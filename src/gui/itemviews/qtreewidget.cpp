@@ -1,28 +1,26 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
 
+#include <algorithm>
 #include <qtreewidget.h>
 
 #ifndef QT_NO_TREEWIDGET
@@ -631,7 +629,7 @@ void QTreeModel::ensureSorted(int column, Qt::SortOrder order,
    }
 
    LessThan compare = (order == Qt::AscendingOrder ? &itemLessThan : &itemGreaterThan);
-   qStableSort(sorting.begin(), sorting.end(), compare);
+   std::stable_sort(sorting.begin(), sorting.end(), compare);
 
    QModelIndexList oldPersistentIndexes;
    QModelIndexList newPersistentIndexes;
@@ -732,9 +730,10 @@ QList<QTreeWidgetItem *>::iterator QTreeModel::sortedInsertionIterator(
    Qt::SortOrder order, QTreeWidgetItem *item)
 {
    if (order == Qt::AscendingOrder) {
-      return qLowerBound(begin, end, item, QTreeModelLessThan());
+      return std::lower_bound(begin, end, item, QTreeModelLessThan());
    }
-   return qLowerBound(begin, end, item, QTreeModelGreaterThan());
+
+   return std::lower_bound(begin, end, item, QTreeModelGreaterThan());
 }
 
 QStringList QTreeModel::mimeTypes() const
@@ -876,21 +875,26 @@ void QTreeModel::sortItems(QList<QTreeWidgetItem *> *items, int column, Qt::Sort
 
    // do the sorting
    LessThan compare = (order == Qt::AscendingOrder ? &itemLessThan : &itemGreaterThan);
-   qStableSort(sorting.begin(), sorting.end(), compare);
+   std::stable_sort(sorting.begin(), sorting.end(), compare);
 
    QModelIndexList fromList;
    QModelIndexList toList;
    int colCount = columnCount();
+
    for (int r = 0; r < sorting.count(); ++r) {
       int oldRow = sorting.at(r).second;
+
       if (oldRow == r) {
          continue;
       }
+
       QTreeWidgetItem *item = sorting.at(r).first;
       items->replace(r, item);
+
       for (int c = 0; c < colCount; ++c) {
          QModelIndex from = createIndex(oldRow, c, item);
-         if (static_cast<QAbstractItemModelPrivate *>(d_ptr.data())->persistent.indexes.contains(from)) {
+
+         if (static_cast<QAbstractItemModelPrivate *>(d_ptr.data())->persistent.m_indexes.contains(from)) {
             QModelIndex to = createIndex(r, c, item);
             fromList << from;
             toList << to;
@@ -1863,19 +1867,14 @@ bool QTreeWidgetItem::operator<(const QTreeWidgetItem &other) const
    return QAbstractItemModelPrivate::variantLessThan(v1, v2);
 }
 
-#ifndef QT_NO_DATASTREAM
-
-/*!
-    Reads the item from stream \a in. This only reads data into a single item.
-
-    \sa write()
-*/
 void QTreeWidgetItem::read(QDataStream &in)
 {
    // convert from streams written before we introduced display (4.2.0)
+
    if (in.version() < QDataStream::Qt_4_2) {
       d->display.clear();
       in >> values;
+
       // move the display value over to the display string list
       for (int column = 0; column < values.count(); ++column) {
          d->display << QVariant();
@@ -1886,32 +1885,17 @@ void QTreeWidgetItem::read(QDataStream &in)
             }
          }
       }
+
    } else {
       in >> values >> d->display;
    }
 }
 
-/*!
-    Writes the item to stream \a out. This only writes data from one single item.
-
-    \sa read()
-*/
 void QTreeWidgetItem::write(QDataStream &out) const
 {
    out << values << d->display;
 }
-#endif // QT_NO_DATASTREAM
 
-/*!
-    \since 4.1
-
-    Constructs a copy of \a other. Note that type() and treeWidget()
-    are not copied.
-
-    This function is useful when reimplementing clone().
-
-    \sa data(), flags()
-*/
 QTreeWidgetItem::QTreeWidgetItem(const QTreeWidgetItem &other)
    : rtti(Type), values(other.values), view(0),
      d(new QTreeWidgetItemPrivate(this)), par(0),
@@ -3001,7 +2985,7 @@ void QTreeWidget::sortItems(int column, Qt::SortOrder order)
 /*!
     \internal
 
-    ### Qt 5: remove
+    ### Qt5: remove
 */
 void QTreeWidget::setSortingEnabled(bool enable)
 {
@@ -3011,7 +2995,7 @@ void QTreeWidget::setSortingEnabled(bool enable)
 /*!
     \internal
 
-    ### Qt 5: remove
+    ### Qt5: remove
 */
 bool QTreeWidget::isSortingEnabled() const
 {
@@ -3147,13 +3131,16 @@ void QTreeWidget::setItemSelected(const QTreeWidgetItem *item, bool select)
 QList<QTreeWidgetItem *> QTreeWidget::selectedItems() const
 {
    Q_D(const QTreeWidget);
+
    QModelIndexList indexes = selectionModel()->selectedIndexes();
    QList<QTreeWidgetItem *> items;
-   items.reserve(indexes.count());
+
    QSet<QTreeWidgetItem *> seen;
    seen.reserve(indexes.count());
+
    for (int i = 0; i < indexes.count(); ++i) {
       QTreeWidgetItem *item = d->item(indexes.at(i));
+
       if (isItemHidden(item) || seen.contains(item)) {
          continue;
       }

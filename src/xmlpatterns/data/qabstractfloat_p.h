@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -58,7 +55,7 @@ class AbstractFloat : public Numeric
     *
     * @returns @c false if the number is 0 or @c NaN, otherwise @c true.
     */
-   bool evaluateEBV(const QExplicitlySharedDataPointer<DynamicContext> &) const;
+   bool evaluateEBV(const QExplicitlySharedDataPointer<DynamicContext> &) const override;
 
    /**
     * Returns this AbstractFloat represented as an @c xs:string.
@@ -71,27 +68,28 @@ class AbstractFloat : public Numeric
     * @see <a href="http://www.w3.org/TR/xpath-functions/#casting-to-string">XQuery 1.0
     * and XPath 2.0 Functions and Operators, 17.1.2 Casting to xs:string and xdt:untypedAtomic</a>
     */
-   virtual QString stringValue() const;
+   QString stringValue() const override;
 
-   virtual xsDouble toDouble() const;
-   virtual xsInteger toInteger() const;
-   virtual xsFloat toFloat() const;
-   virtual xsDecimal toDecimal() const;
+   xsDouble toDouble() const override;
+   xsInteger toInteger() const override;
+   xsFloat toFloat() const override;
+   xsDecimal toDecimal() const override;
 
-   virtual Numeric::Ptr round() const;
-   virtual Numeric::Ptr roundHalfToEven(const xsInteger scale) const;
-   virtual Numeric::Ptr floor() const;
-   virtual Numeric::Ptr ceiling() const;
-   virtual Numeric::Ptr abs() const;
+   Numeric::Ptr round() const override;
+   Numeric::Ptr roundHalfToEven(const xsInteger scale) const override;
+   Numeric::Ptr floor() const override;
+   Numeric::Ptr ceiling() const override;
+   Numeric::Ptr abs() const override;
 
-   virtual bool isNaN() const;
-   virtual bool isInf() const;
+   bool isNaN() const override;
+   bool isInf() const override;
 
-   virtual ItemType::Ptr type() const;
-   virtual Item toNegated() const;
-   virtual qulonglong toUnsignedInteger() const;
+   ItemType::Ptr type() const override;
+   Item toNegated() const override;
+   quint64 toUnsignedInteger() const override;
 
-   virtual bool isSigned() const;
+   bool isSigned() const override;
+
  protected:
    AbstractFloat(const xsDouble num);
 

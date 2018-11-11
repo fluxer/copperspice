@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -149,34 +146,44 @@ QT_USE_NAMESPACE
    // In every other case we return NO, which means that Cocoa can do as it pleases
    // (i.e., fire the menu action).
    NSMenuItem *whichItem;
+
    // Change the private unicode keys to the ones used in setting the "Key Equivalents"
    NSString *characters = qt_mac_removePrivateUnicode([event characters]);
+
    if ([self hasShortcut: menu
          forKey: characters
          // Interested only in Shift, Cmd, Ctrl & Alt Keys, so ignoring masks like, Caps lock, Num Lock ...
          forModifiers: ([event modifierFlags] & (NSShiftKeyMask | NSControlKeyMask | NSCommandKeyMask | NSAlternateKeyMask))
          whichItem: &whichItem]) {
-      QWidget *widget = 0;
-      QAction *qaction = 0;
+
+      QWidget *widget  = nullptr;
+      QAction *qaction = nullptr;
+
       if (whichItem && [whichItem tag]) {
          qaction = reinterpret_cast<QAction *>([whichItem tag]);
       }
-      if (qApp->activePopupWidget())
+
+      if (qApp->activePopupWidget()) {
          widget = (qApp->activePopupWidget()->focusWidget() ?
                    qApp->activePopupWidget()->focusWidget() : qApp->activePopupWidget());
-      else if (QApplicationPrivate::focus_widget) {
+
+      } else if (QApplicationPrivate::focus_widget) {
          widget = QApplicationPrivate::focus_widget;
       }
+
       // If we could not find any receivers, pass it to the active window
-      if (!widget) {
+      if (! widget) {
          widget = qApp->activeWindow();
       }
+
       if (qaction && widget) {
-         int key = qaction->shortcut();
+         int key = qaction->shortcut()[0];
          QKeyEvent accel_ev(QEvent::ShortcutOverride, (key & (~Qt::KeyboardModifierMask)),
                             Qt::KeyboardModifiers(key & Qt::KeyboardModifierMask));
+
          accel_ev.ignore();
          qt_sendSpontaneousEvent(widget, &accel_ev);
+
          if (accel_ev.isAccepted()) {
             qt_dispatchKeyEvent(event, widget);
             *target = nil;
@@ -185,6 +192,7 @@ QT_USE_NAMESPACE
          }
       }
    }
+
    return NO;
 }
 

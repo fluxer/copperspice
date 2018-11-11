@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -141,27 +138,31 @@ QString QMdiSubWindowPrivate::originalWindowTitle()
 {
    Q_Q(QMdiSubWindow);
 
-   if (originalTitle.isNull()) {
+   if (originalTitle.isEmpty()) {
       originalTitle = q->window()->windowTitle();
 
-      if (originalTitle.isNull()) {
-         originalTitle = QLatin1String("");
+      if (originalTitle.isEmpty()) {
+         originalTitle = "";
       }
    }
+
    return originalTitle;
 }
 
 void QMdiSubWindowPrivate::setNewWindowTitle()
 {
    Q_Q(QMdiSubWindow);
+
    QString childTitle = q->windowTitle();
    if (childTitle.isEmpty()) {
       return;
    }
+
    QString original = originalWindowTitle();
-   if (!original.isEmpty()) {
-      if (!original.contains(QMdiSubWindow::tr("- [%1]").arg(childTitle))) {
-         q->window()->setWindowTitle(QMdiSubWindow::tr("%1 - [%2]").arg(original, childTitle));
+   if (! original.isEmpty()) {
+
+      if (!original.contains(QMdiSubWindow::tr("- [%1]").formatArg(childTitle))) {
+         q->window()->setWindowTitle(QMdiSubWindow::tr("%1 - [%2]").formatArgs(original, childTitle));
       }
 
    } else {
@@ -264,8 +265,8 @@ class ControlLabel : public QWidget
    GUI_CS_OBJECT(ControlLabel)
 
  public:
-   ControlLabel(QMdiSubWindow *subWindow, QWidget *parent = 0);
-   QSize sizeHint() const;
+   ControlLabel(QMdiSubWindow *subWindow, QWidget *parent = nullptr);
+   QSize sizeHint() const override;
 
    GUI_CS_SIGNAL_1(Public, void _q_clicked())
    GUI_CS_SIGNAL_2(_q_clicked)
@@ -274,11 +275,11 @@ class ControlLabel : public QWidget
    GUI_CS_SIGNAL_2(_q_doubleClicked)
 
  protected:
-   bool event(QEvent *event);
-   void paintEvent(QPaintEvent *paintEvent);
-   void mousePressEvent(QMouseEvent *mouseEvent);
-   void mouseDoubleClickEvent(QMouseEvent *mouseEvent);
-   void mouseReleaseEvent(QMouseEvent *mouseEvent);
+   bool event(QEvent *event) override;
+   void paintEvent(QPaintEvent *paintEvent) override;
+   void mousePressEvent(QMouseEvent *mouseEvent) override;
+   void mouseDoubleClickEvent(QMouseEvent *mouseEvent) override;
+   void mouseReleaseEvent(QMouseEvent *mouseEvent) override;
 
  private:
    QPixmap label;
@@ -396,8 +397,8 @@ class ControllerWidget : public QWidget
    GUI_CS_OBJECT(ControllerWidget)
 
  public:
-   ControllerWidget(QMdiSubWindow *subWindow, QWidget *parent = 0);
-   QSize sizeHint() const;
+   ControllerWidget(QMdiSubWindow *subWindow, QWidget *parent = nullptr);
+   QSize sizeHint() const override;
    void setControlVisible(QMdiSubWindowPrivate::WindowStateAction action, bool visible);
 
    inline bool hasVisibleControls() const {
@@ -417,12 +418,12 @@ class ControllerWidget : public QWidget
 
 
  protected:
-   void paintEvent(QPaintEvent *event);
-   void mousePressEvent(QMouseEvent *event);
-   void mouseReleaseEvent(QMouseEvent *event);
-   void mouseMoveEvent(QMouseEvent *event);
-   void leaveEvent(QEvent *event);
-   bool event(QEvent *event);
+   void paintEvent(QPaintEvent *event) override;
+   void mousePressEvent(QMouseEvent *event) override;
+   void mouseReleaseEvent(QMouseEvent *event) override;
+   void mouseMoveEvent(QMouseEvent *event) override;
+   void leaveEvent(QEvent *event) override;
+   bool event(QEvent *event) override;
 
  private:
    QStyle::SubControl activeControl;
@@ -430,6 +431,7 @@ class ControllerWidget : public QWidget
    QStyle::SubControls visibleControls;
    void initStyleOption(QStyleOptionComplex *option) const;
    QMdiArea *mdiArea;
+
    inline QStyle::SubControl getSubControl(const QPoint &pos) const {
       QStyleOptionComplex opt;
       initStyleOption(&opt);
@@ -1031,8 +1033,9 @@ void QMdiSubWindowPrivate::updateDirtyRegions()
       return;
    }
 
-   foreach (Operation operation, operationMap.keys())
-   operationMap.find(operation).value().region = getRegion(operation);
+   for (Operation operation : operationMap.keys()) {
+      operationMap.find(operation).value().region = getRegion(operation);
+   }
 }
 
 /*!
@@ -1838,6 +1841,7 @@ void QMdiSubWindowPrivate::removeButtonsFromMenuBar()
    }
 
    QMenuBar *currentMenuBar = 0;
+
 #ifndef QT_NO_MAINWINDOW
    if (QMainWindow *mainWindow = qobject_cast<QMainWindow *>(q->window())) {
       // NB! We can't use menuBar() here because that one will actually create
@@ -1852,10 +1856,12 @@ void QMdiSubWindowPrivate::removeButtonsFromMenuBar()
 
    QWidget *topLevelWindow = q->window();
    topLevelWindow->removeEventFilter(q);
+
    if (baseWidget && !drawTitleBarWhenMaximized()) {
       topLevelWindow->setWindowModified(false);
    }
-   originalTitle = QString::null;
+
+   originalTitle = "";
 }
 
 #endif // QT_NO_MENUBAR
@@ -2170,10 +2176,9 @@ void QMdiSubWindowPrivate::setEnabled(WindowStateAction action, bool enable)
 }
 
 #ifndef QT_NO_MENU
-void QMdiSubWindowPrivate::addToSystemMenu(WindowStateAction action, const QString &text,
-      const char *slot)
+void QMdiSubWindowPrivate::addToSystemMenu(WindowStateAction action, const QString &text, const QString &slot)
 {
-   if (!systemMenu) {
+   if (! systemMenu) {
       return;
    }
    actions[action] = systemMenu->addAction(text, q_func(), slot);
@@ -2242,8 +2247,9 @@ void QMdiSubWindowPrivate::setSizeGripVisible(bool visible) const
 {
    // See if we can find any size grips
    QList<QSizeGrip *> sizeGrips = q_func()->findChildren<QSizeGrip *>();
-   foreach (QSizeGrip * grip, sizeGrips)
-   grip->setVisible(visible);
+   for  (QSizeGrip * grip : sizeGrips) {
+      grip->setVisible(visible);
+   }
 }
 
 #endif // QT_NO_SIZEGRIP
@@ -2813,13 +2819,16 @@ bool QMdiSubWindow::eventFilter(QObject *object, QEvent *event)
          }
          break;
       }
+
       case QEvent::Enter:
          d->currentOperation = QMdiSubWindowPrivate::None;
          d->updateCursor();
          break;
+
       case QEvent::LayoutRequest:
          d->updateGeometryConstraints();
          break;
+
       case QEvent::WindowTitleChange:
          if (d->ignoreWindowTitleChange) {
             break;
@@ -2828,9 +2837,12 @@ bool QMdiSubWindow::eventFilter(QObject *object, QEvent *event)
             d->updateWindowTitle(true);
             d->lastChildWindowTitle = d->baseWidget->windowTitle();
 #ifndef QT_NO_MENUBAR
+
          } else if (maximizedButtonsWidget() && d->controlContainer->menuBar() && d->controlContainer->menuBar()
                     ->cornerWidget(Qt::TopRightCorner) == maximizedButtonsWidget()) {
-            d->originalTitle = QString::null;
+
+            d->originalTitle = "";
+
             if (d->baseWidget && d->baseWidget->windowTitle() == windowTitle()) {
                d->updateWindowTitle(true);
             } else {
@@ -2839,6 +2851,7 @@ bool QMdiSubWindow::eventFilter(QObject *object, QEvent *event)
 #endif
          }
          break;
+
       case QEvent::ModifiedChange: {
          if (object != d->baseWidget) {
             break;

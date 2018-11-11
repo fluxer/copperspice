@@ -1,27 +1,26 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
+
+#include <algorithm>
 
 #include <qrasterizer_p.h>
 #include <QPoint>
@@ -29,6 +28,8 @@
 #include <qmath_p.h>
 #include <qdatabuffer_p.h>
 #include <qdrawhelper_p.h>
+
+#include <stdlib.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -39,7 +40,7 @@ typedef int Q16Dot16;
 #define Q16Dot16ToInt(i) ((i) >> 16)
 #define Q16Dot16Factor 65536
 
-#define Q16Dot16Multiply(x, y) (int)((qlonglong(x) * qlonglong(y)) >> 16)
+#define Q16Dot16Multiply(x, y) (int)((qint64(x) * qint64(y)) >> 16)
 #define Q16Dot16FastMultiply(x, y) (((x) * (y)) >> 16)
 
 #define SPAN_BUFFER_SIZE 256
@@ -302,8 +303,10 @@ void qScanConvert(QScanConverter &d, T allVertical)
       d.m_active.reset();
       return;
    }
-   qSort(d.m_lines.data(), d.m_lines.data() + d.m_lines.size(), QT_PREPEND_NAMESPACE(topOrder));
+
+   std::sort(d.m_lines.data(), d.m_lines.data() + d.m_lines.size(), QT_PREPEND_NAMESPACE(topOrder));
    int line = 0;
+
    for (int y = d.m_lines.first().top; y <= d.m_bottom; ++y) {
       for (; line < d.m_lines.size() && d.m_lines.at(line).top == y; ++line) {
          // add node to active list
@@ -485,17 +488,15 @@ void QScanConverter::mergeCurve(const QT_FT_Vector &pa, const QT_FT_Vector &pb,
 
       bool belowThreshold;
       if (l > 64) {
-         qlonglong d2 = qAbs(qlonglong(b[1].x - b[0].x) * qlonglong(delta.y) -
-                             qlonglong(b[1].y - b[0].y) * qlonglong(delta.x));
-         qlonglong d3 = qAbs(qlonglong(b[2].x - b[0].x) * qlonglong(delta.y) -
-                             qlonglong(b[2].y - b[0].y) * qlonglong(delta.x));
+         qint64 d2 = qAbs(qint64(b[1].x - b[0].x) * qint64(delta.y) - qint64(b[1].y - b[0].y) * qint64(delta.x));
+         qint64 d3 = qAbs(qint64(b[2].x - b[0].x) * qint64(delta.y) - qint64(b[2].y - b[0].y) * qint64(delta.x));
 
-         qlonglong d = d2 + d3;
+         qint64 d = d2 + d3;
 
-         belowThreshold = (d <= qlonglong(flatness) * qlonglong(l));
+         belowThreshold = (d <= qint64(flatness) * qint64(l));
+
       } else {
-         QT_FT_Pos d = qAbs(b[0].x - b[1].x) + qAbs(b[0].y - b[1].y) +
-                       qAbs(b[0].x - b[2].x) + qAbs(b[0].y - b[2].y);
+         QT_FT_Pos d = qAbs(b[0].x - b[1].x) + qAbs(b[0].y - b[1].y) + qAbs(b[0].x - b[2].x) + qAbs(b[0].y - b[2].y);
 
          belowThreshold = (d <= flatness);
       }

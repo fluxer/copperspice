@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -113,9 +110,11 @@ void BatchTranslationDialog::startTranslation()
             for (int b = 0; b < m_model.rowCount(); ++b) {
                QModelIndex idx(m_model.index(b, 0));
                QVariant checkState = m_model.data(idx, Qt::CheckStateRole);
+
                if (checkState == Qt::Checked) {
                   PhraseBook *pb = m_phrasebooks[m_model.data(idx, Qt::UserRole).toInt()];
-                  foreach (const Phrase * ph, pb->phrases()) {
+
+                  for (const Phrase * ph : pb->phrases()) {
                      if (ph->source() == m->text()) {
                         m_dataModel->setTranslation(it, ph->target());
                         m_dataModel->setFinished(it, m_ui.ckMarkFinished->isChecked());

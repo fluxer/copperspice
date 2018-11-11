@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -40,8 +37,8 @@
 #include <quserfunctioncallsite_p.h>
 #include <quserfunction_p.h>
 #include <qvariabledeclaration_p.h>
-
-QT_BEGIN_NAMESPACE
+#include <qhash.h>
+#include <qmultihash.h>
 
 namespace QPatternist {
 class Tokenizer;
@@ -65,29 +62,11 @@ class ParserContext : public QSharedData
 
    typedef QFlags<PrologDeclaration> PrologDeclarations;
 
-   /**
-    * Constructs a ParserContext instance.
-    *
-    * @param context the static context as defined in XPath. This contain
-    * namespace bindings, error handler, and other information necessary
-    * for creating an XPath expression.
-    * @param lang the particular XPath language sub-set that should be parsed
-    * @param tokenizer the Tokenizer to use.
-    * @see ExpressionFactory::LanguageAccent
-    */
    ParserContext(const StaticContext::Ptr &context,
                  const QXmlQuery::QueryLanguage lang,
                  Tokenizer *const tokenizer);
 
-   /**
-    * @short Removes the recently pushed variables from
-    * scope. The amount of removed variables is @p amount.
-    *
-    * finalizePushedVariable() can be seen as popping the variable.
-    *
-    */
-   void finalizePushedVariable(const int amount = 1,
-                               const bool shouldPop = true);
+   void finalizePushedVariable(const int amount = 1, const bool shouldPop = true);
 
    inline VariableSlotID allocatePositionalSlot() {
       ++m_positionSlot;
@@ -150,10 +129,6 @@ class ParserContext : public QSharedData
     */
    QStack<QXmlName> tagStack;
 
-   /**
-    * The actual expression, the Query. This member may be @c null,
-    * such as in the case of an XQuery library module.
-    */
    Expression::Ptr queryBody;
 
    /**
@@ -240,11 +215,7 @@ class ParserContext : public QSharedData
     * can also have rules, each body may also be in templateRules.
     */
    QHash<QXmlName, Template::Ptr>  namedTemplates;
-
-   /**
-    * All the @c xsl:call-template instructions that we have encountered.
-    */
-   QVector<Expression::Ptr>         templateCalls;
+   QVector<Expression::Ptr>        templateCalls;
 
    /**
     * If we're in XSL-T, and a variable reference is encountered
@@ -272,10 +243,6 @@ class ParserContext : public QSharedData
     */
    QHash<QXmlName, TemplateMode::Ptr>  templateRules;
 
-   /**
-    * @short Returns the TemplateMode for @p modeName or @c null if the
-    * mode being asked for is @c #current.
-    */
    TemplateMode::Ptr modeFor(const QXmlName &modeName) {
       /* #current is not a mode, so it cannot contain templates. #current
        * specifies how to look up templates wrt. mode. This check helps
@@ -300,14 +267,7 @@ class ParserContext : public QSharedData
       return m_currentTemplateID;
    }
 
-   /**
-    * The @c xsl:param appearing inside template.
-    */
    VariableDeclaration::List templateParameters;
-
-   /**
-    * The @c xsl:with-param appearing in template calling instruction.
-    */
    WithParam::Hash templateWithParams;
 
    inline void templateParametersHandled() {
@@ -331,13 +291,8 @@ class ParserContext : public QSharedData
       m_isParsingWithParam.pop();
    }
 
-   /**
-    * This is used to deal with XSL-T's exception to the @c node() type,
-    * which doesn't match document nodes.
-    */
-   bool                                isParsingPattern;
-
-   ImportPrecedence                    currentImportPrecedence;
+   bool isParsingPattern;
+   ImportPrecedence currentImportPrecedence;
 
    bool isFirstTemplate() const {
       return m_currentTemplateID == InitialTemplateID;
@@ -360,15 +315,9 @@ class ParserContext : public QSharedData
    VariableSlotID                      m_globalVariableSlot;
    TemplatePattern::ID                 m_currentTemplateID;
 
-   /**
-    * The default is @c false. If we're not parsing @c xsl:with-param,
-    * hence parsing @c xsl:param, the value has changed.
-    */
    QStack<bool>                        m_isParsingWithParam;
    Q_DISABLE_COPY(ParserContext)
 };
 }
-
-QT_END_NAMESPACE
 
 #endif

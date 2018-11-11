@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -31,8 +28,6 @@
 #include <QtCore/QString>
 #include <QtCore/QStringList>
 #include <QtCore/QTextStream>
-
-QT_BEGIN_NAMESPACE
 
 class QTextStream;
 class DomUI;
@@ -80,8 +75,7 @@ class Driver
 
    static QString normalizedName(const QString &name);
    static QString qtify(const QString &name);
-   QString unique(const QString &instanceName = QString(),
-                  const QString &className = QString());
+   QString unique(const QString &instanceName = QString(), const QString &className = QString());
 
    // symbol table
    QString findOrInsertWidget(DomWidget *ui_widget);
@@ -92,6 +86,7 @@ class Driver
    QString findOrInsertActionGroup(DomActionGroup *ui_group);
    QString findOrInsertAction(DomAction *ui_action);
    QString findOrInsertButtonGroup(const DomButtonGroup *ui_group);
+
    // Find a group by its non-uniqified name
    const DomButtonGroup *findButtonGroup(const QString &attributeName) const;
 
@@ -121,13 +116,13 @@ class Driver
    QHash<DomSpacer *, QString> m_spacers;
    QHash<DomLayout *, QString> m_layouts;
    QHash<DomActionGroup *, QString> m_actionGroups;
+
    typedef QHash<const DomButtonGroup *, QString> ButtonGroupNameHash;
    ButtonGroupNameHash m_buttonGroups;
+
    QHash<DomAction *, QString> m_actions;
    QHash<QString, bool> m_nameRepository;
    QHash<QString, bool> m_pixmaps;
 };
-
-QT_END_NAMESPACE
 
 #endif // DRIVER_H

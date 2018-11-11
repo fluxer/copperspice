@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -38,13 +35,13 @@ class NoneType : public ItemType, public SequenceType
  public:
    typedef QExplicitlySharedDataPointer<NoneType> Ptr;
 
-   virtual bool itemMatches(const Item &item) const;
-   virtual bool xdtTypeMatches(const ItemType::Ptr &other) const;
+   bool itemMatches(const Item &item) const override;
+   bool xdtTypeMatches(const ItemType::Ptr &other) const override;
 
    /**
     * @returns always "none". That is, no namespace prefix
     */
-   virtual QString displayName(const NamePool::Ptr &np) const;
+   QString displayName(const NamePool::Ptr &np) const override;
 
    /**
     * @note The semantical meaning of this type's item type can
@@ -53,7 +50,7 @@ class NoneType : public ItemType, public SequenceType
     *
     * @returns always 'this' since NoneType is also an ItemType
     */
-   virtual ItemType::Ptr itemType() const;
+   ItemType::Ptr itemType() const override;
 
    /**
     * @note The semantical meaning of this type's cardinality
@@ -62,12 +59,12 @@ class NoneType : public ItemType, public SequenceType
     *
     * @returns always Cardinality::zeroOrMore()
     */
-   virtual Cardinality cardinality() const;
+   Cardinality cardinality() const override;
 
    /**
     * @returns always @c false
     */
-   virtual bool isAtomicType() const;
+   bool isAtomicType() const override;
 
    /**
     * This can be thought to be a weird function for this type(none). There
@@ -82,24 +79,24 @@ class NoneType : public ItemType, public SequenceType
     * static operator lookup is postponed to runtime. Subsequently, expressions like error()
     * works properly with other XPath expressions.
     */
-   virtual ItemType::Ptr atomizedType() const;
+   ItemType::Ptr atomizedType() const override;
 
    /**
     * @returns always @c false
     */
-   virtual bool isNodeType() const;
+   bool isNodeType() const override;
 
    /**
     * @returns always item()
     */
-   virtual ItemType::Ptr xdtSuperType() const;
+   ItemType::Ptr xdtSuperType() const override;
 
    /**
     * @returns always @p other. The none type can be thought as
     * disappearing when attempting to find the union of it and
     * another type.
     */
-   virtual const ItemType &operator|(const ItemType &other) const;
+   const ItemType &operator|(const ItemType &other) const override;
 
  protected:
 

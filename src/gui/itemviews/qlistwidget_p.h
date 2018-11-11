@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -69,22 +66,22 @@ class QListModel : public QAbstractListModel
    QListWidgetItem *take(int row);
    void move(int srcRow, int dstRow);
 
-   int rowCount(const QModelIndex &parent = QModelIndex()) const;
+   int rowCount(const QModelIndex &parent = QModelIndex()) const override;
 
    QModelIndex index(QListWidgetItem *item) const;
-   QModelIndex index(int row, int column = 0, const QModelIndex &parent = QModelIndex()) const;
+   QModelIndex index(int row, int column = 0, const QModelIndex &parent = QModelIndex()) const override;
 
-   QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
-   bool setData(const QModelIndex &index, const QVariant &value, int role);
+   QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
+   bool setData(const QModelIndex &index, const QVariant &value, int role) override;
 
-   QMap<int, QVariant> itemData(const QModelIndex &index) const;
+   QMap<int, QVariant> itemData(const QModelIndex &index) const override;
 
-   bool insertRows(int row, int count = 1, const QModelIndex &parent = QModelIndex());
-   bool removeRows(int row, int count = 1, const QModelIndex &parent = QModelIndex());
+   bool insertRows(int row, int count = 1, const QModelIndex &parent = QModelIndex()) override;
+   bool removeRows(int row, int count = 1, const QModelIndex &parent = QModelIndex()) override;
 
-   Qt::ItemFlags flags(const QModelIndex &index) const;
+   Qt::ItemFlags flags(const QModelIndex &index) const override;
 
-   void sort(int column, Qt::SortOrder order);
+   void sort(int column, Qt::SortOrder order) override;
    void ensureSorted(int column, Qt::SortOrder order, int start, int end);
    static bool itemLessThan(const QPair<QListWidgetItem *, int> &left,const QPair<QListWidgetItem *, int> &right);
    static bool itemGreaterThan(const QPair<QListWidgetItem *, int> &left, const QPair<QListWidgetItem *, int> &right);
@@ -95,13 +92,13 @@ class QListModel : public QAbstractListModel
    void itemChanged(QListWidgetItem *item);
 
    // dnd
-   QStringList mimeTypes() const;
-   QMimeData *mimeData(const QModelIndexList &indexes) const;
+   QStringList mimeTypes() const override;
+   QMimeData *mimeData(const QModelIndexList &indexes) const override;
 
 #ifndef QT_NO_DRAGANDDROP
    bool dropMimeData(const QMimeData *data, Qt::DropAction action,
-                     int row, int column, const QModelIndex &parent);
-   Qt::DropActions supportedDropActions() const;
+                     int row, int column, const QModelIndex &parent) override;
+   Qt::DropActions supportedDropActions() const override;
 #endif
 
    QMimeData *internalMimeData()  const;

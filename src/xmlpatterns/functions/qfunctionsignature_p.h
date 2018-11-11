@@ -1,33 +1,27 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
 
 #ifndef QFunctionSignature_P_H
 #define QFunctionSignature_P_H
-
-template<typename Key, typename Value> class QHash;
-template<typename T> class QList;
 
 #include <QSharedData>
 
@@ -36,10 +30,12 @@ template<typename T> class QList;
 #include <qfunctionargument_p.h>
 #include <qpatternistlocale_p.h>
 #include <qprimitives_p.h>
+#include <qcontainerfwd.h>
 
 QT_BEGIN_NAMESPACE
 
 namespace QPatternist {
+
 class FunctionSignature : public CallTargetDescription
 {
  public:
@@ -50,19 +46,16 @@ class FunctionSignature : public CallTargetDescription
       UnlimitedArity = -1
    };
 
-   typedef QExplicitlySharedDataPointer<FunctionSignature> Ptr;
-   typedef QHash<QXmlName, FunctionSignature::Ptr> Hash;
-   typedef QList<FunctionSignature::Ptr> List;
+   using Ptr   = QExplicitlySharedDataPointer<FunctionSignature>;
+   using Hash  = QHash<QXmlName, FunctionSignature::Ptr>;
+   using List  = QList<FunctionSignature::Ptr>;
 
    /**
     * A number which tells the amount of arguments a function has.
     */
    typedef qint16 Arity;
 
-   FunctionSignature(const QXmlName name,
-                     const Arity minArgs,
-                     const Arity maxArgs,
-                     const SequenceType::Ptr &returnType,
+   FunctionSignature(const QXmlName name, const Arity minArgs, const Arity maxArgs, const SequenceType::Ptr &returnType,
                      const Expression::Properties chars = Expression::Properties(),
                      const Expression::ID id = Expression::IDIgnorableExpression);
 
@@ -74,8 +67,7 @@ class FunctionSignature : public CallTargetDescription
     * calling setArguments() with a list containing a FunctionsArgument with name @p name
     * and type @p type.
     */
-   void appendArgument(const QXmlName::LocalNameCode name,
-                       const SequenceType::Ptr &type);
+   void appendArgument(const QXmlName::LocalNameCode name, const SequenceType::Ptr &type);
 
    /**
     * Checks whether @p arity is within the range of allowed count of arguments. For example,
@@ -149,9 +141,7 @@ class FunctionSignature : public CallTargetDescription
  */
 static inline QString formatFunction(const NamePool::Ptr &np, const FunctionSignature::Ptr &func)
 {
-   return QLatin1String("<span class='XQuery-function'>")  +
-          escape(func->displayName(np))                    +
-          QLatin1String("</span>");
+   return QLatin1String("<span class='XQuery-function'>")  + escape(func->displayName(np)) + QLatin1String("</span>");
 }
 }
 

@@ -11,7 +11,6 @@ CORE_PUBLIC_INCLUDES += \
 	QCoreApplication \
 	QCustomEvent \
 	QDynamicPropertyChangeEvent \
-	QEvent \
 	QEventLoop \
 	QGenericArgument \
 	QGenericReturnArgument \
@@ -48,6 +47,7 @@ CORE_PUBLIC_INCLUDES += \
 	QVariantList \
 	QVariantHash \
 	QVariantMap \
+	QWinEventNotifier \
 	QtCleanUpFunction \
 	QtMsgHandler
 
@@ -64,7 +64,6 @@ CORE_KERNEL_INCLUDES = \
 	qcustomevent.h \
 	qdynamicpropertychangeevent.h \
 	qeventloop.h \
-	qevent.h \
 	qgenericargument.h \
 	qgenericreturnargument.h \
 	qmath.h \
@@ -103,6 +102,7 @@ CORE_KERNEL_INCLUDES = \
 	qvariantlist.h \
 	qvarianthash.h \
 	qvariantmap.h \
+	qwineventnotifier.h \
 	qmetatype.h \
 	csmeta.h \
 	csmeta_callevent.h \
@@ -127,7 +127,6 @@ CORE_KERNEL_PRIVATE_INCLUDES = \
 	qsystemsemaphore_p.h \
 	qeventdispatcher_win_p.h \
 	qeventdispatcher_unix_p.h \
-	qwineventnotifier_p.h \
 	qfunctions_p.h \
 	qcrashhandler_p.h \
 	qeventdispatcher_glib_p.h \
@@ -139,7 +138,7 @@ CORE_PRIVATE_INCLUDES += $(CORE_KERNEL_PRIVATE_INCLUDES)
 noinst_HEADERS+=$(patsubst %,src/core/kernel/%,$(CORE_KERNEL_INCLUDES)) \
 		$(patsubst %,src/core/kernel/%,$(CORE_KERNEL_PRIVATE_INCLUDES))
 
-lib_libCsCore1_la_SOURCES += \
+lib_libCsCore@BUILD_ABI@_la_SOURCES += \
 	src/core/kernel/qabstracteventdispatcher.cpp \
 	src/core/kernel/qabstractitemmodel.cpp \
 	src/core/kernel/qbasictimer.cpp \
@@ -172,16 +171,16 @@ lib_libCsCore1_la_SOURCES += \
 
 
 if OSTYPE_WIN
-lib_libCsCore1_la_SOURCES += \
+lib_libCsCore@BUILD_ABI@_la_SOURCES += \
 	src/core/kernel/qeventdispatcher_win.cpp \
 	src/core/kernel/qcoreapplication_win.cpp \
-	src/core/kernel/qwineventnotifier_p.cpp \
+	src/core/kernel/qwineventnotifier.cpp \
 	src/core/kernel/qsharedmemory_win.cpp \
 	src/core/kernel/qsystemsemaphore_win.cpp
 endif
 
 if OSTYPE_LINUX
-lib_libCsCore1_la_SOURCES += \
+lib_libCsCore@BUILD_ABI@_la_SOURCES += \
 	src/core/kernel/qcore_unix.cpp \
 	src/core/kernel/qcrashhandler.cpp \
 	src/core/kernel/qsharedmemory_unix.cpp \
@@ -191,7 +190,7 @@ lib_libCsCore1_la_SOURCES += \
 endif
 
 if OSTYPE_BSD
-lib_libCsCore1_la_SOURCES += \
+lib_libCsCore@BUILD_ABI@_la_SOURCES += \
         src/core/kernel/qcore_unix.cpp \
         src/core/kernel/qcrashhandler.cpp \
         src/core/kernel/qsharedmemory_unix.cpp \
@@ -201,8 +200,9 @@ lib_libCsCore1_la_SOURCES += \
 endif
 
 if OSTYPE_DARWIN
-lib_libCsCore1_la_SOURCES += \
+lib_libCsCore@BUILD_ABI@_la_SOURCES += \
 	src/core/kernel/qcore_mac.cpp \
+	src/core/kernel/qcore_mac_objc.mm \
 	src/core/kernel/qcore_unix.cpp \
 	src/core/kernel/qcoreapplication_mac.cpp \
 	src/core/kernel/qeventdispatcher_unix.cpp \

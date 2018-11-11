@@ -1,27 +1,26 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
+
+#include <algorithm>
 
 #include <qlistwidget.h>
 
@@ -301,9 +300,11 @@ void QListModel::sort(int column, Qt::SortOrder order)
    }
 
    LessThan compare = (order == Qt::AscendingOrder ? &itemLessThan : &itemGreaterThan);
-   qSort(sorting.begin(), sorting.end(), compare);
+   std::sort(sorting.begin(), sorting.end(), compare);
+
    QModelIndexList fromIndexes;
    QModelIndexList toIndexes;
+
    for (int r = 0; r < sorting.count(); ++r) {
       QListWidgetItem *item = sorting.at(r).first;
       toIndexes.append(createIndex(r, 0, item));
@@ -336,7 +337,7 @@ void QListModel::ensureSorted(int column, Qt::SortOrder order, int start, int en
    }
 
    LessThan compare = (order == Qt::AscendingOrder ? &itemLessThan : &itemGreaterThan);
-   qSort(sorting.begin(), sorting.end(), compare);
+   std::sort(sorting.begin(), sorting.end(), compare);
 
    QModelIndexList oldPersistentIndexes = persistentIndexList();
    QModelIndexList newPersistentIndexes = oldPersistentIndexes;
@@ -403,9 +404,10 @@ QList<QListWidgetItem *>::iterator QListModel::sortedInsertionIterator(
    Qt::SortOrder order, QListWidgetItem *item)
 {
    if (order == Qt::AscendingOrder) {
-      return qLowerBound(begin, end, item, QListModelLessThan());
+      return std::lower_bound(begin, end, item, QListModelLessThan());
    }
-   return qLowerBound(begin, end, item, QListModelGreaterThan());
+
+   return std::lower_bound(begin, end, item, QListModelGreaterThan());
 }
 
 void QListModel::itemChanged(QListWidgetItem *item)
@@ -1854,7 +1856,7 @@ void QListWidget::dropEvent(QDropEvent *event)
          if (persIndexes.contains(topIndex)) {
             return;
          }
-         qSort(persIndexes); // The dropped items will remain in the same visual order.
+         std::sort(persIndexes.begin(), persIndexes.end()); // The dropped items will remain in the same visual order.
 
          QPersistentModelIndex dropRow = model()->index(row, col, topIndex);
 

@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -89,8 +86,7 @@ class QFileDialogPrivate : public QDialogPrivate
    void createMenuActions();
    void createWidgets();
 
-   void init(const QString &directory = QString(), const QString &nameFilter = QString(),
-             const QString &caption = QString());
+   void init(const QString &directory = QString(), const QString &nameFilter = QString(), const QString &caption = QString());
    bool itemViewKeyboardEvent(QKeyEvent *event);
    QString getEnvironmentVariable(const QString &string);
    static QString workingDirectory(const QString &path);
@@ -117,7 +113,7 @@ class QFileDialogPrivate : public QDialogPrivate
       DWORD maxLength;
       QString drive = path.left(3);
 
-      if (::GetVolumeInformation(reinterpret_cast<const wchar_t *>(drive.utf16()), NULL, 0, NULL, &maxLength, NULL, NULL, 0) == FALSE) {
+      if (::GetVolumeInformation(&drive.toStdWString()[0], NULL, 0, NULL, &maxLength, NULL, NULL, 0) == FALSE) {
          return -1;
       }
 
@@ -246,7 +242,7 @@ class QFileDialogPrivate : public QDialogPrivate
    void setNameFilters_sys(const QStringList &filters);
    void selectNameFilter_sys(const QString &filter);
    QString selectedNameFilter_sys() const;
-   
+
 
 #if defined(Q_OS_MAC)
    void *mDelegate;
@@ -268,8 +264,8 @@ class QFileDialogPrivate : public QDialogPrivate
    QString acceptLabel;
 
    QPointer<QObject> receiverToDisconnectOnClose;
-   QByteArray memberToDisconnectOnClose;
-   QByteArray signalToDisconnectOnClose;
+   QString memberToDisconnectOnClose;
+   QString signalToDisconnectOnClose;
 
    QFileDialog::Options opts;
 
@@ -282,11 +278,13 @@ class QFileDialogPrivate : public QDialogPrivate
 class QFileDialogLineEdit : public QLineEdit
 {
  public:
-   QFileDialogLineEdit(QWidget *parent = 0) : QLineEdit(parent), hideOnEsc(false), d_ptr(0) {}
+   QFileDialogLineEdit(QWidget *parent = nullptr) : QLineEdit(parent), hideOnEsc(false), d_ptr(0) {}
+
    void setFileDialogPrivate(QFileDialogPrivate *d_pointer) {
       d_ptr = d_pointer;
    }
-   void keyPressEvent(QKeyEvent *e);
+
+   void keyPressEvent(QKeyEvent *e) override;
    bool hideOnEsc;
 
  private:
@@ -296,14 +294,16 @@ class QFileDialogLineEdit : public QLineEdit
 class QFileDialogComboBox : public QComboBox
 {
  public:
-   QFileDialogComboBox(QWidget *parent = 0) : QComboBox(parent), urlModel(0) {}
+   QFileDialogComboBox(QWidget *parent = nullptr) : QComboBox(parent), urlModel(0) {}
    void setFileDialogPrivate(QFileDialogPrivate *d_pointer);
-   void showPopup();
+   void showPopup() override;
    void setHistory(const QStringList &paths);
+
    QStringList history() const {
       return m_history;
    }
-   void paintEvent(QPaintEvent *);
+
+   void paintEvent(QPaintEvent *) override;
 
  private:
    QUrlModel *urlModel;
@@ -314,12 +314,12 @@ class QFileDialogComboBox : public QComboBox
 class QFileDialogListView : public QListView
 {
  public:
-   QFileDialogListView(QWidget *parent = 0);
+   QFileDialogListView(QWidget *parent = nullptr);
    void setFileDialogPrivate(QFileDialogPrivate *d_pointer);
-   QSize sizeHint() const;
+   QSize sizeHint() const override;
 
  protected:
-   void keyPressEvent(QKeyEvent *e);
+   void keyPressEvent(QKeyEvent *e) override;
 
  private:
    QFileDialogPrivate *d_ptr;
@@ -330,10 +330,10 @@ class QFileDialogTreeView : public QTreeView
  public:
    QFileDialogTreeView(QWidget *parent);
    void setFileDialogPrivate(QFileDialogPrivate *d_pointer);
-   QSize sizeHint() const;
+   QSize sizeHint() const override;
 
  protected:
-   void keyPressEvent(QKeyEvent *e);
+   void keyPressEvent(QKeyEvent *e) override;
 
  private:
    QFileDialogPrivate *d_ptr;

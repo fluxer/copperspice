@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -34,25 +31,21 @@
 
 #ifndef QT_NO_BEARERMANAGEMENT
 
-QT_BEGIN_NAMESPACE
-
-
-Q_GLOBAL_STATIC_WITH_ARGS(QFactoryLoader, loader,
-                          (QBearerEngineFactoryInterface_iid, QLatin1String("/bearer")))
+Q_GLOBAL_STATIC_WITH_ARGS(QFactoryLoader, loader, (QBearerEngineFactoryInterface_iid, QLatin1String("/bearer")))
 
 QNetworkConfigurationManagerPrivate::QNetworkConfigurationManagerPrivate()
-   : QObject(), pollTimer(0), bearerThread(0), mutex(QMutex::Recursive), forcedPolling(0), firstUpdate(true)
+   : QObject(), pollTimer(0), bearerThread(0),  mutex(QMutex::Recursive), forcedPolling(0), firstUpdate(true)
 {
-   qRegisterMetaType<QNetworkConfiguration>("QNetworkConfiguration");
-   qRegisterMetaType<QNetworkConfigurationPrivatePointer>("QNetworkConfigurationPrivatePointer");
+   qRegisterMetaType<QNetworkConfiguration>();
+   qRegisterMetaType<QNetworkConfigurationPrivatePointer>();
 }
 
 void QNetworkConfigurationManagerPrivate::initialize()
 {
    //Two stage construction, because we only want to do this heavyweight work for the winner of the Q_GLOBAL_STATIC race.
    bearerThread = new QThread();
-   bearerThread->moveToThread(
-      QCoreApplicationPrivate::mainThread()); // because cleanup() is called in main thread context.
+   bearerThread->setObjectName("Network Bearer Thread");
+   bearerThread->moveToThread(QCoreApplicationPrivate::mainThread());    // because cleanup() is called in main thread context.
    moveToThread(bearerThread);
    bearerThread->start();
    updateConfigurations();
@@ -63,6 +56,8 @@ QNetworkConfigurationManagerPrivate::~QNetworkConfigurationManagerPrivate()
    QMutexLocker locker(&mutex);
 
    qDeleteAll(sessionEngines);
+   sessionEngines.clear();
+
    if (bearerThread) {
       bearerThread->quit();
    }
@@ -72,6 +67,7 @@ void QNetworkConfigurationManagerPrivate::cleanup()
 {
    QThread *thread = bearerThread;
    deleteLater();
+
    if (thread->wait(5000)) {
       delete thread;
    }
@@ -81,7 +77,7 @@ QNetworkConfiguration QNetworkConfigurationManagerPrivate::defaultConfiguration(
 {
    QMutexLocker locker(&mutex);
 
-   foreach (QBearerEngine * engine, sessionEngines) {
+   for (QBearerEngine *engine : sessionEngines) {
       QNetworkConfigurationPrivatePointer ptr = engine->defaultConfiguration();
       if (ptr) {
          QNetworkConfiguration config;
@@ -95,9 +91,9 @@ QNetworkConfiguration QNetworkConfigurationManagerPrivate::defaultConfiguration(
    // Return first active snap
    QNetworkConfigurationPrivatePointer defaultConfiguration;
 
-   foreach (QBearerEngine * engine, sessionEngines) {
-      QHash<QString, QNetworkConfigurationPrivatePointer>::Iterator it;
-      QHash<QString, QNetworkConfigurationPrivatePointer>::Iterator end;
+   for (QBearerEngine *engine : sessionEngines) {
+      QHash<QString, QNetworkConfigurationPrivatePointer>::iterator it;
+      QHash<QString, QNetworkConfigurationPrivatePointer>::iterator end;
 
       QMutexLocker locker(&engine->mutex);
 
@@ -111,6 +107,7 @@ QNetworkConfiguration QNetworkConfigurationManagerPrivate::defaultConfiguration(
             QNetworkConfiguration config;
             config.d = ptr;
             return config;
+
          } else if (!defaultConfiguration) {
             if ((ptr->state & QNetworkConfiguration::Discovered) == QNetworkConfiguration::Discovered) {
                defaultConfiguration = ptr;
@@ -138,9 +135,9 @@ QNetworkConfiguration QNetworkConfigurationManagerPrivate::defaultConfiguration(
            6. Discovered Other
    */
 
-   foreach (QBearerEngine * engine, sessionEngines) {
-      QHash<QString, QNetworkConfigurationPrivatePointer>::Iterator it;
-      QHash<QString, QNetworkConfigurationPrivatePointer>::Iterator end;
+   for (QBearerEngine *engine : sessionEngines) {
+      QHash<QString, QNetworkConfigurationPrivatePointer>::iterator it;
+      QHash<QString, QNetworkConfigurationPrivatePointer>::iterator end;
 
       QMutexLocker locker(&engine->mutex);
 
@@ -195,16 +192,15 @@ QNetworkConfiguration QNetworkConfigurationManagerPrivate::defaultConfiguration(
    return QNetworkConfiguration();
 }
 
-QList<QNetworkConfiguration> QNetworkConfigurationManagerPrivate::allConfigurations(
-   QNetworkConfiguration::StateFlags filter) const
+QList<QNetworkConfiguration> QNetworkConfigurationManagerPrivate::allConfigurations(QNetworkConfiguration::StateFlags filter) const
 {
    QList<QNetworkConfiguration> result;
 
    QMutexLocker locker(&mutex);
 
-   foreach (QBearerEngine * engine, sessionEngines) {
-      QHash<QString, QNetworkConfigurationPrivatePointer>::Iterator it;
-      QHash<QString, QNetworkConfigurationPrivatePointer>::Iterator end;
+   for (QBearerEngine *engine : sessionEngines) {
+      QHash<QString, QNetworkConfigurationPrivatePointer>::iterator it;
+      QHash<QString, QNetworkConfigurationPrivatePointer>::iterator end;
 
       QMutexLocker locker(&engine->mutex);
 
@@ -246,7 +242,7 @@ QNetworkConfiguration QNetworkConfigurationManagerPrivate::configurationFromIden
 
    QMutexLocker locker(&mutex);
 
-   foreach (QBearerEngine * engine, sessionEngines) {
+   for (QBearerEngine *engine : sessionEngines) {
       QMutexLocker locker(&engine->mutex);
 
       if (engine->accessPointConfigurations.contains(identifier)) {
@@ -269,7 +265,7 @@ bool QNetworkConfigurationManagerPrivate::isOnline() const
 {
    QMutexLocker locker(&mutex);
 
-   return !onlineConfigurations.isEmpty();
+   return !allConfigurations(QNetworkConfiguration::Active).isEmpty();
 }
 
 QNetworkConfigurationManager::Capabilities QNetworkConfigurationManagerPrivate::capabilities() const
@@ -278,8 +274,9 @@ QNetworkConfigurationManager::Capabilities QNetworkConfigurationManagerPrivate::
 
    QNetworkConfigurationManager::Capabilities capFlags;
 
-   foreach (QBearerEngine * engine, sessionEngines)
-   capFlags |= engine->capabilities();
+   for (QBearerEngine *engine : sessionEngines) {
+      capFlags |= engine->capabilities();
+   }
 
    return capFlags;
 }
@@ -301,6 +298,7 @@ void QNetworkConfigurationManagerPrivate::configurationAdded(QNetworkConfigurati
       if (!firstUpdate && onlineConfigurations.count() == 1) {
          emit onlineStateChanged(true);
       }
+
    } else {
       ptr->mutex.unlock();
    }
@@ -364,20 +362,37 @@ void QNetworkConfigurationManagerPrivate::updateConfigurations()
 
       updating = false;
 
-      //
-      QBearerEngine *generic = 0;
-
+      QBearerEngine *generic = nullptr;
       QFactoryLoader *l = loader();
-      foreach (const QString & key, l->keys()) {
+
+      /*
+            // const PluginKeyMap keyMap = l->keyMap();
+            // const PluginKeyMapconst_iterator cend = keyMap.constEnd();
+            // QStringList addedEngines;
+
+            for (PluginKeyMapconst_iterator it = keyMap.constBegin(); it != cend; ++it) {
+               const QString &key = it.value();
+
+               if (addedEngines.contains(key))  {
+                  continue;
+               }
+
+               addedEngines.append(key);
+               if (QBearerEngine *engine = qLoadPlugin<QBearerEngine, QBearerEnginePlugin>(l, key)) {
+               }
+      */
+
+      for (const QString &key : l->keys())  {
          QBearerEnginePlugin *plugin = qobject_cast<QBearerEnginePlugin *>(l->instance(key));
 
          if (plugin) {
             QBearerEngine *engine = plugin->create(key);
-            if (!engine) {
+
+            if (! engine) {
                continue;
             }
 
-            if (key == QLatin1String("generic")) {
+            if (key == "generic") {
                generic = engine;
             } else {
                sessionEngines.append(engine);
@@ -402,10 +417,10 @@ void QNetworkConfigurationManagerPrivate::updateConfigurations()
       if (generic) {
          sessionEngines.append(generic);
       }
-
    }
 
    QBearerEngine *engine = qobject_cast<QBearerEngine *>(sender());
+
    if (engine && !updatingEngines.isEmpty()) {
       updatingEngines.remove(engine);
    }
@@ -424,10 +439,12 @@ void QNetworkConfigurationManagerPrivate::updateConfigurations()
 
    if (firstUpdate) {
       firstUpdate = false;
-      QList<QBearerEngine *> enginesToInitialize =
-         sessionEngines; //shallow copy the list in case it is modified when we unlock mutex
+
+      //shallow copy the list in case it is modified when we unlock mutex
+      QList<QBearerEngine *> enginesToInitialize = sessionEngines;
       locker.unlock();
-      foreach (QBearerEngine * engine, enginesToInitialize) {
+
+      for (QBearerEngine *engine : enginesToInitialize) {
          QMetaObject::invokeMethod(engine, "initialize", Qt::BlockingQueuedConnection);
       }
    }
@@ -444,7 +461,7 @@ void QNetworkConfigurationManagerPrivate::performAsyncConfigurationUpdate()
 
    updating = true;
 
-   foreach (QBearerEngine * engine, sessionEngines) {
+   for (QBearerEngine *engine : sessionEngines) {
       updatingEngines.insert(engine);
       QMetaObject::invokeMethod(engine, "requestUpdate");
    }
@@ -463,7 +480,14 @@ void QNetworkConfigurationManagerPrivate::startPolling()
 
    if (!pollTimer) {
       pollTimer = new QTimer(this);
-      pollTimer->setInterval(10000);
+      bool ok;
+      int interval = qgetenv("QT_BEARER_POLL_TIMEOUT").toInt(&ok);
+
+      if (! ok) {
+         interval = 10000;//default 10 seconds
+      }
+
+      pollTimer->setInterval(interval);
       pollTimer->setSingleShot(true);
       connect(pollTimer, SIGNAL(timeout()), this, SLOT(pollEngines()));
    }
@@ -472,19 +496,21 @@ void QNetworkConfigurationManagerPrivate::startPolling()
       return;
    }
 
-   foreach (QBearerEngine * engine, sessionEngines) {
+   for (QBearerEngine *engine : sessionEngines) {
       if (engine->requiresPolling() && (forcedPolling || engine->configurationsInUse())) {
          pollTimer->start();
          break;
       }
    }
+
+   performAsyncConfigurationUpdate();
 }
 
 void QNetworkConfigurationManagerPrivate::pollEngines()
 {
    QMutexLocker locker(&mutex);
 
-   foreach (QBearerEngine * engine, sessionEngines) {
+   for (QBearerEngine *engine : sessionEngines) {
       if (engine->requiresPolling() && (forcedPolling || engine->configurationsInUse())) {
          pollingEngines.insert(engine);
          QMetaObject::invokeMethod(engine, "requestUpdate");
@@ -510,6 +536,5 @@ void QNetworkConfigurationManagerPrivate::disablePolling()
    --forcedPolling;
 }
 
-QT_END_NAMESPACE
 
 #endif // QT_NO_BEARERMANAGEMENT

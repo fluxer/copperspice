@@ -18,14 +18,25 @@ bin_lrelease_SOURCES = \
 	src/tools/shared/ioutils.cpp \
 	src/tools/lrelease/main.cpp
 
-$(bin_lrelease_SOURCES) : $(CORE_HEADERS_INSTALLED) $(XML_HEADERS_INSTALLED) 
+if OSTYPE_BSD
+bin_lrelease_LDFLAGS='-Wl,-rpath,$$ORIGIN/../lib'
+endif
 
+if OSTYPE_DARWIN
+bin_lrelease_LDFLAGS='-Wl,-rpath,$$ORIGIN/../lib'
+endif
 
-bin_lrelease_CXXFLAGS = $(lib_libCsCore1_la_CXXFLAGS) \
+if OSTYPE_LINUX
+bin_lrelease_LDFLAGS='-Wl,-rpath,$$ORIGIN/../lib'
+endif
+
+$(bin_lrelease_SOURCES) : $(CORE_HEADERS_INSTALLED) $(XML_HEADERS_INSTALLED)
+
+bin_lrelease_CXXFLAGS = $(lib_libCsCore@BUILD_ABI@_la_CXXFLAGS) \
    -Iinclude/QtCore -Iinclude/QtXml \
    -Iprivateinclude/QtCore/private  -I$(top_srcdir)/src/tools/shared
 
-bin_lrelease_LDADD = lib/libCsCore1.la lib/libCsXml1.la
+bin_lrelease_LDADD = lib/libCsCore@BUILD_ABI@.la lib/libCsXml@BUILD_ABI@.la
 
 if OSTYPE_WIN
    bin_lrelease_LDADD += -luuid

@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -54,15 +51,16 @@ QGLFramebufferObjectPool *qgl_fbo_pool();
 class QGLPixmapGLPaintDevice : public QGLPaintDevice
 {
  public:
-   QPaintEngine *paintEngine() const;
+   QPaintEngine *paintEngine() const override;
 
-   void beginPaint();
-   void endPaint();
-   QGLContext *context() const;
-   QSize size() const;
-   bool alphaRequested() const;
+   void beginPaint() override;
+   void endPaint() override;
+   QGLContext *context() const override;
+   QSize size() const override;
+   bool alphaRequested() const override;
 
    void setPixmapData(QGLPixmapData *);
+
  private:
    QGLPixmapData *data;
 };
@@ -73,24 +71,21 @@ class Q_OPENGL_EXPORT QGLPixmapData : public QPixmapData
    QGLPixmapData(PixelType type);
    ~QGLPixmapData();
 
-   QPixmapData *createCompatiblePixmapData() const;
+   QPixmapData *createCompatiblePixmapData() const override;
 
    // Re-implemented from QPixmapData:
-   void resize(int width, int height);
-   void fromImage(const QImage &image, Qt::ImageConversionFlags flags);
-   void fromImageReader(QImageReader *imageReader,
-                        Qt::ImageConversionFlags flags);
-   bool fromFile(const QString &filename, const char *format,
-                 Qt::ImageConversionFlags flags);
-   bool fromData(const uchar *buffer, uint len, const char *format,
-                 Qt::ImageConversionFlags flags);
-   void copy(const QPixmapData *data, const QRect &rect);
-   bool scroll(int dx, int dy, const QRect &rect);
-   void fill(const QColor &color);
-   bool hasAlphaChannel() const;
-   QImage toImage() const;
-   QPaintEngine *paintEngine() const;
-   int metric(QPaintDevice::PaintDeviceMetric metric) const;
+   void resize(int width, int height) override;
+   void fromImage(const QImage &image, Qt::ImageConversionFlags flags) override;
+   void fromImageReader(QImageReader *imageReader, Qt::ImageConversionFlags flags) override;
+   bool fromFile(const QString &filename, const char *format, Qt::ImageConversionFlags flags) override;
+   bool fromData(const uchar *buffer, uint len, const char *format, Qt::ImageConversionFlags flags) override;
+   void copy(const QPixmapData *data, const QRect &rect) override;
+   bool scroll(int dx, int dy, const QRect &rect) override;
+   void fill(const QColor &color) override;
+   bool hasAlphaChannel() const override;
+   QImage toImage() const override;
+   QPaintEngine *paintEngine() const override;
+   int metric(QPaintDevice::PaintDeviceMetric metric) const override;
 
    // For accessing as a target:
    QGLPaintDevice *glDevice() const;
@@ -115,8 +110,6 @@ class Q_OPENGL_EXPORT QGLPixmapData : public QPixmapData
    QColor fillColor() const {
       return m_fillColor;
    }
-
-
 
    QGLPixmapData(const QGLPixmapData &other);
    QGLPixmapData &operator=(const QGLPixmapData &other);

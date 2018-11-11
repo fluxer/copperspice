@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -45,9 +42,7 @@ const int QT_RASTER_COORD_LIMIT = 32767;
 
 //#define QT_DEBUG_CONVERT
 
-/********************************************************************************
- * class QOutlineMapper
- *
+/**
  * Used to map between QPainterPath and the QT_FT_Outline structure used by the
  * freetype scanconvertor.
  *
@@ -70,11 +65,8 @@ class QOutlineMapper
       m_in_clip_elements(false) {
    }
 
-   /*!
-     Sets up the matrix to be used for conversion. This also
-     sets up the qt_path_iterator function that is used as a callback
-     to get points.
-   */
+   //  Sets up the matrix to be used for conversion. This also
+   //  sets up the qt_path_iterator function that is used as a callback to get points.
    void setMatrix(const QTransform &m) {
       m_m11 = m.m11();
       m_m12 = m.m12();

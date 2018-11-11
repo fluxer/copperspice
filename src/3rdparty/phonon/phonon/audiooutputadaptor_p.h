@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,7 +23,9 @@
 #ifndef PHONON_AUDIOOUTPUTADAPTOR_P_H
 #define PHONON_AUDIOOUTPUTADAPTOR_P_H
 
-#include <QtCore/QObject>
+#include <QObject>
+#include <qcontainerfwd.h>
+#include <qstringfwd.h>
 
 #ifndef QT_NO_DBUS
 #include <QtDBus/QtDBus>
@@ -34,9 +33,6 @@
 QT_BEGIN_NAMESPACE
 
 class QByteArray;
-template<class T> class QList;
-template<class Key, class Value> class QMap;
-class QString;
 class QStringList;
 class QVariant;
 
@@ -107,22 +103,22 @@ public:
     void setVolume(double value);
 
     PHN_CS_SLOT_1(Public, QString category())
-    PHN_CS_SLOT_2(category) 
+    PHN_CS_SLOT_2(category)
     PHN_CS_SLOT_1(Public, QString name())
-    PHN_CS_SLOT_2(name) 
+    PHN_CS_SLOT_2(name)
 
     PHN_CS_SIGNAL_1(Public, void mutedChanged(bool in0))
-    PHN_CS_SIGNAL_2(mutedChanged,in0) 
+    PHN_CS_SIGNAL_2(mutedChanged,in0)
     PHN_CS_SIGNAL_1(Public, void nameChanged(const QString & newName))
-    PHN_CS_SIGNAL_2(nameChanged,newName) 
+    PHN_CS_SIGNAL_2(nameChanged,newName)
     PHN_CS_SIGNAL_1(Public, void newOutputAvailable(const QString & service,const QString & path))
-    PHN_CS_SIGNAL_2(newOutputAvailable,service,path) 
+    PHN_CS_SIGNAL_2(newOutputAvailable,service,path)
     PHN_CS_SIGNAL_1(Public, void outputDestroyed())
-    PHN_CS_SIGNAL_2(outputDestroyed) 
+    PHN_CS_SIGNAL_2(outputDestroyed)
     PHN_CS_SIGNAL_1(Public, void outputDeviceIndexChanged(int in0))
-    PHN_CS_SIGNAL_2(outputDeviceIndexChanged,in0) 
+    PHN_CS_SIGNAL_2(outputDeviceIndexChanged,in0)
     PHN_CS_SIGNAL_1(Public, void volumeChanged(qreal in0))
-    PHN_CS_SIGNAL_2(volumeChanged,in0) 
+    PHN_CS_SIGNAL_2(volumeChanged,in0)
 };
 
 } // namespace Phonon

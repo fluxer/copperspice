@@ -1,29 +1,26 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
 
-#include <QtDebug>
+#include <QDebug>
 
 #include "qaxisstep_p.h"
 #include "qcommonsequencetypes_p.h"
@@ -167,20 +164,20 @@ Expression::Properties ApplyTemplate::properties() const
 
 bool ApplyTemplate::configureRecursion(const CallTargetDescription::Ptr &sign)
 {
-   Q_ASSERT_X(false, Q_FUNC_INFO, "We're not expected to be called.");
+   Q_ASSERT_X(false, Q_FUNC_INFO, "This function should never be called.");
    Q_UNUSED(sign);
    return false;
 }
 
 Expression::Ptr ApplyTemplate::body() const
 {
-   Q_ASSERT_X(false, Q_FUNC_INFO, "We're not expected to be called.");
+   Q_ASSERT_X(false, Q_FUNC_INFO, "This function should never be called.");
    return Expression::Ptr();
 }
 
 CallTargetDescription::Ptr ApplyTemplate::callTargetDescription() const
 {
-   Q_ASSERT_X(false, Q_FUNC_INFO, "We're not expected to be called.");
+   Q_ASSERT_X(false, Q_FUNC_INFO, "This function should never be called.");
    return CallTargetDescription::Ptr();
 }
 

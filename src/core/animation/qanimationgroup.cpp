@@ -1,74 +1,29 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
 
-/*!
-    \class QAnimationGroup
-    \brief The QAnimationGroup class is an abstract base class for groups of animations.
-    \since 4.6
-    \ingroup animation
-
-    An animation group is a container for animations (subclasses of
-    QAbstractAnimation). A group is usually responsible for managing
-    the \l{QAbstractAnimation::State}{state} of its animations, i.e.,
-    it decides when to start, stop, resume, and pause them. Currently,
-    Qt provides two such groups: QParallelAnimationGroup and
-    QSequentialAnimationGroup. Look up their class descriptions for
-    details.
-
-    Since QAnimationGroup inherits from QAbstractAnimation, you can
-    combine groups, and easily construct complex animation graphs.
-    You can query QAbstractAnimation for the group it belongs to
-    (using the \l{QAbstractAnimation::}{group()} function).
-
-    To start a top-level animation group, you simply use the
-    \l{QAbstractAnimation::}{start()} function from
-    QAbstractAnimation. By a top-level animation group, we think of a
-    group that itself is not contained within another group. Starting
-    sub groups directly is not supported, and may lead to unexpected
-    behavior.
-
-    \omit OK, we'll put in a snippet on this here \endomit
-
-    QAnimationGroup provides methods for adding and retrieving
-    animations. Besides that, you can remove animations by calling
-    remove(), and clear the animation group by calling
-    clear(). You may keep track of changes in the group's
-    animations by listening to QEvent::ChildAdded and
-    QEvent::ChildRemoved events.
-
-    \omit OK, let's find a snippet here as well. \endomit
-
-    QAnimationGroup takes ownership of the animations it manages, and
-    ensures that they are deleted when the animation group is deleted.
-
-    \sa QAbstractAnimation, QVariantAnimation, {The Animation Framework}
-*/
-
 #include <qanimationgroup.h>
-#include <QtCore/qdebug.h>
-#include <QtCore/qcoreevent.h>
+#include <qalgorithms.h>
+#include <qdebug.h>
+#include <qcoreevent.h>
 #include <qanimationgroup_p.h>
 
 #ifndef QT_NO_ANIMATION

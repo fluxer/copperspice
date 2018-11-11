@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -138,54 +135,34 @@ void QDialogPrivate::hideDefault()
 void QDialogPrivate::resetModalitySetByOpen()
 {
    Q_Q(QDialog);
+
    if (resetModalityTo != -1 && !q->testAttribute(Qt::WA_SetWindowModality)) {
       // open() changed the window modality and the user didn't touch it afterwards; restore it
       q->setWindowModality(Qt::WindowModality(resetModalityTo));
       q->setAttribute(Qt::WA_SetWindowModality, wasModalitySet);
+
 #ifdef Q_OS_MAC
       Q_ASSERT(resetModalityTo != Qt::WindowModal);
       q->setParent(q->parentWidget(), Qt::Dialog);
 #endif
+
    }
+
    resetModalityTo = -1;
 }
 
-/*!
-  In general returns the modal dialog's result code, \c Accepted or \c Rejected.
-
-  \note When used from QMessageBox instance the result code type is \l QMessageBox::StandardButton
-
-  Do not call this function if the dialog was constructed with the
-  Qt::WA_DeleteOnClose attribute.
-*/
 int QDialog::result() const
 {
    Q_D(const QDialog);
    return d->rescode;
 }
 
-/*!
-  \fn void QDialog::setResult(int i)
-
-  Sets the modal dialog's result code to \a i.
-
-  \note We recommend that you use one of the values defined by
-  QDialog::DialogCode.
-*/
 void QDialog::setResult(int r)
 {
    Q_D(QDialog);
    d->rescode = r;
 }
 
-/*!
-    \since 4.5
-
-    Shows the dialog as a \l{QDialog#Modal Dialogs}{window modal dialog},
-    returning immediately.
-
-    \sa exec(), show(), result(), setWindowModality()
-*/
 void QDialog::open()
 {
    Q_D(QDialog);
@@ -196,6 +173,7 @@ void QDialog::open()
       d->wasModalitySet = testAttribute(Qt::WA_SetWindowModality);
       setWindowModality(Qt::WindowModal);
       setAttribute(Qt::WA_SetWindowModality, false);
+
 #ifdef Q_OS_MAC
       setParent(parentWidget(), Qt::Sheet);
 #endif
@@ -204,20 +182,6 @@ void QDialog::open()
    setResult(0);
    show();
 }
-
-/*!
-    Shows the dialog as a \l{QDialog#Modal Dialogs}{modal dialog},
-    blocking until the user closes it. The function returns a \l
-    DialogCode result.
-
-    If the dialog is \l{Qt::ApplicationModal}{application modal}, users cannot
-    interact with any other window in the same application until they close
-    the dialog. If the dialog is \l{Qt::ApplicationModal}{window modal}, only
-    interaction with the parent window is blocked while the dialog is open.
-    By default, the dialog is application modal.
-
-    \sa open(), show(), result(), setWindowModality()
-*/
 
 int QDialog::exec()
 {
@@ -237,11 +201,6 @@ int QDialog::exec()
    setAttribute(Qt::WA_ShowModal, true);
    setResult(0);
 
-   bool showSystemDialogFullScreen = false;
-   if (showSystemDialogFullScreen) {
-      setWindowFlags(windowFlags() | Qt::WindowSoftkeysVisibleHint);
-      setWindowState(Qt::WindowFullScreen);
-   }
    show();
 
 #ifdef Q_OS_MAC
@@ -251,7 +210,9 @@ int QDialog::exec()
    QEventLoop eventLoop;
    d->eventLoop = &eventLoop;
    QPointer<QDialog> guard = this;
+
    (void) eventLoop.exec(QEventLoop::DialogExec);
+
    if (guard.isNull()) {
       return QDialog::Rejected;
    }
@@ -738,7 +699,9 @@ void QDialog::showExtension(bool showIt)
          d->extension->setGeometry(0, height(), w, s.height());
          setFixedSize(w, height() + s.height());
       }
+
       d->extension->show();
+
 #ifndef QT_NO_SIZEGRIP
       const bool sizeGripEnabled = isSizeGripEnabled();
       setSizeGripEnabled(false);
@@ -856,7 +819,6 @@ void QDialog::setSizeGripEnabled(bool enabled)
    }
 #endif //QT_NO_SIZEGRIP
 }
-
 
 
 /*! \reimp */

@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -43,7 +40,7 @@ class Q_GUI_EXPORT QBoxLayout : public QLayout
                     Down = TopToBottom, Up = BottomToTop
                   };
 
-   explicit QBoxLayout(Direction, QWidget *parent = 0);
+   explicit QBoxLayout(Direction, QWidget *parent = nullptr);
    ~QBoxLayout();
 
    Direction direction() const;
@@ -55,7 +52,7 @@ class Q_GUI_EXPORT QBoxLayout : public QLayout
    void addWidget(QWidget *, int stretch = 0, Qt::Alignment alignment = 0);
    void addLayout(QLayout *layout, int stretch = 0);
    void addStrut(int);
-   void addItem(QLayoutItem *);
+   void addItem(QLayoutItem *) override;
 
    void insertSpacing(int index, int size);
    void insertStretch(int index, int stretch = 0);
@@ -71,20 +68,20 @@ class Q_GUI_EXPORT QBoxLayout : public QLayout
    void setStretch(int index, int stretch);
    int stretch(int index) const;
 
-   QSize sizeHint() const;
-   QSize minimumSize() const;
-   QSize maximumSize() const;
+   QSize sizeHint() const override;
+   QSize minimumSize() const override;
+   QSize maximumSize() const override;
 
-   bool hasHeightForWidth() const;
-   int heightForWidth(int) const;
-   int minimumHeightForWidth(int) const;
+   bool hasHeightForWidth() const override;
+   int heightForWidth(int) const override;
+   int minimumHeightForWidth(int) const override;
 
-   Qt::Orientations expandingDirections() const;
-   void invalidate();
-   QLayoutItem *itemAt(int) const;
-   QLayoutItem *takeAt(int);
-   int count() const;
-   void setGeometry(const QRect &);
+   Qt::Orientations expandingDirections() const override;
+   void invalidate() override;
+   QLayoutItem *itemAt(int) const override;
+   QLayoutItem *takeAt(int) override;
+   int count() const override;
+   void setGeometry(const QRect &) override;
 
    void insertItem(int index, QLayoutItem *);
 

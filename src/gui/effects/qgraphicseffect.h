@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -73,7 +70,7 @@ class Q_GUI_EXPORT QGraphicsEffect : public QObject
       PadToEffectiveBoundingRect
    };
 
-   QGraphicsEffect(QObject *parent = 0);
+   QGraphicsEffect(QObject *parent = nullptr);
    virtual ~QGraphicsEffect();
 
    virtual QRectF boundingRectFor(const QRectF &sourceRect) const;
@@ -92,7 +89,7 @@ class Q_GUI_EXPORT QGraphicsEffect : public QObject
    GUI_CS_SIGNAL_2(enabledChanged, enabled)
 
  protected:
-   QGraphicsEffect(QGraphicsEffectPrivate &d, QObject *parent = 0);
+   QGraphicsEffect(QGraphicsEffectPrivate &d, QObject *parent = nullptr);
    virtual void draw(QPainter *painter) = 0;
    virtual void sourceChanged(ChangeFlags flags);
    void updateBoundingRect();
@@ -132,7 +129,7 @@ class Q_GUI_EXPORT QGraphicsColorizeEffect: public QGraphicsEffect
    GUI_CS_PROPERTY_NOTIFY(strength, strengthChanged)
 
  public:
-   QGraphicsColorizeEffect(QObject *parent = 0);
+   QGraphicsColorizeEffect(QObject *parent = nullptr);
    ~QGraphicsColorizeEffect();
 
    QColor color() const;
@@ -149,7 +146,7 @@ class Q_GUI_EXPORT QGraphicsColorizeEffect: public QGraphicsEffect
    GUI_CS_SIGNAL_2(strengthChanged, strength)
 
  protected:
-   void draw(QPainter *painter);
+   void draw(QPainter *painter) override;
 
  private:
    Q_DECLARE_PRIVATE(QGraphicsColorizeEffect)
@@ -176,10 +173,10 @@ class Q_GUI_EXPORT QGraphicsBlurEffect: public QGraphicsEffect
    };
    using BlurHints = QFlags<BlurHint>;
 
-   QGraphicsBlurEffect(QObject *parent = 0);
+   QGraphicsBlurEffect(QObject *parent = nullptr);
    ~QGraphicsBlurEffect();
 
-   QRectF boundingRectFor(const QRectF &rect) const;
+   QRectF boundingRectFor(const QRectF &rect) const override;
    qreal blurRadius() const;
    BlurHints blurHints() const;
 
@@ -194,7 +191,7 @@ class Q_GUI_EXPORT QGraphicsBlurEffect: public QGraphicsEffect
    GUI_CS_SIGNAL_2(blurHintsChanged, hints)
 
  protected:
-   void draw(QPainter *painter);
+   void draw(QPainter *painter) override;
 
  private:
    Q_DECLARE_PRIVATE(QGraphicsBlurEffect)
@@ -209,26 +206,29 @@ class Q_GUI_EXPORT QGraphicsDropShadowEffect: public QGraphicsEffect
 
    GUI_CS_PROPERTY_READ(offset, offset)
    GUI_CS_PROPERTY_WRITE(offset, cs_setOffset)
-
    GUI_CS_PROPERTY_NOTIFY(offset, offsetChanged)
+
    GUI_CS_PROPERTY_READ(xOffset, xOffset)
    GUI_CS_PROPERTY_WRITE(xOffset, setXOffset)
    GUI_CS_PROPERTY_NOTIFY(xOffset, offsetChanged)
+
    GUI_CS_PROPERTY_READ(yOffset, yOffset)
    GUI_CS_PROPERTY_WRITE(yOffset, setYOffset)
    GUI_CS_PROPERTY_NOTIFY(yOffset, offsetChanged)
+
    GUI_CS_PROPERTY_READ(blurRadius, blurRadius)
    GUI_CS_PROPERTY_WRITE(blurRadius, setBlurRadius)
    GUI_CS_PROPERTY_NOTIFY(blurRadius, blurRadiusChanged)
+
    GUI_CS_PROPERTY_READ(color, color)
    GUI_CS_PROPERTY_WRITE(color, setColor)
    GUI_CS_PROPERTY_NOTIFY(color, colorChanged)
 
  public:
-   QGraphicsDropShadowEffect(QObject *parent = 0);
+   QGraphicsDropShadowEffect(QObject *parent = nullptr);
    ~QGraphicsDropShadowEffect();
 
-   QRectF boundingRectFor(const QRectF &rect) const;
+   QRectF boundingRectFor(const QRectF &rect) const override;
    QPointF offset() const;
 
    inline qreal xOffset() const;
@@ -271,7 +271,7 @@ class Q_GUI_EXPORT QGraphicsDropShadowEffect: public QGraphicsEffect
    inline void cs_setOffset(const QPointF &ofs);
 
  protected:
-   void draw(QPainter *painter);
+   void draw(QPainter *painter) override;
 
  private:
    Q_DECLARE_PRIVATE(QGraphicsDropShadowEffect)
@@ -285,12 +285,13 @@ class Q_GUI_EXPORT QGraphicsOpacityEffect: public QGraphicsEffect
    GUI_CS_PROPERTY_READ(opacity, opacity)
    GUI_CS_PROPERTY_WRITE(opacity, setOpacity)
    GUI_CS_PROPERTY_NOTIFY(opacity, opacityChanged)
+
    GUI_CS_PROPERTY_READ(opacityMask, opacityMask)
    GUI_CS_PROPERTY_WRITE(opacityMask, setOpacityMask)
    GUI_CS_PROPERTY_NOTIFY(opacityMask, opacityMaskChanged)
 
  public:
-   QGraphicsOpacityEffect(QObject *parent = 0);
+   QGraphicsOpacityEffect(QObject *parent = nullptr);
    ~QGraphicsOpacityEffect();
 
    qreal opacity() const;
@@ -307,34 +308,34 @@ class Q_GUI_EXPORT QGraphicsOpacityEffect: public QGraphicsEffect
    GUI_CS_SIGNAL_2(opacityMaskChanged, mask)
 
  protected:
-   void draw(QPainter *painter);
+   void draw(QPainter *painter) override;
 
  private:
    Q_DECLARE_PRIVATE(QGraphicsOpacityEffect)
    Q_DISABLE_COPY(QGraphicsOpacityEffect)
 };
 
-qreal QGraphicsDropShadowEffect::xOffset() const
+inline qreal QGraphicsDropShadowEffect::xOffset() const
 {
    return offset().x();
 }
 
-qreal QGraphicsDropShadowEffect::yOffset() const
+inline qreal QGraphicsDropShadowEffect::yOffset() const
 {
    return offset().y();
 }
 
-void QGraphicsDropShadowEffect::setXOffset(qreal dx)
+inline void QGraphicsDropShadowEffect::setXOffset(qreal dx)
 {
    setOffset(QPointF(dx, yOffset()));
 }
 
-void QGraphicsDropShadowEffect::setYOffset(qreal dy)
+inline void QGraphicsDropShadowEffect::setYOffset(qreal dy)
 {
    setOffset(QPointF(xOffset(), dy));
 }
 
-void QGraphicsDropShadowEffect::cs_setOffset(const QPointF &ofs)
+inline void QGraphicsDropShadowEffect::cs_setOffset(const QPointF &ofs)
 {
    setOffset(ofs);
 }

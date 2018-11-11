@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -39,8 +36,9 @@ QT_BEGIN_NAMESPACE
 
 void QWindowsFileSystemWatcherEngine::stop()
 {
-   foreach(QWindowsFileSystemWatcherEngineThread * thread, threads)
-   thread->stop();
+   for (QWindowsFileSystemWatcherEngineThread * thread : threads) {
+      thread->stop();
+   }
 }
 
 QWindowsFileSystemWatcherEngine::QWindowsFileSystemWatcherEngine()
@@ -54,14 +52,14 @@ QWindowsFileSystemWatcherEngine::~QWindowsFileSystemWatcherEngine()
       return;
    }
 
-   foreach(QWindowsFileSystemWatcherEngineThread * thread, threads) {
+   for (QWindowsFileSystemWatcherEngineThread * thread : threads) {
       thread->stop();
       thread->wait();
       delete thread;
    }
 }
 
-QStringList QWindowsFileSystemWatcherEngine::addPaths(const QStringList &paths, 
+QStringList QWindowsFileSystemWatcherEngine::addPaths(const QStringList &paths,
       QStringList *files, QStringList *directories)
 {
    // qDebug()<<"Adding"<<paths.count()<<"to existing"<<(files->count() + directories->count())<<"watchers";
@@ -148,19 +146,22 @@ QStringList QWindowsFileSystemWatcherEngine::addPaths(const QStringList &paths,
          // qDebug()<<"  No thread found";
          // Volume and folder paths need a trailing slash for proper notification
          // (e.g. "c:" -> "c:/").
-         const QString effectiveAbsolutePath =
-            isDir ? (absolutePath + QLatin1Char('/')) : absolutePath;
 
-         handle.handle = FindFirstChangeNotification((wchar_t *) QDir::toNativeSeparators(effectiveAbsolutePath).utf16(), false,
-                         flags);
-         handle.flags = flags;
+         const QString effectiveAbsolutePath = isDir ? (absolutePath + '/') : absolutePath;
+
+         handle.handle = FindFirstChangeNotification(&QDir::toNativeSeparators(effectiveAbsolutePath).toStdWString()[0],
+                  false, flags);
+
+         handle.flags  = flags;
+
          if (handle.handle == INVALID_HANDLE_VALUE) {
             continue;
          }
 
          // now look for a thread to insert
          bool found = false;
-         foreach(QWindowsFileSystemWatcherEngineThread * thread, threads) {
+
+         for (QWindowsFileSystemWatcherEngineThread * thread : threads) {
             QMutexLocker(&(thread->mutex));
             if (thread->handles.count() < MAXIMUM_WAIT_OBJECTS) {
                // qDebug() << "  Added handle" << handle.handle << "for" << absolutePath << "to watch" << fileInfo.absoluteFilePath();
@@ -317,7 +318,7 @@ QWindowsFileSystemWatcherEngineThread::~QWindowsFileSystemWatcherEngineThread()
    CloseHandle(handles.at(0));
    handles[0] = INVALID_HANDLE_VALUE;
 
-   foreach (HANDLE h, handles) {
+   for (HANDLE h : handles) {
       if (h == INVALID_HANDLE_VALUE) {
          continue;
       }

@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -75,11 +72,11 @@ class QTableModel : public QAbstractTableModel
    QTableModel(int rows, int columns, QTableWidget *parent);
    ~QTableModel();
 
-   bool insertRows(int row, int count = 1, const QModelIndex &parent = QModelIndex());
-   bool insertColumns(int column, int count = 1, const QModelIndex &parent = QModelIndex());
+   bool insertRows(int row, int count = 1, const QModelIndex &parent = QModelIndex()) override;
+   bool insertColumns(int column, int count = 1, const QModelIndex &parent = QModelIndex()) override;
 
-   bool removeRows(int row, int count = 1, const QModelIndex &parent = QModelIndex());
-   bool removeColumns(int column, int count = 1, const QModelIndex &parent = QModelIndex());
+   bool removeRows(int row, int count = 1, const QModelIndex &parent = QModelIndex()) override;
+   bool removeColumns(int column, int count = 1, const QModelIndex &parent = QModelIndex()) override;
 
    void setItem(int row, int column, QTableWidgetItem *item);
    QTableWidgetItem *takeItem(int row, int column);
@@ -94,7 +91,7 @@ class QTableModel : public QAbstractTableModel
    QTableWidgetItem *horizontalHeaderItem(int section);
    QTableWidgetItem *verticalHeaderItem(int section);
 
-   QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const {
+   QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const override {
       return QAbstractTableModel::index(row, column, parent);
    }
 
@@ -103,21 +100,21 @@ class QTableModel : public QAbstractTableModel
    void setRowCount(int rows);
    void setColumnCount(int columns);
 
-   int rowCount(const QModelIndex &parent = QModelIndex()) const;
-   int columnCount(const QModelIndex &parent = QModelIndex()) const;
+   int rowCount(const QModelIndex &parent = QModelIndex()) const override;
+   int columnCount(const QModelIndex &parent = QModelIndex()) const override;
 
-   QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
-   bool setData(const QModelIndex &index, const QVariant &value, int role);
-   bool setItemData(const QModelIndex &index, const QMap<int, QVariant> &roles);
+   QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
+   bool setData(const QModelIndex &index, const QVariant &value, int role) override;
+   bool setItemData(const QModelIndex &index, const QMap<int, QVariant> &roles) override;
 
-   QMap<int, QVariant> itemData(const QModelIndex &index) const;
+   QMap<int, QVariant> itemData(const QModelIndex &index) const override;
 
-   QVariant headerData(int section, Qt::Orientation orientation, int role) const;
-   bool setHeaderData(int section, Qt::Orientation orientation, const QVariant &value, int role);
+   QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
+   bool setHeaderData(int section, Qt::Orientation orientation, const QVariant &value, int role) override;
 
-   Qt::ItemFlags flags(const QModelIndex &index) const;
+   Qt::ItemFlags flags(const QModelIndex &index) const override;
 
-   void sort(int column, Qt::SortOrder order);
+   void sort(int column, Qt::SortOrder order) override;
    static bool itemLessThan(const QPair<QTableWidgetItem *, int> &left, const QPair<QTableWidgetItem *, int> &right);
    static bool itemGreaterThan(const QPair<QTableWidgetItem *, int> &left, const QPair<QTableWidgetItem *, int> &right);
 
@@ -142,10 +139,10 @@ class QTableModel : public QAbstractTableModel
    void setItemPrototype(const QTableWidgetItem *item);
 
    // dnd
-   QStringList mimeTypes() const;
-   QMimeData *mimeData(const QModelIndexList &indexes) const;
-   bool dropMimeData(const QMimeData *data, Qt::DropAction action,int row, int column, const QModelIndex &parent);
-   Qt::DropActions supportedDropActions() const;
+   QStringList mimeTypes() const override;
+   QMimeData *mimeData(const QModelIndexList &indexes) const override;
+   bool dropMimeData(const QMimeData *data, Qt::DropAction action,int row, int column, const QModelIndex &parent) override;
+   Qt::DropActions supportedDropActions() const override;
 
    QMimeData *internalMimeData()  const;
 

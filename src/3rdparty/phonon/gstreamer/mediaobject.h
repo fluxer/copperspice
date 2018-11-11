@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -37,8 +34,8 @@
 #include <QtCore/QVariant>
 #include <QtCore/QObject>
 #include <QtCore/QDate>
-#include <QtCore/QEvent>
 #include <QtCore/QUrl>
+#include <qcoreevent.h>
 #include <gst/gst.h>
 
 QT_BEGIN_NAMESPACE
@@ -57,6 +54,7 @@ class VideoPath;
 class AudioOutput;
 
 class MediaObject : public QObject, public MediaObjectInterface
+
 #ifndef QT_NO_PHONON_MEDIACONTROLLER
         , public AddonInterface
 #endif
@@ -72,48 +70,46 @@ class MediaObject : public QObject, public MediaObjectInterface
 #else
    CS_INTERFACES(Phonon::MediaObjectInterface, Phonon::Gstreamer::MediaNode)
 #endif
-   
-
+  
 public:
-
     MediaObject(Backend *backend, QObject *parent);
     ~MediaObject();
-    Phonon::State state() const;
 
-    bool hasVideo() const;
-    bool isSeekable() const;
+    Phonon::State state() const override;
 
-    qint64 currentTime() const;
-    qint32 tickInterval() const;
+    bool hasVideo() const override;
+    bool isSeekable() const override;
 
-    void setTickInterval(qint32 newTickInterval);
+    qint64 currentTime() const override;
+    qint32 tickInterval() const override;
+    void setTickInterval(qint32 newTickInterval) override;
 
-    void play();
-    void pause();
-    void stop();
-    void seek(qint64 time);
+    void play() override;
+    void pause() override;
+    void stop() override;
+    void seek(qint64 time) override;
 
-    QString errorString() const;
-    Phonon::ErrorType errorType() const;
+    QString errorString() const override;
+    Phonon::ErrorType errorType() const override;
 
     QUrl url() const;
-    qint64 totalTime() const;
+    qint64 totalTime() const override;
 
-    qint32 prefinishMark() const;
-    void setPrefinishMark(qint32 newPrefinishMark);
+    qint32 prefinishMark() const override;
+    void setPrefinishMark(qint32 newPrefinishMark) override;
 
-    qint32 transitionTime() const;
-    void setTransitionTime(qint32);
-    qint64 remainingTime() const;
+    qint32 transitionTime() const override;
+    void setTransitionTime(qint32) override;
+    qint64 remainingTime() const override;
 
-    void setSource(const MediaSource &source);
-    void setNextSource(const MediaSource &source);
-    MediaSource source() const;
+    void setSource(const MediaSource &source) override;
+    void setNextSource(const MediaSource &source) override;
+    MediaSource source() const override; 
 
     // No additional interfaces currently supported
 #ifndef QT_NO_PHONON_MEDIACONTROLLER
-    bool hasInterface(Interface) const;
-    QVariant interfaceCall(Interface, int, const QList<QVariant> &);
+    bool hasInterface(Interface) const override;
+    QVariant interfaceCall(Interface, int, const QList<QVariant> &) override;
 #endif
 
     bool isLoading()
@@ -241,6 +237,18 @@ protected:
     bool createPipefromURL(const QUrl &url);
     bool createPipefromStream(const MediaSource &);
 
+   GstElement *audioElement() override
+    {
+        Q_ASSERT(m_audioPipe);
+        return m_audioPipe;
+    }
+
+    GstElement *videoElement() override
+    {
+        Q_ASSERT(m_videoPipe);
+        return m_videoPipe;
+    }
+
 private :
     GSTRM_CS_SLOT_1(Private, void noMorePadsAvailable())
     GSTRM_CS_SLOT_2(noMorePadsAvailable)     
@@ -255,22 +263,7 @@ private :
     GSTRM_CS_SLOT_1(Private, void notifyStateChange(Phonon::State newstate,Phonon::State oldstate))
     GSTRM_CS_SLOT_2(notifyStateChange) 
 
-protected:
-    GstElement *audioElement()
-    {
-        Q_ASSERT(m_audioPipe);
-        return m_audioPipe;
-    }
-
-    GstElement *videoElement()
-    {
-        Q_ASSERT(m_videoPipe);
-        return m_videoPipe;
-    }
-
-private:
-
-    // GStreamer specific :
+    // GStreamer specific 
     void createPipeline();
     bool addToPipeline(GstElement *elem);
     void setTotalTime(qint64 newTime);
@@ -297,7 +290,7 @@ private:
     MediaSource m_nextSource;
     qint32 m_prefinishMark;
     qint32 m_transitionTime;
-	bool m_isStream;
+	 bool m_isStream;
 
     qint64 m_posAtSeek;
 

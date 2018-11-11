@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -63,27 +60,28 @@ class QPdfEngine : public QPdfBaseEngine
    virtual ~QPdfEngine();
 
    // reimplementations QPaintEngine
-   bool begin(QPaintDevice *pdev);
-   bool end();
-   void drawPixmap (const QRectF &rectangle, const QPixmap &pixmap, const QRectF &sr);
-   void drawImage(const QRectF &r, const QImage &pm, const QRectF &sr,
-                  Qt::ImageConversionFlags flags = Qt::AutoColor);
-   void drawTiledPixmap (const QRectF &rectangle, const QPixmap &pixmap, const QPointF &point);
+   bool begin(QPaintDevice *pdev) override;
+   bool end() override;
+   void drawPixmap (const QRectF &rectangle, const QPixmap &pixmap, const QRectF &sr) override;
 
-   Type type() const;
-   // end reimplementations QPaintEngine
+   void drawImage(const QRectF &r, const QImage &pm, const QRectF &sr,
+                  Qt::ImageConversionFlags flags = Qt::AutoColor) override;
+
+   void drawTiledPixmap (const QRectF &rectangle, const QPixmap &pixmap, const QPointF &point) override;
+   Type type() const override;
+
 
    // reimplementations QPrintEngine
-   bool abort() {
+   bool abort() override {
       return false;
    }
-   bool newPage();
-   QPrinter::PrinterState printerState() const {
+
+   bool newPage() override;
+   QPrinter::PrinterState printerState() const override {
       return state;
    }
-   // end reimplementations QPrintEngine
 
-   void setBrush();
+   void setBrush() override;
 
    // ### unused, should have something for this in QPrintEngine
    void setAuthor(const QString &author);
@@ -111,6 +109,7 @@ class QPdfEnginePrivate : public QPdfBaseEnginePrivate
       QRect r = paperRect();
       return qRound(r.width() * 72. / resolution);
    }
+
    int height() const {
       QRect r = paperRect();
       return qRound(r.height() * 72. / resolution);
@@ -123,7 +122,7 @@ class QPdfEnginePrivate : public QPdfBaseEnginePrivate
    int addConstantAlphaObject(int brushAlpha, int penAlpha = 255);
    int addBrushPattern(const QTransform &matrix, bool *specifyColor, int *gStateObject);
 
-   void drawTextItem(const QPointF &p, const QTextItemInt &ti);
+   void drawTextItem(const QPointF &p, const QTextItemInt &ti) override;
 
    QTransform pageMatrix() const;
 

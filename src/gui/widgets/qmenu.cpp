@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -56,7 +53,6 @@
 #include <qtooltip.h>
 #include <qpushbutton_p.h>
 #include <qaction_p.h>
-#include <qsoftkeymanager_p.h>
 
 #ifdef Q_WS_X11
 #   include <qt_x11_p.h>
@@ -81,6 +77,7 @@ class QTornOffMenu : public QMenu
    class QTornOffMenuPrivate : public QMenuPrivate
    {
       Q_DECLARE_PUBLIC(QMenu)
+
     public:
       QTornOffMenuPrivate(QMenu *p) : causedMenu(p) {
          tornoff = 1;
@@ -88,32 +85,40 @@ class QTornOffMenu : public QMenu
          causedPopup.action = ((QTornOffMenu *)p)->d_func()->causedPopup.action;
          causedStack = ((QTornOffMenu *)p)->d_func()->calcCausedStack();
       }
-      QList<QPointer<QWidget> > calcCausedStack() const {
+
+      QList<QPointer<QWidget> > calcCausedStack() const override {
          return causedStack;
       }
+
       QPointer<QMenu> causedMenu;
       QList<QPointer<QWidget> > causedStack;
    };
+
  public:
    QTornOffMenu(QMenu *p) : QMenu(*(new QTornOffMenuPrivate(p))) {
       Q_D(QTornOffMenu);
+
       // make the torn-off menu a sibling of p (instead of a child)
       QWidget *parentWidget = d->causedStack.isEmpty() ? p : d->causedStack.last();
       if (parentWidget->parentWidget()) {
          parentWidget = parentWidget->parentWidget();
       }
+
       setParent(parentWidget, Qt::Window | Qt::Tool);
       setAttribute(Qt::WA_DeleteOnClose, true);
       setAttribute(Qt::WA_X11NetWmWindowTypeMenu, true);
       setWindowTitle(p->windowTitle());
       setEnabled(p->isEnabled());
+
       //QObject::connect(this, SIGNAL(triggered(QAction*)), this, SLOT(onTrigger(QAction*)));
       //QObject::connect(this, SIGNAL(hovered(QAction*)), this, SLOT(onHovered(QAction*)));
+
       QList<QAction *> items = p->actions();
       for (int i = 0; i < items.count(); i++) {
          addAction(items.at(i));
       }
    }
+
    void syncWithMenu(QMenu *menu, QActionEvent *act) {
       Q_D(QTornOffMenu);
       if (menu != d->causedMenu) {
@@ -125,7 +130,8 @@ class QTornOffMenu : public QMenu
          removeAction(act->action());
       }
    }
-   void actionEvent(QActionEvent *e) {
+
+   void actionEvent(QActionEvent *e)  override {
       QMenu::actionEvent(e);
       setFixedSize(sizeHint());
    }
@@ -169,16 +175,6 @@ void QMenuPrivate::init()
       scroll = new QMenuPrivate::QMenuScroller;
       scroll->scrollFlags = QMenuPrivate::QMenuScroller::ScrollNone;
    }
-
-#ifdef QT_SOFTKEYS_ENABLED
-   selectAction = QSoftKeyManager::createKeyedAction(QSoftKeyManager::SelectSoftKey, Qt::Key_Select, q);
-   cancelAction = QSoftKeyManager::createKeyedAction(QSoftKeyManager::CancelSoftKey, Qt::Key_Back, q);
-   selectAction->setPriority(QAction::HighPriority);
-   cancelAction->setPriority(QAction::HighPriority);
-   q->addAction(selectAction);
-   q->addAction(cancelAction);
-#endif
-
 }
 
 int QMenuPrivate::scrollerHeight() const
@@ -286,7 +282,7 @@ void QMenuPrivate::updateActionRects(const QRect &screen) const
       hasCheckableItems |= action->isCheckable();
       QIcon is = action->icon();
       if (!is.isNull()) {
-         maxIconWidth = qMax<uint>(maxIconWidth, icone + 4);
+         maxIconWidth = qMax(maxIconWidth, icone + 4);
       }
    }
 
@@ -318,17 +314,21 @@ void QMenuPrivate::updateActionRects(const QRect &screen) const
          } else {
             QString s = action->text();
             int t = s.indexOf(QLatin1Char('\t'));
+
             if (t != -1) {
                tabWidth = qMax(int(tabWidth), qfm.width(s.mid(t + 1)));
                s = s.left(t);
+
 #ifndef QT_NO_SHORTCUT
             } else {
                QKeySequence seq = action->shortcut();
-               if (!seq.isEmpty()) {
-                  tabWidth = qMax(int(tabWidth), qfm.width(seq));
+
+               if (! seq.isEmpty()) {
+                  tabWidth = qMax(int(tabWidth), qfm.width(seq.toString(QKeySequence::NativeText)));
                }
 #endif
             }
+
             sz.setWidth(fm.boundingRect(QRect(), Qt::TextSingleLine | Qt::TextShowMnemonic, s).width());
             sz.setHeight(qMax(fm.height(), qfm.height()));
 
@@ -1295,14 +1295,18 @@ void QMenu::initStyleOption(QStyleOptionMenuItem *option, const QAction *action)
    if (action->isIconVisibleInMenu()) {
       option->icon = action->icon();
    }
+
    QString textAndAccel = action->text();
+
 #ifndef QT_NO_SHORTCUT
    if (textAndAccel.indexOf(QLatin1Char('\t')) == -1) {
       QKeySequence seq = action->shortcut();
+
       if (!seq.isEmpty()) {
-         textAndAccel += QLatin1Char('\t') + QString(seq);
+         textAndAccel += QLatin1Char('\t') + seq.toString(QKeySequence::NativeText);
       }
    }
+
 #endif
    option->text = textAndAccel;
    option->tabWidth = d->tabWidth;
@@ -1310,109 +1314,6 @@ void QMenu::initStyleOption(QStyleOptionMenuItem *option, const QAction *action)
    option->menuRect = rect();
 }
 
-/*!
-    \class QMenu
-    \brief The QMenu class provides a menu widget for use in menu
-    bars, context menus, and other popup menus.
-
-    \ingroup mainwindow-classes
-    \ingroup basicwidgets
-
-
-    A menu widget is a selection menu. It can be either a pull-down
-    menu in a menu bar or a standalone context menu. Pull-down menus
-    are shown by the menu bar when the user clicks on the respective
-    item or presses the specified shortcut key. Use
-    QMenuBar::addMenu() to insert a menu into a menu bar. Context
-    menus are usually invoked by some special keyboard key or by
-    right-clicking. They can be executed either asynchronously with
-    popup() or synchronously with exec(). Menus can also be invoked in
-    response to button presses; these are just like context menus
-    except for how they are invoked.
-
-    \table 100%
-    \row
-    \o \inlineimage plastique-menu.png
-    \o \inlineimage windowsxp-menu.png
-    \o \inlineimage macintosh-menu.png
-    \endtable
-    \caption Fig. A menu shown in \l{Plastique Style Widget Gallery}{Plastique widget style},
-           \l{Windows XP Style Widget Gallery}{Windows XP widget style},
-           and \l{Macintosh Style Widget Gallery}{Macintosh widget style}.
-
-    \section1 Actions
-
-    A menu consists of a list of action items. Actions are added with
-    the addAction(), addActions() and insertAction() functions. An action
-    is represented vertically and rendered by QStyle. In addition, actions
-    can have a text label, an optional icon drawn on the very left side,
-    and shortcut key sequence such as "Ctrl+X".
-
-    The existing actions held by a menu can be found with actions().
-
-    There are four kinds of action items: separators, actions that
-    show a submenu, widgets, and actions that perform an action.
-    Separators are inserted with addSeparator(), submenus with addMenu(),
-    and all other items are considered action items.
-
-    When inserting action items you usually specify a receiver and a
-    slot. The receiver will be notifed whenever the item is
-    \l{QAction::triggered()}{triggered()}. In addition, QMenu provides
-    two signals, activated() and highlighted(), which signal the
-    QAction that was triggered from the menu.
-
-    You clear a menu with clear() and remove individual action items
-    with removeAction().
-
-    A QMenu can also provide a tear-off menu. A tear-off menu is a
-    top-level window that contains a copy of the menu. This makes it
-    possible for the user to "tear off" frequently used menus and
-    position them in a convenient place on the screen. If you want
-    this functionality for a particular menu, insert a tear-off handle
-    with setTearOffEnabled(). When using tear-off menus, bear in mind
-    that the concept isn't typically used on Microsoft Windows so
-    some users may not be familiar with it. Consider using a QToolBar
-    instead.
-
-    Widgets can be inserted into menus with the QWidgetAction class.
-    Instances of this class are used to hold widgets, and are inserted
-    into menus with the addAction() overload that takes a QAction.
-
-    Conversely, actions can be added to widgets with the addAction(),
-    addActions() and insertAction() functions.
-
-    \warning To make QMenu visible on the screen, exec() or popup() should be
-    used instead of show().
-
-    \section1 QMenu on Qt for Windows CE
-
-    If a menu is integrated into the native menubar on Windows Mobile we
-    do not support the signals: aboutToHide (), aboutToShow () and hovered ().
-    It is not possible to display an icon in a native menu on Windows Mobile.
-
-    \section1 QMenu on Mac OS X with Qt build against Cocoa
-
-    QMenu can be inserted only once in a menu/menubar. Subsequent insertions will
-    have no effect or will result in a disabled menu item.
-
-    See the \l{mainwindows/menus}{Menus} example for an example of how
-    to use QMenuBar and QMenu in your application.
-
-    \bold{Important inherited functions:} addAction(), removeAction(), clear(),
-    addSeparator(), and addMenu().
-
-    \sa QMenuBar, {fowler}{GUI Design Handbook: Menu, Drop-Down and Pop-Up},
-        {Application Example}, {Menus Example}, {Recent Files Example}
-*/
-
-
-/*!
-    Constructs a menu with parent \a parent.
-
-    Although a popup menu is always a top-level widget, if a parent is
-    passed the popup menu will be deleted when that parent is
-    destroyed (as with any other QObject).
-*/
 QMenu::QMenu(QWidget *parent)
    : QWidget(*new QMenuPrivate, parent, Qt::Popup)
 {
@@ -1420,15 +1321,6 @@ QMenu::QMenu(QWidget *parent)
    d->init();
 }
 
-/*!
-    Constructs a menu with a \a title and a \a parent.
-
-    Although a popup menu is always a top-level widget, if a parent is
-    passed the popup menu will be deleted when that parent is
-    destroyed (as with any other QObject).
-
-    \sa title
-*/
 QMenu::QMenu(const QString &title, QWidget *parent)
    : QWidget(*new QMenuPrivate, parent, Qt::Popup)
 {
@@ -1512,7 +1404,7 @@ QAction *QMenu::addAction(const QIcon &icon, const QString &text)
 
     \sa QWidget::addAction()
 */
-QAction *QMenu::addAction(const QString &text, const QObject *receiver, const char *member,
+QAction *QMenu::addAction(const QString &text, const QObject *receiver, const QString &member,
                           const QKeySequence &shortcut)
 {
    QAction *action = new QAction(text, this);
@@ -1538,7 +1430,7 @@ QAction *QMenu::addAction(const QString &text, const QObject *receiver, const ch
     \sa QWidget::addAction()
 */
 QAction *QMenu::addAction(const QIcon &icon, const QString &text, const QObject *receiver,
-                          const char *member, const QKeySequence &shortcut)
+                          const QString &member, const QKeySequence &shortcut)
 {
    QAction *action = new QAction(icon, text, this);
 #ifdef QT_NO_SHORTCUT
@@ -1649,29 +1541,11 @@ void QMenu::setDefaultAction(QAction *act)
    d_func()->defaultAction = act;
 }
 
-/*!
-  Returns the current default action.
-
-  \sa setDefaultAction()
-*/
-QAction *QMenu::defaultAction() const
+QAction * QMenu::defaultAction() const
 {
    return d_func()->defaultAction;
 }
 
-/*!
-    \property QMenu::tearOffEnabled
-    \brief whether the menu supports being torn off
-
-    When true, the menu contains a special tear-off item (often shown as a dashed
-    line at the top of the menu) that creates a copy of the menu when it is
-    triggered.
-
-    This "torn-off" copy lives in a separate window. It contains the same menu
-    items as the original menu, with the exception of the tear-off handle.
-
-    By default, this property is false.
-*/
 void QMenu::setTearOffEnabled(bool b)
 {
    Q_D(QMenu);
@@ -1777,13 +1651,6 @@ void QMenu::clear()
    QList<QAction *> acts = actions();
 
    for (int i = 0; i < acts.size(); i++) {
-#ifdef QT_SOFTKEYS_ENABLED
-      Q_D(QMenu);
-      // Lets not touch to our internal softkey actions
-      if (acts[i] == d->selectAction || acts[i] == d->cancelAction) {
-         continue;
-      }
-#endif
       removeAction(acts[i]);
       if (acts[i]->parent() == this && acts[i]->d_func()->widgets.isEmpty()) {
          delete acts[i];
@@ -1936,10 +1803,11 @@ void QMenu::popup(const QPoint &p, QAction *atAction)
          atAction = d->defaultAction;
          // TODO: This works for first level menus, not yet sub menus
       } else {
-         foreach (QAction * action, d->actions)
-         if (action->isEnabled()) {
-            atAction = action;
-            break;
+         for (QAction * action : d->actions) {
+            if (action->isEnabled()) {
+               atAction = action;
+               break;
+            }
          }
       }
       d->currentAction = atAction;
@@ -2192,6 +2060,7 @@ QAction *QMenu::exec(const QPoint &p, QAction *action)
 
    QPointer<QObject> guard = this;
    (void) eventLoop.exec();
+
    if (guard.isNull()) {
       return 0;
    }
@@ -2202,58 +2071,11 @@ QAction *QMenu::exec(const QPoint &p, QAction *action)
    return action;
 }
 
-/*!
-    \overload
-
-    Executes a menu synchronously.
-
-    The menu's actions are specified by the list of \a actions. The menu will
-    pop up so that the specified action, \a at, appears at global position \a
-    pos. If \a at is not specified then the menu appears at position \a
-    pos. \a parent is the menu's parent widget; specifying the parent will
-    provide context when \a pos alone is not enough to decide where the menu
-    should go (e.g., with multiple desktops or when the parent is embedded in
-    QGraphicsView).
-
-    The function returns the triggered QAction in either the popup
-    menu or one of its submenus, or 0 if no item was triggered
-    (normally because the user pressed Esc).
-
-    This is equivalent to:
-    \snippet doc/src/snippets/code/src_gui_widgets_qmenu.cpp 6
-
-    \sa popup(), QWidget::mapToGlobal()
-*/
-QAction *QMenu::exec(QList<QAction *> actions, const QPoint &pos, QAction *at, QWidget *parent)
+QAction *QMenu::exec(const QList<QAction *> &actions, const QPoint &pos, QAction *at, QWidget *parent)
 {
    QMenu menu(parent);
    menu.addActions(actions);
    return menu.exec(pos, at);
-}
-
-/*!
-    \overload
-
-    Executes a menu synchronously.
-
-    The menu's actions are specified by the list of \a actions. The menu
-    will pop up so that the specified action, \a at, appears at global
-    position \a pos. If \a at is not specified then the menu appears
-    at position \a pos.
-
-    The function returns the triggered QAction in either the popup
-    menu or one of its submenus, or 0 if no item was triggered
-    (normally because the user pressed Esc).
-
-    This is equivalent to:
-    \snippet doc/src/snippets/code/src_gui_widgets_qmenu.cpp 6
-
-    \sa popup(), QWidget::mapToGlobal()
-*/
-QAction *QMenu::exec(QList<QAction *> actions, const QPoint &pos, QAction *at)
-{
-   // ### Qt 5: merge
-   return exec(actions, pos, at, 0);
 }
 
 /*!
@@ -2568,13 +2390,7 @@ QMenu::event(QEvent *e)
          }
          return true;
 #endif
-#ifdef QT_SOFTKEYS_ENABLED
-      case QEvent::LanguageChange: {
-         d->selectAction->setText(QSoftKeyManager::standardSoftKeyText(QSoftKeyManager::SelectSoftKey));
-         d->cancelAction->setText(QSoftKeyManager::standardSoftKeyText(QSoftKeyManager::CancelSoftKey));
-      }
-      break;
-#endif
+
       default:
          break;
    }
@@ -2883,7 +2699,7 @@ void QMenu::keyPressEvent(QKeyEvent *e)
 
 #ifndef QT_NO_WHATSTHIS
       case Qt::Key_F1:
-         if (!d->currentAction || d->currentAction->whatsThis().isNull()) {
+         if (!d->currentAction || d->currentAction->whatsThis().isEmpty()) {
             break;
          }
          QWhatsThis::enterWhatsThisMode();
@@ -2924,15 +2740,20 @@ void QMenu::keyPressEvent(QKeyEvent *e)
 #ifndef QT_NO_SHORTCUT
          else {
             int clashCount = 0;
+
             QAction *first = 0, *currentSelected = 0, *firstAfterCurrent = 0;
-            QChar c = e->text().at(0).toUpper();
+            QChar c = e->text().at(0).toUpper()[0];
+
             for (int i = 0; i < d->actions.size(); ++i) {
                if (d->actionRects.at(i).isNull()) {
                   continue;
                }
+
                QAction *act = d->actions.at(i);
                QKeySequence sequence = QKeySequence::mnemonic(act->text());
+
                int key = sequence[0] & 0xffff;
+
                if (key == c.unicode()) {
                   clashCount++;
                   if (!first) {
@@ -3202,65 +3023,6 @@ void QMenu::internalDelayedPopup()
    d->activeMenu->popup(pos);
 }
 
-/*!
-    \fn void QMenu::addAction(QAction *action)
-    \overload
-
-    Appends the action \a action to the menu's list of actions.
-
-    \sa QMenuBar::addAction(), QWidget::addAction()
-*/
-
-/*!
-    \fn void QMenu::aboutToHide()
-    \since 4.2
-
-    This signal is emitted just before the menu is hidden from the user.
-
-    \sa aboutToShow(), hide()
-*/
-
-/*!
-    \fn void QMenu::aboutToShow()
-
-    This signal is emitted just before the menu is shown to the user.
-
-    \sa aboutToHide(), show()
-*/
-
-/*!
-    \fn void QMenu::triggered(QAction *action)
-
-    This signal is emitted when an action in this menu is triggered.
-
-    \a action is the action that caused the signal to be emitted.
-
-    Normally, you connect each menu action's \l{QAction::}{triggered()} signal
-    to its own custom slot, but sometimes you will want to connect several
-    actions to a single slot, for example, when you have a group of closely
-    related actions, such as "left justify", "center", "right justify".
-
-    \note This signal is emitted for the main parent menu in a hierarchy.
-    Hence, only the parent menu needs to be connected to a slot; sub-menus need
-    not be connected.
-
-    \sa hovered(), QAction::triggered()
-*/
-
-/*!
-    \fn void QMenu::hovered(QAction *action)
-
-    This signal is emitted when a menu action is highlighted; \a action
-    is the action that caused the signal to be emitted.
-
-    Often this is used to update status information.
-
-    \sa triggered(), QAction::hovered()
-*/
-
-
-/*!\internal
-*/
 void QMenu::setNoReplayFor(QWidget *noReplayFor)
 {
 #ifdef Q_OS_WIN
@@ -3270,18 +3032,6 @@ void QMenu::setNoReplayFor(QWidget *noReplayFor)
 #endif
 }
 
-/*!
-  \property QMenu::separatorsCollapsible
-  \since 4.2
-
-  \brief whether consecutive separators should be collapsed
-
-  This property specifies whether consecutive separators in the menu
-  should be visually collapsed to a single one. Separators at the
-  beginning or the end of the menu are also hidden.
-
-  By default, this property is true.
-*/
 bool QMenu::separatorsCollapsible() const
 {
    Q_D(const QMenu);
@@ -3308,311 +3058,6 @@ void QMenu::setSeparatorsCollapsible(bool collapse)
 #endif
 }
 
-/*!
-    \fn uint QMenu::count() const
-
-    Use actions().count() instead.
-*/
-
-/*!
-    \fn int QMenu::insertItem(const QString &text, const QObject *receiver, const char* member, const QKeySequence& shortcut, int id, int index)
-
-    Use insertAction() or one of the addAction() overloads instead.
-*/
-
-/*!
-    \fn int QMenu::insertItem(const QIcon& icon, const QString &text, const QObject *receiver, const char* member, const QKeySequence& shortcut, int id, int index)
-
-    Use insertAction() or one of the addAction() overloads instead.
-*/
-
-/*!
-    \fn int QMenu::insertItem(const QPixmap &pixmap, const QObject *receiver, const char* member, const QKeySequence& shortcut, int id, int index)
-
-    Use insertAction() or one of the addAction() overloads instead.
-*/
-
-/*!
-    \fn int QMenu::insertItem(const QString &text, int id, int index)
-
-    Use insertAction() or one of the addAction() overloads instead.
-*/
-
-/*!
-    \fn int QMenu::insertItem(const QIcon& icon, const QString &text, int id, int index)
-
-    Use insertAction() or one of the addAction() overloads instead.
-*/
-
-/*!
-    \fn int QMenu::insertItem(const QString &text, QMenu *popup, int id, int index)
-
-    Use insertMenu() or one of the addMenu() overloads instead.
-*/
-
-/*!
-    \fn int QMenu::insertItem(const QIcon& icon, const QString &text, QMenu *popup, int id, int index)
-
-    Use insertMenu() or one of the addMenu() overloads instead.
-*/
-
-/*!
-    \fn int QMenu::insertItem(const QPixmap &pixmap, int id, int index)
-
-    Use insertAction() or one of the addAction() overloads instead.
-*/
-
-/*!
-    \fn int QMenu::insertItem(const QPixmap &pixmap, QMenu *popup, int id, int index)
-
-    Use insertMenu() or one of the addMenu() overloads instead.
-*/
-
-/*!
-    \fn void QMenu::removeItem(int id)
-
-    Use removeAction() instead.
-*/
-
-/*!
-    \fn void QMenu::removeItemAt(int index)
-
-    Use removeAction() instead.
-*/
-
-/*!
-    \fn QKeySequence QMenu::accel(int id) const
-
-    Use shortcut() on the relevant QAction instead.
-*/
-
-/*!
-    \fn void QMenu::setAccel(const QKeySequence& key, int id)
-
-    Use setShortcut() on the relevant QAction instead.
-*/
-
-/*!
-    \fn QIcon QMenu::iconSet(int id) const
-
-    Use icon() on the relevant QAction instead.
-*/
-
-/*!
-    \fn QString QMenu::text(int id) const
-
-    Use text() on the relevant QAction instead.
-*/
-
-/*!
-    \fn QPixmap QMenu::pixmap(int id) const
-
-    Use QPixmap(icon()) on the relevant QAction instead.
-*/
-
-/*!
-    \fn void QMenu::setWhatsThis(int id, const QString &w)
-
-    Use setWhatsThis() on the relevant QAction instead.
-*/
-
-/*!
-    \fn QString QMenu::whatsThis(int id) const
-
-    Use whatsThis() on the relevant QAction instead.
-*/
-
-/*!
-    \fn void QMenu::changeItem(int id, const QString &text)
-
-    Use setText() on the relevant QAction instead.
-*/
-
-/*!
-    \fn void QMenu::changeItem(int id, const QPixmap &pixmap)
-
-    Use setText() on the relevant QAction instead.
-*/
-
-/*!
-    \fn void QMenu::changeItem(int id, const QIcon &icon, const QString &text)
-
-    Use setIcon() and setText() on the relevant QAction instead.
-*/
-
-/*!
-    \fn bool QMenu::isItemActive(int id) const
-
-    Use activeAction() instead.
-*/
-
-/*!
-    \fn bool QMenu::isItemEnabled(int id) const
-
-    Use isEnabled() on the relevant QAction instead.
-*/
-
-/*!
-    \fn void QMenu::setItemEnabled(int id, bool enable)
-
-    Use setEnabled() on the relevant QAction instead.
-*/
-
-/*!
-    \fn bool QMenu::isItemChecked(int id) const
-
-    Use isChecked() on the relevant QAction instead.
-*/
-
-/*!
-    \fn void QMenu::setItemChecked(int id, bool check)
-
-    Use setChecked() on the relevant QAction instead.
-*/
-
-/*!
-    \fn bool QMenu::isItemVisible(int id) const
-
-    Use isVisible() on the relevant QAction instead.
-*/
-
-/*!
-    \fn void QMenu::setItemVisible(int id, bool visible)
-
-    Use setVisible() on the relevant QAction instead.
-*/
-
-/*!
-    \fn QRect QMenu::itemGeometry(int index)
-
-    Use actionGeometry() on the relevant QAction instead.
-*/
-
-/*!
-    \fn QFont QMenu::itemFont(int id) const
-
-    Use font() on the relevant QAction instead.
-*/
-
-/*!
-    \fn void QMenu::setItemFont(int id, const QFont &font)
-
-    Use setFont() on the relevant QAction instead.
-*/
-
-/*!
-    \fn int QMenu::indexOf(int id) const
-
-    Use actions().indexOf(action) on the relevant QAction instead.
-*/
-
-/*!
-    \fn int QMenu::idAt(int index) const
-
-    Use actions instead.
-*/
-
-/*!
-    \fn void QMenu::activateItemAt(int index)
-
-    Use activate() on the relevant QAction instead.
-*/
-
-/*!
-    \fn bool QMenu::connectItem(int id, const QObject *receiver, const char* member)
-
-    Use connect() on the relevant QAction instead.
-*/
-
-/*!
-    \fn bool QMenu::disconnectItem(int id,const QObject *receiver, const char* member)
-    Use disconnect() on the relevant QAction instead.
-
-*/
-
-/*!
-    \fn QMenuItem *QMenu::findItem(int id) const
-
-    Use actions instead.
-*/
-
-/*!
-    \fn void QMenu::popup(const QPoint & pos, int indexAtPoint)
-
-    Use popup() on the relevant QAction instead.
-*/
-
-/*!
-    \fn int QMenu::insertTearOffHandle(int a, int b)
-
-    Use setTearOffEnabled() instead.
-*/
-
-/*!
-    \fn int QMenu::itemAtPos(const QPoint &p, bool ignoreSeparator)
-
-    Use actions instead.
-*/
-
-/*!
-    \fn int QMenu::columns() const
-
-    Use columnCount() instead.
-*/
-
-/*!
-    \fn int QMenu::itemHeight(int index)
-
-    Use actionGeometry(actions().value(index)).height() instead.
-*/
-
-/*!
-    \fn int QMenu::itemHeight(QMenuItem *mi)
-
-    Use actionGeometry() instead.
-*/
-
-/*!
-    \fn void QMenu::activated(int itemId);
-
-    Use triggered() instead.
-*/
-
-/*!
-    \fn void QMenu::highlighted(int itemId);
-
-    Use hovered() instead.
-*/
-
-/*!
-    \fn void QMenu::setCheckable(bool checkable)
-
-    Not necessary anymore. The \a checkable parameter is ignored.
-*/
-
-/*!
-    \fn bool QMenu::isCheckable() const
-
-    Not necessary anymore. Always returns true.
-*/
-
-/*!
-    \fn void QMenu::setActiveItem(int id)
-
-    Use setActiveAction() instead.
-*/
-
-/*!
-  \property QMenu::toolTipsVisible
-  \since 5.1
-
-  \brief whether tooltips of menu actions should be visible
-
-  This property specifies whether action menu entries show
-  their tooltip.
-
-  By default, this property is false.
-*/
 bool QMenu::toolTipsVisible() const
 {
    Q_D(const QMenu);

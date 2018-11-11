@@ -1,27 +1,26 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
+
+#include <algorithm>
 
 #include <qxpmhandler_p.h>
 
@@ -38,20 +37,25 @@ QT_BEGIN_NAMESPACE
 static quint64 xpmHash(const QString &str)
 {
    unsigned int hashValue = 0;
+
    for (int i = 0; i < str.size(); ++i) {
       hashValue <<= 8;
       hashValue += (unsigned int)str.at(i).unicode();
    }
+
    return hashValue;
 }
-static quint64 xpmHash(char *str)
+
+static quint64 xpmHash(const char *str)
 {
    unsigned int hashValue = 0;
+
    while (*str != '\0') {
       hashValue <<= 8;
       hashValue += (unsigned int) * str;
       ++str;
    }
+
    return hashValue;
 }
 
@@ -736,8 +740,9 @@ inline bool operator<(const XPMRGBData &data, const char *name)
 
 static inline bool qt_get_named_xpm_rgb(const char *name_no_space, QRgb *rgb)
 {
-   const XPMRGBData *r = qBinaryFind(xpmRgbTbl, xpmRgbTbl + xpmRgbTblSize, name_no_space);
-   if (r != xpmRgbTbl + xpmRgbTblSize) {
+   const XPMRGBData *r = std::lower_bound(xpmRgbTbl, xpmRgbTbl + xpmRgbTblSize, name_no_space);
+
+   if ((r != xpmRgbTbl + xpmRgbTblSize) && !(name_no_space < *r)) {
       *rgb = r->value;
       return true;
    } else {
@@ -745,39 +750,43 @@ static inline bool qt_get_named_xpm_rgb(const char *name_no_space, QRgb *rgb)
    }
 }
 
-/*****************************************************************************
-  Misc. utility functions
- *****************************************************************************/
-static QString fbname(const QString &fileName) // get file basename (sort of)
+static QString fbname(const QString &fileName)
 {
+   // get file basename (sort of)
    QString s = fileName;
-   if (!s.isEmpty()) {
+
+   if (! s.isEmpty()) {
       int i;
-      if ((i = s.lastIndexOf(QLatin1Char('/'))) >= 0) {
+
+      if ((i = s.lastIndexOf('/')) >= 0) {
          s = s.mid(i);
       }
-      if ((i = s.lastIndexOf(QLatin1Char('\\'))) >= 0) {
+
+      if ((i = s.lastIndexOf('\\')) >= 0) {
          s = s.mid(i);
       }
-      QRegExp r(QLatin1String("[a-zA-Z][a-zA-Z0-9_]*"));
-      int p = r.indexIn(s);
-      if (p == -1) {
-         s.clear();
+
+      QRegularExpression regExp("[a-zA-Z][a-zA-Z0-9_]*");
+      QRegularExpressionMatch match = regExp.match(s);
+
+      if (match.hasMatch()) {
+         s = match.captured(0);
       } else {
-         s = s.mid(p, r.matchedLength());
+         s.clear();
       }
    }
+
    if (s.isEmpty()) {
-      s = QString::fromLatin1("dummy");
+      s = "dummy";
    }
+
    return s;
 }
 
 // Skip until ", read until the next ", return the rest in *buf
 // Returns false on error, true on success
 
-static bool read_xpm_string(QByteArray &buf, QIODevice *d, const char *const *source, int &index,
-                            QByteArray &state)
+static bool read_xpm_string(QByteArray &buf, QIODevice *d, const char *const *source, int &index, QByteArray &state)
 {
    if (source) {
       buf = source[index++];
@@ -787,6 +796,7 @@ static bool read_xpm_string(QByteArray &buf, QIODevice *d, const char *const *so
    buf = "";
    bool gotQuote = false;
    int offset = 0;
+
    forever {
       if (offset == state.size() || state.isEmpty())
       {
@@ -830,9 +840,8 @@ static bool is_xpm_color_spec_prefix(const QByteArray &prefix)
 
 // Reads XPM header.
 
-static bool read_xpm_header(
-   QIODevice *device, const char *const *source, int &index, QByteArray &state,
-   int *cpp, int *ncols, int *w, int *h)
+static bool read_xpm_header(QIODevice *device, const char *const *source, int &index,
+                  QByteArray &state, int *cpp, int *ncols, int *w, int *h)
 {
    QByteArray buf(200, 0);
 
@@ -840,7 +849,7 @@ static bool read_xpm_header(
       return false;
    }
 
-   if (sscanf(buf, "%d %d %d %d", w, h, ncols, cpp) < 4) {
+   if (sscanf(buf.constData(), "%d %d %d %d", w, h, ncols, cpp) < 4) {
       return false;
    }
 
@@ -849,9 +858,8 @@ static bool read_xpm_header(
 
 // Reads XPM body (color information & pixels).
 
-static bool read_xpm_body(
-   QIODevice *device, const char *const *source, int &index, QByteArray &state,
-   int cpp, int ncols, int w, int h, QImage &image)
+static bool read_xpm_body(QIODevice *device, const char *const *source, int &index, QByteArray &state,
+                  int cpp, int ncols, int w, int h, QImage &image)
 {
    QByteArray buf(200, 0);
    int i;
@@ -864,9 +872,11 @@ static bool read_xpm_body(
    // after we have read the color specifications, so that we can
    // create it in correct format (Format_RGB32 vs Format_ARGB32,
    // depending on absence or presence of "c none", respectively)
+
    if (ncols <= 256) {
       if (image.size() != QSize(w, h) || image.format() != QImage::Format_Indexed8) {
          image = QImage(w, h, QImage::Format_Indexed8);
+
          if (image.isNull()) {
             return false;
          }
@@ -883,67 +893,83 @@ static bool read_xpm_body(
          qWarning("QImage: XPM color specification missing");
          return false;
       }
+
       QByteArray index;
       index = buf.left(cpp);
-      buf = buf.mid(cpp).simplified().trimmed().toLower();
+      buf   = buf.mid(cpp).simplified().trimmed().toLower();
+
       QList<QByteArray> tokens = buf.split(' ');
       i = tokens.indexOf("c");
+
       if (i < 0) {
          i = tokens.indexOf("g");
       }
+
       if (i < 0) {
          i = tokens.indexOf("g4");
       }
+
       if (i < 0) {
          i = tokens.indexOf("m");
       }
+
       if (i < 0) {
          qWarning("QImage: XPM color specification is missing: %s", buf.constData());
          return false;        // no c/g/g4/m specification at all
       }
+
       QByteArray color;
       while ((++i < tokens.size()) && !is_xpm_color_spec_prefix(tokens.at(i))) {
          color.append(tokens.at(i));
       }
+
       if (color.isEmpty()) {
          qWarning("QImage: XPM color value is missing from specification: %s", buf.constData());
          return false;        // no color value
       }
+
       buf = color;
+
       if (buf == "none") {
          hasTransparency = true;
          int transparentColor = currentColor;
+
          if (ncols <= 256) {
             image.setColor(transparentColor, 0);
-            colorMap.insert(xpmHash(QLatin1String(index.constData())), transparentColor);
+            colorMap.insert(xpmHash(index.constData()), transparentColor);
          } else {
-            colorMap.insert(xpmHash(QLatin1String(index.constData())), 0);
+            colorMap.insert(xpmHash(index.constData()), 0);
          }
+
       } else {
          QRgb c_rgb;
+
          if (((buf.length() - 1) % 3) && (buf[0] == '#')) {
             buf.truncate(((buf.length() - 1) / 4 * 3) + 1); // remove alpha channel left by imagemagick
          }
+
          if (buf[0] == '#') {
-            qt_get_hex_rgb(buf, &c_rgb);
+            qt_get_hex_rgb(buf.constData(), &c_rgb);
          } else {
-            qt_get_named_xpm_rgb(buf, &c_rgb);
+            qt_get_named_xpm_rgb(buf.constData(), &c_rgb);
          }
+
          if (ncols <= 256) {
             image.setColor(currentColor, 0xff000000 | c_rgb);
-            colorMap.insert(xpmHash(QLatin1String(index.constData())), currentColor);
+            colorMap.insert(xpmHash(index.constData()), currentColor);
          } else {
-            colorMap.insert(xpmHash(QLatin1String(index.constData())), 0xff000000 | c_rgb);
+            colorMap.insert(xpmHash(index.constData()), 0xff000000 | c_rgb);
          }
       }
    }
 
    if (ncols > 256) {
       // Now we can create 32-bit image of appropriate format
-      QImage::Format format = hasTransparency ?
-                              QImage::Format_ARGB32 : QImage::Format_RGB32;
+      QImage::Format format = hasTransparency ? QImage::Format_ARGB32 : QImage::Format_RGB32;
+
       if (image.size() != QSize(w, h) || image.format() != format) {
          image = QImage(w, h, format);
+
          if (image.isNull()) {
             return false;
          }
@@ -1141,18 +1167,19 @@ static bool write_xpm_image(const QImage &sourceImage, QIODevice *device, const 
      << '\"' << w << ' ' << h << ' ' << ncolors << ' ' << cpp << '\"';
 
    // write palette
-   QMap<QRgb, int>::Iterator c = colorMap.begin();
+   QMap<QRgb, int>::iterator c = colorMap.begin();
+
    while (c != colorMap.end()) {
       QRgb color = c.key();
-      if (image.format() != QImage::Format_RGB32 && !qAlpha(color))
-         line.sprintf("\"%s c None\"",
-                      xpm_color_name(cpp, *c));
-      else
-         line.sprintf("\"%s c #%02x%02x%02x\"",
-                      xpm_color_name(cpp, *c),
-                      qRed(color),
-                      qGreen(color),
-                      qBlue(color));
+
+      if (image.format() != QImage::Format_RGB32 && !qAlpha(color)) {
+         line = QString("\"%1 c None\"").formatArg(QString::fromLatin1(xpm_color_name(cpp, *c)));
+
+      } else {
+         line = QString("\"%1 c #%2%3%4\"").formatArg(QString::fromLatin1(xpm_color_name(cpp, *c)))
+                  .formatArg(qRed(color), 2, 16, '0').formatArg(qGreen(color), 2, 16, '0').formatArg(qBlue(color), 2, 16, '0');
+      }
+
       ++c;
       s << ',' << endl << line;
    }
@@ -1162,6 +1189,7 @@ static bool write_xpm_image(const QImage &sourceImage, QIODevice *device, const 
    for (y = 0; y < h; y++) {
       QRgb *yp = (QRgb *) image.scanLine(y);
       int cc = 0;
+
       for (x = 0; x < w; x++) {
          int color = (int)(*(yp + x));
          QByteArray chars(xpm_color_name(cpp, colorMap[color]));

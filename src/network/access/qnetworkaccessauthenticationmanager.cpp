@@ -1,42 +1,39 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
 
+#include <algorithm>
+
 #include <qnetworkaccessmanager.h>
 #include <qnetworkaccessmanager_p.h>
 #include <qnetworkaccessauthenticationmanager_p.h>
+#include <qsslerror.h>
 
-#include <QtCore/qbuffer.h>
-#include <QtCore/qurl.h>
-#include <QtCore/qvector.h>
-#include <QtCore/QMutexLocker>
-#include <QtNetwork/qauthenticator.h>
+#include <qauthenticator.h>
+#include <qbuffer.h>
+#include <qmutex.h>
+#include <qurl.h>
+#include <qvector.h>
 
-QT_BEGIN_NAMESPACE
-
-class QNetworkAuthenticationCache: private QVector<QNetworkAuthenticationCredential>,
-   public QNetworkAccessCache::CacheableObject
+class QNetworkAuthenticationCache: private QVector<QNetworkAuthenticationCredential>, public QNetworkAccessCache::CacheableObject
 {
  public:
    QNetworkAuthenticationCache() {
@@ -46,11 +43,13 @@ class QNetworkAuthenticationCache: private QVector<QNetworkAuthenticationCredent
    }
 
    QNetworkAuthenticationCredential *findClosestMatch(const QString &domain) {
-      iterator it = qLowerBound(begin(), end(), domain);
+      iterator it = std::lower_bound(begin(), end(), domain);
+
       if (it == end() && !isEmpty()) {
          --it;
       }
-      if (it == end() || !domain.startsWith(it->domain)) {
+
+      if (it == end() || ! domain.startsWith(it->domain)) {
          return 0;
       }
       return &*it;
@@ -58,10 +57,12 @@ class QNetworkAuthenticationCache: private QVector<QNetworkAuthenticationCredent
 
    void insert(const QString &domain, const QString &user, const QString &password) {
       QNetworkAuthenticationCredential *closestMatch = findClosestMatch(domain);
+
       if (closestMatch && closestMatch->domain == domain) {
-         // we're overriding the current credentials
+         // overriding the current credentials
          closestMatch->user = user;
          closestMatch->password = password;
+
       } else {
          QNetworkAuthenticationCredential newCredential;
          newCredential.domain = domain;
@@ -69,14 +70,16 @@ class QNetworkAuthenticationCache: private QVector<QNetworkAuthenticationCredent
          newCredential.password = password;
 
          if (closestMatch) {
-            QVector<QNetworkAuthenticationCredential>::insert(++closestMatch, newCredential);
+            auto tmp = begin() + (++closestMatch - data());
+            QVector<QNetworkAuthenticationCredential>::insert(tmp, newCredential);
+
          } else {
             QVector<QNetworkAuthenticationCredential>::insert(end(), newCredential);
          }
       }
    }
 
-   virtual void dispose() {
+   void dispose() override {
       delete this;
    }
 };
@@ -109,9 +112,8 @@ static QByteArray proxyAuthenticationKey(const QNetworkProxy &proxy, const QStri
          // let there be errors if a new proxy type is added in the future
    }
 
-   if (key.scheme().isEmpty())
+   if (key.scheme().isEmpty()) {
       // proxy type not handled
-   {
       return QByteArray();
    }
 
@@ -146,7 +148,7 @@ void QNetworkAccessAuthenticationManager::cacheProxyCredentials(const QNetworkPr
    proxy.setUser(authenticator->user());
 
    // don't cache null passwords, empty password may be valid though
-   if (authenticator->password().isNull()) {
+   if (authenticator->password().isEmpty()) {
       return;
    }
 
@@ -204,14 +206,13 @@ QNetworkAccessAuthenticationManager::fetchCachedProxyCredentials(const QNetworkP
       return QNetworkAuthenticationCredential();
    }
 
-   QNetworkAuthenticationCache *auth =
-      static_cast<QNetworkAuthenticationCache *>(authenticationCache.requestEntryNow(cacheKey));
+   QNetworkAuthenticationCache *auth     = static_cast<QNetworkAuthenticationCache *>(authenticationCache.requestEntryNow(cacheKey));
    QNetworkAuthenticationCredential cred = *auth->findClosestMatch(QString());
    authenticationCache.releaseEntry(cacheKey);
 
    // proxy cache credentials always have exactly one item
    Q_ASSERT_X(!cred.isNull(), "QNetworkAccessManager",
-              "Internal inconsistency: found a cache key for a proxy, but it's empty");
+              "Internal inconsistency: found a cache key for a proxy, but it is empty");
    return cred;
 }
 
@@ -221,6 +222,11 @@ void QNetworkAccessAuthenticationManager::cacheCredentials(const QUrl &url,
       const QAuthenticator *authenticator)
 {
    Q_ASSERT(authenticator);
+
+   if (authenticator->isNull()) {
+      return;
+   }
+
    QString domain = QString::fromLatin1("/"); // FIXME: make QAuthenticator return the domain
    QString realm = authenticator->realm();
 
@@ -281,13 +287,14 @@ QNetworkAccessAuthenticationManager::fetchCachedCredentials(const QUrl &url,
       return QNetworkAuthenticationCredential();
    }
 
-   QNetworkAuthenticationCache *auth =
-      static_cast<QNetworkAuthenticationCache *>(authenticationCache.requestEntryNow(cacheKey));
+   QNetworkAuthenticationCache *auth      = static_cast<QNetworkAuthenticationCache *>(authenticationCache.requestEntryNow(cacheKey));
    QNetworkAuthenticationCredential *cred = auth->findClosestMatch(url.path());
    QNetworkAuthenticationCredential ret;
+
    if (cred) {
       ret = *cred;
    }
+
    authenticationCache.releaseEntry(cacheKey);
    return ret;
 }
@@ -297,5 +304,4 @@ void QNetworkAccessAuthenticationManager::clearCache()
    authenticationCache.clear();
 }
 
-QT_END_NAMESPACE
 

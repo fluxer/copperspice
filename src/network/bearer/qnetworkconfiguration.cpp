@@ -1,33 +1,28 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
 
 #include <qnetworkconfiguration.h>
 #include <qnetworkconfiguration_p.h>
-
-QT_BEGIN_NAMESPACE
-
+#include <qdebug.h>
 
 QNetworkConfiguration::QNetworkConfiguration()
    : d(0)
@@ -217,22 +212,6 @@ QList<QNetworkConfiguration> QNetworkConfiguration::children() const
    return results;
 }
 
-/*!
-    \fn QString QNetworkConfiguration::bearerName() const
-    \deprecated
-
-    This function is deprecated.  It is equivalent to calling bearerTypeName(), however
-    bearerType() should be used in preference.
-*/
-
-/*!
-    Returns the type of bearer used by this network configuration.
-
-    If the bearer type is \l {QNetworkConfiguration::BearerUnknown}{unknown} the bearerTypeName()
-    function can be used to retrieve a textural type name for the bearer.
-
-    An invalid network configuration always returns the BearerUnknown value.
-*/
 QNetworkConfiguration::BearerType QNetworkConfiguration::bearerType() const
 {
    if (!isValid()) {
@@ -244,90 +223,89 @@ QNetworkConfiguration::BearerType QNetworkConfiguration::bearerType() const
    return d->bearerType;
 }
 
-/*!
-    Returns the type of bearer used by this network configuration as a string.
+QNetworkConfiguration::BearerType QNetworkConfiguration::bearerTypeFamily() const
+{
+   QNetworkConfiguration::BearerType type = bearerType();
 
-    The string is not translated and therefore can not be shown to the user. The subsequent table
-    shows the fixed mappings between BearerType and the bearer type name for known types.  If the
-    BearerType is unknown this function may return additional information if it is available;
-    otherwise an empty string will be returned.
+   switch (type) {
+      case QNetworkConfiguration::BearerUnknown:
+      case QNetworkConfiguration::Bearer2G:
+      case QNetworkConfiguration::BearerEthernet:
+      case QNetworkConfiguration::BearerWLAN:
+      case QNetworkConfiguration::BearerBluetooth:
+         return type;
 
-    \table
-        \header
-            \o BearerType
-            \o Value
-        \row
-            \o BearerUnknown
-            \o
-            \o The session is based on an unknown or unspecified bearer type. The value of the
-               string returned describes the bearer type.
-        \row
-            \o BearerEthernet
-            \o Ethernet
-        \row
-            \o BearerWLAN
-            \o WLAN
-        \row
-            \o Bearer2G
-            \o 2G
-        \row
-            \o BearerCDMA2000
-            \o CDMA2000
-        \row
-            \o BearerWCDMA
-            \o WCDMA
-        \row
-            \o BearerHSPA
-            \o HSPA
-        \row
-            \o BearerBluetooth
-            \o Bluetooth
-        \row
-            \o BearerWiMAX
-            \o WiMAX
-    \endtable
+      case QNetworkConfiguration::BearerCDMA2000:
+      case QNetworkConfiguration::BearerEVDO:
+      case QNetworkConfiguration::BearerWCDMA:
+      case QNetworkConfiguration::BearerHSPA:
+      case QNetworkConfiguration::Bearer3G:
+         return QNetworkConfiguration::Bearer3G;
 
-    This function returns an empty string if this is an invalid configuration, a network
-    configuration of type \l QNetworkConfiguration::ServiceNetwork or
-    \l QNetworkConfiguration::UserChoice.
+      case QNetworkConfiguration::BearerWiMAX:
+      case QNetworkConfiguration::BearerLTE:
+      case QNetworkConfiguration::Bearer4G:
+         return QNetworkConfiguration::Bearer4G;
 
-    \sa bearerType()
-*/
+      default:
+         qWarning() << "unknown bearer type" << type;
+         return QNetworkConfiguration::BearerUnknown;
+   }
+}
 QString QNetworkConfiguration::bearerTypeName() const
 {
-   if (!isValid()) {
+   if (! isValid()) {
       return QString();
    }
 
    QMutexLocker locker(&d->mutex);
 
-   if (d->type == QNetworkConfiguration::ServiceNetwork ||
-         d->type == QNetworkConfiguration::UserChoice) {
+   if (d->type == QNetworkConfiguration::ServiceNetwork || d->type == QNetworkConfiguration::UserChoice) {
       return QString();
    }
 
    switch (d->bearerType) {
-      case BearerUnknown:
-         return d->bearerTypeName();
+
       case BearerEthernet:
-         return QLatin1String("Ethernet");
+         return QString("Ethernet");
+
       case BearerWLAN:
-         return QLatin1String("WLAN");
+         return QString("WLAN");
+
       case Bearer2G:
-         return QLatin1String("2G");
+         return QString("2G");
+
+      case Bearer3G:
+         return QString("3G");
+
+      case Bearer4G:
+         return QString("4G");
+
       case BearerCDMA2000:
-         return QLatin1String("CDMA2000");
+         return QString("CDMA2000");
+
       case BearerWCDMA:
-         return QLatin1String("WCDMA");
+         return QString("WCDMA");
+
       case BearerHSPA:
-         return QLatin1String("HSPA");
+         return QString("HSPA");
+
       case BearerBluetooth:
-         return QLatin1String("Bluetooth");
+         return QString("Bluetooth");
+
       case BearerWiMAX:
-         return QLatin1String("WiMAX");
+         return QString("WiMAX");
+
+      case BearerEVDO:
+         return QString("EVDO");
+
+      case BearerLTE:
+         return QString("LTE");
+
+      case BearerUnknown:
+         break;
    }
 
-   return QLatin1String("Unknown");
+   return QString("Unknown");
 }
 
-QT_END_NAMESPACE

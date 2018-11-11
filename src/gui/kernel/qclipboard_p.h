@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,8 +23,9 @@
 #ifndef QCLIPBOARD_P_H
 #define QCLIPBOARD_P_H
 
-#include <QtGui/qmime.h>
-#include <QtGui/qclipboard.h>
+#include <qmime.h>
+#include <qclipboard.h>
+#include <qstringlist.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -38,10 +36,10 @@ class QMimeDataWrapper : public QMimeSource
  public:
    QMimeDataWrapper() {}
 
-   const char *format(int n) const;
-   QByteArray encodedData(const char *) const;
+   QString format(int n) const override;
+   QByteArray encodedData(const QString &format) const override;
 
-   mutable QList<QByteArray> formats;
+   mutable QStringList m_formats;
    const QMimeData *data;
 };
 
@@ -51,11 +49,11 @@ class QMimeSourceWrapper : public QMimeData
    QMimeSourceWrapper(QClipboardPrivate *priv, QClipboard::Mode m);
    ~QMimeSourceWrapper();
 
-   bool hasFormat(const QString &mimetype) const;
-   QStringList formats() const;
+   bool hasFormat(const QString &mimetype) const override;
+   QStringList formats() const override;
 
  protected:
-   QVariant retrieveData(const QString &mimetype, QVariant::Type) const;
+   QVariant retrieveData(const QString &mimetype, QVariant::Type) const override;
 
  private:
    QClipboardPrivate *d;

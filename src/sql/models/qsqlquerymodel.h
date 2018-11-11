@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -42,22 +39,20 @@ class Q_SQL_EXPORT QSqlQueryModel: public QAbstractTableModel
    Q_DECLARE_PRIVATE(QSqlQueryModel)
 
  public:
-   explicit QSqlQueryModel(QObject *parent = 0);
+   explicit QSqlQueryModel(QObject *parent = nullptr);
    virtual ~QSqlQueryModel();
 
-   int rowCount(const QModelIndex &parent = QModelIndex()) const;
-   int columnCount(const QModelIndex &parent = QModelIndex()) const;
+   int rowCount(const QModelIndex &parent = QModelIndex()) const override;
+   int columnCount(const QModelIndex &parent = QModelIndex()) const override;
    QSqlRecord record(int row) const;
    QSqlRecord record() const;
 
-   QVariant data(const QModelIndex &item, int role = Qt::DisplayRole) const;
-   QVariant headerData(int section, Qt::Orientation orientation,
-                       int role = Qt::DisplayRole) const;
-   bool setHeaderData(int section, Qt::Orientation orientation, const QVariant &value,
-                      int role = Qt::EditRole);
+   QVariant data(const QModelIndex &item, int role = Qt::DisplayRole) const override;
+   QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
+   bool setHeaderData(int section, Qt::Orientation orientation, const QVariant &value, int role = Qt::EditRole) override;
 
-   bool insertColumns(int column, int count, const QModelIndex &parent = QModelIndex());
-   bool removeColumns(int column, int count, const QModelIndex &parent = QModelIndex());
+   bool insertColumns(int column, int count, const QModelIndex &parent = QModelIndex()) override;
+   bool removeColumns(int column, int count, const QModelIndex &parent = QModelIndex()) override;
 
    void setQuery(const QSqlQuery &query);
    void setQuery(const QString &query, const QSqlDatabase &db = QSqlDatabase());
@@ -67,15 +62,15 @@ class Q_SQL_EXPORT QSqlQueryModel: public QAbstractTableModel
 
    QSqlError lastError() const;
 
-   void fetchMore(const QModelIndex &parent = QModelIndex());
-   bool canFetchMore(const QModelIndex &parent = QModelIndex()) const;
+   void fetchMore(const QModelIndex &parent = QModelIndex()) override;
+   bool canFetchMore(const QModelIndex &parent = QModelIndex()) const override;
 
  protected:
    virtual void queryChange();
 
    QModelIndex indexInQuery(const QModelIndex &item) const;
    void setLastError(const QSqlError &error);
-   QSqlQueryModel(QSqlQueryModelPrivate &dd, QObject *parent = 0);
+   QSqlQueryModel(QSqlQueryModelPrivate &dd, QObject *parent = nullptr);
 };
 
 QT_END_NAMESPACE

@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -40,32 +37,22 @@
 #include <qdebug.h>
 #endif
 
-QT_BEGIN_NAMESPACE
-
 extern bool qt_sendSpontaneousEvent(QObject *, QEvent *);
 
 
 DEFINE_GUID(IID_IActiveIMMApp,
             0x08c0e040, 0x62d1, 0x11d1, 0x93, 0x26, 0x0, 0x60, 0xb0, 0x67, 0xb8, 0x6e);
 
-
-
 DEFINE_GUID(CLSID_CActiveIMM,
             0x4955DD33, 0xB159, 0x11d0, 0x8F, 0xCF, 0x0, 0xAA, 0x00, 0x6B, 0xCC, 0x59);
-
-
 
 DEFINE_GUID(IID_IActiveIMMMessagePumpOwner,
             0xb5cf2cfa, 0x8aeb, 0x11d1, 0x93, 0x64, 0x0, 0x60, 0xb0, 0x67, 0xb8, 0x6e);
 
-
-
 interface IEnumRegisterWordW;
 interface IEnumInputContext;
 
-
 bool qt_sendSpontaneousEvent(QObject *, QEvent *);
-
 
 #define IFMETHOD HRESULT STDMETHODCALLTYPE
 
@@ -345,9 +332,11 @@ void QWinInputContext::TranslateMessage(const MSG *msg)
 LRESULT QWinInputContext::DefWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
    LRESULT retval;
-   if (!aimm || aimm->OnDefWindowProc(hwnd, msg, wParam, lParam, &retval) != S_OK) {
+
+   if (! aimm || aimm->OnDefWindowProc(hwnd, msg, wParam, lParam, &retval) != S_OK) {
       retval = ::DefWindowProc(hwnd, msg, wParam, lParam);
    }
+
    return retval;
 }
 
@@ -355,6 +344,7 @@ LRESULT QWinInputContext::DefWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPAR
 void QWinInputContext::update()
 {
    QWidget *w = focusWidget();
+
    if (!w) {
       return;
    }
@@ -426,7 +416,7 @@ bool QWinInputContext::endComposition()
 {
    QWidget *fw = focusWidget();
 #ifdef Q_IME_DEBUG
-   qDebug() << "endComposition! fw=" <<  fw;
+   qDebug() << "endComposition fw=" <<  fw;
 #endif
    bool result = true;
    if (imePosition == -1 || recursionGuard) {
@@ -619,7 +609,7 @@ bool QWinInputContext::composition(LPARAM lParam)
       releaseContext(fw->effectiveWinId(), imc);
    }
 #ifdef Q_IME_DEBUG
-   qDebug("imecomposition: cursor pos at %d, str=%x", imePosition, str[0].unicode());
+   qDebug("ime composition: cursor pos at %d, str=%x", imePosition, str[0].unicode());
 #endif
    return result;
 }
@@ -697,9 +687,11 @@ void QWinInputContext::updateImeStatus(QWidget *w, bool hasFocus)
    bool e = w->testAttribute(Qt::WA_InputMethodEnabled) && w->isEnabled()
             && !(focusProxyWidget->inputMethodHints() & (Qt::ImhExclusiveInputMask | Qt::ImhHiddenText));
    bool hasIme = e && hasFocus;
+
 #ifdef Q_IME_DEBUG
-   qDebug("%s HasFocus = %d hasIme = %d e = %d ", w->metaObject()->className(), hasFocus, hasIme, e);
+   qDebug("%s HasFocus = %d hasIme = %d e = %d ", csPrintable(w->metaObject()->className()), hasFocus, hasIme, e);
 #endif
+
    if (hasFocus || e) {
       if (isInPopup(w)) {
          QWinInputContext::enablePopupChild(w, hasIme);
@@ -817,13 +809,15 @@ QString QWinInputContext::language()
 int QWinInputContext::reconvertString(RECONVERTSTRING *reconv)
 {
    QWidget *w = focusWidget();
-   if (!w) {
+
+   if (! w) {
       return -1;
    }
 
    Q_ASSERT(w->testAttribute(Qt::WA_WState_Created));
    QString surroundingText = qvariant_cast<QString>(w->inputMethodQuery(Qt::ImSurroundingText));
    int memSize = sizeof(RECONVERTSTRING) + (surroundingText.length() + 1) * sizeof(ushort);
+
    // If memory is not allocated, return the required size.
    if (!reconv) {
       if (surroundingText.isEmpty()) {
@@ -836,6 +830,7 @@ int QWinInputContext::reconvertString(RECONVERTSTRING *reconv)
    // find the word in the surrounding text.
    QTextBoundaryFinder bounds(QTextBoundaryFinder::Word, surroundingText);
    bounds.setPosition(pos);
+
    if (bounds.isAtBoundary()) {
       if (QTextBoundaryFinder::EndWord == bounds.boundaryReasons()) {
          bounds.toPreviousBoundary();
@@ -843,27 +838,33 @@ int QWinInputContext::reconvertString(RECONVERTSTRING *reconv)
    } else {
       bounds.toPreviousBoundary();
    }
+
    int startPos = bounds.position();
    bounds.toNextBoundary();
+
    int endPos = bounds.position();
+
    // select the text, this will be overwritten by following ime events.
    QList<QInputMethodEvent::Attribute> attrs;
    attrs << QInputMethodEvent::Attribute(QInputMethodEvent::Selection, startPos, endPos - startPos, QVariant());
+
    QInputMethodEvent e(QString(), attrs);
    qt_sendSpontaneousEvent(w, &e);
 
    reconv->dwSize = memSize;
    reconv->dwVersion = 0;
 
-   reconv->dwStrLen = surroundingText.length();
-   reconv->dwStrOffset = sizeof(RECONVERTSTRING);
-   reconv->dwCompStrLen = endPos - startPos;
-   reconv->dwCompStrOffset = startPos * sizeof(ushort);
-   reconv->dwTargetStrLen = reconv->dwCompStrLen;
+   reconv->dwStrLen          = surroundingText.length();
+   reconv->dwStrOffset       = sizeof(RECONVERTSTRING);
+   reconv->dwCompStrLen      = endPos - startPos;
+   reconv->dwCompStrOffset   = startPos * sizeof(ushort);
+   reconv->dwTargetStrLen    = reconv->dwCompStrLen;
    reconv->dwTargetStrOffset = reconv->dwCompStrOffset;
-   memcpy((char *)(reconv + 1), surroundingText.utf16(), surroundingText.length()*sizeof(ushort));
+
+   QString16 tmp(surroundingText.toUtf16());
+   memcpy((char *)(reconv + 1), tmp.constData(), tmp.size_storage() * sizeof(ushort));
+
    return memSize;
 }
 
-QT_END_NAMESPACE
-#endif // QT_NO_IM
+#endif

@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -47,45 +44,51 @@
 #endif
 #endif
 
-QT_BEGIN_NAMESPACE
-
 #if !defined(QT_NO_SETTINGS)
-Q_GLOBAL_STATIC_WITH_ARGS(QFactoryLoader, loader,
-                          (QAudioEngineFactoryInterface_iid, QLatin1String("/audio"), Qt::CaseInsensitive))
+Q_GLOBAL_STATIC_WITH_ARGS(QFactoryLoader, loader, (QAudioEngineFactoryInterface_iid, "/audio", Qt::CaseInsensitive))
 #endif
 
 class QNullDeviceInfo : public QAbstractAudioDeviceInfo
 {
  public:
-   QAudioFormat preferredFormat() const {
+   QAudioFormat preferredFormat() const override {
       qWarning() << "using null deviceinfo, none available";
       return QAudioFormat();
    }
-   bool isFormatSupported(const QAudioFormat &) const {
+
+   bool isFormatSupported(const QAudioFormat &) const override {
       return false;
    }
-   QAudioFormat nearestFormat(const QAudioFormat &) const {
+
+   QAudioFormat nearestFormat(const QAudioFormat &) const override {
       return QAudioFormat();
    }
-   QString deviceName() const {
+
+   QString deviceName() const override {
       return QString();
    }
-   QStringList codecList() {
+
+   QStringList codecList() override {
       return QStringList();
    }
-   QList<int> frequencyList()  {
+
+   QList<int> frequencyList() override {
       return QList<int>();
    }
-   QList<int> channelsList() {
+
+   QList<int> channelsList() override {
       return QList<int>();
    }
-   QList<int> sampleSizeList() {
+
+   QList<int> sampleSizeList() override {
       return QList<int>();
    }
-   QList<QAudioFormat::Endian> byteOrderList() {
+
+   QList<QAudioFormat::Endian> byteOrderList() override {
       return QList<QAudioFormat::Endian>();
    }
-   QList<QAudioFormat::SampleType> sampleTypeList() {
+
+   QList<QAudioFormat::SampleType> sampleTypeList()  override{
       return QList<QAudioFormat::SampleType>();
    }
 };
@@ -93,41 +96,49 @@ class QNullDeviceInfo : public QAbstractAudioDeviceInfo
 class QNullInputDevice : public QAbstractAudioInput
 {
  public:
-   QIODevice *start(QIODevice *) {
+   QIODevice *start(QIODevice *)  override {
       qWarning() << "using null input device, none available";
+      return nullptr;
+   }
+
+   void stop() override {}
+   void reset() override {}
+   void suspend() override {}
+   void resume() override {}
+
+   int bytesReady() const override {
       return 0;
    }
-   void stop() {}
-   void reset() {}
-   void suspend() {}
-   void resume() {}
-   int bytesReady() const {
+   int periodSize() const override {
       return 0;
    }
-   int periodSize() const {
+   void setBufferSize(int ) override {}
+   int bufferSize() const  override {
       return 0;
    }
-   void setBufferSize(int ) {}
-   int bufferSize() const  {
+
+   void setNotifyInterval(int ) override {}
+   int notifyInterval() const override {
       return 0;
    }
-   void setNotifyInterval(int ) {}
-   int notifyInterval() const {
+
+   qint64 processedUSecs() const override {
       return 0;
    }
-   qint64 processedUSecs() const {
+
+   qint64 elapsedUSecs() const override {
       return 0;
    }
-   qint64 elapsedUSecs() const {
-      return 0;
-   }
-   QAudio::Error error() const {
+
+   QAudio::Error error() const override {
       return QAudio::OpenError;
    }
-   QAudio::State state() const {
+
+   QAudio::State state() const override {
       return QAudio::StoppedState;
    }
-   QAudioFormat format() const {
+
+   QAudioFormat format() const override {
       return QAudioFormat();
    }
 };
@@ -135,41 +146,51 @@ class QNullInputDevice : public QAbstractAudioInput
 class QNullOutputDevice : public QAbstractAudioOutput
 {
  public:
-   QIODevice *start(QIODevice *) {
+   QIODevice *start(QIODevice *)  override {
       qWarning() << "using null output device, none available";
+      return nullptr;
+   }
+
+   void stop() override {}
+   void reset() override {}
+   void suspend() override {}
+   void resume() override {}
+
+   int bytesFree() const override {
       return 0;
    }
-   void stop() {}
-   void reset() {}
-   void suspend() {}
-   void resume() {}
-   int bytesFree() const {
+
+   int periodSize() const override {
       return 0;
    }
-   int periodSize() const {
+
+   void setBufferSize(int ) override {}
+   int bufferSize() const   override {
       return 0;
    }
-   void setBufferSize(int ) {}
-   int bufferSize() const  {
+
+   void setNotifyInterval(int ) override {}
+   int notifyInterval() const override {
       return 0;
    }
-   void setNotifyInterval(int ) {}
-   int notifyInterval() const {
+
+   qint64 processedUSecs() const override {
       return 0;
    }
-   qint64 processedUSecs() const {
+
+   qint64 elapsedUSecs() const override {
       return 0;
    }
-   qint64 elapsedUSecs() const {
-      return 0;
-   }
-   QAudio::Error error() const {
+
+   QAudio::Error error() const override {
       return QAudio::OpenError;
    }
-   QAudio::State state() const {
+
+   QAudio::State state() const override {
       return QAudio::StoppedState;
    }
-   QAudioFormat format() const {
+
+   QAudioFormat format() const override {
       return QAudioFormat();
    }
 };
@@ -180,19 +201,22 @@ QList<QAudioDeviceInfo> QAudioDeviceFactory::availableDevices(QAudio::Mode mode)
 
 #ifndef QT_NO_AUDIO_BACKEND
 #if (defined(Q_OS_WIN) || defined(Q_OS_MAC) || defined(HAS_ALSA))
-   foreach (const QByteArray & handle, QAudioDeviceInfoInternal::availableDevices(mode))
-   devices << QAudioDeviceInfo(QLatin1String("builtin"), handle, mode);
+   for (const QString & handle : QAudioDeviceInfoInternal::availableDevices(mode)) {
+      devices << QAudioDeviceInfo("builtin", handle, mode);
+   }
 #endif
 #endif
 
 #if !defined(QT_NO_SETTINGS)
    QFactoryLoader *l = loader();
 
-   foreach (QString const & key, l->keys()) {
+   for (QString const & key : l->keys()) {
       QAudioEngineFactoryInterface *plugin = qobject_cast<QAudioEngineFactoryInterface *>(l->instance(key));
+
       if (plugin) {
-         foreach (QByteArray const & handle, plugin->availableDevices(mode))
-         devices << QAudioDeviceInfo(key, handle, mode);
+         for (QString const & handle : plugin->availableDevices(mode)) {
+            devices << QAudioDeviceInfo(key, handle, mode);
+         }
       }
 
       delete plugin;
@@ -204,20 +228,20 @@ QList<QAudioDeviceInfo> QAudioDeviceFactory::availableDevices(QAudio::Mode mode)
 QAudioDeviceInfo QAudioDeviceFactory::defaultInputDevice()
 {
 #if !defined(QT_NO_SETTINGS)
-   QAudioEngineFactoryInterface *plugin = qobject_cast<QAudioEngineFactoryInterface *>(loader()->instance(
-         QLatin1String("default")));
+   QAudioEngineFactoryInterface *plugin = qobject_cast<QAudioEngineFactoryInterface *>(loader()->instance("default"));
 
    if (plugin) {
-      QList<QByteArray> list = plugin->availableDevices(QAudio::AudioInput);
+      QList<QString> list = plugin->availableDevices(QAudio::AudioInput);
+
       if (list.size() > 0) {
-         return QAudioDeviceInfo(QLatin1String("default"), list.at(0), QAudio::AudioInput);
+         return QAudioDeviceInfo("default", list.at(0), QAudio::AudioInput);
       }
    }
 #endif
 
 #ifndef QT_NO_AUDIO_BACKEND
 #if (defined(Q_OS_WIN) || defined(Q_OS_MAC) || defined(HAS_ALSA))
-   return QAudioDeviceInfo(QLatin1String("builtin"), QAudioDeviceInfoInternal::defaultInputDevice(), QAudio::AudioInput);
+   return QAudioDeviceInfo("builtin", QAudioDeviceInfoInternal::defaultInputDevice(), QAudio::AudioInput);
 #endif
 #endif
    return QAudioDeviceInfo();
@@ -226,46 +250,47 @@ QAudioDeviceInfo QAudioDeviceFactory::defaultInputDevice()
 QAudioDeviceInfo QAudioDeviceFactory::defaultOutputDevice()
 {
 #if !defined(QT_NO_SETTINGS)
-   QAudioEngineFactoryInterface *plugin = qobject_cast<QAudioEngineFactoryInterface *>(loader()->instance(
-         QLatin1String("default")));
+   QAudioEngineFactoryInterface *plugin = qobject_cast<QAudioEngineFactoryInterface *>(loader()->instance("default"));
 
    if (plugin) {
-      QList<QByteArray> list = plugin->availableDevices(QAudio::AudioOutput);
+      QList<QString> list = plugin->availableDevices(QAudio::AudioOutput);
+
       if (list.size() > 0) {
-         return QAudioDeviceInfo(QLatin1String("default"), list.at(0), QAudio::AudioOutput);
+         return QAudioDeviceInfo("default", list.at(0), QAudio::AudioOutput);
       }
    }
 #endif
 
 #ifndef QT_NO_AUDIO_BACKEND
 #if (defined(Q_OS_WIN) || defined(Q_OS_MAC) || defined(HAS_ALSA))
-   return QAudioDeviceInfo(QLatin1String("builtin"), QAudioDeviceInfoInternal::defaultOutputDevice(), QAudio::AudioOutput);
+   return QAudioDeviceInfo("builtin", QAudioDeviceInfoInternal::defaultOutputDevice(), QAudio::AudioOutput);
 #endif
 #endif
 
    return QAudioDeviceInfo();
 }
 
-QAbstractAudioDeviceInfo *QAudioDeviceFactory::audioDeviceInfo(const QString &realm, const QByteArray &handle,
+QAbstractAudioDeviceInfo *QAudioDeviceFactory::audioDeviceInfo(const QString &realm, const QString &handle,
       QAudio::Mode mode)
 {
    QAbstractAudioDeviceInfo *rc = 0;
 
 #ifndef QT_NO_AUDIO_BACKEND
 #if (defined(Q_OS_WIN) || defined(Q_OS_MAC) || defined(HAS_ALSA))
-   if (realm == QLatin1String("builtin")) {
+   if (realm == "builtin") {
       return new QAudioDeviceInfoInternal(handle, mode);
    }
 #endif
 #endif
+
 #if !defined(QT_NO_SETTINGS)
-   QAudioEngineFactoryInterface *plugin =
-      qobject_cast<QAudioEngineFactoryInterface *>(loader()->instance(realm));
+   QAudioEngineFactoryInterface *plugin = qobject_cast<QAudioEngineFactoryInterface *>(loader()->instance(realm));
 
    if (plugin) {
       rc = plugin->createDeviceInfo(handle, mode);
    }
 #endif
+
    return rc == 0 ? new QNullDeviceInfo() : rc;
 }
 
@@ -288,7 +313,7 @@ QAbstractAudioInput *QAudioDeviceFactory::createInputDevice(QAudioDeviceInfo con
 
 #ifndef QT_NO_AUDIO_BACKEND
 #if (defined(Q_OS_WIN) || defined(Q_OS_MAC) || defined(HAS_ALSA))
-   if (deviceInfo.realm() == QLatin1String("builtin")) {
+   if (deviceInfo.realm() == "builtin") {
       return new QAudioInputPrivate(deviceInfo.handle(), format);
    }
 #endif
@@ -314,15 +339,14 @@ QAbstractAudioOutput *QAudioDeviceFactory::createOutputDevice(QAudioDeviceInfo c
 
 #ifndef QT_NO_AUDIO_BACKEND
 #if (defined(Q_OS_WIN) || defined(Q_OS_MAC) || defined(HAS_ALSA))
-   if (deviceInfo.realm() == QLatin1String("builtin")) {
+   if (deviceInfo.realm() == "builtin") {
       return new QAudioOutputPrivate(deviceInfo.handle(), format);
    }
 #endif
 #endif
 
 #if  !defined(QT_NO_SETTINGS)
-   QAudioEngineFactoryInterface *plugin =
-      qobject_cast<QAudioEngineFactoryInterface *>(loader()->instance(deviceInfo.realm()));
+   QAudioEngineFactoryInterface *plugin = qobject_cast<QAudioEngineFactoryInterface *>(loader()->instance(deviceInfo.realm()));
 
    if (plugin) {
       return plugin->createOutput(deviceInfo.handle(), format);
@@ -330,6 +354,4 @@ QAbstractAudioOutput *QAudioDeviceFactory::createOutputDevice(QAudioDeviceInfo c
 #endif
    return new QNullOutputDevice();
 }
-
-QT_END_NAMESPACE
 

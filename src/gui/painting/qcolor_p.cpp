@@ -1,27 +1,26 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
+
+#include <algorithm>
 
 #include <qglobal.h>
 #include <qrgb.h>
@@ -85,20 +84,28 @@ bool qt_get_hex_rgb(const char *name, QRgb *rgb)
       *rgb = 0;
       return false;
    }
+
    *rgb = qRgb(r, g , b);
+
    return true;
 }
 
-bool qt_get_hex_rgb(const QChar *str, int len, QRgb *rgb)
+bool qt_get_hex_rgb(QStringView str, QRgb *rgb)
 {
+   auto len = str.length();
+
    if (len > 13) {
       return false;
    }
+
    char tmp[16];
+
    for (int i = 0; i < len; ++i) {
       tmp[i] = str[i].toLatin1();
    }
+
    tmp[len] = 0;
+
    return qt_get_hex_rgb(tmp, rgb);
 }
 
@@ -275,6 +282,7 @@ inline bool operator<(const char *name, const RGBData &data)
 {
    return qstrcmp(name, data.name) < 0;
 }
+
 inline bool operator<(const RGBData &data, const char *name)
 {
    return qstrcmp(data.name, name) < 0;
@@ -282,46 +290,55 @@ inline bool operator<(const RGBData &data, const char *name)
 
 static bool get_named_rgb(const char *name_no_space, QRgb *rgb)
 {
-   QByteArray name = QByteArray(name_no_space).toLower();
-   const RGBData *r = qBinaryFind(rgbTbl, rgbTbl + rgbTblSize, name.constData());
-   if (r != rgbTbl + rgbTblSize) {
+   QByteArray name  = QByteArray(name_no_space).toLower();
+   const RGBData *r = std::lower_bound(rgbTbl, rgbTbl + rgbTblSize, name.constData());
+
+   if ((r != rgbTbl + rgbTblSize) || (name.constData() < *r)) {
       *rgb = r->value;
       return true;
    }
+
    return false;
 }
 
 bool qt_get_named_rgb(const char *name, QRgb *rgb)
 {
-   int len = int(strlen(name));
+   int len = strlen(name);
    if (len > 255) {
       return false;
    }
+
    char name_no_space[256];
    int pos = 0;
+
    for (int i = 0; i < len; i++) {
       if (name[i] != '\t' && name[i] != ' ') {
          name_no_space[pos++] = name[i];
       }
    }
+
    name_no_space[pos] = 0;
 
    return get_named_rgb(name_no_space, rgb);
 }
 
-bool qt_get_named_rgb(const QChar *name, int len, QRgb *rgb)
+bool qt_get_named_rgb(const QStringView name, QRgb *rgb)
 {
-   if (len > 255) {
+   if (name.length() > 255) {
       return false;
    }
+
    char name_no_space[256];
    int pos = 0;
-   for (int i = 0; i < len; i++) {
-      if (name[i] != QLatin1Char('\t') && name[i] != QLatin1Char(' ')) {
-         name_no_space[pos++] = name[i].toLatin1();
+
+   for (QChar c : name) {
+      if (c != '\t' && c != ' ') {
+         name_no_space[pos++] = c.toLatin1();
       }
    }
+
    name_no_space[pos] = 0;
+
    return get_named_rgb(name_no_space, rgb);
 }
 
@@ -337,8 +354,9 @@ QStringList qt_get_colornames()
 {
    int i = 0;
    QStringList lst;
+
    for (i = 0; i < rgbTblSize; i++) {
-      lst << QLatin1String(rgbTbl[i].name);
+      lst << QString::fromLatin1(rgbTbl[i].name);
    }
    return lst;
 }
@@ -346,6 +364,11 @@ QStringList qt_get_colornames()
 #else
 
 bool qt_get_named_rgb(const char *, QRgb *)
+{
+   return false;
+}
+
+bool qt_get_named_rgb(QStringView name, QRgb *)
 {
    return false;
 }

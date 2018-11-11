@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -49,20 +46,19 @@ class SequenceMappingIterator : public QAbstractXmlForwardIterator<TResult>
                            const typename QAbstractXmlForwardIterator<TSource>::Ptr &sourceIterator,
                            const DynamicContext::Ptr &context);
 
-   virtual TResult next();
-   virtual xsInteger count();
-   virtual TResult current() const;
-   virtual xsInteger position() const;
+   TResult next() override;
+   xsInteger count() override;
+   TResult current() const override;
+   xsInteger position() const override;
 
    /**
     * The reason the implementation is placed in line here, is due to a bug
     * in MSVC-2005 version 14.00.50727.762. Note that it works with version 14.00.50727.42.
     */
-   virtual typename QAbstractXmlForwardIterator<TResult>::Ptr copy() const {
+   typename QAbstractXmlForwardIterator<TResult>::Ptr copy() const override {
       return typename QAbstractXmlForwardIterator<TResult>::Ptr
              (new SequenceMappingIterator<TResult, TSource, TMapper>(m_mapper,
-                   m_mainIterator->copy(),
-                   m_context));
+                   m_mainIterator->copy(), m_context));
    }
 
  private:
@@ -76,13 +72,9 @@ class SequenceMappingIterator : public QAbstractXmlForwardIterator<TResult>
 
 template<typename TResult, typename TSource, typename TMapper>
 SequenceMappingIterator<TResult, TSource, TMapper>::SequenceMappingIterator(
-   const TMapper &mapper,
-   const typename QAbstractXmlForwardIterator<TSource>::Ptr &iterator,
+   const TMapper &mapper, const typename QAbstractXmlForwardIterator<TSource>::Ptr &iterator,
    const DynamicContext::Ptr &context)
-   : m_position(0),
-     m_mainIterator(iterator),
-     m_context(context),
-     m_mapper(mapper)
+   : m_position(0), m_mainIterator(iterator), m_context(context), m_mapper(mapper)
 {
    Q_ASSERT(mapper);
    Q_ASSERT(iterator);
@@ -94,7 +86,7 @@ TResult SequenceMappingIterator<TResult, TSource, TMapper>::next()
    /* This was once implemented with a recursive function, but the stack
     * got blown for some inputs by that approach. */
    while (true) {
-      while (!m_currentIterator) {
+      while (! m_currentIterator) {
          const TSource mainItem(m_mainIterator->next());
 
          if (qIsForwardIteratorEnd(mainItem)) { /* We've reached the very end. */
@@ -145,13 +137,11 @@ xsInteger SequenceMappingIterator<TResult, TSource, TMapper>::position() const
    return m_position;
 }
 
-
 template<typename TResult, typename TSource, typename TMapper>
-static inline
-typename QAbstractXmlForwardIterator<TResult>::Ptr
-makeSequenceMappingIterator(const TMapper &mapper,
-                            const QExplicitlySharedDataPointer<QAbstractXmlForwardIterator<TSource> > &source,
-                            const DynamicContext::Ptr &context)
+static inline typename QAbstractXmlForwardIterator<TResult>::Ptr
+makeSequenceMappingIterator(const TMapper &mapper, 
+                  const QExplicitlySharedDataPointer<QAbstractXmlForwardIterator<TSource> > &source,
+                  const DynamicContext::Ptr &context)
 {
    return typename QAbstractXmlForwardIterator<TResult>::Ptr
           (new SequenceMappingIterator<TResult, TSource, TMapper>(mapper, source, context));

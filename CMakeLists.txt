@@ -1,48 +1,6 @@
-# Editors notes:
-#
-# * To find all FIXME/TODO related to the CMake build system (and those
-#   inherited from the autotools build system) execute the following in the
-#   top-level directory of the source tree:
-#
-#     find -name '*.cmake' -exec grep -E 'TODO|FIXME' {} +
-#     find -name CMakeLists.txt -exec grep -E 'TODO|FIXME' {} +
-#
-# * Should we support CMake v2.8.12 and newer only, COMPILE_OPTIONS can be used
-#   instead of COMPILE_FLAGS
-#
-# * Component libraries should probably be exported without the major build
-#   version in their names, e.g. CopperSpice::CsCore instead of
-#   CopperSpice::CsCore1 for consistency. The only problem can be for projects
-#   not checking (or requesting) for specifiec CopperSpice version requirement
-#   from their build systems leading to build failures on their side as things
-#   tend to break between major releases.
-#
-# * Definitions used on components (e.g. -DQT_NO_FREETYPE) should probably be
-#   set as interface definitions of some sort, also exposing them will make it
-#   possibly for projects to check for the features that CopperSpice was build
-#   with before attempting to compile any code which is nice to have. The file
-#   to record the features in should be cs_build_info.h I guess.
-#
-# * A lot of Windows libraries are hardcoded and linking may fail with newer
-#   versions of the OS, those will have to be abstracted in some way via use
-#   of CMake module(s).
-#
-# * Proper RPATH handling, required for running rcc and uic during build, on
-#   Mac OSX most likely requires CMake version 2.8.12, see
-#   http://www.cmake.org/pipermail/cmake/2013-October/056020.html.
-#
+cmake_minimum_required(VERSION 3.4.3 FATAL_ERROR)
 
-cmake_minimum_required(VERSION 2.8.11 FATAL_ERROR)
-# cmake_policy(VERSION 2.8.11)
-
-# Silence a warning about rpath on OS X.
-cmake_policy(SET CMP0042 OLD)
-
-# old versions of CMake ship bogus Freetype module
-if(CMAKE_MAJOR_VERSION VERSION_LESS "3")
-    cmake_policy(SET CMP0017 OLD)
-endif()
-
+cmake_policy(SET CMP0042 NEW)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules")
 
 project(copperspice)
@@ -53,35 +11,43 @@ include(CheckIncludeFile)
 include(CheckIncludeFiles)
 include(CheckTypeSize)
 include(FeatureSummary)
-include(TestLargeFiles)
+
 include(CopperSpiceBuildMacros)
+include(TestLargeFiles)
+
+# location deploy or install
 if(UNIX)
     include(GNUInstallDirs)
 else()
-    set(CMAKE_INSTALL_BINDIR ${CMAKE_INSTALL_PREFIX})
-    set(CMAKE_INSTALL_LIBDIR ${CMAKE_INSTALL_PREFIX})
-    set(CMAKE_INSTALL_INCLUDEDIR ${CMAKE_INSTALL_PREFIX})
-    set(CMAKE_INSTALL_DATAROOTDIR ${CMAKE_INSTALL_PREFIX})
+    set(CMAKE_INSTALL_BINDIR bin)
+    set(CMAKE_INSTALL_LIBDIR lib)
+    set(CMAKE_INSTALL_INCLUDEDIR include)
 endif()
 
-string(TIMESTAMP BUILD_DATE "%Y-%m-%d")
 set(BUILD_MAJOR "1")
-set(BUILD_MINOR "2")
+set(BUILD_MINOR "5")
 set(BUILD_MICRO "1")
-# everything is optional except core
+set(BUILD_ABI ${BUILD_MAJOR}.${BUILD_MINOR})
+
+# required library
 set(BUILD_COMPONENTS "Core")
-# TODO: add DBus, Declarative and ScriptTools once they build
-set(_OPTIONAL_COMPONENTS Gui Multimedia Network Phonon OpenGL Script Sql Svg Xml XmlPatterns WebKit)
+
+# might add DBus, Declarative and ScriptTools later
+set(_OPTIONAL_COMPONENTS Gui Multimedia Network OpenGL Phonon Script Sql Svg WebKit Xml XmlPatterns)
+
 set(PACKAGE "copperspice")
 set(PACKAGE_NAME "copperspice")
 set(PACKAGE_VERSION "${BUILD_MAJOR}.${BUILD_MINOR}.${BUILD_MICRO}")
 set(PACKAGE_STRING "copperspice ${BUILD_MAJOR}.${BUILD_MINOR}.${BUILD_MICRO}")
 set(PACKAGE_TARNAME "copperspice")
 set(PACKAGE_BUGREPORT "info@copperspice.com")
-set(PACKAGE_URL "http://www.copperspice.com/") # empty leaves it undefined
+set(PACKAGE_URL "http://www.copperspice.com/")
+
+# used in cs_build_info.h.in
 set(HEX_VERSION "0x0${BUILD_MAJOR}0${BUILD_MINOR}0${BUILD_MICRO}")
 set(VERSION "${PACKAGE_VERSION}")
 set(prefix "${CMAKE_INSTALL_PREFIX}")
+
 if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang|AppleClang)")
     execute_process(
         COMMAND ${CMAKE_CXX_COMPILER} -dumpmachine
@@ -90,49 +56,55 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang|AppleClang)")
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
     if(NOT DUMPMACHINE_EXITCODE EQUAL 0)
-        message(SEND_ERROR "failed to obtain machine from ${CMAKE_CXX_COMPILER}")
+        message(SEND_ERROR "Failed to obtain machine from ${CMAKE_CXX_COMPILER}")
     endif()
     set(target "${DUMPMACHINE_OUTPUT}")
+
+elseif(MSVC)
+   enable_language(ASM_MASM)
+   set(target "MSVC")
+
 else()
     message(WARNING
-        "Your compiler (${CMAKE_CXX_COMPILER}) is not yet handled properly. "
-        "If it supports -dumpmachine argument or alternative let use know. "
-        "This affects binary compatibility with plugins, the key that will be "
-        "used is: ${CMAKE_SYSTEM}"
+        "Your compiler (${CMAKE_CXX_COMPILER}) may not be supported. "
+        "The plugin key which will be used is: ${CMAKE_SYSTEM}"
     )
-    # TODO: more compiler handlers are required, check CMake docs for CMAKE_LANG_COMPILER_ID
+
     set(target "${CMAKE_SYSTEM}")
 endif()
 
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "C++ GUI library")
+set(CPACK_PACKAGE_NAME ${PROJECT_NAME})
 set(CPACK_PACKAGE_VENDOR "CopperSpice")
-set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_SOURCE_DIR}/README")
-set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/license/LICENSE.LGPL")
-set(CPACK_SOURCE_IGNORE_FILES "/build/;/.git;${CPACK_SOURCE_IGNORE_FILES}")
-set(CPACK_PACKAGE_INSTALL_DIRECTORY ${CMAKE_INSTALL_PREFIX})
 set(CPACK_PACKAGE_VERSION_MAJOR ${BUILD_MAJOR})
 set(CPACK_PACKAGE_VERSION_MINOR ${BUILD_MINOR})
 set(CPACK_PACKAGE_VERSION_PATCH ${BUILD_MICRO})
+
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "C++ GUI library")
+set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_SOURCE_DIR}/README.md")
+
+set(CPACK_SOURCE_IGNORE_FILES "/build/;/.git;${CPACK_SOURCE_IGNORE_FILES}")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY ${CMAKE_INSTALL_PREFIX})
+set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY OFF)
+
 include(CPack)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_INCLUDE_DIRECTORIES_BEFORE ON)
-if(NOT CMAKE_VERSION VERSION_LESS "3.1.0")
-    set(CMAKE_CXX_STANDARD_REQUIRED ON)
-    set(CMAKE_CXX_STANDARD 11)
-else()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-endif()
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD 14)
+
 if(APPLE)
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-undefined,error")
-    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-undefined,error")
-    set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -Wl,-undefined,error")
+   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-undefined,error")
+   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-undefined,error")
+   set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -Wl,-undefined,error")
 else()
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--no-undefined")
-    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
-    set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -Wl,--no-undefined")
+   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--no-undefined")
+   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
+   set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -Wl,--no-undefined")
 endif()
-add_definitions(-DQT_SHARED -DHAVE_CONFIG_H -DBUILD_DATE="${BUILD_DATE}")
+
+string(TIMESTAMP BUILD_DATE "%Y-%m-%d")
+add_definitions(-DQT_SHARED -DBUILD_DATE="${BUILD_DATE}")
 set(TOOLS_SUFFIX)
 
 check_include_file(cups/cups.h HAVE_CUPS_CUPS_H)
@@ -181,10 +153,13 @@ foreach(component ${_OPTIONAL_COMPONENTS})
     option(WITH_${uppercomp} "Build ${component} component" ON)
 endforeach()
 
-find_package(OpenSSL)
+message("")
+message(STATUS "Search for packages:\n")
+
+find_package(OpenSSL 1.0)
 set_package_properties(OpenSSL PROPERTIES
     PURPOSE "Required for HTTPS support"
-    DESCRIPTION "Support for secure network communications (SSL and TLS)"
+    DESCRIPTION "Support for secure network communications using OpenSSL for SSL and TLS"
     URL "http://openssl.org"
     TYPE RECOMMENDED
 )
@@ -229,9 +204,6 @@ set_package_properties(MySQL PROPERTIES
     TYPE RECOMMENDED
 )
 
-# TODO: need a module for Qt Platform Abstraction
-# find_package(QPA)
-
 if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     find_package(GTK2)
     set_package_properties(GTK2 PROPERTIES
@@ -242,7 +214,17 @@ if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     )
 endif()
 
-if(${CMAKE_SYSTEM_NAME} MATCHES "(Linux|OpenBSD|FreeBSD|NetBSD)")
+if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+   find_package(Security)
+   set_package_properties(Security PROPERTIES
+       PURPOSE "Required for HTTPS support"
+       DESCRIPTION "Support for secure network communications using Secure Trasnport for SSL and TLS"
+       URL "https://developer.apple.com/documentation/security/secure_transport"
+       TYPE RECOMMENDED
+   )
+endif()
+
+if(${CMAKE_SYSTEM_NAME} MATCHES "(Linux|OpenBSD|FreeBSD|NetBSD|DragonFly)")
     # required by core component
     find_package(Threads)
     set_package_properties(Threads PROPERTIES
@@ -252,14 +234,13 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "(Linux|OpenBSD|FreeBSD|NetBSD)")
         TYPE REQUIRED
     )
 
-    find_package(GLIB2)
-    set_package_properties(GLIB2 PROPERTIES
+    find_package(GLib2)
+    set_package_properties(GLib2 PROPERTIES
         PURPOSE "Required for glib mainloop support"
         DESCRIPTION "Core application building blocks for libraries and applications written in C"
         URL "https://developer.gnome.org/glib"
         TYPE REQUIRED
     )
-    include_directories(${GLIB2_INCLUDE_DIR})
 
     find_package(GOBJECT2)
     set_package_properties(GOBJECT2 PROPERTIES
@@ -268,7 +249,6 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "(Linux|OpenBSD|FreeBSD|NetBSD)")
         URL "https://developer.gnome.org/gobject"
         TYPE REQUIRED
     )
-    include_directories(${GOBJECT2_INCLUDE_DIR})
 
     if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Linux")
         find_package(Iconv)
@@ -283,7 +263,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "(Linux|OpenBSD|FreeBSD|NetBSD)")
     if(WITH_GUI)
         find_package(NAS)
         set_package_properties(NAS PROPERTIES
-            PURPOSE "Required for basic audio support over wire"
+            PURPOSE "Required for basic audio support"
             DESCRIPTION "Network transparent, client/server audio transport system"
             URL "http://www.radscan.com/nas.html"
             TYPE REQUIRED
@@ -345,7 +325,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "(Linux|OpenBSD|FreeBSD|NetBSD)")
     endif()
 endif()
 
-if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+if(WIN32)
     add_definitions(-DUNICODE)
 endif()
 if(NOT CUPS_FOUND)
@@ -381,7 +361,7 @@ configure_file(
     ${CMAKE_BINARY_DIR}/include/QtCore/cs_build_info.h
 )
 
-# static libs, libs, exe    src/core/lib
+# file locations for building
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -440,28 +420,29 @@ configure_file(
 )
 
 install(
-    FILES
-    ${CMAKE_BINARY_DIR}/CopperSpiceConfig.cmake
-    ${CMAKE_BINARY_DIR}/CopperSpiceConfigVersion.cmake
-    ${CMAKE_SOURCE_DIR}/cmake/CopperSpiceMacros.cmake
-    DESTINATION
-    ${CMAKE_INSTALL_DATAROOTDIR}/cmake/CopperSpice
+   FILES
+      ${CMAKE_BINARY_DIR}/CopperSpiceConfig.cmake
+      ${CMAKE_BINARY_DIR}/CopperSpiceConfigVersion.cmake
+      ${CMAKE_SOURCE_DIR}/cmake/CopperSpiceMacros.cmake
+      ${CMAKE_SOURCE_DIR}/cmake/InstallMinGW.cmake
+   DESTINATION cmake/CopperSpice
 )
 
-install(
-    EXPORT CopperSpiceLibraryTargets
+install(EXPORT CopperSpiceLibraryTargets
     NAMESPACE CopperSpice::
     FILE CopperSpiceLibraryTargets.cmake
-    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/cmake/CopperSpice
+    DESTINATION cmake/CopperSpice
 )
 
 install(
     EXPORT CopperSpiceBinaryTargets
     NAMESPACE CopperSpice::
     FILE CopperSpiceBinaryTargets.cmake
-    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/cmake/CopperSpice
+    DESTINATION cmake/CopperSpice
 )
 
-message(STATUS "The following components will be build:")
+message("")
+message(STATUS "The following components will be built:")
 message("\n * ${BUILD_COMPONENTS}\n")
+
 feature_summary(WHAT ALL FATAL_ON_MISSING_REQUIRED_PACKAGES)

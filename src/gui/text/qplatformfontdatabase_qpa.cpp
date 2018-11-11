@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -239,9 +236,11 @@ void QPlatformFontDatabase::populateFontDatabase()
    QDir dir(fontpath);
    dir.setNameFilters(QStringList() << QLatin1String("*.qpf2"));
    dir.refresh();
+
    for (int i = 0; i < int(dir.count()); ++i) {
       const QByteArray fileName = QFile::encodeName(dir.absoluteFilePath(dir[i]));
-      QFile file(QString::fromLocal8Bit(fileName));
+      QFile file(QString::fromUtf8(fileName));
+
       if (file.open(QFile::ReadOnly)) {
          const QByteArray fileData = file.readAll();
          QByteArray *fileDataPtr = new QByteArray(fileData);
@@ -254,7 +253,7 @@ void QPlatformFontDatabase::populateFontDatabase()
     Returns the font engine that can be used to render the font described by
     the font definition, \a fontDef, in the specified \a script.
 */
-QFontEngine *QPlatformFontDatabase::fontEngine(const QFontDef &fontDef, QUnicodeTables::Script script, void *handle)
+QFontEngine *QPlatformFontDatabase::fontEngine(const QFontDef &fontDef, QChar::Script script, void *handle)
 {
    Q_UNUSED(script);
    Q_UNUSED(handle);
@@ -279,7 +278,7 @@ QFontEngine *QPlatformFontDatabase::fontEngine(const QByteArray &fontData, qreal
     \a style and \a script using the \a styleHint given.
 */
 QStringList QPlatformFontDatabase::fallbacksForFamily(const QString family, const QFont::Style &style,
-      const QFont::StyleHint &styleHint, const QUnicodeTables::Script &script) const
+      const QFont::StyleHint &styleHint, const QChar::Script &script) const
 {
    Q_UNUSED(family);
    Q_UNUSED(style);
@@ -326,11 +325,12 @@ void QPlatformFontDatabase::releaseHandle(void *handle)
 */
 QString QPlatformFontDatabase::fontDir() const
 {
-   QString fontpath = QString::fromLocal8Bit(qgetenv("QT_QPA_FONTDIR"));
+   QString fontpath = QString::fromUtf8(qgetenv("QT_QPA_FONTDIR"));
+
    if (fontpath.isEmpty()) {
 #ifndef QT_NO_SETTINGS
       fontpath = QLibraryInfo::location(QLibraryInfo::LibrariesPath);
-      fontpath += QLatin1String("/fonts");
+      fontpath += "/fonts";
 #endif
    }
 

@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -53,9 +50,10 @@
 #   define old_qDebug qDebug
 #   undef qDebug
 # endif
-#if !defined(Q_OS_IOS)
+
+#if ! defined(Q_OS_IOS)
 # include <CoreServices/CoreServices.h>
-#endif // !defined(Q_OS_IOS)
+#endif
 
 # ifdef old_qDebug
 #   undef qDebug
@@ -83,9 +81,6 @@ QT_BEGIN_NAMESPACE
 enum { ThreadPriorityResetFlag = 0x80000000 };
 
 #if defined(Q_OS_LINUX) && defined(__GLIBC__) && (defined(Q_CC_GNU) || defined(Q_CC_INTEL))
-#define HAVE_TLS
-#endif
-#if defined(Q_CC_XLC) || defined (Q_CC_SUN)
 #define HAVE_TLS
 #endif
 
@@ -236,21 +231,19 @@ void QThreadPrivate::createEventDispatcher(QThreadData *data)
    data->eventDispatcher->startingUp();
 }
 
-#if (defined(Q_OS_LINUX) || (defined(Q_OS_MAC) && MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_6))
-static void setCurrentThreadName(pthread_t threadId, const char *name)
+#if defined(Q_OS_LINUX) || defined(Q_OS_MAC)
+
+static void setCurrentThreadName(pthread_t threadId, const QString &name)
 {
-#  if defined(Q_OS_LINUX) && !defined(QT_LINUXBASE)
-   Q_UNUSED(threadId);
-   prctl(PR_SET_NAME, (unsigned long)name, 0, 0, 0);
+#if defined(Q_OS_LINUX) && ! defined(QT_LINUXBASE)
+   prctl(PR_SET_NAME, (unsigned long)name.constData(), 0, 0, 0);
 
-#  elif (defined(Q_OS_MAC) && MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_6)
-   Q_UNUSED(threadId);
-   if (QSysInfo::MacintoshVersion >= QSysInfo::MV_10_6) {
-      pthread_setname_np(name);
-   }
+#elif defined(Q_OS_MAC)
+   pthread_setname_np(name.constData());
 
-#  endif
+#endif
 }
+
 #endif
 
 void *QThreadPrivate::start(void *arg)
@@ -278,14 +271,14 @@ void *QThreadPrivate::start(void *arg)
    // ### TODO: allow the user to create a custom event dispatcher
    createEventDispatcher(data);
 
-#if (defined(Q_OS_LINUX) || (defined(Q_OS_MAC) && MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_6))
+#if defined(Q_OS_LINUX) || defined(Q_OS_MAC)
    // sets the name of the current thread.
    QString objectName = thr->objectName();
 
-   if (Q_LIKELY(objectName.isEmpty())) {
+   if (objectName.isEmpty()) {
       setCurrentThreadName(thr->d_func()->thread_id, thr->metaObject()->className());
    } else {
-      setCurrentThreadName(thr->d_func()->thread_id, objectName.toLocal8Bit());
+      setCurrentThreadName(thr->d_func()->thread_id, objectName);
    }
 
 #endif

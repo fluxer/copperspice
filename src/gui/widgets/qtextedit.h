@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -117,8 +114,8 @@ class Q_GUI_EXPORT QTextEdit : public QAbstractScrollArea
 
    using AutoFormatting = QFlags<AutoFormattingFlag>;
 
-   explicit QTextEdit(QWidget *parent = 0);
-   explicit QTextEdit(const QString &text, QWidget *parent = 0);
+   explicit QTextEdit(QWidget *parent = nullptr);
+   explicit QTextEdit(const QString &text, QWidget *parent = nullptr);
    virtual ~QTextEdit();
 
    void setDocument(QTextDocument *document);
@@ -300,48 +297,48 @@ class Q_GUI_EXPORT QTextEdit : public QAbstractScrollArea
    GUI_CS_SIGNAL_2(cursorPositionChanged)
 
  protected:
-   virtual bool event(QEvent *e);
-   virtual void timerEvent(QTimerEvent *e);
-   virtual void keyPressEvent(QKeyEvent *e);
-   virtual void keyReleaseEvent(QKeyEvent *e);
-   virtual void resizeEvent(QResizeEvent *e);
-   virtual void paintEvent(QPaintEvent *e);
-   virtual void mousePressEvent(QMouseEvent *e);
-   virtual void mouseMoveEvent(QMouseEvent *e);
-   virtual void mouseReleaseEvent(QMouseEvent *e);
-   virtual void mouseDoubleClickEvent(QMouseEvent *e);
-   virtual bool focusNextPrevChild(bool next);
+   bool event(QEvent *e) override;
+   void timerEvent(QTimerEvent *e) override;
+   void keyPressEvent(QKeyEvent *e) override;
+   void keyReleaseEvent(QKeyEvent *e) override;
+   void resizeEvent(QResizeEvent *e) override;
+   void paintEvent(QPaintEvent *e) override;
+   void mousePressEvent(QMouseEvent *e) override;
+   void mouseMoveEvent(QMouseEvent *e) override;
+   void mouseReleaseEvent(QMouseEvent *e) override;
+   void mouseDoubleClickEvent(QMouseEvent *e) override;
+   bool focusNextPrevChild(bool next) override;
 
 #ifndef QT_NO_CONTEXTMENU
-   virtual void contextMenuEvent(QContextMenuEvent *e);
+   void contextMenuEvent(QContextMenuEvent *e) override;
 #endif
 
 #ifndef QT_NO_DRAGANDDROP
-   virtual void dragEnterEvent(QDragEnterEvent *e);
-   virtual void dragLeaveEvent(QDragLeaveEvent *e);
-   virtual void dragMoveEvent(QDragMoveEvent *e);
-   virtual void dropEvent(QDropEvent *e);
+   void dragEnterEvent(QDragEnterEvent *e) override;
+   void dragLeaveEvent(QDragLeaveEvent *e) override;
+   void dragMoveEvent(QDragMoveEvent *e) override;
+   void dropEvent(QDropEvent *e) override;
 #endif
 
 #ifndef QT_NO_WHEELEVENT
-   virtual void wheelEvent(QWheelEvent *e);
+   void wheelEvent(QWheelEvent *e) override;
 #endif
 
-   virtual void focusInEvent(QFocusEvent *e);
-   virtual void focusOutEvent(QFocusEvent *e);
-   virtual void showEvent(QShowEvent *);
-   virtual void changeEvent(QEvent *e);
+   void focusInEvent(QFocusEvent *e) override;
+   void focusOutEvent(QFocusEvent *e) override;
+   void showEvent(QShowEvent *) override;
+   void changeEvent(QEvent *e) override;
 
    virtual QMimeData *createMimeDataFromSelection() const;
    virtual bool canInsertFromMimeData(const QMimeData *source) const;
    virtual void insertFromMimeData(const QMimeData *source);
 
-   virtual void inputMethodEvent(QInputMethodEvent *);
-   QVariant inputMethodQuery(Qt::InputMethodQuery property) const;
+   void inputMethodEvent(QInputMethodEvent *) override;
+   QVariant inputMethodQuery(Qt::InputMethodQuery property) const override;
 
    QTextEdit(QTextEditPrivate &dd, QWidget *parent);
 
-   virtual void scrollContentsBy(int dx, int dy);
+   virtual void scrollContentsBy(int dx, int dy) override;
 
  private:
    Q_DISABLE_COPY(QTextEdit)

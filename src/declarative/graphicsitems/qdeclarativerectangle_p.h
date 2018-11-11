@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -44,7 +41,7 @@ class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativePen : public QObject
    DECL_CS_PROPERTY_NOTIFY(color, penChanged)
 
  public:
-   QDeclarativePen(QObject *parent = 0)
+   QDeclarativePen(QObject *parent = nullptr)
       : QObject(parent), _width(1), _color("#000000"), _valid(false) {
    }
 
@@ -82,7 +79,7 @@ class QDeclarativeGradientStop : public QObject
    DECL_CS_PROPERTY_WRITE(color, setColor)
 
  public:
-   QDeclarativeGradientStop(QObject *parent = 0) : QObject(parent) {}
+   QDeclarativeGradientStop(QObject *parent = nullptr) : QObject(parent) {}
 
    qreal position() const {
       return m_position;
@@ -116,7 +113,7 @@ class QDeclarativeGradient : public QObject
    DECL_CS_CLASSINFO("DefaultProperty", "stops")
 
  public:
-   QDeclarativeGradient(QObject *parent = 0) : QObject(parent), m_gradient(0) {}
+   QDeclarativeGradient(QObject *parent = nullptr) : QObject(parent), m_gradient(0) {}
    ~QDeclarativeGradient() {
       delete m_gradient;
    }

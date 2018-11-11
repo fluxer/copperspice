@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,7 +23,6 @@
 #include "qxsdschemaparser_p.h"
 #include "qxmlutils_p.h"
 #include "qacceltreeresourceloader_p.h"
-#include "qautoptr_p.h"
 #include "qboolean_p.h"
 #include "qcommonnamespaces_p.h"
 #include "qderivedinteger_p.h"
@@ -147,8 +143,8 @@ class TagValidationHandler
          }
 
          m_parser->error(QtXmlPatterns::tr("Can not process unknown element %1, expected elements are: %2.")
-                         .arg(formatElement(m_parser->name().toString()))
-                         .arg(elementNames.join(QLatin1String(", "))));
+                         .formatArg(formatElement(m_parser->name().toString()))
+                         .formatArg(elementNames.join(QLatin1String(", "))));
          return;
       }
 
@@ -161,8 +157,8 @@ class TagValidationHandler
          }
 
          m_parser->error(QtXmlPatterns::tr("Element %1 is not allowed in this scope, possible elements are: %2.")
-                         .arg(formatElement(XsdSchemaToken::toString(token)))
-                         .arg(elementNames.join(QLatin1String(", "))));
+                         .formatArg(formatElement(XsdSchemaToken::toString(token)))
+                         .formatArg(elementNames.join(QLatin1String(", "))));
          return;
       }
    }
@@ -177,7 +173,7 @@ class TagValidationHandler
          }
 
          m_parser->error(QtXmlPatterns::tr("Child element is missing in that scope, possible child elements are: %1.")
-                         .arg(elementNames.join(QLatin1String(", "))));
+                         .formatArg(elementNames.join(QLatin1String(", "))));
       }
    }
 
@@ -349,15 +345,15 @@ void XsdSchemaParser::attributeContentError(const char *attributeName, const cha
 {
    if (type) {
       error(QtXmlPatterns::tr("%1 attribute of %2 element contains invalid content: {%3} is not a value of type %4.")
-            .arg(formatAttribute(attributeName))
-            .arg(formatElement(elementName))
-            .arg(formatData(value))
-            .arg(formatType(NamePool::Ptr(m_namePool), type)));
+            .formatArg(formatAttribute(attributeName))
+            .formatArg(formatElement(elementName))
+            .formatArg(formatData(value))
+            .formatArg(formatType(NamePool::Ptr(m_namePool), type)));
    } else {
       error(QtXmlPatterns::tr("%1 attribute of %2 element contains invalid content: {%3}.")
-            .arg(formatAttribute(attributeName))
-            .arg(formatElement(elementName))
-            .arg(formatData(value)));
+            .formatArg(formatAttribute(attributeName))
+            .formatArg(formatElement(elementName))
+            .formatArg(formatData(value)));
    }
 }
 
@@ -370,9 +366,10 @@ void XsdSchemaParser::parseSchema(ParserType parserType)
    // parse attributes
 
    if (parserType == TopLevelParser) {
-      if (hasAttribute(QString::fromLatin1("targetNamespace"))) {
+      if (hasAttribute(QString("targetNamespace"))) {
          m_targetNamespace = readNamespaceAttribute(QString::fromLatin1("targetNamespace"), "schema");
       }
+
    } else if (parserType == IncludeParser) {
       // m_targetNamespace is set to the target namespace of the including schema at this point
 
@@ -380,8 +377,9 @@ void XsdSchemaParser::parseSchema(ParserType parserType)
          const QString targetNamespace = readNamespaceAttribute(QString::fromLatin1("targetNamespace"), "schema");
 
          if (m_targetNamespace != targetNamespace) {
-            error(QtXmlPatterns::tr("Target namespace %1 of included schema is different from the target namespace %2 as defined by the including schema.")
-                  .arg(formatURI(targetNamespace)).arg(formatURI(m_targetNamespace)));
+            error(QtXmlPatterns::tr("Target namespace %1 of included schema is different from the target "
+                  "namespace %2 as defined by the including schema.")
+                  .formatArg(formatURI(targetNamespace)).formatArg(formatURI(m_targetNamespace)));
             return;
          }
       }
@@ -395,7 +393,7 @@ void XsdSchemaParser::parseSchema(ParserType parserType)
 
       if (m_targetNamespace != targetNamespace) {
          error(QtXmlPatterns::tr("Target namespace %1 of imported schema is different from the target namespace %2 as defined by the importing schema.")
-               .arg(formatURI(targetNamespace)).arg(formatURI(m_targetNamespace)));
+               .formatArg(formatURI(targetNamespace)).formatArg(formatURI(m_targetNamespace)));
          return;
       }
    } else if (parserType == RedefineParser) {
@@ -406,7 +404,7 @@ void XsdSchemaParser::parseSchema(ParserType parserType)
 
          if (m_targetNamespace != targetNamespace) {
             error(QtXmlPatterns::tr("Target namespace %1 of imported schema is different from the target namespace %2 as defined by the importing schema.")
-                  .arg(formatURI(targetNamespace)).arg(formatURI(m_targetNamespace)));
+                  .formatArg(formatURI(targetNamespace)).formatArg(formatURI(m_targetNamespace)));
             return;
          }
       }
@@ -438,7 +436,7 @@ void XsdSchemaParser::parseSchema(ParserType parserType)
 
    if (hasAttribute(QString::fromLatin1("blockDefault"))) {
       const QString blockDefault = readAttribute(QString::fromLatin1("blockDefault"));
-      const QStringList blockDefaultList = blockDefault.split(QLatin1Char(' '), QString::SkipEmptyParts);
+      const QStringList blockDefaultList = blockDefault.split(QLatin1Char(' '), QStringParser::SkipEmptyParts);
       for (int i = 0; i < blockDefaultList.count(); ++i) {
          const QString value = blockDefaultList.at(i);
          if (value != QString::fromLatin1("#all") &&
@@ -455,7 +453,7 @@ void XsdSchemaParser::parseSchema(ParserType parserType)
 
    if (hasAttribute(QString::fromLatin1("finalDefault"))) {
       const QString finalDefault = readAttribute(QString::fromLatin1("finalDefault"));
-      const QStringList finalDefaultList = finalDefault.split(QLatin1Char(' '), QString::SkipEmptyParts);
+      const QStringList finalDefaultList = finalDefault.split(QLatin1Char(' '), QStringParser::SkipEmptyParts);
       for (int i = 0; i < finalDefaultList.count(); ++i) {
          const QString value = finalDefaultList.at(i);
          if (value != QString::fromLatin1("#all") &&
@@ -483,13 +481,12 @@ void XsdSchemaParser::parseSchema(ParserType parserType)
       }
       m_xpathDefaultNamespace = xpathDefaultNamespace;
    } else {
-      m_xpathDefaultNamespace = QString::fromLatin1("##local");
+      m_xpathDefaultNamespace = QString("##local");
    }
 
    if (hasAttribute(QString::fromLatin1("defaultAttributes"))) {
-      const QString attrGroupName = readQNameAttribute(QString::fromLatin1("defaultAttributes"), "schema");
-      convertName(attrGroupName, NamespaceSupport::ElementName,
-                  m_defaultAttributes); // translate qualified name into QXmlName
+      const QString attrGroupName = readQNameAttribute(QString("defaultAttributes"), "schema");
+      convertName(attrGroupName, NamespaceSupport::ElementName, m_defaultAttributes); // translate qualified name into QXmlName
    }
 
    if (hasAttribute(QString::fromLatin1("version"))) {
@@ -497,10 +494,10 @@ void XsdSchemaParser::parseSchema(ParserType parserType)
    }
 
    if (hasAttribute(CommonNamespaces::XML, QString::fromLatin1("lang"))) {
-      const QString value = readAttribute(QString::fromLatin1("lang"), CommonNamespaces::XML);
+      const QString value = readAttribute(QString("lang"), CommonNamespaces::XML);
+      const QRegularExpression exp(QString::fromLatin1("[a-zA-Z]{1,8}(-[a-zA-Z0-9]{1,8})*"), QPatternOption::ExactMatchOption);
 
-      const QRegExp exp(QString::fromLatin1("[a-zA-Z]{1,8}(-[a-zA-Z0-9]{1,8})*"));
-      if (!exp.exactMatch(value)) {
+      if (! exp.match(value).hasMatch()) {
          attributeContentError("xml:lang", "schema", value);
          return;
       }
@@ -589,11 +586,11 @@ void XsdSchemaParser::parseInclude()
    } else {
       m_includedSchemas.insert(url);
 
-      const AutoPtr<QNetworkReply> reply(AccelTreeResourceLoader::load(url, m_context->networkAccessManager(),
+      const std::unique_ptr<QNetworkReply> reply(AccelTreeResourceLoader::load(url, m_context->networkAccessManager(),
                                          XsdSchemaContext::Ptr(m_context), AccelTreeResourceLoader::ContinueOnError));
       if (reply) {
          // parse the included schema by a different parser but with the same context
-         XsdSchemaParser parser(XsdSchemaContext::Ptr(m_context), XsdSchemaParserContext::Ptr(m_parserContext), reply.data());
+         XsdSchemaParser parser(XsdSchemaContext::Ptr(m_context), XsdSchemaParserContext::Ptr(m_parserContext), reply.get());
          parser.setDocumentURI(url);
          parser.setTargetNamespaceExtended(m_targetNamespace);
          parser.setIncludedSchemas(m_includedSchemas);
@@ -652,16 +649,16 @@ void XsdSchemaParser::parseImport()
       importNamespace = readAttribute(QString::fromLatin1("namespace"));
       if (importNamespace == m_targetNamespace) {
          error(QtXmlPatterns::tr("%1 element is not allowed to have the same %2 attribute value as the target namespace %3.")
-               .arg(formatElement("import"))
-               .arg(formatAttribute("namespace"))
-               .arg(formatURI(m_targetNamespace)));
+               .formatArg(formatElement("import"))
+               .formatArg(formatAttribute("namespace"))
+               .formatArg(formatURI(m_targetNamespace)));
          return;
       }
    } else {
       if (m_targetNamespace.isEmpty()) {
          error(QtXmlPatterns::tr("%1 element without %2 attribute is not allowed inside schema without target namespace.")
-               .arg(formatElement("import"))
-               .arg(formatAttribute("namespace")));
+               .formatArg(formatElement("import"))
+               .formatArg(formatAttribute("namespace")));
          return;
       }
    }
@@ -679,25 +676,30 @@ void XsdSchemaParser::parseImport()
       if (m_importedSchemas.contains(url)) {
          // we have imported that file already, according to the schema spec we are
          // allowed to silently skip it.
+
       } else {
          m_importedSchemas.insert(url);
 
          // as it is possible that well known schemas (e.g. XSD for XML) are only referenced by
          // namespace we should add it as well
-         m_importedSchemas.insert(importNamespace);
+         m_importedSchemas.insert(QUrl(importNamespace));
 
-         AutoPtr<QNetworkReply> reply(AccelTreeResourceLoader::load(url, m_context->networkAccessManager(),
+         std::unique_ptr<QNetworkReply> reply(AccelTreeResourceLoader::load(url, m_context->networkAccessManager(),
                                       XsdSchemaContext::Ptr(m_context), AccelTreeResourceLoader::ContinueOnError));
          if (reply) {
             // parse the included schema by a different parser but with the same context
-            XsdSchemaParser parser(XsdSchemaContext::Ptr(m_context), XsdSchemaParserContext::Ptr(m_parserContext), reply.data());
+            XsdSchemaParser parser(XsdSchemaContext::Ptr(m_context),
+                  XsdSchemaParserContext::Ptr(m_parserContext), reply.get());
+
             parser.setDocumentURI(url);
             parser.setTargetNamespace(importNamespace);
             parser.setIncludedSchemas(m_includedSchemas);
             parser.setImportedSchemas(m_importedSchemas);
             parser.setRedefinedSchemas(m_redefinedSchemas);
+
             if (!parser.parse(XsdSchemaParser::ImportParser)) {
                return;
+
             } else {
                // add indirectly loaded schemas to the list of already loaded ones
                addIncludedSchemas(parser.m_includedSchemas);
@@ -706,22 +708,28 @@ void XsdSchemaParser::parseImport()
             }
          }
       }
+
    } else {
       // check whether it is a known namespace we have a builtin schema for
-      if (!importNamespace.isEmpty()) {
-         if (!m_importedSchemas.contains(importNamespace)) {
-            m_importedSchemas.insert(importNamespace);
+      if (! importNamespace.isEmpty()) {
+         QUrl tmp(importNamespace);
 
-            QFile file(QString::fromLatin1(":") + importNamespace);
+         if (! m_importedSchemas.contains(tmp)) {
+            m_importedSchemas.insert(tmp);
+
+            QFile file(":" + importNamespace);
+
             if (file.open(QIODevice::ReadOnly)) {
                XsdSchemaParser parser(XsdSchemaContext::Ptr(m_context), XsdSchemaParserContext::Ptr(m_parserContext), &file);
-               parser.setDocumentURI(importNamespace);
+               parser.setDocumentURI(tmp);
                parser.setTargetNamespace(importNamespace);
                parser.setIncludedSchemas(m_includedSchemas);
                parser.setImportedSchemas(m_importedSchemas);
                parser.setRedefinedSchemas(m_redefinedSchemas);
+
                if (!parser.parse(XsdSchemaParser::ImportParser)) {
                   return;
+
                } else {
                   // add indirectly loaded schemas to the list of already loaded ones
                   addIncludedSchemas(parser.m_includedSchemas);
@@ -730,8 +738,9 @@ void XsdSchemaParser::parseImport()
                }
             }
          }
+
       } else {
-         // we don't import anything... that is valid according to the schema
+         // we do not import anything... that is valid according to the schema
       }
    }
 
@@ -739,7 +748,7 @@ void XsdSchemaParser::parseImport()
 
    TagValidationHandler tagValidator(XsdTagScope::Import, this, NamePool::Ptr(m_namePool));
 
-   while (!atEnd()) {
+   while (! atEnd()) {
       readNext();
 
       if (isEndElement()) {
@@ -805,7 +814,7 @@ void XsdSchemaParser::parseRedefine()
 
             const QXmlName baseTypeName = m_parserContext->resolver()->baseTypeNameOfType(type);
             if (baseTypeName != type->name(NamePool::Ptr(m_namePool))) {
-               error(QString::fromLatin1("redefined simple type %1 must have itself as base type").arg(formatType(NamePool::Ptr(
+               error(QString::fromLatin1("redefined simple type %1 must have itself as base type").formatArg(formatType(NamePool::Ptr(
                         m_namePool), type)));
                return;
             }
@@ -818,7 +827,7 @@ void XsdSchemaParser::parseRedefine()
             // 5
             const QXmlName baseTypeName = m_parserContext->resolver()->baseTypeNameOfType(type);
             if (baseTypeName != type->name(NamePool::Ptr(m_namePool))) {
-               error(QString::fromLatin1("redefined complex type %1 must have itself as base type").arg(formatType(NamePool::Ptr(
+               error(QString::fromLatin1("redefined complex type %1 must have itself as base type").formatArg(formatType(NamePool::Ptr(
                         m_namePool), type)));
                return;
             }
@@ -928,7 +937,7 @@ void XsdSchemaParser::parseRedefine()
       }
 
       if (!found) {
-         error(QString::fromLatin1("no matching type found to redefine simple type %1").arg(formatType(NamePool::Ptr(m_namePool),
+         error(QString::fromLatin1("no matching type found to redefine simple type %1").formatArg(formatType(NamePool::Ptr(m_namePool),
                redefinedType)));
          return;
       }
@@ -979,7 +988,7 @@ void XsdSchemaParser::parseRedefine()
       }
 
       if (!found) {
-         error(QString::fromLatin1("no matching type found to redefine complex type %1").arg(formatType(NamePool::Ptr(
+         error(QString::fromLatin1("no matching type found to redefine complex type %1").formatArg(formatType(NamePool::Ptr(
                   m_namePool), redefinedType)));
          return;
       }
@@ -1002,7 +1011,7 @@ void XsdSchemaParser::parseRedefine()
 
             if (referencedParticle->minimumOccurs() != 1 || referencedParticle->maximumOccurs() != 1 ||
                   referencedParticle->maximumOccursUnbounded()) { // 6.1.2
-               error(QString::fromLatin1("redefined group %1 can not contain reference to itself with minOccurs or maxOccurs != 1").arg(
+               error(QString::fromLatin1("redefined group %1 can not contain reference to itself with minOccurs or maxOccurs != 1").formatArg(
                         formatKeyword(group->displayName(NamePool::Ptr(m_namePool)))));
                return;
             }
@@ -1012,7 +1021,7 @@ void XsdSchemaParser::parseRedefine()
 
       // 6.1.1
       if (sameNameCounter > 1) {
-         error(QString::fromLatin1("redefined group %1 can not contain multiple references to itself").arg(formatKeyword(
+         error(QString::fromLatin1("redefined group %1 can not contain multiple references to itself").formatArg(formatKeyword(
                   group->displayName(NamePool::Ptr(m_namePool)))));
          return;
       }
@@ -1027,7 +1036,7 @@ void XsdSchemaParser::parseRedefine()
       }
 
       if (!contextGroup) { // 6.2.1
-         error(QString::fromLatin1("redefined group %1 has no occurrence in included schema").arg(formatKeyword(
+         error(QString::fromLatin1("redefined group %1 has no occurrence in included schema").formatArg(formatKeyword(
                   group->displayName(NamePool::Ptr(m_namePool)))));
          return;
       }
@@ -1087,7 +1096,7 @@ void XsdSchemaParser::parseRedefine()
          }
       }
       if (sameNameCounter > 1) {
-         error(QString::fromLatin1("redefined attribute group %1 can not contain multiple references to itself").arg(
+         error(QString::fromLatin1("redefined attribute group %1 can not contain multiple references to itself").formatArg(
                   formatKeyword(group->displayName(NamePool::Ptr(m_namePool)))));
          return;
       }
@@ -1103,7 +1112,7 @@ void XsdSchemaParser::parseRedefine()
       }
 
       if (!baseGroup) { // 7.2.1
-         error(QString::fromLatin1("redefined attribute group %1 has no occurrence in included schema").arg(formatKeyword(
+         error(QString::fromLatin1("redefined attribute group %1 has no occurrence in included schema").formatArg(formatKeyword(
                   group->displayName(NamePool::Ptr(m_namePool)))));
          return;
       }
@@ -1285,7 +1294,7 @@ XsdDocumentation::Ptr XsdSchemaParser::parseDocumentation()
    if (hasAttribute(QString::fromLatin1("source"))) {
       const QString value = readAttribute(QString::fromLatin1("source"));
 
-      if (!isValidUri(value)) {
+      if (! isValidUri(value)) {
          attributeContentError("source", "documentation", value, BuiltinTypes::xsAnyURI);
          return documentation;
       }
@@ -1299,14 +1308,16 @@ XsdDocumentation::Ptr XsdSchemaParser::parseDocumentation()
    if (hasAttribute(CommonNamespaces::XML, QString::fromLatin1("lang"))) {
       const QString value = readAttribute(QString::fromLatin1("lang"), CommonNamespaces::XML);
 
-      const QRegExp exp(QString::fromLatin1("[a-zA-Z]{1,8}(-[a-zA-Z0-9]{1,8})*"));
-      if (!exp.exactMatch(value)) {
+      static const QRegularExpression exp("[a-zA-Z]{1,8}(-[a-zA-Z0-9]{1,8})*", QPatternOption::ExactMatchOption);
+
+      if (! exp.match(value).hasMatch()) {
          attributeContentError("xml:lang", "documentation", value);
          return documentation;
       }
    }
 
-   while (!atEnd()) { //EVAL: can by any... what to do?
+   while (!atEnd()) {
+      //EVAL: can by any... what to do?
       readNext();
 
       if (isEndElement()) {
@@ -1541,9 +1552,9 @@ void XsdSchemaParser::parseSimpleRestriction(const XsdSimpleType::Ptr &ptr)
          } else if (isSchemaTag(XsdSchemaToken::SimpleType, token, namespaceToken)) {
             if (hasBaseAttribute) {
                error(QtXmlPatterns::tr("%1 element is not allowed inside %2 element if %3 attribute is present.")
-                     .arg(formatElement("simpleType"))
-                     .arg(formatElement("restriction"))
-                     .arg(formatAttribute("base")));
+                     .formatArg(formatElement("simpleType"))
+                     .formatArg(formatElement("restriction"))
+                     .formatArg(formatAttribute("base")));
                return;
             }
 
@@ -1602,9 +1613,9 @@ void XsdSchemaParser::parseSimpleRestriction(const XsdSimpleType::Ptr &ptr)
 
    if (!hasBaseTypeSpecified) {
       error(QtXmlPatterns::tr("%1 element has neither %2 attribute nor %3 child element.")
-            .arg(formatElement("restriction"))
-            .arg(formatAttribute("base"))
-            .arg(formatElement("simpleType")));
+            .formatArg(formatElement("restriction"))
+            .formatArg(formatAttribute("base"))
+            .formatArg(formatElement("simpleType")));
       return;
    }
 
@@ -1703,9 +1714,9 @@ void XsdSchemaParser::parseList(const XsdSimpleType::Ptr &ptr)
          } else if (isSchemaTag(XsdSchemaToken::SimpleType, token, namespaceToken)) {
             if (hasItemTypeAttribute) {
                error(QtXmlPatterns::tr("%1 element is not allowed inside %2 element if %3 attribute is present.")
-                     .arg(formatElement("simpleType"))
-                     .arg(formatElement("list"))
-                     .arg(formatAttribute("itemType")));
+                     .formatArg(formatElement("simpleType"))
+                     .formatArg(formatElement("list"))
+                     .formatArg(formatAttribute("itemType")));
                return;
             }
 
@@ -1725,9 +1736,9 @@ void XsdSchemaParser::parseList(const XsdSimpleType::Ptr &ptr)
 
    if (!hasItemTypeSpecified) {
       error(QtXmlPatterns::tr("%1 element has neither %2 attribute nor %3 child element.")
-            .arg(formatElement("list"))
-            .arg(formatAttribute("itemType"))
-            .arg(formatElement("simpleType")));
+            .formatArg(formatElement("list"))
+            .formatArg(formatAttribute("itemType"))
+            .formatArg(formatElement("simpleType")));
       return;
    }
 
@@ -1760,7 +1771,7 @@ void XsdSchemaParser::parseUnion(const XsdSimpleType::Ptr &ptr)
 
    if (hasAttribute(QString::fromLatin1("memberTypes"))) {
       const QStringList memberTypes = readAttribute(QString::fromLatin1("memberTypes")).split(QLatin1Char(' '),
-                                      QString::SkipEmptyParts);
+                                      QStringParser::SkipEmptyParts);
       QList<QXmlName> typeNames;
 
       for (int i = 0; i < memberTypes.count(); ++i) {
@@ -1817,9 +1828,9 @@ void XsdSchemaParser::parseUnion(const XsdSimpleType::Ptr &ptr)
 
    if (!hasMemberTypesSpecified) {
       error(QtXmlPatterns::tr("%1 element has neither %2 attribute nor %3 child element.")
-            .arg(formatElement("union"))
-            .arg(formatAttribute("memberTypes"))
-            .arg(formatElement("simpleType")));
+            .formatArg(formatElement("union"))
+            .formatArg(formatAttribute("memberTypes"))
+            .formatArg(formatElement("simpleType")));
       return;
    }
 
@@ -2672,9 +2683,9 @@ XsdComplexType::Ptr XsdSchemaParser::parseGlobalComplexType()
          } else if (isSchemaTag(XsdSchemaToken::SimpleContent, token, namespaceToken)) {
             if (effectiveMixed) {
                error(QtXmlPatterns::tr("%1 element with %2 child element must not have a %3 attribute.")
-                     .arg(formatElement("complexType"))
-                     .arg(formatElement("simpleContent"))
-                     .arg(formatAttribute("mixed")));
+                     .formatArg(formatElement("complexType"))
+                     .formatArg(formatElement("simpleContent"))
+                     .formatArg(formatAttribute("mixed")));
                return complexType;
             }
 
@@ -3698,10 +3709,10 @@ XsdModelGroup::Ptr XsdSchemaParser::parseAll(const NamedSchemaComponent::Ptr &pa
 
             if (particle->maximumOccursUnbounded() || particle->maximumOccurs() > 1) {
                error(QtXmlPatterns::tr("%1 attribute of %2 element must be %3 or %4.")
-                     .arg(formatAttribute("maxOccurs"))
-                     .arg(formatElement("all"))
-                     .arg(formatData("0"))
-                     .arg(formatData("1")));
+                     .formatArg(formatAttribute("maxOccurs"))
+                     .formatArg(formatElement("all"))
+                     .formatArg(formatData("0"))
+                     .formatArg(formatData("1")));
                return modelGroup;
             }
 
@@ -3735,17 +3746,17 @@ XsdModelGroup::Ptr XsdSchemaParser::parseLocalAll(const XsdParticle::Ptr &partic
    }
    if (particle->maximumOccursUnbounded() || particle->maximumOccurs() != 1) {
       error(QtXmlPatterns::tr("%1 attribute of %2 element must have a value of %3.")
-            .arg(formatAttribute("maxOccurs"))
-            .arg(formatElement("all"))
-            .arg(formatData("1")));
+            .formatArg(formatAttribute("maxOccurs"))
+            .formatArg(formatElement("all"))
+            .formatArg(formatData("1")));
       return modelGroup;
    }
    if (particle->minimumOccurs() != 0 && particle->minimumOccurs() != 1) {
       error(QtXmlPatterns::tr("%1 attribute of %2 element must have a value of %3 or %4.")
-            .arg(formatAttribute("minOccurs"))
-            .arg(formatElement("all"))
-            .arg(formatData("0"))
-            .arg(formatData("1")));
+            .formatArg(formatAttribute("minOccurs"))
+            .formatArg(formatElement("all"))
+            .formatArg(formatData("0"))
+            .formatArg(formatData("1")));
       return modelGroup;
    }
 
@@ -3777,10 +3788,10 @@ XsdModelGroup::Ptr XsdSchemaParser::parseLocalAll(const XsdParticle::Ptr &partic
 
             if (particle->maximumOccursUnbounded() || particle->maximumOccurs() > 1) {
                error(QtXmlPatterns::tr("%1 attribute of %2 element must have a value of %3 or %4.")
-                     .arg(formatAttribute("maxOccurs"))
-                     .arg(formatElement("all"))
-                     .arg(formatData("0"))
-                     .arg(formatData("1")));
+                     .formatArg(formatAttribute("maxOccurs"))
+                     .formatArg(formatElement("all"))
+                     .formatArg(formatData("0"))
+                     .formatArg(formatData("1")));
                return modelGroup;
             }
 
@@ -4102,9 +4113,9 @@ XsdAttribute::Ptr XsdSchemaParser::parseGlobalAttribute()
 
    if (hasAttribute(QString::fromLatin1("default")) && hasAttribute(QString::fromLatin1("fixed"))) {
       error(QtXmlPatterns::tr("%1 element must not have %2 and %3 attribute together.")
-            .arg(formatElement("attribute"))
-            .arg(formatAttribute("default"))
-            .arg(formatAttribute("fixed")));
+            .formatArg(formatElement("attribute"))
+            .formatArg(formatAttribute("default"))
+            .formatArg(formatAttribute("fixed")));
       return attribute;
    }
 
@@ -4129,16 +4140,16 @@ XsdAttribute::Ptr XsdSchemaParser::parseGlobalAttribute()
          (m_namePool->stringForLocalName(objectName.localName()) != QString::fromLatin1("noNamespaceSchemaLocation"))) {
 
       error(QtXmlPatterns::tr("Content of %1 attribute of %2 element must not be from namespace %3.")
-            .arg(formatAttribute("name"))
-            .arg(formatElement("attribute"))
-            .arg(formatURI(CommonNamespaces::XSI)));
+            .formatArg(formatAttribute("name"))
+            .formatArg(formatElement("attribute"))
+            .formatArg(formatURI(CommonNamespaces::XSI)));
       return attribute;
    }
    if (m_namePool->stringForLocalName(objectName.localName()) == QString::fromLatin1("xmlns")) {
       error(QtXmlPatterns::tr("%1 attribute of %2 element must not be %3.")
-            .arg(formatAttribute("name"))
-            .arg(formatElement("attribute"))
-            .arg(formatData("xmlns")));
+            .formatArg(formatAttribute("name"))
+            .formatArg(formatElement("attribute"))
+            .formatArg(formatData("xmlns")));
       return attribute;
    }
    attribute->setName(objectName);
@@ -4179,9 +4190,9 @@ XsdAttribute::Ptr XsdSchemaParser::parseGlobalAttribute()
          } else if (isSchemaTag(XsdSchemaToken::SimpleType, token, namespaceToken)) {
             if (hasTypeAttribute) {
                error(QtXmlPatterns::tr("%1 element with %2 child element must not have a %3 attribute.")
-                     .arg(formatElement("attribute"))
-                     .arg(formatElement("simpleType"))
-                     .arg(formatAttribute("type")));
+                     .formatArg(formatElement("attribute"))
+                     .formatArg(formatElement("simpleType"))
+                     .formatArg(formatAttribute("type")));
                break;
             }
 
@@ -4232,32 +4243,32 @@ XsdAttributeUse::Ptr XsdSchemaParser::parseLocalAttribute(const NamedSchemaCompo
 
    if (hasAttribute(QString::fromLatin1("default")) && hasAttribute(QString::fromLatin1("fixed"))) {
       error(QtXmlPatterns::tr("%1 element must not have %2 and %3 attribute together.")
-            .arg(formatElement("attribute"))
-            .arg(formatAttribute("default"))
-            .arg(formatAttribute("fixed")));
+            .formatArg(formatElement("attribute"))
+            .formatArg(formatAttribute("default"))
+            .formatArg(formatAttribute("fixed")));
       return attributeUse;
    }
 
    if (hasRefAttribute) {
       if (hasAttribute(QString::fromLatin1("form"))) {
          error(QtXmlPatterns::tr("%1 element must not have %2 and %3 attribute together.")
-               .arg(formatElement("attribute"))
-               .arg(formatAttribute("ref"))
-               .arg(formatAttribute("form")));
+               .formatArg(formatElement("attribute"))
+               .formatArg(formatAttribute("ref"))
+               .formatArg(formatAttribute("form")));
          return attributeUse;
       }
       if (hasAttribute(QString::fromLatin1("name"))) {
          error(QtXmlPatterns::tr("%1 element must not have %2 and %3 attribute together.")
-               .arg(formatElement("attribute"))
-               .arg(formatAttribute("ref"))
-               .arg(formatAttribute("name")));
+               .formatArg(formatElement("attribute"))
+               .formatArg(formatAttribute("ref"))
+               .formatArg(formatAttribute("name")));
          return attributeUse;
       }
       if (hasAttribute(QString::fromLatin1("type"))) {
          error(QtXmlPatterns::tr("%1 element must not have %2 and %3 attribute together.")
-               .arg(formatElement("attribute"))
-               .arg(formatAttribute("ref"))
-               .arg(formatAttribute("type")));
+               .formatArg(formatElement("attribute"))
+               .formatArg(formatAttribute("ref"))
+               .formatArg(formatAttribute("type")));
          return attributeUse;
       }
    }
@@ -4298,10 +4309,10 @@ XsdAttributeUse::Ptr XsdSchemaParser::parseLocalAttribute(const NamedSchemaCompo
             attributeUse->valueConstraint()->variety() == XsdAttributeUse::ValueConstraint::Default &&
             value != QString::fromLatin1("optional")) {
          error(QtXmlPatterns::tr("%1 attribute of %2 element must have the value %3 because the %4 attribute is set.")
-               .arg(formatAttribute("use"))
-               .arg(formatElement("attribute"))
-               .arg(formatData("optional"))
-               .arg(formatElement("default")));
+               .formatArg(formatAttribute("use"))
+               .formatArg(formatElement("attribute"))
+               .formatArg(formatData("optional"))
+               .formatArg(formatElement("default")));
          return attributeUse;
       }
    }
@@ -4355,16 +4366,16 @@ XsdAttributeUse::Ptr XsdSchemaParser::parseLocalAttribute(const NamedSchemaCompo
                (m_namePool->stringForLocalName(objectName.localName()) != QString::fromLatin1("noNamespaceSchemaLocation"))) {
 
             error(QtXmlPatterns::tr("Content of %1 attribute of %2 element must not be from namespace %3.")
-                  .arg(formatAttribute("name"))
-                  .arg(formatElement("attribute"))
-                  .arg(formatURI(CommonNamespaces::XSI)));
+                  .formatArg(formatAttribute("name"))
+                  .formatArg(formatElement("attribute"))
+                  .formatArg(formatURI(CommonNamespaces::XSI)));
             return attributeUse;
          }
          if (m_namePool->stringForLocalName(objectName.localName()) == QString::fromLatin1("xmlns")) {
             error(QtXmlPatterns::tr("%1 attribute of %2 element must not be %3.")
-                  .arg(formatAttribute("name"))
-                  .arg(formatElement("attribute"))
-                  .arg(formatData("xmlns")));
+                  .formatArg(formatAttribute("name"))
+                  .formatArg(formatElement("attribute"))
+                  .formatArg(formatData("xmlns")));
             return attributeUse;
          }
 
@@ -4417,16 +4428,16 @@ XsdAttributeUse::Ptr XsdSchemaParser::parseLocalAttribute(const NamedSchemaCompo
          } else if (isSchemaTag(XsdSchemaToken::SimpleType, token, namespaceToken)) {
             if (hasTypeAttribute) {
                error(QtXmlPatterns::tr("%1 element with %2 child element must not have a %3 attribute.")
-                     .arg(formatElement("attribute"))
-                     .arg(formatElement("simpleType"))
-                     .arg(formatAttribute("type")));
+                     .formatArg(formatElement("attribute"))
+                     .formatArg(formatElement("simpleType"))
+                     .formatArg(formatAttribute("type")));
                break;
             }
             if (hasRefAttribute) {
                error(QtXmlPatterns::tr("%1 element with %2 child element must not have a %3 attribute.")
-                     .arg(formatElement("attribute"))
-                     .arg(formatElement("simpleType"))
-                     .arg(formatAttribute("ref")));
+                     .formatArg(formatElement("attribute"))
+                     .formatArg(formatElement("simpleType"))
+                     .formatArg(formatAttribute("ref")));
                break;
             }
 
@@ -4590,9 +4601,9 @@ XsdElement::Ptr XsdSchemaParser::parseGlobalElement()
 
    if (hasAttribute(QString::fromLatin1("default")) && hasAttribute(QString::fromLatin1("fixed"))) {
       error(QtXmlPatterns::tr("%1 element must not have %2 and %3 attribute together.")
-            .arg(formatElement("element"))
-            .arg(formatAttribute("default"))
-            .arg(formatAttribute("fixed")));
+            .formatArg(formatElement("element"))
+            .formatArg(formatAttribute("default"))
+            .formatArg(formatAttribute("fixed")));
       return element;
    }
 
@@ -4641,7 +4652,7 @@ XsdElement::Ptr XsdSchemaParser::parseGlobalElement()
       QList<QXmlName> elementNames;
 
       const QString value = readAttribute(QString::fromLatin1("substitutionGroup"));
-      const QStringList substitutionGroups = value.split(QLatin1Char(' '), QString::SkipEmptyParts);
+      const QStringList substitutionGroups = value.split(QLatin1Char(' '), QStringParser::SkipEmptyParts);
       if (substitutionGroups.isEmpty()) {
          attributeContentError("substitutionGroup", "element", value, BuiltinTypes::xsQName);
          return element;
@@ -4689,9 +4700,9 @@ XsdElement::Ptr XsdSchemaParser::parseGlobalElement()
          } else if (isSchemaTag(XsdSchemaToken::SimpleType, token, namespaceToken)) {
             if (hasTypeAttribute) {
                error(QtXmlPatterns::tr("%1 element with %2 child element must not have a %3 attribute.")
-                     .arg(formatElement("element"))
-                     .arg(formatElement("simpleType"))
-                     .arg(formatAttribute("type")));
+                     .formatArg(formatElement("element"))
+                     .formatArg(formatElement("simpleType"))
+                     .formatArg(formatAttribute("type")));
                return element;
             }
 
@@ -4706,9 +4717,9 @@ XsdElement::Ptr XsdSchemaParser::parseGlobalElement()
          } else if (isSchemaTag(XsdSchemaToken::ComplexType, token, namespaceToken)) {
             if (hasTypeAttribute) {
                error(QtXmlPatterns::tr("%1 element with %2 child element must not have a %3 attribute.")
-                     .arg(formatElement("element"))
-                     .arg(formatElement("complexType"))
-                     .arg(formatAttribute("type")));
+                     .formatArg(formatElement("element"))
+                     .formatArg(formatElement("complexType"))
+                     .formatArg(formatAttribute("type")));
                return element;
             }
 
@@ -4800,45 +4811,45 @@ XsdTerm::Ptr XsdSchemaParser::parseLocalElement(const XsdParticle::Ptr &particle
    if (hasRefAttribute) {
       if (hasAttribute(QString::fromLatin1("name"))) {
          error(QtXmlPatterns::tr("%1 element must not have %2 and %3 attribute together.")
-               .arg(formatElement("element"))
-               .arg(formatAttribute("ref"))
-               .arg(formatAttribute("name")));
+               .formatArg(formatElement("element"))
+               .formatArg(formatAttribute("ref"))
+               .formatArg(formatAttribute("name")));
          return term;
       } else if (hasAttribute(QString::fromLatin1("block"))) {
          error(QtXmlPatterns::tr("%1 element must not have %2 and %3 attribute together.")
-               .arg(formatElement("element"))
-               .arg(formatAttribute("ref"))
-               .arg(formatAttribute("block")));
+               .formatArg(formatElement("element"))
+               .formatArg(formatAttribute("ref"))
+               .formatArg(formatAttribute("block")));
          return term;
       } else if (hasAttribute(QString::fromLatin1("nillable"))) {
          error(QtXmlPatterns::tr("%1 element must not have %2 and %3 attribute together.")
-               .arg(formatElement("element"))
-               .arg(formatAttribute("ref"))
-               .arg(formatAttribute("nillable")));
+               .formatArg(formatElement("element"))
+               .formatArg(formatAttribute("ref"))
+               .formatArg(formatAttribute("nillable")));
          return term;
       } else if (hasAttribute(QString::fromLatin1("default"))) {
          error(QtXmlPatterns::tr("%1 element must not have %2 and %3 attribute together.")
-               .arg(formatElement("element"))
-               .arg(formatAttribute("ref"))
-               .arg(formatAttribute("default")));
+               .formatArg(formatElement("element"))
+               .formatArg(formatAttribute("ref"))
+               .formatArg(formatAttribute("default")));
          return term;
       } else if (hasAttribute(QString::fromLatin1("fixed"))) {
          error(QtXmlPatterns::tr("%1 element must not have %2 and %3 attribute together.")
-               .arg(formatElement("element"))
-               .arg(formatAttribute("ref"))
-               .arg(formatAttribute("fixed")));
+               .formatArg(formatElement("element"))
+               .formatArg(formatAttribute("ref"))
+               .formatArg(formatAttribute("fixed")));
          return term;
       } else if (hasAttribute(QString::fromLatin1("form"))) {
          error(QtXmlPatterns::tr("%1 element must not have %2 and %3 attribute together.")
-               .arg(formatElement("element"))
-               .arg(formatAttribute("ref"))
-               .arg(formatAttribute("form")));
+               .formatArg(formatElement("element"))
+               .formatArg(formatAttribute("ref"))
+               .formatArg(formatAttribute("form")));
          return term;
       } else if (hasAttribute(QString::fromLatin1("type"))) {
          error(QtXmlPatterns::tr("%1 element must not have %2 and %3 attribute together.")
-               .arg(formatElement("element"))
-               .arg(formatAttribute("ref"))
-               .arg(formatAttribute("type")));
+               .formatArg(formatElement("element"))
+               .formatArg(formatAttribute("ref"))
+               .formatArg(formatAttribute("type")));
          return term;
       }
    }
@@ -4850,9 +4861,9 @@ XsdTerm::Ptr XsdSchemaParser::parseLocalElement(const XsdParticle::Ptr &particle
 
    if (!hasAttribute(QString::fromLatin1("name")) && !hasAttribute(QString::fromLatin1("ref"))) {
       error(QtXmlPatterns::tr("%1 element must have either %2 or %3 attribute.")
-            .arg(formatElement("element"))
-            .arg(formatAttribute("name"))
-            .arg(formatAttribute("ref")));
+            .formatArg(formatElement("element"))
+            .formatArg(formatAttribute("name"))
+            .formatArg(formatAttribute("ref")));
       return element;
    }
 
@@ -4913,9 +4924,9 @@ XsdTerm::Ptr XsdSchemaParser::parseLocalElement(const XsdParticle::Ptr &particle
 
       if (hasAttribute(QString::fromLatin1("default")) && hasAttribute(QString::fromLatin1("fixed"))) {
          error(QtXmlPatterns::tr("%1 element must not have %2 and %3 attribute together.")
-               .arg(formatElement("element"))
-               .arg(formatAttribute("default"))
-               .arg(formatAttribute("fixed")));
+               .formatArg(formatElement("element"))
+               .formatArg(formatAttribute("default"))
+               .formatArg(formatAttribute("fixed")));
          return element;
       }
 
@@ -4970,15 +4981,15 @@ XsdTerm::Ptr XsdSchemaParser::parseLocalElement(const XsdParticle::Ptr &particle
          } else if (isSchemaTag(XsdSchemaToken::SimpleType, token, namespaceToken)) {
             if (hasRefAttribute) {
                error(QtXmlPatterns::tr("%1 element with %2 child element must not have a %3 attribute.")
-                     .arg(formatElement("element"))
-                     .arg(formatElement("simpleType"))
-                     .arg(formatAttribute("ref")));
+                     .formatArg(formatElement("element"))
+                     .formatArg(formatElement("simpleType"))
+                     .formatArg(formatAttribute("ref")));
                return term;
             } else if (hasTypeAttribute) {
                error(QtXmlPatterns::tr("%1 element with %2 child element must not have a %3 attribute.")
-                     .arg(formatElement("element"))
-                     .arg(formatElement("simpleType"))
-                     .arg(formatAttribute("type")));
+                     .formatArg(formatElement("element"))
+                     .formatArg(formatElement("simpleType"))
+                     .formatArg(formatAttribute("type")));
                return term;
             }
 
@@ -4993,15 +5004,15 @@ XsdTerm::Ptr XsdSchemaParser::parseLocalElement(const XsdParticle::Ptr &particle
          } else if (isSchemaTag(XsdSchemaToken::ComplexType, token, namespaceToken)) {
             if (hasRefAttribute) {
                error(QtXmlPatterns::tr("%1 element with %2 child element must not have a %3 attribute.")
-                     .arg(formatElement("element"))
-                     .arg(formatElement("complexType"))
-                     .arg(formatAttribute("ref")));
+                     .formatArg(formatElement("element"))
+                     .formatArg(formatElement("complexType"))
+                     .formatArg(formatAttribute("ref")));
                return term;
             } else if (hasTypeAttribute) {
                error(QtXmlPatterns::tr("%1 element with %2 child element must not have a %3 attribute.")
-                     .arg(formatElement("element"))
-                     .arg(formatElement("complexType"))
-                     .arg(formatAttribute("type")));
+                     .formatArg(formatElement("element"))
+                     .formatArg(formatElement("complexType"))
+                     .formatArg(formatAttribute("type")));
                return term;
             }
 
@@ -5016,9 +5027,9 @@ XsdTerm::Ptr XsdSchemaParser::parseLocalElement(const XsdParticle::Ptr &particle
          } else if (isSchemaTag(XsdSchemaToken::Alternative, token, namespaceToken)) {
             if (hasRefAttribute) {
                error(QtXmlPatterns::tr("%1 element with %2 child element must not have a %3 attribute.")
-                     .arg(formatElement("element"))
-                     .arg(formatElement("alternative"))
-                     .arg(formatAttribute("ref")));
+                     .formatArg(formatElement("element"))
+                     .formatArg(formatElement("alternative"))
+                     .formatArg(formatAttribute("ref")));
                return term;
             }
 
@@ -5027,9 +5038,9 @@ XsdTerm::Ptr XsdSchemaParser::parseLocalElement(const XsdParticle::Ptr &particle
          } else if (isSchemaTag(XsdSchemaToken::Unique, token, namespaceToken)) {
             if (hasRefAttribute) {
                error(QtXmlPatterns::tr("%1 element with %2 child element must not have a %3 attribute.")
-                     .arg(formatElement("element"))
-                     .arg(formatElement("unique"))
-                     .arg(formatAttribute("ref")));
+                     .formatArg(formatElement("element"))
+                     .formatArg(formatElement("unique"))
+                     .formatArg(formatAttribute("ref")));
                return term;
             }
 
@@ -5038,9 +5049,9 @@ XsdTerm::Ptr XsdSchemaParser::parseLocalElement(const XsdParticle::Ptr &particle
          } else if (isSchemaTag(XsdSchemaToken::Key, token, namespaceToken)) {
             if (hasRefAttribute) {
                error(QtXmlPatterns::tr("%1 element with %2 child element must not have a %3 attribute.")
-                     .arg(formatElement("element"))
-                     .arg(formatElement("key"))
-                     .arg(formatAttribute("ref")));
+                     .formatArg(formatElement("element"))
+                     .formatArg(formatElement("key"))
+                     .formatArg(formatAttribute("ref")));
                return term;
             }
 
@@ -5049,9 +5060,9 @@ XsdTerm::Ptr XsdSchemaParser::parseLocalElement(const XsdParticle::Ptr &particle
          } else if (isSchemaTag(XsdSchemaToken::Keyref, token, namespaceToken)) {
             if (hasRefAttribute) {
                error(QtXmlPatterns::tr("%1 element with %2 child element must not have a %3 attribute.")
-                     .arg(formatElement("element"))
-                     .arg(formatElement("keyref"))
-                     .arg(formatAttribute("ref")));
+                     .formatArg(formatElement("element"))
+                     .formatArg(formatElement("keyref"))
+                     .formatArg(formatAttribute("ref")));
                return term;
             }
 
@@ -5415,10 +5426,10 @@ XsdAlternative::Ptr XsdSchemaParser::parseAlternative()
 
    if (!hasTypeSpecified) {
       error(QtXmlPatterns::tr("%1 element must have either %2 attribute or %3 or %4 as child element.")
-            .arg(formatElement("alternative"))
-            .arg(formatAttribute("type"))
-            .arg(formatElement("simpleType"))
-            .arg(formatElement("complexType")));
+            .formatArg(formatElement("alternative"))
+            .formatArg(formatAttribute("type"))
+            .formatArg(formatElement("simpleType"))
+            .formatArg(formatElement("complexType")));
       return alternative;
    }
 
@@ -5470,9 +5481,9 @@ XsdNotation::Ptr XsdSchemaParser::parseNotation()
 
    if (!hasOptionalAttribute) {
       error(QtXmlPatterns::tr("%1 element requires either %2 or %3 attribute.")
-            .arg(formatElement("notation"))
-            .arg(formatAttribute("public"))
-            .arg(formatAttribute("system")));
+            .formatArg(formatElement("notation"))
+            .formatArg(formatAttribute("public"))
+            .formatArg(formatAttribute("system")));
       return notation;
    }
 
@@ -5489,7 +5500,7 @@ XsdNotation::Ptr XsdSchemaParser::parseNotation()
 
       if (isCharacters() || isEntityReference()) {
          if (!text().toString().trimmed().isEmpty()) {
-            error(QtXmlPatterns::tr("Text or entity references not allowed inside %1 element").arg(formatElement("notation.")));
+            error(QtXmlPatterns::tr("Text or entity references not allowed inside %1 element").formatArg(formatElement("notation.")));
             return notation;
          }
       }
@@ -5529,14 +5540,14 @@ XsdWildcard::Ptr XsdSchemaParser::parseAny(const XsdParticle::Ptr &particle)
 
    if (hasAttribute(QString::fromLatin1("namespace"))) {
       const QSet<QString> values = readAttribute(QString::fromLatin1("namespace")).split(QLatin1Char(' '),
-                                   QString::SkipEmptyParts).toSet();
+                                   QStringParser::SkipEmptyParts).toSet();
       if ((values.contains(QString::fromLatin1("##any")) || values.contains(QString::fromLatin1("##other"))) &&
             values.count() != 1) {
          error(QtXmlPatterns::tr("%1 attribute of %2 element must contain %3, %4 or a list of URIs.")
-               .arg(formatAttribute("namespace"))
-               .arg(formatElement("any"))
-               .arg(formatData("##any"))
-               .arg(formatData("##other")));
+               .formatArg(formatAttribute("namespace"))
+               .formatArg(formatElement("any"))
+               .formatArg(formatData("##any"))
+               .formatArg(formatData("##other")));
          return wildcard;
       }
 
@@ -5647,14 +5658,14 @@ XsdWildcard::Ptr XsdSchemaParser::parseAnyAttribute()
    // parse attributes
    if (hasAttribute(QString::fromLatin1("namespace"))) {
       const QSet<QString> values = readAttribute(QString::fromLatin1("namespace")).split(QLatin1Char(' '),
-                                   QString::SkipEmptyParts).toSet();
+                                   QStringParser::SkipEmptyParts).toSet();
       if ((values.contains(QString::fromLatin1("##any")) || values.contains(QString::fromLatin1("##other"))) &&
             values.count() != 1) {
          error(QtXmlPatterns::tr("%1 attribute of %2 element must contain %3, %4 or a list of URIs.")
-               .arg(formatAttribute("namespace"))
-               .arg(formatElement("anyAttribute"))
-               .arg(formatData("##any"))
-               .arg(formatData("##other")));
+               .formatArg(formatAttribute("namespace"))
+               .formatArg(formatElement("anyAttribute"))
+               .formatArg(formatData("##any"))
+               .formatArg(formatData("##other")));
          return wildcard;
       }
 
@@ -5782,7 +5793,7 @@ void XsdSchemaParser::parseUnknown()
    m_namespaceSupport.pushContext();
    m_namespaceSupport.setPrefixes(namespaceDeclarations());
 
-   error(QtXmlPatterns::tr("%1 element is not allowed in this context.").arg(formatElement(name().toString())));
+   error(QtXmlPatterns::tr("%1 element is not allowed in this context.").formatArg(formatElement(name().toString())));
 
    while (!atEnd()) {
       readNext();
@@ -5840,9 +5851,9 @@ bool XsdSchemaParser::parseMinMaxConstraint(const XsdParticle::Ptr &particle, co
    if (!particle->maximumOccursUnbounded()) {
       if (particle->maximumOccurs() < particle->minimumOccurs()) {
          error(QtXmlPatterns::tr("%1 attribute of %2 element has larger value than %3 attribute.")
-               .arg(formatAttribute("minOccurs"))
-               .arg(formatElement(elementName))
-               .arg(formatAttribute("maxOccurs")));
+               .formatArg(formatAttribute("minOccurs"))
+               .formatArg(formatElement(elementName))
+               .formatArg(formatAttribute("maxOccurs")));
          return false;
       }
    }
@@ -5864,7 +5875,7 @@ void XsdSchemaParser::convertName(const QString &qualifiedName, NamespaceSupport
 {
    bool result = m_namespaceSupport.processName(qualifiedName, type, name);
    if (!result) {
-      error(QtXmlPatterns::tr("Prefix of qualified name %1 is not defined.").arg(formatKeyword(qualifiedName)));
+      error(QtXmlPatterns::tr("Prefix of qualified name %1 is not defined.").formatArg(formatKeyword(qualifiedName)));
    }
 }
 
@@ -5882,8 +5893,8 @@ QString XsdSchemaParser::readNameAttribute(const char *elementName)
 QString XsdSchemaParser::readQNameAttribute(const QString &typeAttribute, const char *elementName)
 {
    const QString value = readAttribute(typeAttribute).simplified();
-   if (!XPathHelper::isQName(value)) {
-      attributeContentError(typeAttribute.toLatin1(), elementName, value, BuiltinTypes::xsQName);
+   if (! XPathHelper::isQName(value)) {
+      attributeContentError(csPrintable(typeAttribute), elementName, value, BuiltinTypes::xsQName);
       return QString();
    } else {
       return value;
@@ -5894,7 +5905,7 @@ QString XsdSchemaParser::readNamespaceAttribute(const QString &attributeName, co
 {
    const QString value = readAttribute(attributeName);
    if (value.isEmpty()) {
-      attributeContentError(attributeName.toLatin1(), elementName, value, BuiltinTypes::xsAnyURI);
+      attributeContentError(csPrintable(attributeName), elementName, value, BuiltinTypes::xsAnyURI);
       return QString();
    }
 
@@ -5925,7 +5936,7 @@ SchemaType::DerivationConstraints XsdSchemaParser::readDerivationConstraintAttri
       content = readAttribute(QString::fromLatin1("final"));
 
       // split string into list to validate the content of the attribute
-      const QStringList values = content.split(QLatin1Char(' '), QString::SkipEmptyParts);
+      const QStringList values = content.split(QLatin1Char(' '), QStringParser::SkipEmptyParts);
       for (int i = 0; i < values.count(); i++) {
          const QString value = values.at(i);
          if (!allowedContent.contains(value) && (value != QString::fromLatin1("#all"))) {
@@ -5935,9 +5946,9 @@ SchemaType::DerivationConstraints XsdSchemaParser::readDerivationConstraintAttri
 
          if ((value == QString::fromLatin1("#all")) && values.count() != 1) {
             error(QtXmlPatterns::tr("%1 attribute of %2 element must either contain %3 or the other values.")
-                  .arg(formatAttribute("final"))
-                  .arg(formatElement(elementName))
-                  .arg(formatData("#all")));
+                  .formatArg(formatAttribute("final"))
+                  .formatArg(formatElement(elementName))
+                  .formatArg(formatData("#all")));
             return SchemaType::DerivationConstraints();
          }
       }
@@ -5946,7 +5957,7 @@ SchemaType::DerivationConstraints XsdSchemaParser::readDerivationConstraintAttri
       content = m_finalDefault;
    }
 
-   QSet<QString> contentSet = content.split(QLatin1Char(' '), QString::SkipEmptyParts).toSet();
+   QSet<QString> contentSet = content.split(QLatin1Char(' '), QStringParser::SkipEmptyParts).toSet();
 
    // if the '#all' tag is defined, we return all allowed values
    if (contentSet.contains(QString::fromLatin1("#all"))) {
@@ -5994,7 +6005,7 @@ NamedSchemaComponent::BlockingConstraints XsdSchemaParser::readBlockingConstrain
       content = readAttribute(QString::fromLatin1("block"));
 
       // split string into list to validate the content of the attribute
-      const QStringList values = content.split(QLatin1Char(' '), QString::SkipEmptyParts);
+      const QStringList values = content.split(QLatin1Char(' '), QStringParser::SkipEmptyParts);
       for (int i = 0; i < values.count(); i++) {
          const QString value = values.at(i);
          if (!allowedContent.contains(value) && (value != QString::fromLatin1("#all"))) {
@@ -6004,9 +6015,9 @@ NamedSchemaComponent::BlockingConstraints XsdSchemaParser::readBlockingConstrain
 
          if ((value == QString::fromLatin1("#all")) && values.count() != 1) {
             error(QtXmlPatterns::tr("%1 attribute of %2 element must either contain %3 or the other values.")
-                  .arg(formatAttribute("block"))
-                  .arg(formatElement(elementName))
-                  .arg(formatData("#all")));
+                  .formatArg(formatAttribute("block"))
+                  .formatArg(formatElement(elementName))
+                  .formatArg(formatData("#all")));
             return NamedSchemaComponent::BlockingConstraints();
          }
       }
@@ -6015,7 +6026,7 @@ NamedSchemaComponent::BlockingConstraints XsdSchemaParser::readBlockingConstrain
       content = m_blockDefault;
    }
 
-   QSet<QString> contentSet = content.split(QLatin1Char(' '), QString::SkipEmptyParts).toSet();
+   QSet<QString> contentSet = content.split(QLatin1Char(' '), QStringParser::SkipEmptyParts).toSet();
 
    // if the '#all' tag is defined, we return all allowed values
    if (contentSet.contains(QString::fromLatin1("#all"))) {
@@ -6077,6 +6088,7 @@ XsdXPathExpression::Ptr XsdSchemaParser::readXPathExpression(const char *element
       if (!m_targetNamespace.isEmpty()) {
          namespaceURI = AnyURI::fromLexical(m_targetNamespace);
       }
+
    } else if (xpathDefaultNamespace == QString::fromLatin1("##local")) {
       // it is absent
    } else {
@@ -6099,8 +6111,9 @@ XsdXPathExpression::Ptr XsdSchemaParser::readXPathExpression(const char *element
 QString XsdSchemaParser::readXPathAttribute(const QString &attributeName, XPathType type,  const char *elementName)
 {
    const QString value = readAttribute(attributeName);
-   if (value.isEmpty() || value.startsWith(QLatin1Char('/'))) {
-      attributeContentError(attributeName.toLatin1(), elementName, value);
+
+   if (value.isEmpty() || value.startsWith('/')) {
+      attributeContentError(csPrintable(attributeName), elementName, value);
       return QString();
    }
 
@@ -6131,7 +6144,7 @@ QString XsdSchemaParser::readXPathAttribute(const QString &attributeName, XPathT
 
    query.setQuery(value, m_documentURI);
    if (!query.isValid()) {
-      attributeContentError(attributeName.toLatin1(), elementName, value);
+      attributeContentError(csPrintable(attributeName), elementName, value);
       return QString();
    }
 
@@ -6143,11 +6156,12 @@ void XsdSchemaParser::validateIdAttribute(const char *elementName)
    if (hasAttribute(QString::fromLatin1("id"))) {
       const QString value = readAttribute(QString::fromLatin1("id"));
       DerivedString<TypeID>::Ptr id = DerivedString<TypeID>::fromLexical(NamePool::Ptr(m_namePool), value);
+
       if (id->hasError()) {
          attributeContentError("id", elementName, value, BuiltinTypes::xsID);
       } else {
          if (m_idCache->hasId(value)) {
-            error(QtXmlPatterns::tr("Component with ID %1 has been defined previously.").arg(formatData(value)));
+            error(QtXmlPatterns::tr("Component with ID %1 has been defined previously.").formatArg(formatData(value)));
          } else {
             m_idCache->addId(value);
          }
@@ -6165,7 +6179,7 @@ void XsdSchemaParser::addElement(const XsdElement::Ptr &element)
 {
    const QXmlName objectName = element->name(NamePool::Ptr(m_namePool));
    if (m_schema->element(objectName)) {
-      error(QtXmlPatterns::tr("Element %1 already defined.").arg(formatElement(m_namePool->displayName(objectName))));
+      error(QtXmlPatterns::tr("Element %1 already defined.").formatArg(formatElement(m_namePool->displayName(objectName))));
    } else {
       m_schema->addElement(element);
       m_componentLocationHash.insert(element, currentSourceLocation());
@@ -6176,7 +6190,7 @@ void XsdSchemaParser::addAttribute(const XsdAttribute::Ptr &attribute)
 {
    const QXmlName objectName = attribute->name(NamePool::Ptr(m_namePool));
    if (m_schema->attribute(objectName)) {
-      error(QtXmlPatterns::tr("Attribute %1 already defined.").arg(formatAttribute(m_namePool->displayName(objectName))));
+      error(QtXmlPatterns::tr("Attribute %1 already defined.").formatArg(formatAttribute(m_namePool->displayName(objectName))));
    } else {
       m_schema->addAttribute(attribute);
       m_componentLocationHash.insert(attribute, currentSourceLocation());
@@ -6192,7 +6206,7 @@ void XsdSchemaParser::addType(const SchemaType::Ptr &type)
 
    const QXmlName objectName = type->name(NamePool::Ptr(m_namePool));
    if (m_schema->type(objectName)) {
-      error(QtXmlPatterns::tr("Type %1 already defined.").arg(formatType(NamePool::Ptr(m_namePool), objectName)));
+      error(QtXmlPatterns::tr("Type %1 already defined.").formatArg(formatType(NamePool::Ptr(m_namePool), objectName)));
    } else {
       m_schema->addType(type);
       if (type->isSimpleType()) {
@@ -6217,8 +6231,7 @@ void XsdSchemaParser::addAttributeGroup(const XsdAttributeGroup::Ptr &group)
 {
    const QXmlName objectName = group->name(NamePool::Ptr(m_namePool));
    if (m_schema->attributeGroup(objectName)) {
-      error(QtXmlPatterns::tr("Attribute group %1 already defined.").arg(formatKeyword(NamePool::Ptr(m_namePool),
-            objectName)));
+      error(QtXmlPatterns::tr("Attribute group %1 already defined.").formatArg(formatKeyword(NamePool::Ptr(m_namePool), objectName)));
    } else {
       m_schema->addAttributeGroup(group);
       m_componentLocationHash.insert(group, currentSourceLocation());
@@ -6229,7 +6242,7 @@ void XsdSchemaParser::addElementGroup(const XsdModelGroup::Ptr &group)
 {
    const QXmlName objectName = group->name(NamePool::Ptr(m_namePool));
    if (m_schema->elementGroup(objectName)) {
-      error(QtXmlPatterns::tr("Element group %1 already defined.").arg(formatKeyword(NamePool::Ptr(m_namePool), objectName)));
+      error(QtXmlPatterns::tr("Element group %1 already defined.").formatArg(formatKeyword(NamePool::Ptr(m_namePool), objectName)));
    } else {
       m_schema->addElementGroup(group);
       m_componentLocationHash.insert(group, currentSourceLocation());
@@ -6240,7 +6253,7 @@ void XsdSchemaParser::addNotation(const XsdNotation::Ptr &notation)
 {
    const QXmlName objectName = notation->name(NamePool::Ptr(m_namePool));
    if (m_schema->notation(objectName)) {
-      error(QtXmlPatterns::tr("Notation %1 already defined.").arg(formatKeyword(NamePool::Ptr(m_namePool), objectName)));
+      error(QtXmlPatterns::tr("Notation %1 already defined.").formatArg(formatKeyword(NamePool::Ptr(m_namePool), objectName)));
    } else {
       m_schema->addNotation(notation);
       m_componentLocationHash.insert(notation, currentSourceLocation());
@@ -6251,7 +6264,7 @@ void XsdSchemaParser::addIdentityConstraint(const XsdIdentityConstraint::Ptr &co
 {
    const QXmlName objectName = constraint->name(NamePool::Ptr(m_namePool));
    if (m_schema->identityConstraint(objectName)) {
-      error(QtXmlPatterns::tr("Identity constraint %1 already defined.").arg(formatKeyword(NamePool::Ptr(m_namePool),
+      error(QtXmlPatterns::tr("Identity constraint %1 already defined.").formatArg(formatKeyword(NamePool::Ptr(m_namePool),
             objectName)));
    } else {
       m_schema->addIdentityConstraint(constraint);
@@ -6263,7 +6276,7 @@ void XsdSchemaParser::addFacet(const XsdFacet::Ptr &facet, XsdFacet::Hash &facet
 {
    // @see http://www.w3.org/TR/xmlschema-2/#src-single-facet-value
    if (facets.contains(facet->type())) {
-      error(QtXmlPatterns::tr("Duplicated facets in simple type %1.").arg(formatType(NamePool::Ptr(m_namePool), type)));
+      error(QtXmlPatterns::tr("Duplicated facets in simple type %1.").formatArg(formatType(NamePool::Ptr(m_namePool), type)));
       return;
    }
 

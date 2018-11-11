@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -141,7 +138,7 @@ class QPagePreview : public QWidget
    }
 
  protected:
-   void paintEvent(QPaintEvent *) {
+   void paintEvent(QPaintEvent *) override {
       QRect pageRect;
       QSizeF adjustedSize(m_size);
       adjustedSize.scale(width() - 10, height() - 10, Qt::KeepAspectRatio);
@@ -345,10 +342,10 @@ void QPageSetupWidget::setupPrinter() const
       engine->setProperty(PPK_CupsStringPageSize, QString::fromLatin1(cupsPageSize));
       engine->setProperty(PPK_CupsOptions, m_cups->options());
 
-      QRect pageRect = m_cups->pageRect(cupsPageSize);
+      QRect pageRect = m_cups->pageRect(cupsPageSize.data());
       engine->setProperty(PPK_CupsPageRect, pageRect);
 
-      QRect paperRect = m_cups->paperRect(cupsPageSize);
+      QRect paperRect = m_cups->paperRect(cupsPageSize.data());
       engine->setProperty(PPK_CupsPaperRect, paperRect);
 
       for (ps = 0; ps < QPrinter::NPaperSize; ++ps) {
@@ -384,8 +381,9 @@ void QPageSetupWidget::selectPrinter(QCUPSSupport *cups)
       int cupsDefaultSize = 0;
       QSize qtPreferredSize = m_printer->paperSize(QPrinter::Point).toSize();
       bool preferredSizeMatched = false;
+
       for (int i = 0; i < numChoices; ++i) {
-         widget.paperSize->addItem(QString::fromLocal8Bit(pageSizes->choices[i].text), QByteArray(pageSizes->choices[i].choice));
+         widget.paperSize->addItem(QString::fromUtf8(pageSizes->choices[i].text), QByteArray(pageSizes->choices[i].choice));
          if (static_cast<int>(pageSizes->choices[i].marked) == 1) {
             cupsDefaultSize = i;
          }
@@ -405,8 +403,8 @@ void QPageSetupWidget::selectPrinter(QCUPSSupport *cups)
          m_printer->getPageMargins(&m_leftMargin, &m_topMargin, &m_rightMargin, &m_bottomMargin, QPrinter::Point);
       } else {
          QByteArray cupsPaperSizeChoice = widget.paperSize->itemData(widget.paperSize->currentIndex()).toByteArray();
-         QRect paper = m_cups->paperRect(cupsPaperSizeChoice);
-         QRect content = m_cups->pageRect(cupsPaperSizeChoice);
+         QRect paper = m_cups->paperRect(cupsPaperSizeChoice.data());
+         QRect content = m_cups->pageRect(cupsPaperSizeChoice.data());
 
          m_leftMargin = content.x() - paper.x();
          m_topMargin = content.y() - paper.y();
@@ -478,7 +476,7 @@ void QPageSetupWidget::_q_paperSizeChanged()
 #if !defined(QT_NO_CUPS)
       if (m_cups) { // combobox is filled with cups based data
          QByteArray cupsPageSize = widget.paperSize->itemData(widget.paperSize->currentIndex()).toByteArray();
-         m_paperSize = m_cups->paperRect(cupsPageSize).size();
+         m_paperSize = m_cups->paperRect(cupsPageSize.data()).size();
          if (orientation == QPrinter::Landscape) {
             m_paperSize = QSizeF(m_paperSize.height(), m_paperSize.width());   // swap
          }

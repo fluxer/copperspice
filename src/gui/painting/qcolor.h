@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,22 +23,17 @@
 #ifndef QCOLOR_H
 #define QCOLOR_H
 
-#include <QtGui/qrgb.h>
-#include <QtCore/qnamespace.h>
-#include <QtCore/qstringlist.h>
-
-QT_BEGIN_NAMESPACE
+#include <qrgb.h>
+#include <qnamespace.h>
+#include <qstringlist.h>
 
 class QColor;
 class QColormap;
 class QVariant;
 
 Q_GUI_EXPORT QDebug operator<<(QDebug, const QColor &);
-
-#ifndef QT_NO_DATASTREAM
 Q_GUI_EXPORT QDataStream &operator<<(QDataStream &, const QColor &);
 Q_GUI_EXPORT QDataStream &operator>>(QDataStream &, QColor &);
-#endif
 
 class Q_GUI_EXPORT QColor
 {
@@ -57,7 +49,7 @@ class Q_GUI_EXPORT QColor
    QColor(const QColor &color);
    QColor(Spec spec);
 
-   bool isValid() const;
+   inline bool isValid() const;
 
    QString name() const;
    void setNamedColor(const QString &name);
@@ -171,9 +163,9 @@ class Q_GUI_EXPORT QColor
    static QColor fromHslF(qreal h, qreal s, qreal l, qreal a = 1.0);
 
    QColor light(int f = 150) const;
-   QColor lighter(int f = 150) const;
+   inline QColor lighter(int f = 150) const;
    QColor dark(int f = 200) const;
-   QColor darker(int f = 200) const;
+   inline QColor darker(int f = 200) const;
 
    QColor &operator=(const QColor &);
    QColor &operator=(Qt::GlobalColor color);
@@ -231,11 +223,9 @@ class Q_GUI_EXPORT QColor
    } ct;
 
    friend class QColormap;
-
-#ifndef QT_NO_DATASTREAM
    friend Q_GUI_EXPORT QDataStream &operator<<(QDataStream &, const QColor &);
    friend Q_GUI_EXPORT QDataStream &operator>>(QDataStream &, QColor &);
-#endif
+
 };
 
 inline QColor::QColor()
@@ -250,7 +240,7 @@ inline QColor::QColor(int r, int g, int b, int a)
 
 inline QColor::QColor(const char *aname)
 {
-   setNamedColor(QLatin1String(aname));
+   setNamedColor(QString::fromLatin1(aname));
 }
 
 inline QColor::QColor(const QString &aname)
@@ -278,7 +268,5 @@ inline QColor QColor::darker(int f) const
 {
    return dark(f);
 }
-
-QT_END_NAMESPACE
 
 #endif // QCOLOR_H

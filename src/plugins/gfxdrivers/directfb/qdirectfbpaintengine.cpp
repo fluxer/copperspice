@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -38,8 +35,6 @@
 #include <qpixmapdata_p.h>
 #include <qpixmap_raster_p.h>
 #include <qimagepixmapcleanuphooks_p.h>
-
-QT_BEGIN_NAMESPACE
 
 class SurfaceCache;
 class QDirectFBPaintEnginePrivate : public QRasterPaintEnginePrivate
@@ -147,9 +142,9 @@ private:
 
 
 #ifdef QT_DIRECTFB_IMAGECACHE
-QT_BEGIN_INCLUDE_NAMESPACE
+
 #include <qimage_p.h>
-QT_END_INCLUDE_NAMESPACE
+
 struct CachedImage
 {
     IDirectFBSurface *surface;
@@ -1566,8 +1561,6 @@ static void rasterFallbackWarn(const char *msg, const char *func, const device *
     }
     qWarning("%s", qPrintable(out));
 }
-
-QT_END_NAMESPACE
 
 #endif // QT_NO_QWS_DIRECTFB
 

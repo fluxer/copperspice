@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -69,23 +66,26 @@ void QWidgetAnimator::animationFinished()
 }
 #endif
 
-void QWidgetAnimator::animate(QWidget *widget, const QRect &_final_geometry, bool animate)
+void QWidgetAnimator::animate(QWidget *widget, const QRect & end_geometry, bool animate)
 {
    QRect r = widget->geometry();
    if (r.right() < 0 || r.bottom() < 0) {
       r = QRect();
    }
 
-   animate = animate && !r.isNull() && !_final_geometry.isNull();
+   animate = animate && ! r.isNull() && ! end_geometry.isNull();
 
    // might make the wigdet go away by sending it to negative space
-   const QRect final_geometry = _final_geometry.isValid() || widget->isWindow() ? _final_geometry :
-                                QRect(QPoint(-500 - widget->width(), -500 - widget->height()), widget->size());
+   QRect final_geometry = end_geometry; 
 
+   if (! (end_geometry.isValid() || widget->isWindow())  ) {
+      final_geometry = QRect(QPoint(-500 - widget->width(), -500 - widget->height()), widget->size());
+   }
 
 #ifndef QT_NO_ANIMATION
 
    AnimationMap::const_iterator it = m_animation_map.constFind(widget);
+
    if (it != m_animation_map.constEnd() && (*it)->endValue().toRect() == final_geometry) {
       return;
    }
@@ -108,7 +108,7 @@ void QWidgetAnimator::animate(QWidget *widget, const QRect &_final_geometry, boo
    m_mainWindowLayout->animationFinished(widget);
 #endif
 
-#endif //QT_NO_ANIMATION
+#endif
 
 }
 

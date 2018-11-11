@@ -1,31 +1,27 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
 
 #ifndef QMACINPUTCONTEXT_P_H
 #define QMACINPUTCONTEXT_P_H
-#include <qconfig.h>
 
 #ifndef QT_NO_IM
 
@@ -41,17 +37,17 @@ class Q_GUI_EXPORT QMacInputContext : public QInputContext
    void createTextDocument();
 
  public:
-   explicit QMacInputContext(QObject *parent = 0);
+   explicit QMacInputContext(QObject *parent = nullptr);
    virtual ~QMacInputContext();
 
-   virtual void setFocusWidget(QWidget *w);
-   virtual QString identifierName() {
+   virtual void setFocusWidget(QWidget *w) override;
+   virtual QString identifierName() override {
       return QLatin1String("mac");
    }
-   virtual QString language();
+   virtual QString language() override;
 
-   virtual void reset();
-   virtual bool isComposing() const;
+   virtual void reset() override;
+   virtual bool isComposing() const override;
 
    static void initialize();
    static void cleanup();
@@ -65,7 +61,7 @@ class Q_GUI_EXPORT QMacInputContext : public QInputContext
    }
 
  protected:
-   void mouseHandler(int pos, QMouseEvent *);
+   void mouseHandler(int pos, QMouseEvent *) override;
 
  private:
    bool composing;

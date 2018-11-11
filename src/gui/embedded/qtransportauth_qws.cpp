@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -29,7 +26,7 @@
 #ifndef QT_NO_SXE
 
 #include "../../3rdparty/md5/md5.h"            // do not change to < >
-#include "../../3rdparty/md5/md5.cpp"          // do not change to < >  
+#include "../../3rdparty/md5/md5.cpp"          // do not change to < >
 #include <qwsutils_qws.h>
 #include <qwssocket_qws.h>
 #include <qwscommand_qws_p.h>
@@ -190,6 +187,7 @@ void QTransportAuth::setProcessKey( const char *key, const char *prog )
 {
    Q_UNUSED(prog);
    setProcessKey( key );
+
 #ifdef QTRANSPORTAUTH_DEBUG
    char displaybuf[QSXE_KEY_LEN * 2 + 1];
    hexstring( displaybuf, (const unsigned char *)key, QSXE_KEY_LEN );
@@ -494,7 +492,7 @@ bool QTransportAuth::authorizeRequest( QTransportAuth::Data &d, const QString &r
          QFile log( logFilePath() );
 
          if (!log.open(QIODevice::WriteOnly | QIODevice::Append)) {
-            qWarning("Could not write to log in discovery mode: %s", qPrintable(logFilePath()));
+            qWarning("Could not write to log in discovery mode: %s", csPrintable(logFilePath()));
 
          } else {
             QTextStream ts( &log );
@@ -552,7 +550,7 @@ inline bool __fileOpen( QFile *f )
       qDebug( "Opened file: %s\n", qPrintable( f->fileName() ));
       return true;
    } else {
-      qWarning( "Could not open file: %s\n", qPrintable( f->fileName() ));
+      qWarning( "Could not open file: %s\n", csPrintable( f->fileName() ));
       return false;
    }
 #else
@@ -776,11 +774,11 @@ QString RequestAnalyzer::analyze( QByteArray *msgQueue )
    }
    if ( command_type == QWSCommand::QCopSend ) {
       QWSQCopSendCommand *sendCommand = static_cast<QWSQCopSendCommand *>(command);
-      request += QString::fromLatin1("/QCop/%1/%2").arg( sendCommand->channel ).arg( sendCommand->message );
+      request += QString::fromLatin1("/QCop/%1/%2").formatArg( sendCommand->channel ).formatArg( sendCommand->message );
    }
    if ( command_type == QWSCommand::QCopRegisterChannel ) {
       QWSQCopRegisterChannelCommand *registerCommand = static_cast<QWSQCopRegisterChannelCommand *>(command);
-      request += QString::fromLatin1("/QCop/RegisterChannel/%1").arg( registerCommand->channel );
+      request += QString::fromLatin1("/QCop/RegisterChannel/%1").formatArg( registerCommand->channel );
    }
 #endif
    dataSize = QWS_PROTOCOL_ITEM_SIZE( *command );
@@ -1293,8 +1291,10 @@ bool QTransportAuth::authFromMessage( QTransportAuth::Data &d, const char *msg, 
          }
          auth_tok += QSXE_KEY_LEN;
       }
+
       //the keys cached on d.progId may not contain the binary key because the cache entry was made
       //before the binary had first started, must search for client key again.
+
       if ( isCached ) {
          d_func()->keyCache.remove(d.progId);
          isCached = false;
@@ -1304,14 +1304,18 @@ bool QTransportAuth::authFromMessage( QTransportAuth::Data &d, const char *msg, 
                   << "against prog Id =" << d.progId << ". Re-obtaining client key. ";
 #endif
          clientKey = d_func()->getClientKey( d.progId );
+
          if ( clientKey == NULL ) {
             d.status = ( d.status & QTransportAuth::StatusMask ) | QTransportAuth::NoSuchKey;
             return false;
          }
+
          need_to_recheck = true;
+
       } else {
          need_to_recheck = false;
       }
+
    } while ( need_to_recheck );
 
    d.status = ( d.status & QTransportAuth::StatusMask ) | QTransportAuth::FailMatch;
@@ -1323,11 +1327,7 @@ bool QTransportAuth::authFromMessage( QTransportAuth::Data &d, const char *msg, 
 
 
 #ifdef QTRANSPORTAUTH_DEBUG
-/*!
-  sprintf into hex - dest \a buf, src \a key, \a key_len is length of key.
 
-  The target buf should be [ key_len * 2 + 1 ] in size
-*/
 void hexstring( char *buf, const unsigned char *key, size_t key_len )
 {
    unsigned int i, p;
@@ -1450,7 +1450,7 @@ void FAREnforcer::logAuthAttempt( QDateTime time )
 
             if ( ! logFilePath.isEmpty() ) {
                QFile log( logFilePath );
-               if ( ! log.open(QIODevice::WriteOnly | QIODevice::Append) ) { 
+               if ( ! log.open(QIODevice::WriteOnly | QIODevice::Append) ) {
                   qWarning("Could not write to log in discovery mode: %s", qPrintable(logFilePath) );
 
                } else {

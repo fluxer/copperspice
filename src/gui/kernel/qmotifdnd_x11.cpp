@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -690,12 +687,11 @@ QByteArray QX11Data::motifdndFormat(int n)
    return ("x-motif-dnd/" + X11->xdndAtomToString(target));
 }
 
-
-QVariant QX11Data::motifdndObtainData(const char *mimeType)
+QVariant QX11Data::motifdndObtainData(const QString &mimeType)
 {
    QByteArray result;
 
-   if (Dnd_selection == 0 || !dropWidget) {
+   if (Dnd_selection == 0 || ! dropWidget) {
       return result;
    }
 
@@ -704,26 +700,35 @@ QVariant QX11Data::motifdndObtainData(const char *mimeType)
 
    int n = 0;
    QByteArray f;
+
    do {
       f = motifdndFormat(n);
+
       if (f.isEmpty()) {
          return result;
       }
+
       n++;
-   } while (qstricmp(mimeType, f.data()));
+
+   } while (qstricmp(mimeType.constData(), f.constData()));
 
    Atom conversion_type = XNone;
+
    if (f == "text/plain;charset=ISO-8859-1") {
       conversion_type = XA_STRING;
+
    } else if (f == "text/plain;charset=UTF-8") {
       conversion_type = ATOM(UTF8_STRING);
+
    } else if (f == (QByteArray("text/plain;charset=") + QTextCodec::codecForLocale()->name())) {
       conversion_type = ATOM(COMPOUND_TEXT);
+
    } else if (f == "text/plain") {
       conversion_type = ATOM(TEXT);
+
    } else if (f.startsWith("x-motif-dnd/")) {
       // strip off the "x-motif-dnd/" prefix
-      conversion_type = X11->xdndStringToAtom(f.remove(0, 12));
+      conversion_type = X11->xdndStringToAtom(f.remove(0, 12).constData());
    }
 
    if (XGetSelectionOwner(X11->display, Dnd_selection) == XNone) {

@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -147,13 +144,16 @@ class QDESIGNER_UILIB_EXPORT DomUI
    ~DomUI();
 
    void read(QXmlStreamReader &reader);
+
 #ifdef QUILOADER_QDOM_READ
    void read(const QDomElement &node);
 #endif
    void write(QXmlStreamWriter &writer, const QString &tagName = QString()) const;
+
    inline QString text() const {
       return m_text;
    }
+
    inline void setText(const QString &s) {
       m_text = s;
    }
@@ -162,13 +162,16 @@ class QDESIGNER_UILIB_EXPORT DomUI
    inline bool hasAttributeVersion() const {
       return m_has_attr_version;
    }
+
    inline QString attributeVersion() const {
       return m_attr_version;
    }
+
    inline void setAttributeVersion(const QString &a) {
       m_attr_version = a;
       m_has_attr_version = true;
    }
+
    inline void clearAttributeVersion() {
       m_has_attr_version = false;
    }
@@ -3522,37 +3525,49 @@ class QDESIGNER_UILIB_EXPORT DomSizePolicy
    inline int elementHSizeType() const {
       return m_hSizeType;
    }
+
    void setElementHSizeType(int a);
+
    inline bool hasElementHSizeType() const {
       return m_children & HSizeType;
    }
+
    void clearElementHSizeType();
 
    inline int elementVSizeType() const {
       return m_vSizeType;
    }
+
    void setElementVSizeType(int a);
+
    inline bool hasElementVSizeType() const {
       return m_children & VSizeType;
    }
+
    void clearElementVSizeType();
 
    inline int elementHorStretch() const {
       return m_horStretch;
    }
+
    void setElementHorStretch(int a);
+
    inline bool hasElementHorStretch() const {
       return m_children & HorStretch;
    }
+
    void clearElementHorStretch();
 
    inline int elementVerStretch() const {
       return m_verStretch;
    }
+
    void setElementVerStretch(int a);
+
    inline bool hasElementVerStretch() const {
       return m_children & VerStretch;
    }
+
    void clearElementVerStretch();
 
  private:
@@ -3906,6 +3921,7 @@ class QDESIGNER_UILIB_EXPORT DomStringList
    // child element data
    uint m_children;
    QStringList m_string;
+
    enum Child {
       String = 1
    };
@@ -4151,13 +4167,17 @@ class QDESIGNER_UILIB_EXPORT DomString
    ~DomString();
 
    void read(QXmlStreamReader &reader);
+
 #ifdef QUILOADER_QDOM_READ
    void read(const QDomElement &node);
 #endif
+
    void write(QXmlStreamWriter &writer, const QString &tagName = QString()) const;
+
    inline QString text() const {
       return m_text;
    }
+
    inline void setText(const QString &s) {
       m_text = s;
    }
@@ -4166,13 +4186,16 @@ class QDESIGNER_UILIB_EXPORT DomString
    inline bool hasAttributeNotr() const {
       return m_has_attr_notr;
    }
+
    inline QString attributeNotr() const {
       return m_attr_notr;
    }
+
    inline void setAttributeNotr(const QString &a) {
       m_attr_notr = a;
       m_has_attr_notr = true;
    }
+
    inline void clearAttributeNotr() {
       m_has_attr_notr = false;
    }
@@ -4180,13 +4203,16 @@ class QDESIGNER_UILIB_EXPORT DomString
    inline bool hasAttributeComment() const {
       return m_has_attr_comment;
    }
+
    inline QString attributeComment() const {
       return m_attr_comment;
    }
+
    inline void setAttributeComment(const QString &a) {
       m_attr_comment = a;
       m_has_attr_comment = true;
    }
+
    inline void clearAttributeComment() {
       m_has_attr_comment = false;
    }
@@ -4194,13 +4220,16 @@ class QDESIGNER_UILIB_EXPORT DomString
    inline bool hasAttributeExtraComment() const {
       return m_has_attr_extraComment;
    }
+
    inline QString attributeExtraComment() const {
       return m_attr_extraComment;
    }
+
    inline void setAttributeExtraComment(const QString &a) {
       m_attr_extraComment = a;
       m_has_attr_extraComment = true;
    }
+
    inline void clearAttributeExtraComment() {
       m_has_attr_extraComment = false;
    }
@@ -4485,6 +4514,7 @@ class QDESIGNER_UILIB_EXPORT DomUrl
    inline DomString *elementString() const {
       return m_string;
    }
+
    DomString *takeElementString();
    void setElementString(DomString *a);
    inline bool hasElementString() const {
@@ -4500,6 +4530,7 @@ class QDESIGNER_UILIB_EXPORT DomUrl
    // child element data
    uint m_children;
    DomString *m_string;
+
    enum Child {
       String = 1
    };
@@ -4515,13 +4546,17 @@ class QDESIGNER_UILIB_EXPORT DomProperty
    ~DomProperty();
 
    void read(QXmlStreamReader &reader);
+
 #ifdef QUILOADER_QDOM_READ
    void read(const QDomElement &node);
 #endif
+
    void write(QXmlStreamWriter &writer, const QString &tagName = QString()) const;
+
    inline QString text() const {
       return m_text;
    }
+
    inline void setText(const QString &s) {
       m_text = s;
    }
@@ -4714,10 +4749,10 @@ class QDESIGNER_UILIB_EXPORT DomProperty
    DomSizeF *takeElementSizeF();
    void setElementSizeF(DomSizeF *a);
 
-   inline qlonglong elementLongLong() const {
+   inline qint64 elementLongLong() const {
       return m_longLong;
    }
-   void setElementLongLong(qlonglong a);
+   void setElementLongLong(qint64 a);
 
    inline DomChar *elementChar() const {
       return m_char;
@@ -4736,10 +4771,10 @@ class QDESIGNER_UILIB_EXPORT DomProperty
    }
    void setElementUInt(uint a);
 
-   inline qulonglong elementULongLong() const {
+   inline quint64 elementULongLong() const {
       return m_uLongLong;
    }
-   void setElementULongLong(qulonglong a);
+   void setElementULongLong(quint64 a);
 
    inline DomBrush *elementBrush() const {
       return m_brush;
@@ -4787,11 +4822,11 @@ class QDESIGNER_UILIB_EXPORT DomProperty
    DomPointF *m_pointF;
    DomRectF *m_rectF;
    DomSizeF *m_sizeF;
-   qlonglong m_longLong;
+   qint64 m_longLong;
    DomChar *m_char;
    DomUrl *m_url;
    uint m_UInt;
-   qulonglong m_uLongLong;
+   quint64 m_uLongLong;
    DomBrush *m_brush;
 
    DomProperty(const DomProperty &other);

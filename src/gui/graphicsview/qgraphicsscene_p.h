@@ -1,30 +1,29 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
 
 #ifndef QGRAPHICSSCENE_P_H
 #define QGRAPHICSSCENE_P_H
+
+#include <algorithm>
 
 #include <qgraphicsscene.h>
 
@@ -186,7 +185,7 @@ class QGraphicsScenePrivate
    void mousePressEventHandler(QGraphicsSceneMouseEvent *mouseEvent);
    QGraphicsWidget *windowForItem(const QGraphicsItem *item) const;
 
-   void drawItemHelper(QGraphicsItem *item, QPainter *painter, const QStyleOptionGraphicsItem *option, 
+   void drawItemHelper(QGraphicsItem *item, QPainter *painter, const QStyleOptionGraphicsItem *option,
                        QWidget *widget, bool painterStateProtection);
 
    void drawItems(QPainter *painter, const QTransform *const viewTransform,
@@ -249,7 +248,7 @@ class QGraphicsScenePrivate
 
    inline void ensureSortedTopLevelItems() {
       if (needSortTopLevelItems) {
-         qSort(topLevelItems.begin(), topLevelItems.end(), qt_notclosestLeaf);
+         std::sort(topLevelItems.begin(), topLevelItems.end(), qt_notclosestLeaf);
          topLevelSequentialOrdering = false;
          needSortTopLevelItems = false;
       }
@@ -286,7 +285,7 @@ class QGraphicsScenePrivate
    QHash<Qt::GestureType, int>  grabbedGestures;
    void gestureEventHandler(QGestureEvent *event);
 
-   void gestureTargetsAtHotSpots(const QSet<QGesture *> &gestures, Qt::GestureFlag flag, 
+   void gestureTargetsAtHotSpots(const QSet<QGesture *> &gestures, Qt::GestureFlag flag,
           QHash<QGraphicsObject *, QSet<QGesture *> > *targets, QSet<QGraphicsObject *> *itemsSet = 0,
           QSet<QGesture *> *normal = 0, QSet<QGesture *> *conflicts = 0);
 

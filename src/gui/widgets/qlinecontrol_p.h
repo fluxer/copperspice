@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,18 +23,21 @@
 #ifndef QLINECONTROL_P_H
 #define QLINECONTROL_P_H
 
-#include <QtCore/qglobal.h>
+#include <qglobal.h>
 
 #ifndef QT_NO_LINEEDIT
+
 #include <qwidget_p.h>
-#include <QtGui/qlineedit.h>
-#include <QtGui/qtextlayout.h>
-#include <QtGui/qstyleoption.h>
-#include <QtCore/qpointer.h>
-#include <QtGui/qclipboard.h>
-#include <QtCore/qpoint.h>
-#include <QtGui/qcompleter.h>
-#include <QtGui/qaccessible.h>
+#include <qtextengine_p.h>
+
+#include <qlineedit.h>
+#include <qtextlayout.h>
+#include <qstyleoption.h>
+#include <qpointer.h>
+#include <qclipboard.h>
+#include <qpoint.h>
+#include <qcompleter.h>
+#include <qaccessible.h>
 #include <qplatformdefs.h>
 
 QT_BEGIN_NAMESPACE
@@ -212,6 +212,7 @@ class Q_GUI_EXPORT QLineControl : public QObject
    qreal cursorToX(int cursor) const {
       return m_textLayout.lineAt(0).cursorToX(cursor);
    }
+
    qreal cursorToX() const {
       int cursor = m_cursor;
       if (m_preeditCursor != -1) {
@@ -223,17 +224,20 @@ class Q_GUI_EXPORT QLineControl : public QObject
    bool isReadOnly() const {
       return m_readOnly;
    }
+
    void setReadOnly(bool enable) {
       m_readOnly = enable;
    }
 
    QString text() const {
       QString res = m_maskData ? stripString(m_text) : m_text;
-      return (res.isNull() ? QString::fromLatin1("") : res);
+      return (res.isEmpty() ? QString("") : res);
    }
+
    void setText(const QString &txt) {
       internalSetText(txt, -1, false);
    }
+
    QString displayText() const {
       return m_textLayout.text();
    }
@@ -286,6 +290,7 @@ class Q_GUI_EXPORT QLineControl : public QObject
    const QValidator *validator() const {
       return m_validator;
    }
+
    void setValidator(const QValidator *v) {
       m_validator = const_cast<QValidator *>(v);
    }
@@ -295,6 +300,7 @@ class Q_GUI_EXPORT QLineControl : public QObject
    QCompleter *completer() const {
       return m_completer;
    }
+
    /* Note that you must set the widget for the completer separately */
    void setCompleter(const QCompleter *c) {
       m_completer = const_cast<QCompleter *>(c);
@@ -341,6 +347,7 @@ class Q_GUI_EXPORT QLineControl : public QObject
    }
 
    void updatePasswordEchoEditing(bool editing);
+
    bool passwordEchoEditing() const {
 #ifdef QT_GUI_PASSWORD_ECHO_DELAY
       if (m_passwordEchoTimer != 0) {
@@ -353,6 +360,7 @@ class Q_GUI_EXPORT QLineControl : public QObject
    QChar passwordCharacter() const {
       return m_passwordCharacter;
    }
+
    void setPasswordCharacter(const QChar &character) {
       m_passwordCharacter = character;
       updateDisplayText();
@@ -363,10 +371,17 @@ class Q_GUI_EXPORT QLineControl : public QObject
          if (m_text.isEmpty()) {
             return QApplication::keyboardInputDirection();
          }
-         return m_text.isRightToLeft() ? Qt::RightToLeft : Qt::LeftToRight;
+
+         if (QTextEngine::isRightToLeft(m_text)) {
+            return Qt::RightToLeft;
+         } else {
+            return Qt::LeftToRight;
+         }
       }
+
       return m_layoutDirection;
    }
+
    void setLayoutDirection(Qt::LayoutDirection direction) {
       if (direction != m_layoutDirection) {
          m_layoutDirection = direction;
@@ -443,7 +458,7 @@ class Q_GUI_EXPORT QLineControl : public QObject
 #endif
 
  protected:
-   virtual void timerEvent(QTimerEvent *event);
+   virtual void timerEvent(QTimerEvent *event) override;
 
  private:
    void init(const QString &txt);

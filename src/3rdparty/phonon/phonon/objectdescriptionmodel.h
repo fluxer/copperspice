@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -117,10 +114,10 @@ public:
    inline void moveUp(const QModelIndex &index) { d->moveUp(index); }           
    inline void moveDown(const QModelIndex &index) { d->moveDown(index); }
 
-   explicit inline ObjectDescriptionModel(QObject *parent = 0) : QAbstractListModel(parent), 
+   explicit inline ObjectDescriptionModel(QObject *parent = nullptr) : QAbstractListModel(parent), 
          d(new ObjectDescriptionModelData(this)) {} 
       
-   explicit inline ObjectDescriptionModel(const QList<ObjectDescription<type> > &data, QObject *parent = 0) :
+   explicit inline ObjectDescriptionModel(const QList<ObjectDescription<type> > &data, QObject *parent = nullptr) :
          QAbstractListModel(parent), d(new ObjectDescriptionModelData(this)) { setModelData(data); }
            
    inline void setModelData(const QList<ObjectDescription<type> > &data) 

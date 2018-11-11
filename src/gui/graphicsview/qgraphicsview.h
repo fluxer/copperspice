@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -121,11 +118,11 @@ class Q_GUI_EXPORT QGraphicsView : public QAbstractScrollArea
    };
    using OptimizationFlags = QFlags<OptimizationFlag>;
 
-   QGraphicsView(QWidget *parent = 0);
-   QGraphicsView(QGraphicsScene *scene, QWidget *parent = 0);
+   QGraphicsView(QWidget *parent = nullptr);
+   QGraphicsView(QGraphicsScene *scene, QWidget *parent = nullptr);
    ~QGraphicsView();
 
-   QSize sizeHint() const;
+   QSize sizeHint() const override;
 
    QPainter::RenderHints renderHints() const;
    void setRenderHint(QPainter::RenderHint hint, bool enabled = true);
@@ -225,7 +222,7 @@ class Q_GUI_EXPORT QGraphicsView : public QAbstractScrollArea
    inline QPoint mapFromScene(qreal x, qreal y) const;
    inline QPolygon mapFromScene(qreal x, qreal y, qreal w, qreal h) const;
 
-   QVariant inputMethodQuery(Qt::InputMethodQuery query) const;
+   QVariant inputMethodQuery(Qt::InputMethodQuery query) const override;
 
    QBrush backgroundBrush() const;
    void setBackgroundBrush(const QBrush &brush);
@@ -248,37 +245,37 @@ class Q_GUI_EXPORT QGraphicsView : public QAbstractScrollArea
    GUI_CS_SLOT_1(Protected, void setupViewport(QWidget *widget))
    GUI_CS_SLOT_2(setupViewport)
 
-   QGraphicsView(QGraphicsViewPrivate &, QWidget *parent = 0);
-   bool event(QEvent *event);
-   bool viewportEvent(QEvent *event);
+   QGraphicsView(QGraphicsViewPrivate &, QWidget *parent = nullptr);
+   bool event(QEvent *event) override;
+   bool viewportEvent(QEvent *event) override;
 
 #ifndef QT_NO_CONTEXTMENU
-   void contextMenuEvent(QContextMenuEvent *event);
+   void contextMenuEvent(QContextMenuEvent *event) override;
 #endif
 
-   void dragEnterEvent(QDragEnterEvent *event);
-   void dragLeaveEvent(QDragLeaveEvent *event);
-   void dragMoveEvent(QDragMoveEvent *event);
-   void dropEvent(QDropEvent *event);
-   void focusInEvent(QFocusEvent *event);
-   bool focusNextPrevChild(bool next);
-   void focusOutEvent(QFocusEvent *event);
-   void keyPressEvent(QKeyEvent *event);
-   void keyReleaseEvent(QKeyEvent *event);
-   void mouseDoubleClickEvent(QMouseEvent *event);
-   void mousePressEvent(QMouseEvent *event);
-   void mouseMoveEvent(QMouseEvent *event);
-   void mouseReleaseEvent(QMouseEvent *event);
+   void dragEnterEvent(QDragEnterEvent *event) override;
+   void dragLeaveEvent(QDragLeaveEvent *event) override;
+   void dragMoveEvent(QDragMoveEvent *event) override;
+   void dropEvent(QDropEvent *event) override;
+   void focusInEvent(QFocusEvent *event) override;
+   bool focusNextPrevChild(bool next) override;
+   void focusOutEvent(QFocusEvent *event) override;
+   void keyPressEvent(QKeyEvent *event) override;
+   void keyReleaseEvent(QKeyEvent *event) override;
+   void mouseDoubleClickEvent(QMouseEvent *event) override;
+   void mousePressEvent(QMouseEvent *event) override;
+   void mouseMoveEvent(QMouseEvent *event) override;
+   void mouseReleaseEvent(QMouseEvent *event) override;
 
 #ifndef QT_NO_WHEELEVENT
-   void wheelEvent(QWheelEvent *event);
+   void wheelEvent(QWheelEvent *event) override;
 #endif
 
-   void paintEvent(QPaintEvent *event);
-   void resizeEvent(QResizeEvent *event);
-   void scrollContentsBy(int dx, int dy);
-   void showEvent(QShowEvent *event);
-   void inputMethodEvent(QInputMethodEvent *event);
+   void paintEvent(QPaintEvent *event) override;
+   void resizeEvent(QResizeEvent *event) override;
+   void scrollContentsBy(int dx, int dy) override;
+   void showEvent(QShowEvent *event) override;
+   void inputMethodEvent(QInputMethodEvent *event) override;
 
    virtual void drawBackground(QPainter *painter, const QRectF &rect);
    virtual void drawForeground(QPainter *painter, const QRectF &rect);

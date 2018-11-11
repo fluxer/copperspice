@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -73,45 +70,56 @@ void QLineControl::updateDisplayText(bool forceUpdate)
 {
    QString orig = m_textLayout.text();
    QString str;
+
    if (m_echoMode == QLineEdit::NoEcho) {
-      str = QString::fromLatin1("");
+      str = QString("");
    } else {
       str = m_text;
    }
 
    if (m_echoMode == QLineEdit::Password) {
       str.fill(m_passwordCharacter);
+
 #ifdef QT_GUI_PASSWORD_ECHO_DELAY
       if (m_passwordEchoTimer != 0 && m_cursor > 0 && m_cursor <= m_text.length()) {
          int cursor = m_cursor - 1;
-         QChar uc = m_text.at(cursor);
+         QChar uc   = m_text.at(cursor);
+
          str[cursor] = uc;
+
          if (cursor > 0 && uc.unicode() >= 0xdc00 && uc.unicode() < 0xe000) {
             // second half of a surrogate, check if we have the first half as well,
             // if yes restore both at once
             uc = m_text.at(cursor - 1);
+
             if (uc.unicode() >= 0xd800 && uc.unicode() < 0xdc00) {
                str[cursor - 1] = uc;
             }
          }
       }
 #endif
+
    } else if (m_echoMode == QLineEdit::PasswordEchoOnEdit && !m_passwordEchoEditing) {
       str.fill(m_passwordCharacter);
    }
 
    // replace certain non-printable characters with spaces (to avoid
-   // drawing boxes when using fonts that don't have glyphs for such
-   // characters)
-   QChar *uc = str.data();
-   for (int i = 0; i < (int)str.length(); ++i) {
-      if ((uc[i] < 0x20 && uc[i] != 0x09)
-            || uc[i] == QChar::LineSeparator
-            || uc[i] == QChar::ParagraphSeparator
-            || uc[i] == QChar::ObjectReplacementCharacter) {
-         uc[i] = QChar(0x0020);
+   // drawing boxes when using fonts that don't have glyphs for such characters)
+   QString tmp;
+
+   for (const QChar &c : str) {
+
+      if ((c < 0x20 && c != QChar::Tabulation) || c == QChar::LineSeparator
+                  || c == QChar::ParagraphSeparator || c == QChar::ObjectReplacementCharacter) {
+
+         tmp.append(QChar(0x0020));
+
+      } else {
+         tmp.append(c);
       }
    }
+
+   str = tmp;
 
    m_textLayout.setText(str);
 
@@ -144,21 +152,20 @@ void QLineControl::updateDisplayText(bool forceUpdate)
 void QLineControl::copy(QClipboard::Mode mode) const
 {
    QString t = selectedText();
+
    if (!t.isEmpty() && m_echoMode == QLineEdit::Normal) {
       disconnect(QApplication::clipboard(), SIGNAL(selectionChanged()), this, 0);
+
       QApplication::clipboard()->setText(t, mode);
-      connect(QApplication::clipboard(), SIGNAL(selectionChanged()),
-              this, SLOT(_q_clipboardChanged()));
+      connect(QApplication::clipboard(), SIGNAL(selectionChanged()), this, SLOT(_q_clipboardChanged()));
    }
 }
 
 /*!
     \internal
 
-    Inserts the text stored in the application clipboard into the line
-    control.
+    Inserts the text stored in the application clipboard into the line  control.
 
-    \sa insert()
 */
 void QLineControl::paste(QClipboard::Mode clipboardMode)
 {
@@ -172,47 +179,26 @@ void QLineControl::paste(QClipboard::Mode clipboardMode)
 
 #endif // !QT_NO_CLIPBOARD
 
-/*!
-    \internal
-
-    Handles the behavior for the backspace key or function.
-    Removes the current selection if there is a selection, otherwise
-    removes the character prior to the cursor position.
-
-    \sa del()
-*/
 void QLineControl::backspace()
 {
    int priorState = m_undoState;
+
    if (hasSelectedText()) {
       removeSelectedText();
+
    } else if (m_cursor) {
       --m_cursor;
+
       if (m_maskData) {
          m_cursor = prevMaskBlank(m_cursor);
       }
-      if (m_cursor > 0 && m_text.at(m_cursor).isLowSurrogate()) {
-         // second half of a surrogate, check if we have the first half as well,
-         // if yes delete both at once
-         if (m_text.at(m_cursor - 1).isHighSurrogate()) {
-            internalDelete(true);
-            --m_cursor;
-         }
-      }
+
       internalDelete(true);
    }
+
    finishChange(priorState);
 }
 
-/*!
-    \internal
-
-    Handles the behavior for the delete key or function.
-    Removes the current selection if there is a selection, otherwise
-    removes the character after the cursor position.
-
-    \sa del()
-*/
 void QLineControl::del()
 {
    int priorState = m_undoState;
@@ -220,10 +206,12 @@ void QLineControl::del()
       removeSelectedText();
    } else {
       int n = m_textLayout.nextCursorPosition(m_cursor) - m_cursor;
+
       while (n--) {
          internalDelete();
       }
    }
+
    finishChange(priorState);
 }
 
@@ -1648,7 +1636,7 @@ void QLineControl::processMouseEvent(QMouseEvent *ev)
          if (QApplication::clipboard()->supportsSelection()) {
             if (ev->button() == Qt::LeftButton) {
                copy(QClipboard::Selection);
-            } else if (!isReadOnly() && ev->button() == Qt::MidButton) {
+            } else if (!isReadOnly() && ev->button() == Qt::MiddleButton) {
                deselect();
                insert(QApplication::clipboard()->text(QClipboard::Selection));
             }

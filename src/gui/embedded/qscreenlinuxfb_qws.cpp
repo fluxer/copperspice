@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -117,7 +114,7 @@ void QLinuxFbScreenPrivate::openTty()
          }
       }
    } else {
-      ttyfd = QT_OPEN(ttyDevice.toAscii().constData(), O_RDWR);
+      ttyfd = QT_OPEN(ttyDevice.toLatin1().constData(), O_RDWR);
    }
 
    if (ttyfd == -1) {
@@ -288,7 +285,7 @@ bool QLinuxFbScreen::connect(const QString &displaySpec)
    }
 #endif
 
-   QRegExp ttyRegExp(QLatin1String("tty=(.*)"));
+   QRegularExpression ttyRegExp(QLatin1String("tty=(.*)"));
    if (args.indexOf(ttyRegExp) != -1) {
       d_ptr->ttyDevice = ttyRegExp.cap(1);
    }
@@ -301,7 +298,7 @@ bool QLinuxFbScreen::connect(const QString &displaySpec)
 #endif
 
    QString dev = QLatin1String("/dev/fb0");
-   foreach(QString d, args) {
+   for (QString d : args) {
       if (d.startsWith(QLatin1Char('/'))) {
          dev = d;
          break;
@@ -412,9 +409,9 @@ bool QLinuxFbScreen::connect(const QString &displaySpec)
 
    // Handle display physical size spec.
    QStringList displayArgs = displaySpec.split(QLatin1Char(':'));
-   QRegExp mmWidthRx(QLatin1String("mmWidth=?(\\d+)"));
+   QRegularExpression mmWidthRx(QLatin1String("mmWidth=?(\\d+)"));
    int dimIdxW = displayArgs.indexOf(mmWidthRx);
-   QRegExp mmHeightRx(QLatin1String("mmHeight=?(\\d+)"));
+   QRegularExpression mmHeightRx(QLatin1String("mmHeight=?(\\d+)"));
    int dimIdxH = displayArgs.indexOf(mmHeightRx);
    if (dimIdxW >= 0) {
       mmWidthRx.exactMatch(displayArgs.at(dimIdxW));

@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -46,12 +43,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#if defined(QT_SOFTKEYS_ENABLED)
-#include <qaction.h>
-#endif
-
-QT_BEGIN_NAMESPACE
-
 class QErrorMessagePrivate : public QDialogPrivate
 {
    Q_DECLARE_PUBLIC(QErrorMessage)
@@ -60,9 +51,7 @@ class QErrorMessagePrivate : public QDialogPrivate
    QCheckBox *again;
    QTextEdit *errors;
    QLabel *icon;
-#ifdef QT_SOFTKEYS_ENABLED
-   QAction *okAction;
-#endif
+
    QQueue<QPair<QString, QString> > pending;
    QSet<QString> doNotShow;
    QSet<QString> doNotShowType;
@@ -81,8 +70,8 @@ class QErrorMessageTextView : public QTextEdit
       setReadOnly(true);
    }
 
-   virtual QSize minimumSizeHint() const;
-   virtual QSize sizeHint() const;
+   QSize minimumSizeHint() const override;
+   QSize sizeHint() const override;
 };
 
 QSize QErrorMessageTextView::minimumSizeHint() const
@@ -147,7 +136,7 @@ static bool metFatal = false;
 
 static void jump(QtMsgType t, const char *m)
 {
-   if (!qtMessageHandler) {
+   if (! qtMessageHandler) {
       return;
    }
 
@@ -158,70 +147,68 @@ static void jump(QtMsgType t, const char *m)
       default:
          rich = QErrorMessage::tr("Debug Message:");
          break;
+
       case QtWarningMsg:
          rich = QErrorMessage::tr("Warning:");
          break;
+
       case QtFatalMsg:
          rich = QErrorMessage::tr("Fatal Error:");
    }
-   rich = QString::fromLatin1("<p><b>%1</b></p>").arg(rich);
-   rich += Qt::convertFromPlainText(QLatin1String(m), Qt::WhiteSpaceNormal);
+
+   rich  = QString("<p><b>%1</b></p>").formatArg(rich);
+   rich += Qt::convertFromPlainText(QString::fromLatin1(m), Qt::WhiteSpaceNormal);
 
    // ### work around text engine quirk
-   if (rich.endsWith(QLatin1String("</p>"))) {
+   if (rich.endsWith("</p>")) {
       rich.chop(4);
    }
 
-   if (!metFatal) {
+   if (! metFatal) {
       if (QThread::currentThread() == qApp->thread()) {
          qtMessageHandler->showMessage(rich);
       } else {
          QMetaObject::invokeMethod(qtMessageHandler, "showMessage", Qt::QueuedConnection, Q_ARG(const QString &, rich));
       }
+
       metFatal = (t == QtFatalMsg);
    }
 }
 
 
 /*!
-    Constructs and installs an error handler window with the given \a
-    parent.
+    Constructs and installs an error handler window with the given parent.
 */
 
 QErrorMessage::QErrorMessage(QWidget *parent)
    : QDialog(*new QErrorMessagePrivate, parent)
 {
    Q_D(QErrorMessage);
+
    QGridLayout *grid = new QGridLayout(this);
-   d->icon = new QLabel(this);
+
+   d->icon   = new QLabel(this);
+   d->errors = new QErrorMessageTextView(this);
+   d->again  = new QCheckBox(this);
+   d->ok     = new QPushButton(this);
+
 #ifndef QT_NO_MESSAGEBOX
    d->icon->setPixmap(QMessageBox::standardIcon(QMessageBox::Information));
    d->icon->setAlignment(Qt::AlignHCenter | Qt::AlignTop);
 #endif
 
-   const int preferredIconColumn = 0;
-   const int preferredTextColumn = 1;
+   grid->addWidget(d->icon,   0,  0, Qt::AlignTop);
+   grid->addWidget(d->errors, 0,  1);
+   grid->addWidget(d->again,  1,  1, Qt::AlignTop);
+   grid->addWidget(d->ok,     2, 0, 1, 2, Qt::AlignCenter);
 
-   grid->addWidget(d->icon, 0, preferredIconColumn, Qt::AlignTop);
-   d->errors = new QErrorMessageTextView(this);
-   grid->addWidget(d->errors, 0, preferredTextColumn);
-   d->again = new QCheckBox(this);
-   d->again->setChecked(true);
-   grid->addWidget(d->again, 1, preferredTextColumn, Qt::AlignTop);
-   d->ok = new QPushButton(this);
-
-#ifdef QT_SOFTKEYS_ENABLED
-   d->okAction = new QAction(d->ok);
-   d->okAction->setSoftKeyRole(QAction::PositiveSoftKey);
-   connect(d->okAction, SIGNAL(triggered()), this, SLOT(accept()));
-   addAction(d->okAction);
-#endif
+   grid->setColumnStretch(1, 42);
+   grid->setRowStretch(0, 42);
 
    connect(d->ok, SIGNAL(clicked()), this, SLOT(accept()));
+
+   d->again->setChecked(true);
    d->ok->setFocus();
-   grid->addWidget(d->ok, 2, 0, 1, 2, Qt::AlignCenter);
-   grid->setColumnStretch(preferredTextColumn, 42);
-   grid->setRowStretch(0, 42);
    d->retranslateStrings();
 }
 
@@ -241,9 +228,6 @@ QErrorMessage::~QErrorMessage()
       }
    }
 }
-
-
-/*! \reimp */
 
 void QErrorMessage::done(int a)
 {
@@ -328,20 +312,6 @@ void QErrorMessage::showMessage(const QString &message)
    }
 }
 
-/*!
-    \since 4.5
-    \overload
-
-    Shows the given message, \a message, and returns immediately. If the user
-    has requested for messages of type, \a type, not to be shown again, this
-    function does nothing.
-
-    Normally, the message is displayed immediately. However, if there are
-    pending messages, it will be queued to be displayed later.
-
-    \sa showMessage()
-*/
-
 void QErrorMessage::showMessage(const QString &message, const QString &type)
 {
    Q_D(QErrorMessage);
@@ -370,17 +340,6 @@ void QErrorMessagePrivate::retranslateStrings()
 {
    again->setText(QErrorMessage::tr("&Show this message again"));
    ok->setText(QErrorMessage::tr("&OK"));
-#ifdef QT_SOFTKEYS_ENABLED
-   okAction->setText(ok->text());
-#endif
 }
-
-/*!
-    \fn void QErrorMessage::message(const QString & message)
-
-    Use showMessage(\a message) instead.
-*/
-
-QT_END_NAMESPACE
 
 #endif // QT_NO_ERRORMESSAGE

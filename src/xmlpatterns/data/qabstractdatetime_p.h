@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -27,7 +24,7 @@
 #define QAbstractDateTime_P_H
 
 #include <QDateTime>
-#include <QRegExp>
+#include <qregularexpression.h>
 #include <qitem_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -57,7 +54,7 @@ class AbstractDateTime : public AtomicValue
    class CaptureTable
    {
     public:
-      CaptureTable(const QRegExp &exp,
+      CaptureTable(const QRegularExpression &exp,
                    const qint8 zoneOffsetSignP,
                    const qint8 zoneOffsetHourP,
                    const qint8 zoneOffsetMinuteP,
@@ -85,7 +82,7 @@ class AbstractDateTime : public AtomicValue
          Q_ASSERT(exp.isValid());
       }
 
-      const QRegExp regExp;
+      const QRegularExpression regExp;
       const qint8 zoneOffsetSign;
       const qint8 zoneOffsetHour;
       const qint8 zoneOffsetMinute;
@@ -137,8 +134,7 @@ class AbstractDateTime : public AtomicValue
     * @c false is returned and @p message is set to contain a translated message for
     * human consumption, describing the error.
     */
-   static bool isRangeValid(const QDate &date,
-                            QString &message);
+   static bool isRangeValid(const QDate &date, QString &message);
 
  protected:
 

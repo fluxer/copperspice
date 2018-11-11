@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -70,12 +67,16 @@ namespace Gstreamer
             /// callback function for handling new audio data
             static void processBuffer(GstPad*, GstBuffer*, gpointer);
 
-            Phonon::AudioDataOutput* frontendObject() const { return m_frontend; }
-            void setFrontendObject(Phonon::AudioDataOutput *frontend) { m_frontend = frontend; }
+            Phonon::AudioDataOutput* frontendObject() const override 
+                  {  return m_frontend; }
 
-            GstElement *audioElement() { return m_queue; }
+            void setFrontendObject(Phonon::AudioDataOutput *frontend) override
+                  { m_frontend = frontend; }
 
-            void mediaNodeEvent(const MediaNodeEvent *event);
+            GstElement *audioElement() override
+                  { return m_queue; }
+
+            void mediaNodeEvent(const MediaNodeEvent *event) override;
         
             GSTRM_CS_SIGNAL_1(Public, void dataReady(const QMap <Phonon::AudioDataOutput::Channel,QVector <qint16>> & data))
             GSTRM_CS_SIGNAL_OVERLOAD(dataReady,(const QMap <Phonon::AudioDataOutput::Channel,QVector <qint16>> &), data) 

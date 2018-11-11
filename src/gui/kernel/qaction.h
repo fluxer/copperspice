@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -33,8 +30,6 @@
 #include <QtGui/qicon.h>
 #include <QScopedPointer>
 
-QT_BEGIN_NAMESPACE
-
 #ifndef QT_NO_ACTION
 
 class QMenu;
@@ -48,7 +43,6 @@ class Q_GUI_EXPORT QAction : public QObject
    Q_DECLARE_PRIVATE(QAction)
 
    GUI_CS_ENUM(MenuRole)
-   GUI_CS_ENUM(SoftKeyRole)
    GUI_CS_ENUM(Priority)
 
    GUI_CS_PROPERTY_READ(checkable, isCheckable)
@@ -110,10 +104,6 @@ class Q_GUI_EXPORT QAction : public QObject
    GUI_CS_PROPERTY_WRITE(menuRole, setMenuRole)
    GUI_CS_PROPERTY_NOTIFY(menuRole, changed)
 
-   GUI_CS_PROPERTY_READ(softKeyRole, softKeyRole)
-   GUI_CS_PROPERTY_WRITE(softKeyRole, setSoftKeyRole)
-   GUI_CS_PROPERTY_NOTIFY(softKeyRole, changed)
-
    GUI_CS_PROPERTY_READ(iconVisibleInMenu, isIconVisibleInMenu)
    GUI_CS_PROPERTY_WRITE(iconVisibleInMenu, setIconVisibleInMenu)
    GUI_CS_PROPERTY_NOTIFY(iconVisibleInMenu, changed)
@@ -121,11 +111,9 @@ class Q_GUI_EXPORT QAction : public QObject
    GUI_CS_PROPERTY_WRITE(priority, setPriority)
 
  public:
-   enum MenuRole { NoRole, TextHeuristicRole, ApplicationSpecificRole, AboutQtRole,
+   enum MenuRole { NoRole, TextHeuristicRole, ApplicationSpecificRole, AboutCsRole,
                    AboutRole, PreferencesRole, QuitRole
                  };
-
-   enum SoftKeyRole { NoSoftKey, PositiveSoftKey, NegativeSoftKey, SelectSoftKey };
 
    enum Priority { LowPriority = 0,
                    NormalPriority = 128,
@@ -206,9 +194,6 @@ class Q_GUI_EXPORT QAction : public QObject
    void setMenuRole(MenuRole menuRole);
    MenuRole menuRole() const;
 
-   void setSoftKeyRole(SoftKeyRole softKeyRole);
-   SoftKeyRole softKeyRole() const;
-
    void setIconVisibleInMenu(bool visible);
    bool isIconVisibleInMenu() const;
 
@@ -219,7 +204,7 @@ class Q_GUI_EXPORT QAction : public QObject
 #ifndef QT_NO_GRAPHICSVIEW
    QList<QGraphicsWidget *> associatedGraphicsWidgets() const; // ### suboptimal
 #endif
- 
+
    GUI_CS_SLOT_1(Public, void trigger())
    GUI_CS_SLOT_2(trigger)
 
@@ -254,7 +239,7 @@ class Q_GUI_EXPORT QAction : public QObject
    GUI_CS_SIGNAL_2(toggled, un_named_arg1)
 
  protected:
-   bool event(QEvent *);
+   bool event(QEvent *) override;
    QAction(QActionPrivate &dd, QObject *parent);
 
    QScopedPointer<QActionPrivate> d_ptr;
@@ -273,16 +258,12 @@ class Q_GUI_EXPORT QAction : public QObject
 
 #ifdef Q_OS_MAC
    friend void qt_mac_clear_status_text(QAction *action);
-#endif  
+#endif
 
 };
 
-QT_BEGIN_INCLUDE_NAMESPACE
 #include <QtGui/qactiongroup.h>
-QT_END_INCLUDE_NAMESPACE
 
 #endif // QT_NO_ACTION
-
-QT_END_NAMESPACE
 
 #endif // QACTION_H

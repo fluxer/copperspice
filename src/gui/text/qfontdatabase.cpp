@@ -1,27 +1,26 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
+
+#include <algorithm>
 
 #include <qdir.h>
 #include <qfontdatabase.h>
@@ -36,7 +35,7 @@
 
 #ifdef Q_WS_QPA
 #include <qapplication_p.h>
-#include <QtGui/qplatformfontdatabase_qpa.h>
+#include <qplatformfontdatabase_qpa.h>
 #include <qabstractfileengine.h>
 #endif
 
@@ -68,8 +67,6 @@
 #if defined(Q_OS_WIN) && !defined(QT_NO_DIRECTWRITE)
 #  include <dwrite.h>
 #endif
-
-QT_BEGIN_NAMESPACE
 
 #define SMOOTH_SCALABLE 0xffff
 
@@ -407,20 +404,25 @@ struct  QtFontFamily {
 
    QtFontFamily(const QString &n)
       :
+
 #ifdef Q_WS_X11
       fixedPitch(true), ftWritingSystemCheck(false),
       xlfdLoaded(false), synthetic(false), symbol_checked(false),
 #else
       fixedPitch(false),
 #endif
+
 #ifdef Q_OS_WIN
       writingSystemCheck(false),
       loaded(false),
 #endif
-#if !defined(QWS) && defined(Q_OS_MAC)
+
+#if ! defined(QWS) && defined(Q_OS_MAC)
       fixedPitchComputed(false),
 #endif
+
       name(n), count(0), foundries(0)
+
 #if defined(Q_WS_QWS) || defined(Q_WS_QPA) && !defined(QT_NO_FREETYPE)
       , bogusWritingSystems(false)
 #endif
@@ -456,13 +458,16 @@ struct  QtFontFamily {
 #endif
 
    QString name;
+
 #if defined(Q_WS_X11) && !defined(QT_NO_FREETYPE)
-   QByteArray fontFilename;
+   QString fontFilename;
    int fontFileIndex;
 #endif
+
 #ifdef Q_OS_WIN
    QString english_name;
 #endif
+
    int count;
    QtFontFoundry **foundries;
 
@@ -492,7 +497,7 @@ inline static void qt_mac_get_fixed_pitch(QtFontFamily *f)
 
 QtFontFoundry *QtFontFamily::foundry(const QString &f, bool create)
 {
-   if (f.isNull() && count == 1) {
+   if (f.isEmpty() && count == 1) {
       return foundries[0];
    }
 
@@ -687,12 +692,14 @@ class QFontDatabasePrivate
    }
 
    int count;
-#if defined(Q_WS_X11) && !defined(QT_NO_FONTCONFIG)
+
+#if defined(Q_WS_X11)
    QString systemLang;
 #endif
+
    QtFontFamily **families;
 
-#if defined(Q_OS_WIN) && !defined(QT_NO_DIRECTWRITE)
+#if defined(Q_OS_WIN) && ! defined(QT_NO_DIRECTWRITE)
    IDWriteFactory *directWriteFactory;
    IDWriteGdiInterop *directWriteGdiInterop;
 #endif
@@ -890,7 +897,7 @@ QStringList QFontDatabasePrivate::addTTFile(const QByteArray &file, const QByteA
          }
       }
 
-      QString family = QString::fromAscii(face->family_name);
+      QString family = QString::fromLatin1(face->family_name);
       families.append(family);
       addFont(family, /*foundry*/ "", weight, italic,
               /*pixelsize*/ 0, file, index, /*antialias*/ true, writingSystems);
@@ -903,40 +910,40 @@ QStringList QFontDatabasePrivate::addTTFile(const QByteArray &file, const QByteA
 #endif
 
 static const int scriptForWritingSystem[] = {
-   QUnicodeTables::Common, // Any
-   QUnicodeTables::Latin, // Latin
-   QUnicodeTables::Greek, // Greek
-   QUnicodeTables::Cyrillic, // Cyrillic
-   QUnicodeTables::Armenian, // Armenian
-   QUnicodeTables::Hebrew, // Hebrew
-   QUnicodeTables::Arabic, // Arabic
-   QUnicodeTables::Syriac, // Syriac
-   QUnicodeTables::Thaana, // Thaana
-   QUnicodeTables::Devanagari, // Devanagari
-   QUnicodeTables::Bengali, // Bengali
-   QUnicodeTables::Gurmukhi, // Gurmukhi
-   QUnicodeTables::Gujarati, // Gujarati
-   QUnicodeTables::Oriya, // Oriya
-   QUnicodeTables::Tamil, // Tamil
-   QUnicodeTables::Telugu, // Telugu
-   QUnicodeTables::Kannada, // Kannada
-   QUnicodeTables::Malayalam, // Malayalam
-   QUnicodeTables::Sinhala, // Sinhala
-   QUnicodeTables::Thai, // Thai
-   QUnicodeTables::Lao, // Lao
-   QUnicodeTables::Tibetan, // Tibetan
-   QUnicodeTables::Myanmar, // Myanmar
-   QUnicodeTables::Georgian, // Georgian
-   QUnicodeTables::Khmer, // Khmer
-   QUnicodeTables::Common, // SimplifiedChinese
-   QUnicodeTables::Common, // TraditionalChinese
-   QUnicodeTables::Common, // Japanese
-   QUnicodeTables::Hangul, // Korean
-   QUnicodeTables::Common, // Vietnamese
-   QUnicodeTables::Common, // Symbol
-   QUnicodeTables::Ogham,  // Ogham
-   QUnicodeTables::Runic, // Runic
-   QUnicodeTables::Nko // Nko
+    QChar::Script_Common, // Any
+    QChar::Script_Latin, // Latin
+    QChar::Script_Greek, // Greek
+    QChar::Script_Cyrillic, // Cyrillic
+    QChar::Script_Armenian, // Armenian
+    QChar::Script_Hebrew, // Hebrew
+    QChar::Script_Arabic, // Arabic
+    QChar::Script_Syriac, // Syriac
+    QChar::Script_Thaana, // Thaana
+    QChar::Script_Devanagari, // Devanagari
+    QChar::Script_Bengali, // Bengali
+    QChar::Script_Gurmukhi, // Gurmukhi
+    QChar::Script_Gujarati, // Gujarati
+    QChar::Script_Oriya, // Oriya
+    QChar::Script_Tamil, // Tamil
+    QChar::Script_Telugu, // Telugu
+    QChar::Script_Kannada, // Kannada
+    QChar::Script_Malayalam, // Malayalam
+    QChar::Script_Sinhala, // Sinhala
+    QChar::Script_Thai, // Thai
+    QChar::Script_Lao, // Lao
+    QChar::Script_Tibetan, // Tibetan
+    QChar::Script_Myanmar, // Myanmar
+    QChar::Script_Georgian, // Georgian
+    QChar::Script_Khmer, // Khmer
+    QChar::Script_Han, // SimplifiedChinese
+    QChar::Script_Han, // TraditionalChinese
+    QChar::Script_Han, // Japanese
+    QChar::Script_Hangul, // Korean
+    QChar::Script_Latin, // Vietnamese
+    QChar::Script_Common, // Symbol
+    QChar::Script_Ogham,  // Ogham
+    QChar::Script_Runic, // Runic
+    QChar::Script_Nko // Nko
 };
 
 int qt_script_for_writing_system(QFontDatabase::WritingSystem writingSystem)
@@ -945,16 +952,17 @@ int qt_script_for_writing_system(QFontDatabase::WritingSystem writingSystem)
 }
 
 
-#if defined Q_WS_QWS || (defined(Q_WS_X11) && !defined(QT_NO_FONTCONFIG)) || defined(Q_OS_WIN)
+#if defined Q_WS_QWS || defined(Q_WS_X11) || defined(Q_OS_WIN)
 static inline bool requiresOpenType(int writingSystem)
 {
    return ((writingSystem >= QFontDatabase::Syriac && writingSystem <= QFontDatabase::Sinhala)
            || writingSystem == QFontDatabase::Khmer || writingSystem == QFontDatabase::Nko);
 }
+
 static inline bool scriptRequiresOpenType(int script)
 {
-   return ((script >= QUnicodeTables::Syriac && script <= QUnicodeTables::Sinhala)
-           || script == QUnicodeTables::Khmer || script == QUnicodeTables::Nko);
+   return ((script >= QChar::Script_Syriac && script <= QChar::Script_Sinhala)
+           || script == QChar::Script_Khmer || script == QChar::Script_Nko);
 }
 #endif
 
@@ -970,43 +978,55 @@ static inline bool scriptRequiresOpenType(int script)
 */
 static void parseFontName(const QString &name, QString &foundry, QString &family)
 {
-   int i = name.indexOf(QLatin1Char('['));
-   int li = name.lastIndexOf(QLatin1Char(']'));
+   int i  = name.indexOf('[');
+   int li = name.lastIndexOf(']');
+
    if (i >= 0 && li >= 0 && i < li) {
       foundry = name.mid(i + 1, li - i - 1);
-      if (i > 0 && name[i - 1] == QLatin1Char(' ')) {
+      if (i > 0 && name[i - 1] == ' ') {
          i--;
       }
       family = name.left(i);
+
    } else {
       foundry.clear();
       family = name;
    }
 
-   // capitalize the family/foundry names
-   bool space = true;
-   QChar *s = family.data();
-   int len = family.length();
-   while (len--) {
-      if (space) {
-         *s = s->toUpper();
+   // capitalize the family names
+   bool isSpace = true;
+   QString tmp;
+
+   for (const auto &c : family) {
+      if (isSpace) {
+         tmp.append(c.toUpper());
+
+      } else {
+         tmp.append(c);
       }
-      space = s->isSpace();
-      ++s;
+
+      isSpace = c.isSpace();
    }
 
-   space = true;
-   s = foundry.data();
-   len = foundry.length();
-   while (len--) {
-      if (space) {
-         *s = s->toUpper();
+   family = tmp;
+
+   // capitalize the foundry names
+   isSpace = true;
+   tmp     = "";
+
+   for (const auto &c : foundry) {
+      if (isSpace) {
+         tmp.append(c.toUpper());
+
+      } else {
+         tmp.append(c);
       }
-      space = s->isSpace();
-      ++s;
+
+      isSpace = c.isSpace();
    }
+
+   foundry = tmp;
 }
-
 
 struct QtFontDesc {
    inline QtFontDesc() : family(0), foundry(0), style(0), size(0), encoding(0), familyIndex(-1) {}
@@ -1088,7 +1108,7 @@ static QStringList familyList(const QFontDef &req)
 
    // append the substitute list for each family in family_list
    QStringList subs_list;
-   QStringList::ConstIterator it = family_list.constBegin(), end = family_list.constEnd();
+   QStringList::const_iterator it = family_list.constBegin(), end = family_list.constEnd();
    for (; it != end; ++it) {
       subs_list += QFont::substitutes(*it);
    }
@@ -1108,7 +1128,6 @@ QMutex *qt_fontdatabase_mutex()
    return fontDatabaseMutex();
 }
 
-QT_BEGIN_INCLUDE_NAMESPACE
 #if defined(Q_WS_X11)
 #  include <qfontdatabase_x11.cpp>
 
@@ -1125,7 +1144,6 @@ QT_BEGIN_INCLUDE_NAMESPACE
 #  include <qfontdatabase_qpa.cpp>
 
 #endif
-QT_END_INCLUDE_NAMESPACE
 
 #if !defined(Q_WS_X11) && !defined(Q_OS_MAC)
 QString QFontDatabase::resolveFontFamilyAlias(const QString &family)
@@ -1450,6 +1468,7 @@ static void match(int script, const QFontDef &request,
             family_name.isEmpty() ? "-- first in script --" : family_name.toLatin1().constData(),
             foundry_name.isEmpty() ? "-- any --" : foundry_name.toLatin1().constData(),
             script, request.weight, request.style, request.stretch, request.pixelSize, pitch);
+
 #if defined(FONT_MATCH_DEBUG) && defined(Q_WS_X11)
    if (force_encoding_id >= 0) {
       FM_DEBUG("    required encoding: %d", force_encoding_id);
@@ -1496,7 +1515,7 @@ static void match(int script, const QFontDef &request,
 
       uint score_adjust = 0;
 
-      bool supported = (script == QUnicodeTables::Common);
+      bool supported = (script == QChar::Script_Common);
       for (int ws = 1; !supported && ws < QFontDatabase::WritingSystemsCount; ++ws) {
          if (scriptForWritingSystem[ws] != script) {
             continue;
@@ -1720,7 +1739,9 @@ QList<QFontDatabase::WritingSystem> QFontDatabase::writingSystems() const
          }
       }
    }
-   qSort(list);
+
+   std::sort(list.begin(), list.end());
+
    return list;
 }
 
@@ -2047,7 +2068,8 @@ end:
       return standardSizes();
    }
 
-   qSort(sizes);
+   std::sort(sizes.begin(), sizes.end());
+
    return sizes;
 #endif
 }
@@ -2168,7 +2190,8 @@ end:
       return QFontDatabase::standardSizes();
    }
 
-   qSort(sizes);
+   std::sort(sizes.begin(), sizes.end());
+
    return sizes;
 #endif
 }
@@ -2709,26 +2732,6 @@ bool QFontDatabasePrivate::isApplicationFont(const QString &fileName)
    return false;
 }
 
-/*!
-    \since 4.2
-
-    Loads the font from the file specified by \a fileName and makes it available to
-    the application. An ID is returned that can be used to remove the font again
-    with removeApplicationFont() or to retrieve the list of family names contained
-    in the font.
-
-    The function returns -1 if the font could not be loaded.
-
-    Currently only TrueType fonts, TrueType font collections, and OpenType fonts are
-    supported.
-
-    \note Adding application fonts on Unix/X11 platforms without fontconfig is
-    currently not supported.
-
-    \note On Symbian, the font family names get truncated to a length of 20 characters.
-
-    \sa addApplicationFontFromData(), applicationFontFamilies(), removeApplicationFont()
-*/
 int QFontDatabase::addApplicationFont(const QString &fileName)
 {
    QByteArray data;
@@ -2741,82 +2744,15 @@ int QFontDatabase::addApplicationFont(const QString &fileName)
    return privateDb()->addAppFont(data, fileName);
 }
 
-/*!
-    \since 4.2
-
-    Loads the font from binary data specified by \a fontData and makes it available to
-    the application. An ID is returned that can be used to remove the font again
-    with removeApplicationFont() or to retrieve the list of family names contained
-    in the font.
-
-    The function returns -1 if the font could not be loaded.
-
-    Currently only TrueType fonts and TrueType font collections are supported.
-
-    \bold{Note:} Adding application fonts on Unix/X11 platforms without fontconfig is
-    currently not supported.
-
-    \note On Symbian, the font family names get truncated to a length of 20 characters.
-
-    \sa addApplicationFont(), applicationFontFamilies(), removeApplicationFont()
-*/
 int QFontDatabase::addApplicationFontFromData(const QByteArray &fontData)
 {
    QMutexLocker locker(fontDatabaseMutex());
    return privateDb()->addAppFont(fontData, QString() /* fileName */);
 }
 
-/*!
-    \since 4.2
-
-    Returns a list of font families for the given application font identified by
-    \a id.
-
-    \sa addApplicationFont(), addApplicationFontFromData()
-*/
 QStringList QFontDatabase::applicationFontFamilies(int id)
 {
    QMutexLocker locker(fontDatabaseMutex());
    return privateDb()->applicationFonts.value(id).families;
 }
-
-/*!
-    \fn bool QFontDatabase::removeApplicationFont(int id)
-    \since 4.2
-
-    Removes the previously loaded application font identified by \a
-    id. Returns true if unloading of the font succeeded; otherwise
-    returns false.
-
-    \sa removeAllApplicationFonts(), addApplicationFont(),
-        addApplicationFontFromData()
-*/
-
-/*!
-    \fn bool QFontDatabase::removeAllApplicationFonts()
-    \since 4.2
-
-    Removes all application-local fonts previously added using addApplicationFont()
-    and addApplicationFontFromData().
-
-    Returns true if unloading of the fonts succeeded; otherwise
-    returns false.
-
-    \sa removeApplicationFont(), addApplicationFont(), addApplicationFontFromData()
-*/
-
-/*!
-    \fn bool QFontDatabase::supportsThreadedFontRendering()
-    \since 4.4
-
-    Returns true if font rendering is supported outside the GUI
-    thread, false otherwise. In other words, a return value of false
-    means that all QPainter::drawText() calls outside the GUI thread
-    will not produce readable output.
-
-    \sa {Thread-Support in Qt Modules#Painting In Threads}{Painting In Threads}
-*/
-
-
-QT_END_NAMESPACE
 

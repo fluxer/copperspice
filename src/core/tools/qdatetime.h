@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,11 +23,11 @@
 #ifndef QDATETIME_H
 #define QDATETIME_H
 
-#include <QtCore/qstring.h>
-#include <QtCore/qnamespace.h>
-#include <QtCore/qsharedpointer.h>
+#include <qstring.h>
+#include <qnamespace.h>
+#include <qsharedpointer.h>
 
-QT_BEGIN_NAMESPACE
+class QDebug;
 
 class Q_CORE_EXPORT QDate
 {
@@ -39,7 +36,7 @@ class Q_CORE_EXPORT QDate
       DateFormat = 0,
       StandaloneFormat
    };
- 
+
    QDate() {
       jd = 0;
    }
@@ -144,11 +141,8 @@ class Q_CORE_EXPORT QDate
    friend class QDateTime;
    friend class QDateTimePrivate;
 
-#ifndef QT_NO_DATASTREAM
    friend Q_CORE_EXPORT QDataStream &operator<<(QDataStream &, const QDate &);
    friend Q_CORE_EXPORT QDataStream &operator>>(QDataStream &, QDate &);
-#endif
-
 };
 Q_DECLARE_TYPEINFO(QDate, Q_MOVABLE_TYPE);
 
@@ -229,11 +223,8 @@ class Q_CORE_EXPORT QTime
    friend class QDateTime;
    friend class QDateTimePrivate;
 
-#ifndef QT_NO_DATASTREAM
    friend Q_CORE_EXPORT QDataStream &operator<<(QDataStream &, const QTime &);
    friend Q_CORE_EXPORT QDataStream &operator>>(QDataStream &, QTime &);
-#endif
-
 };
 Q_DECLARE_TYPEINFO(QTime, Q_MOVABLE_TYPE);
 
@@ -245,7 +236,8 @@ class Q_CORE_EXPORT QDateTime
    QDateTime();
    explicit QDateTime(const QDate &);
    QDateTime(const QDate &, const QTime &, Qt::TimeSpec spec = Qt::LocalTime);
-   // ### Qt 6: Merge with above with default offsetSeconds = 0
+
+   // ### Qt5: Merge with above with default offsetSeconds = 0
    QDateTime(const QDate &date, const QTime &time, Qt::TimeSpec spec, int offsetSeconds);
    QDateTime(const QDateTime &other);
    ~QDateTime();
@@ -268,7 +260,7 @@ class Q_CORE_EXPORT QDateTime
    void setTimeSpec(Qt::TimeSpec spec);
    void setOffsetFromUtc(int offsetSeconds);
    void setMSecsSinceEpoch(qint64 msecs);
-   void setTime_t(uint secsSince1Jan1970UTC);
+   void setTime_t(uint secs);
 
 #ifndef QT_NO_DATESTRING
    QString toString(Qt::DateFormat f = Qt::TextDate) const;
@@ -323,13 +315,13 @@ class Q_CORE_EXPORT QDateTime
    static QDateTime fromString(const QString &s, Qt::DateFormat f = Qt::TextDate);
    static QDateTime fromString(const QString &s, const QString &format);
 #endif
-   static QDateTime fromTime_t(uint secsSince1Jan1970UTC);
+   static QDateTime fromTime_t(uint secs);
 
-   // ### Qt 6: Merge with above with default spec = Qt::LocalTime
-   static QDateTime fromTime_t(uint secsSince1Jan1970UTC, Qt::TimeSpec spec, int offsetFromUtc = 0);
+   // ### Qt5: Merge with above with default spec = Qt::LocalTime
+   static QDateTime fromTime_t(uint secs, Qt::TimeSpec spec, int offsetFromUtc = 0);
    static QDateTime fromMSecsSinceEpoch(qint64 msecs);
 
-   // ### Qt 6: Merge with above with default spec = Qt::LocalTime
+   // ### Qt5: Merge with above with default spec = Qt::LocalTime
    static QDateTime fromMSecsSinceEpoch(qint64 msecs, Qt::TimeSpec spec, int offsetFromUtc = 0);
    static qint64 currentMSecsSinceEpoch();
 
@@ -338,22 +330,18 @@ class Q_CORE_EXPORT QDateTime
    void detach();
    QExplicitlySharedDataPointer<QDateTimePrivate> d;
 
-#ifndef QT_NO_DATASTREAM
    friend Q_CORE_EXPORT QDataStream &operator<<(QDataStream &, const QDateTime &);
    friend Q_CORE_EXPORT QDataStream &operator>>(QDataStream &, QDateTime &);
-#endif
 };
 
 Q_DECLARE_TYPEINFO(QDateTime, Q_MOVABLE_TYPE);
 
-#ifndef QT_NO_DATASTREAM
 Q_CORE_EXPORT QDataStream &operator<<(QDataStream &, const QDate &);
 Q_CORE_EXPORT QDataStream &operator>>(QDataStream &, QDate &);
 Q_CORE_EXPORT QDataStream &operator<<(QDataStream &, const QTime &);
 Q_CORE_EXPORT QDataStream &operator>>(QDataStream &, QTime &);
 Q_CORE_EXPORT QDataStream &operator<<(QDataStream &, const QDateTime &);
 Q_CORE_EXPORT QDataStream &operator>>(QDataStream &, QDateTime &);
-#endif
 
 #if ! defined(QT_NO_DATESTRING)
 Q_CORE_EXPORT QDebug operator<<(QDebug, const QDate &);
@@ -361,6 +349,4 @@ Q_CORE_EXPORT QDebug operator<<(QDebug, const QTime &);
 Q_CORE_EXPORT QDebug operator<<(QDebug, const QDateTime &);
 #endif
 
-QT_END_NAMESPACE
-
-#endif // QDATETIME_H
+#endif

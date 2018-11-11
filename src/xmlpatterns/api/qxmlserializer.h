@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -40,25 +37,25 @@ class Q_XMLPATTERNS_EXPORT QXmlSerializer : public QAbstractXmlReceiver
  public:
    QXmlSerializer(const QXmlQuery &query, QIODevice *outputDevice);
 
-   virtual void namespaceBinding(const QXmlName &nb);
+   void namespaceBinding(const QXmlName &nb) override;
 
-   virtual void characters(const QStringRef &value);
-   virtual void comment(const QString &value);
+   void characters(QStringView value) override;
+   void comment(const QString &value) override;
 
-   virtual void startElement(const QXmlName &name);
+   void startElement(const QXmlName &name) override;
 
-   virtual void endElement();
+   void endElement() override;
 
-   virtual void attribute(const QXmlName &name, const QStringRef &value);
+   void attribute(const QXmlName &name, QStringView value) override;
 
-   virtual void processingInstruction(const QXmlName &name, const QString &value);
+   void processingInstruction(const QXmlName &name, const QString &value) override;
 
-   virtual void atomicValue(const QVariant &value);
+   void atomicValue(const QVariant &value) override;
 
-   virtual void startDocument();
-   virtual void endDocument();
-   virtual void startOfSequence();
-   virtual void endOfSequence();
+   void startDocument() override;
+   void endDocument() override;
+   void startOfSequence() override;
+   void endOfSequence() override;
 
    QIODevice *outputDevice() const;
 
@@ -67,7 +64,7 @@ class Q_XMLPATTERNS_EXPORT QXmlSerializer : public QAbstractXmlReceiver
 
    /* The members below are internal, not part of the public API, and
     * unsupported. Using them leads to undefined behavior. */
-   virtual void item(const QPatternist::Item &item);
+   void item(const QPatternist::Item &item) override;
 
  protected:
    QXmlSerializer(QAbstractXmlReceiverPrivate *d);

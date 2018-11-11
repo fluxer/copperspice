@@ -1,56 +1,28 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
 
 #include "qdebug_p.h"
-
 #include "qsourcelocation.h"
 
-
-QT_BEGIN_NAMESPACE
-
-/*!
-  \class QSourceLocation
-  \reentrant
-  \since 4.4
-  \brief The QSourceLocation class identifies a location in a resource by URI, line, and column.
-  \ingroup xml-tools
-
-  QSourceLocation is a simple value based class that has three
-  properties, uri(), line(), and column(), that, taken together,
-  identify a certain point in a resource, e.g., a file or an in-memory
-  document.
-
-  line() and column() refer to character counts (not byte counts), and
-  they both start from 1, as opposed to 0.
- */
-
-/*!
-   Construct a QSourceLocation that doesn't identify anything at all.
-
-   For a default constructed QSourceLocation(), isNull() returns \c true.
- */
 QSourceLocation::QSourceLocation() : m_line(-1), m_column(-1)
 {
 }
@@ -177,7 +149,7 @@ void QSourceLocation::setUri(const QUrl &newUri)
 QDebug operator<<(QDebug debug, const QSourceLocation &sourceLocation)
 {
    debug << "QSourceLocation("
-         << sourceLocation.uri()
+         << sourceLocation.uri().toString()
          << ", line:"
          << sourceLocation.line()
          << ", column:"
@@ -186,30 +158,14 @@ QDebug operator<<(QDebug debug, const QSourceLocation &sourceLocation)
    return debug;
 }
 
-/*!
-  Returns \c true if this QSourceLocation doesn't identify anything.
-
-  For a default constructed QSourceLocation, this function returns \c
-  true. The same applies for any other QSourceLocation whose uri() is
-  invalid.
- */
 bool QSourceLocation::isNull() const
 {
-   return !m_uri.isValid();
+   return ! m_uri.isValid();
 }
 
-/*!
- \since 4.4
-
- Computes a hash key for the QSourceLocation \a location.
-
- \relates QSourceLocation
- */
 uint qHash(const QSourceLocation &location)
 {
    /* Not the world's best hash function exactly. */
    return qHash(location.uri().toString()) + location.line() + location.column();
 }
-
-QT_END_NAMESPACE
 

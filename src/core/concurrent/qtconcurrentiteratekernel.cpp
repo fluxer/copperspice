@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -48,7 +45,7 @@ enum {
    MedianSize = 7
 };
 
-#if defined(Q_OS_MAC)
+#ifdef Q_OS_DARWIN
 
 static qint64 getticks()
 {
@@ -65,6 +62,7 @@ static qint64 getticks()
 
 #ifndef _POSIX_THREAD_CPUTIME
    clockId = CLOCK_REALTIME;
+
 #elif (_POSIX_THREAD_CPUTIME-0 <= 0)
    // if we don't have CLOCK_THREAD_CPUTIME_ID, we have to just use elapsed realtime instead
    clockId = CLOCK_REALTIME;
@@ -72,14 +70,16 @@ static qint64 getticks()
 #  if (_POSIX_THREAD_CPUTIME-0 == 0)
    // detect availablility of CLOCK_THREAD_CPUTIME_ID
    static long useThreadCpuTime = -2;
+
    if (useThreadCpuTime == -2) {
-      // sysconf() will return either -1 or _POSIX_VERSION (don't care about thread races here)
       useThreadCpuTime = sysconf(_SC_THREAD_CPUTIME);
    }
+
    if (useThreadCpuTime != -1) {
       clockId = CLOCK_THREAD_CPUTIME_ID;
    }
 #  endif
+
 #else
    clockId = CLOCK_THREAD_CPUTIME_ID;
 #endif

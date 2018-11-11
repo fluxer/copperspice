@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -34,8 +31,6 @@
 
 #include <iostream>
 
-QT_USE_NAMESPACE
-
 class LC
 {
    Q_DECLARE_TR_FUNCTIONS(LConvert)
@@ -46,13 +41,15 @@ static int usage(const QStringList &args)
    Q_UNUSED(args);
 
    QString loaders;
-   QString line(QLatin1String("    %1 - %2\n"));
-   foreach (Translator::FileFormat format, Translator::registeredFileFormats())
-   loaders += line.arg(format.extension, -5).arg(format.description);
+   QString line("    %1 - %2\n");
+
+   for (Translator::FileFormat format : Translator::registeredFileFormats()) {
+      loaders += line.formatArg(format.extension, -5).formatArg(format.description);
+   }
 
    std::cout << qPrintable(LC::tr("\nUsage:\n"
                                   "    lconvert [options] <infile> [<infile>...]\n\n"
-                                  "lconvert is part of Qt's Linguist tool chain. It can be used as a\n"
+                                  "lconvert is part of Linguist tool chain. It can be used as a\n"
                                   "stand-alone tool to convert and filter translation data files.\n"
                                   "The following file formats are supported:\n\n%1\n"
                                   "If multiple input files are specified, they are merged with\n"
@@ -112,7 +109,7 @@ static int usage(const QStringList &args)
                                   "    0 on success\n"
                                   "    1 on command line parse failures\n"
                                   "    2 on read failures\n"
-                                  "    3 on write failures\n").arg(loaders));
+                                  "    3 on write failures\n").formatArg(loaders));
    return 1;
 }
 

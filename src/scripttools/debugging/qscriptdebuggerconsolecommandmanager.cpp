@@ -1,49 +1,40 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
+
+#include <algorithm>
 
 #include "qscriptdebuggerconsolecommandmanager_p.h"
 #include "qscriptdebuggerconsolecommand_p.h"
 #include "qscriptdebuggerconsolecommandgroupdata_p.h"
 
-#include <QtCore/qlist.h>
-#include <QtCore/qstringlist.h>
+#include <qlist.h>
+#include <qstringlist.h>
 
 QT_BEGIN_NAMESPACE
-
-/*!
-  \since 4.5
-  \class QScriptDebuggerConsoleCommandManager
-  \internal
-
-  \brief The QScriptDebuggerConsoleCommandManager manages a collection of console commands.
-
-*/
 
 class QScriptDebuggerConsoleCommandManagerPrivate
 {
    Q_DECLARE_PUBLIC(QScriptDebuggerConsoleCommandManager)
+
  public:
    QScriptDebuggerConsoleCommandManagerPrivate();
    ~QScriptDebuggerConsoleCommandManagerPrivate();
@@ -212,6 +203,7 @@ QStringList QScriptDebuggerConsoleCommandManager::completions(const QString &pre
 {
    Q_D(const QScriptDebuggerConsoleCommandManager);
    QStringList result;
+
    for (int i = 0; i < d->commands.size(); ++i) {
       QScriptDebuggerConsoleCommand *cmd = d->commands.at(i);
       QStringList names;
@@ -224,7 +216,9 @@ QStringList QScriptDebuggerConsoleCommandManager::completions(const QString &pre
          }
       }
    }
-   qStableSort(result);
+
+   std::stable_sort(result);
+
    return result;
 }
 

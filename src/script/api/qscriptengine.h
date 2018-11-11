@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,17 +23,16 @@
 #ifndef QSCRIPTENGINE_H
 #define QSCRIPTENGINE_H
 
-#include <QtCore/qmetatype.h>
-#include <QtCore/qvariant.h>
-#include <QtCore/qsharedpointer.h>
-#include <QtCore/qobject.h>
+#include <qmetatype.h>
+#include <qvariant.h>
+#include <qsharedpointer.h>
+#include <qobject.h>
 
 #include <QtScript/qscriptvalue.h>
 #include <QtScript/qscriptcontext.h>
 #include <QtScript/qscriptstring.h>
 #include <QtScript/qscriptprogram.h>
-
-QT_BEGIN_NAMESPACE
+#include <qstringfwd.h>
 
 class QDateTime;
 class QScriptClass;
@@ -48,10 +44,6 @@ inline QScriptValue qscriptQMetaObjectConstructor(QScriptContext *, QScriptEngin
 {
    return QScriptValue();
 }
-
-#ifndef QT_NO_REGEXP
-class QRegExp;
-#endif
 
 template <typename T>
 inline QScriptValue qScriptValueFromValue(QScriptEngine *, const T &);
@@ -159,9 +151,7 @@ class Q_SCRIPT_EXPORT QScriptEngine
    QScriptValue newVariant(const QVariant &value);
    QScriptValue newVariant(const QScriptValue &object, const QVariant &value);
 
-#ifndef QT_NO_REGEXP
-   QScriptValue newRegExp(const QRegExp &regexp);
-#endif
+   QScriptValue newRegExp(const QRegularExpression &regexp);
 
    QScriptValue newObject();
    QScriptValue newObject(QScriptClass *scriptClass, const QScriptValue &data = QScriptValue());
@@ -240,7 +230,7 @@ class Q_SCRIPT_EXPORT QScriptEngine
    friend inline bool qscriptvalue_cast_helper(const QScriptValue &, int, void *);
 
  protected:
-   QScriptEngine(QScriptEnginePrivate &dd, QObject *parent = 0);
+   QScriptEngine(QScriptEnginePrivate &dd, QObject *parent = nullptr);
 
  private:
    Q_DECLARE_PRIVATE(QScriptEngine)
@@ -392,28 +382,20 @@ void qScriptValueToSequence(const QScriptValue &value, Container &cont)
 }
 
 template<typename T>
-int qScriptRegisterSequenceMetaType(
-   QScriptEngine *engine,
-   const QScriptValue &prototype = QScriptValue(),
-   T * /* dummy */ = 0 )
-
-
+int qScriptRegisterSequenceMetaType(QScriptEngine *engine, const QScriptValue &prototype = QScriptValue(), T * = nullptr)
 {
-   return qScriptRegisterMetaType<T>(engine, qScriptValueFromSequence,
-                                     qScriptValueToSequence, prototype);
+   return qScriptRegisterMetaType<T>(engine, qScriptValueFromSequence, qScriptValueToSequence, prototype);
 }
 
 
-Q_SCRIPT_EXPORT bool qScriptConnect(QObject *sender, const char *signal,
-                                    const QScriptValue &receiver,
-                                    const QScriptValue &function);
-Q_SCRIPT_EXPORT bool qScriptDisconnect(QObject *sender, const char *signal,
-                                       const QScriptValue &receiver,
-                                       const QScriptValue &function);
+Q_SCRIPT_EXPORT bool qScriptConnect(QObject *sender, const QString &signal,
+                  const QScriptValue &receiver, const QScriptValue &function);
+
+Q_SCRIPT_EXPORT bool qScriptDisconnect(QObject *sender, const QString &signal,
+                  const QScriptValue &receiver, const QScriptValue &function);
 
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QScriptEngine::QObjectWrapOptions)
 
-QT_END_NAMESPACE
 
 #endif // QSCRIPTENGINE_H

@@ -1,43 +1,30 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
 
 template <bool FromDocument>
-AccelTreeBuilder<FromDocument>::AccelTreeBuilder(const QUrl &docURI,
-      const QUrl &baseURI,
-      const NamePool::Ptr &np,
-      ReportContext *const context,
-      Features features) : m_preNumber(-1)
-   , m_isPreviousAtomic(false)
-   , m_hasCharacters(false)
-   , m_isCharactersCompressed(false)
-   , m_namePool(np)
-   , m_document(new AccelTree(docURI, baseURI))
-   , m_skippedDocumentNodes(0)
-   , m_documentURI(docURI)
-   , m_context(context)
-   , m_features(features)
+AccelTreeBuilder<FromDocument>::AccelTreeBuilder(const QUrl &docURI, const QUrl &baseURI, const NamePool::Ptr &np,
+      ReportContext *const context, Features features)
+   : m_preNumber(-1), m_isPreviousAtomic(false), m_hasCharacters(false), m_isCharactersCompressed(false), m_namePool(np),
+      m_document(new AccelTree(docURI, baseURI)), m_skippedDocumentNodes(0), m_documentURI(docURI), m_context(context), m_features(features)
 {
    Q_ASSERT(m_namePool);
 
@@ -150,7 +137,7 @@ void AccelTreeBuilder<FromDocument>::endElement()
 }
 
 template <bool FromDocument>
-void AccelTreeBuilder<FromDocument>::attribute(const QXmlName &name, const QStringRef &value)
+void AccelTreeBuilder<FromDocument>::attribute(const QXmlName &name, QStringView value)
 {
    /* Attributes adds a namespace binding, so lets synthesize one.
     *
@@ -188,22 +175,19 @@ void AccelTreeBuilder<FromDocument>::attribute(const QXmlName &name, const QStri
          if (oldSize == m_document->m_IDs.count() && m_context) { // TODO
             Q_ASSERT(m_context);
             m_context->error(QtXmlPatterns::tr("An %1-attribute with value %2 has already been declared.")
-                             .arg(formatKeyword("xml:id"),
-                                  formatData(normalized)),
-                             FromDocument ? ReportContext::FODC0002 : ReportContext::XQDY0091,
-                             this);
+                  .formatArgs(formatKeyword("xml:id"),
+                  formatData(normalized)),
+                  FromDocument ? ReportContext::FODC0002 : ReportContext::XQDY0091, this);
          }
       } else if (m_context) { // TODO
          Q_ASSERT(m_context);
 
          /* If we're building from an XML Document(e.g, we're fed from QXmlStreamReader, we raise FODC0002,
           * otherwise XQDY0091. */
-         m_context->error(QtXmlPatterns::tr("An %1-attribute must have a "
-                                            "valid %2 as value, which %3 isn't.").arg(formatKeyword("xml:id"),
-                                                  formatType(m_namePool, BuiltinTypes::xsNCName),
-                                                  formatData(value.toString())),
-                          FromDocument ? ReportContext::FODC0002 : ReportContext::XQDY0091,
-                          this);
+         m_context->error(QtXmlPatterns::tr("An %1-attribute must have a valid %2 as value, which %3 isn't.")
+                  .formatArgs(formatKeyword("xml:id"),
+                  formatType(m_namePool, BuiltinTypes::xsNCName), formatData(value.toString())),
+                  FromDocument ? ReportContext::FODC0002 : ReportContext::XQDY0091, this);
       }
    } else {
       m_document->data.insert(m_preNumber, *m_attributeCompress.insert(value.toString()));
@@ -211,7 +195,7 @@ void AccelTreeBuilder<FromDocument>::attribute(const QXmlName &name, const QStri
 }
 
 template <bool FromDocument>
-void AccelTreeBuilder<FromDocument>::characters(const QStringRef &ch)
+void AccelTreeBuilder<FromDocument>::characters(QStringView ch)
 {
 
    /* If a text node constructor appears by itself, a node needs to
@@ -232,7 +216,7 @@ void AccelTreeBuilder<FromDocument>::characters(const QStringRef &ch)
 }
 
 template <bool FromDocument>
-void AccelTreeBuilder<FromDocument>::whitespaceOnly(const QStringRef &ch)
+void AccelTreeBuilder<FromDocument>::whitespaceOnly(QStringView ch)
 {
    Q_ASSERT(!ch.isEmpty());
    Q_ASSERT(ch.toString().trimmed().isEmpty());
@@ -399,7 +383,7 @@ template <bool FromDocument>
 QSourceLocation AccelTreeBuilder<FromDocument>::sourceLocation() const
 {
    if (m_documentURI.isEmpty()) {
-      return QSourceLocation(QUrl(QLatin1String("AnonymousNodeTree")));
+      return QSourceLocation(QUrl("AnonymousNodeTree"));
    } else {
       return QSourceLocation(m_documentURI);
    }

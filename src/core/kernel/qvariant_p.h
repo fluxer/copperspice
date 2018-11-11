@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,29 +23,13 @@
 #ifndef QVARIANT_P_H
 #define QVARIANT_P_H
 
-// takes a type, returns the internal void* pointer cast
-// to a pointer of the input type
+// takes a type, returns the internal void* pointer cast to a pointer of the input type
 
-#include <QtCore/qglobal.h>
-#include <QtCore/qvariant.h>
-
-QT_BEGIN_NAMESPACE
-
-#ifdef Q_CC_SUN // Sun CC picks the wrong overload, so introduce awful hack
+#include <qglobal.h>
+#include <qvariant.h>
 
 template <typename T>
-inline T *v_cast(const QVariant::Private *nd, T * = 0)
-{
-   QVariant::Private *d = const_cast<QVariant::Private *>(nd);
-   return ((sizeof(T) > sizeof(QVariant::Private::Data))
-           ? static_cast<T *>(d->data.shared->ptr)
-           : static_cast<T *>(static_cast<void *>(&d->data.c)));
-}
-
-#else // every other compiler in this world
-
-template <typename T>
-inline const T *v_cast(const QVariant::Private *d, T * = 0)
+inline const T *v_cast(const QVariant::Private *d, T * = nullptr)
 {
    return ((sizeof(T) > sizeof(QVariant::Private::Data))
            ? static_cast<const T *>(d->data.shared->ptr)
@@ -56,17 +37,15 @@ inline const T *v_cast(const QVariant::Private *d, T * = 0)
 }
 
 template <typename T>
-inline T *v_cast(QVariant::Private *d, T * = 0)
+inline T *v_cast(QVariant::Private *d, T * = nullptr)
 {
    return ((sizeof(T) > sizeof(QVariant::Private::Data))
            ? static_cast<T *>(d->data.shared->ptr)
            : static_cast<T *>(static_cast<void *>(&d->data.c)));
 }
 
-#endif
 
-
-//a simple template that avoids to allocate 2 memory chunks when creating a QVariant
+// simple template that avoids to allocate 2 memory chunks when creating a QVariant
 template <class T> class QVariantPrivateSharedEx : public QVariant::PrivateShared
 {
  public:
@@ -77,53 +56,53 @@ template <class T> class QVariantPrivateSharedEx : public QVariant::PrivateShare
    T m_t;
 };
 
-// constructs a new variant if copy is 0, otherwise copy-constructs
-template <class T>
-inline void v_construct(QVariant::Private *x, const void *copy, T * = 0)
+// constructs a new variant if copy is nullptr, otherwise copy-constructs
+template <class T, typename = typename std::enable_if<(sizeof(T) > sizeof(QVariant::Private::Data))>::type>
+inline void v_construct(QVariant::Private *x, const void *copy, T * = nullptr)
 {
-   if (sizeof(T) > sizeof(QVariant::Private::Data)) {
-      x->data.shared = copy ? new QVariantPrivateSharedEx<T>(*static_cast<const T *>(copy))
-                       : new QVariantPrivateSharedEx<T>;
-      x->is_shared = true;
+   x->data.shared = copy ? new QVariantPrivateSharedEx<T>(*static_cast<const T *>(copy)) : new QVariantPrivateSharedEx<T>;
+   x->is_shared   = true;
+}
+
+template <class T, typename = typename std::enable_if<sizeof(T) <= sizeof(QVariant::Private::Data)>::type, typename = void>
+inline void v_construct(QVariant::Private *x, const void *copy, T * = nullptr)
+{
+   if (copy) {
+      new (&x->data) T(*static_cast<const T *>(copy));
 
    } else {
-      if (copy) {
-         new (&x->data.ptr) T(*static_cast<const T *>(copy));
-      } else {
-         new (&x->data.ptr) T;
-      }
+      new (&x->data) T;
+
    }
 }
 
-template <class T>
+template <class T, typename = typename std::enable_if<(sizeof(T) > sizeof(QVariant::Private::Data))>::type>
 inline void v_construct(QVariant::Private *x, const T &t)
 {
-   if (sizeof(T) > sizeof(QVariant::Private::Data)) {
-      x->data.shared = new QVariantPrivateSharedEx<T>(t);
-      x->is_shared = true;
-   } else {
-      new (&x->data.ptr) T(t);
-   }
+   x->data.shared = new QVariantPrivateSharedEx<T>(t);
+   x->is_shared   = true;
+}
+
+template <class T, typename = typename std::enable_if<sizeof(T) <= sizeof(QVariant::Private::Data)>::type, typename = void>
+inline void v_construct(QVariant::Private *x, const T &t)
+{
+   new (&x->data) T(t);
 }
 
 // deletes the internal structures
-template <class T>
-inline void v_clear(QVariant::Private *d, T * = 0)
+template <class T, typename = typename std::enable_if<(sizeof(T) > sizeof(QVariant::Private::Data))>::type>
+inline void v_clear(QVariant::Private *d, T * = nullptr)
 {
+   // now we need to cast because QVariant::PrivateShared does not have a virtual destructor
+   delete static_cast<QVariantPrivateSharedEx<T>*>(d->data.shared);
+}
 
-   if (sizeof(T) > sizeof(QVariant::Private::Data)) {
-      //now we need to cast
-      //because QVariant::PrivateShared doesn't have a virtual destructor
-      delete static_cast<QVariantPrivateSharedEx<T>*>(d->data.shared);
-
-   } else {
-      v_cast<T>(d)->~T();
-   }
-
+template <class T, typename = typename std::enable_if<sizeof(T) <= sizeof(QVariant::Private::Data)>::type, typename = void>
+inline void v_clear(QVariant::Private *d, T * = nullptr)
+{
+   v_cast<T>(d)->~T();
 }
 
 Q_CORE_EXPORT const QVariant::Handler *qcoreVariantHandler();
 
-QT_END_NAMESPACE
-
-#endif // QVARIANT_P_H
+#endif

@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -46,32 +43,32 @@ class Q_CORE_EXPORT QEventDispatcherWin32 : public QAbstractEventDispatcher
    friend class QGuiEventDispatcherWin32;
 
  public:
-   explicit QEventDispatcherWin32(QObject *parent = 0);
+   explicit QEventDispatcherWin32(QObject *parent = nullptr);
    ~QEventDispatcherWin32();
 
-   bool QT_ENSURE_STACK_ALIGNED_FOR_SSE processEvents(QEventLoop::ProcessEventsFlags flags);
-   bool hasPendingEvents();
+   bool QT_ENSURE_STACK_ALIGNED_FOR_SSE processEvents(QEventLoop::ProcessEventsFlags flags) override;
+   bool hasPendingEvents() override;
 
-   void registerSocketNotifier(QSocketNotifier *notifier);
-   void unregisterSocketNotifier(QSocketNotifier *notifier);
+   void registerSocketNotifier(QSocketNotifier *notifier) override;
+   void unregisterSocketNotifier(QSocketNotifier *notifier) override;
 
-   void registerTimer(int timerId, int interval, QObject *object);
-   bool unregisterTimer(int timerId);
-   bool unregisterTimers(QObject *object);
-   QList<TimerInfo> registeredTimers(QObject *object) const;
+   void registerTimer(int timerId, int interval, QObject *object) override;
+   bool unregisterTimer(int timerId) override;
+   bool unregisterTimers(QObject *object) override;
+   QList<TimerInfo> registeredTimers(QObject *object) const override;
 
    bool registerEventNotifier(QWinEventNotifier *notifier);
    void unregisterEventNotifier(QWinEventNotifier *notifier);
    void activateEventNotifiers();
 
-   void wakeUp();
-   void interrupt();
-   void flush();
+   void wakeUp() override;
+   void interrupt() override;
+   void flush() override;
 
-   void startingUp();
-   void closingDown();
+   void startingUp() override;
+   void closingDown() override;
 
-   bool event(QEvent *e);
+   bool event(QEvent *e) override;
 
  private:
    friend LRESULT QT_WIN_CALLBACK qt_internal_proc(HWND hwnd, UINT message, WPARAM wp, LPARAM lp);

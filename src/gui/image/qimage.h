@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,14 +23,12 @@
 #ifndef QIMAGE_H
 #define QIMAGE_H
 
-#include <QtGui/qtransform.h>
-#include <QtGui/qpaintdevice.h>
-#include <QtGui/qrgb.h>
-#include <QtCore/qbytearray.h>
-#include <QtCore/qrect.h>
-#include <QtCore/qstring.h>
-
-QT_BEGIN_NAMESPACE
+#include <qtransform.h>
+#include <qpaintdevice.h>
+#include <qrgb.h>
+#include <qbytearray.h>
+#include <qrect.h>
+#include <qstring.h>
 
 class QIODevice;
 class QStringList;
@@ -67,7 +62,8 @@ class Q_GUI_EXPORT QImageTextKeyLang
       return !operator==(other);
    }
 };
-#endif //QT_NO_IMAGE_TEXT
+
+#endif
 
 
 class Q_GUI_EXPORT QImage : public QPaintDevice
@@ -103,14 +99,14 @@ class Q_GUI_EXPORT QImage : public QPaintDevice
    QImage(uchar *data, int width, int height, int bytesPerLine, Format format);
    QImage(const uchar *data, int width, int height, int bytesPerLine, Format format);
 
+   QImage(const QImage &);
+
+   explicit QImage(const QString &fileName, const char *format = 0);
+
 #ifndef QT_NO_IMAGEFORMAT_XPM
    explicit QImage(const char *const xpm[]);
 #endif
 
-   explicit QImage(const QString &fileName, const char *format = 0);
-   explicit QImage(const char *fileName, const char *format = 0);
-
-   QImage(const QImage &);
    ~QImage();
 
    QImage &operator=(const QImage &);
@@ -126,7 +122,7 @@ class Q_GUI_EXPORT QImage : public QPaintDevice
 
    bool isNull() const;
 
-   int devType() const;
+   int devType() const override;
 
    bool operator==(const QImage &) const;
    bool operator!=(const QImage &) const;
@@ -186,16 +182,16 @@ class Q_GUI_EXPORT QImage : public QPaintDevice
    int bytesPerLine() const;
 
    bool valid(int x, int y) const;
-   bool valid(const QPoint &pt) const;
+   inline bool valid(const QPoint &pt) const;
 
    int pixelIndex(int x, int y) const;
-   int pixelIndex(const QPoint &pt) const;
+   inline int pixelIndex(const QPoint &pt) const;
 
    QRgb pixel(int x, int y) const;
-   QRgb pixel(const QPoint &pt) const;
+   inline QRgb pixel(const QPoint &pt) const;
 
    void setPixel(int x, int y, uint index_or_rgb);
-   void setPixel(const QPoint &pt, uint index_or_rgb);
+   inline void setPixel(const QPoint &pt, uint index_or_rgb);
 
    QVector<QRgb> colorTable() const;
    void setColorTable(const QVector<QRgb> colors);
@@ -233,7 +229,6 @@ class Q_GUI_EXPORT QImage : public QPaintDevice
    QImage rgbSwapped() const;
    void invertPixels(InvertMode = InvertRgb);
 
-
    bool load(QIODevice *device, const char *format);
    bool load(const QString &fileName, const char *format = 0);
    bool loadFromData(const uchar *buf, int len, const char *format = 0);
@@ -252,7 +247,7 @@ class Q_GUI_EXPORT QImage : public QPaintDevice
    int serialNumber() const;
    qint64 cacheKey() const;
 
-   QPaintEngine *paintEngine() const;
+   QPaintEngine *paintEngine() const override;
 
    // Auxiliary data
    int dotsPerMeterX() const;
@@ -274,6 +269,7 @@ class Q_GUI_EXPORT QImage : public QPaintDevice
    QT_DEPRECATED QString text(const QImageTextKeyLang &) const;
    QT_DEPRECATED void setText(const char *key, const char *lang, const QString &);
 #endif
+
 #endif
 
    typedef QImageData *DataPtr;
@@ -282,7 +278,7 @@ class Q_GUI_EXPORT QImage : public QPaintDevice
    }
 
  protected:
-   virtual int metric(PaintDeviceMetric metric) const;
+   virtual int metric(PaintDeviceMetric metric) const override;
 
  private:
    friend class QWSOnScreenSurface;
@@ -298,8 +294,6 @@ class Q_GUI_EXPORT QImage : public QPaintDevice
 
 Q_DECLARE_SHARED(QImage)
 Q_DECLARE_TYPEINFO(QImage, Q_MOVABLE_TYPE);
-
-// Inline functions...
 
 inline bool QImage::valid(const QPoint &pt) const
 {
@@ -318,13 +312,7 @@ inline void QImage::setPixel(const QPoint &pt, uint index_or_rgb)
    setPixel(pt.x(), pt.y(), index_or_rgb);
 }
 
-// QImage stream functions
-
-#if !defined(QT_NO_DATASTREAM)
 Q_GUI_EXPORT QDataStream &operator<<(QDataStream &, const QImage &);
 Q_GUI_EXPORT QDataStream &operator>>(QDataStream &, QImage &);
+
 #endif
-
-QT_END_NAMESPACE
-
-#endif // QIMAGE_H

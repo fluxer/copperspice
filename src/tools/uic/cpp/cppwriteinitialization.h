@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -34,8 +31,6 @@
 #include <QtCore/QStack>
 #include <QtCore/QTextStream>
 
-QT_BEGIN_NAMESPACE
-
 class Driver;
 class Uic;
 class DomBrush;
@@ -46,17 +41,21 @@ struct Option;
 
 namespace CPP {
 // Handle for a flat DOM font to get comparison functionality required for maps
+
 class FontHandle
 {
  public:
    FontHandle(const DomFont *domFont);
    int compare(const FontHandle &) const;
+
  private:
    const DomFont *m_domFont;
+
 #if defined(Q_OS_MAC) && defined(Q_CC_GNU) && (__GNUC__ == 3 && __GNUC_MINOR__ == 3)
    friend uint qHash(const FontHandle &);
 #endif
 };
+
 inline bool operator ==(const FontHandle &f1, const FontHandle &f2)
 {
    return f1.compare(f2) == 0;
@@ -93,16 +92,20 @@ class SizePolicyHandle
  public:
    SizePolicyHandle(const DomSizePolicy *domSizePolicy);
    int compare(const SizePolicyHandle &) const;
+
  private:
    const DomSizePolicy *m_domSizePolicy;
+
 #if defined(Q_OS_MAC) && defined(Q_CC_GNU) && (__GNUC__ == 3 && __GNUC_MINOR__ == 3)
    friend uint qHash(const SizePolicyHandle &);
 #endif
 };
+
 inline bool operator ==(const SizePolicyHandle &f1, const SizePolicyHandle &f2)
 {
    return f1.compare(f2) == 0;
 }
+
 #if !(defined(Q_OS_MAC) && defined(Q_CC_GNU) && (__GNUC__ == 3 && __GNUC_MINOR__ == 3))
 inline bool operator  <(const SizePolicyHandle &f1, const SizePolicyHandle &f2)
 {
@@ -111,61 +114,47 @@ inline bool operator  <(const SizePolicyHandle &f1, const SizePolicyHandle &f2)
 #endif
 
 
-
 struct WriteInitialization : public TreeWalker {
-   typedef QList<DomProperty *> DomPropertyList;
-   typedef QHash<QString, DomProperty *> DomPropertyMap;
+   using DomPropertyList = QList<DomProperty *>;
+   using DomPropertyMap  = QHash<QString, DomProperty *>;
 
    WriteInitialization(Uic *uic, bool activateScripts);
 
-   //
    // widgets
-   //
-   void acceptUI(DomUI *node);
-   void acceptWidget(DomWidget *node);
-   void acceptWidgetScripts(const DomScripts &, DomWidget *node, const  DomWidgets &childWidgets);
+   void acceptUI(DomUI *node) override;
+   void acceptWidget(DomWidget *node) override;
+   void acceptWidgetScripts(const DomScripts &, DomWidget *node, const  DomWidgets &childWidgets) override;
 
-   void acceptLayout(DomLayout *node);
-   void acceptSpacer(DomSpacer *node);
-   void acceptLayoutItem(DomLayoutItem *node);
+   void acceptLayout(DomLayout *node) override;
+   void acceptSpacer(DomSpacer *node) override;
+   void acceptLayoutItem(DomLayoutItem *node) override;
 
-   //
    // actions
-   //
-   void acceptActionGroup(DomActionGroup *node);
-   void acceptAction(DomAction *node);
-   void acceptActionRef(DomActionRef *node);
+   void acceptActionGroup(DomActionGroup *node) override;
+   void acceptAction(DomAction *node) override;
+   void acceptActionRef(DomActionRef *node) override;
 
-   //
    // tab stops
-   //
-   void acceptTabStops(DomTabStops *tabStops);
+   void acceptTabStops(DomTabStops *tabStops) override;
 
-   //
    // custom widgets
-   //
-   void acceptCustomWidgets(DomCustomWidgets *node);
-   void acceptCustomWidget(DomCustomWidget *node);
+   void acceptCustomWidgets(DomCustomWidgets *node) override;
+   void acceptCustomWidget(DomCustomWidget *node) override;
 
-   //
    // layout defaults/functions
-   //
-   void acceptLayoutDefault(DomLayoutDefault *node)   {
+   void acceptLayoutDefault(DomLayoutDefault *node) override {
       m_LayoutDefaultHandler.acceptLayoutDefault(node);
    }
-   void acceptLayoutFunction(DomLayoutFunction *node) {
+
+   void acceptLayoutFunction(DomLayoutFunction *node)  override{
       m_LayoutDefaultHandler.acceptLayoutFunction(node);
    }
 
-   //
    // signal/slot connections
-   //
-   void acceptConnection(DomConnection *connection);
+   void acceptConnection(DomConnection *connection) override;
 
-   //
    // images
-   //
-   void acceptImage(DomImage *image);
+   void acceptImage(DomImage *image) override;
 
    enum {
       Use43UiFile = 0,
@@ -180,11 +169,15 @@ struct WriteInitialization : public TreeWalker {
    QString iconCall(const DomProperty *prop);
    QString pixCall(const DomProperty *prop) const;
    QString pixCall(const QString &type, const QString &text) const;
+
    QString trCall(const QString &str, const QString &comment = QString()) const;
    QString trCall(DomString *str, const QString &defaultString = QString()) const;
+
    QString noTrCall(DomString *str, const QString &defaultString = QString()) const;
    QString autoTrCall(DomString *str, const QString &defaultString = QString()) const;
+
    QTextStream &autoTrOutput(DomString *str, const QString &defaultString = QString());
+
    // Apply a comma-separated list of values using a function "setSomething(int idx, value)"
    void writePropertyList(const QString &varName, const QString &setFunction, const QString &value,
                           const QString &defaultValue);
@@ -194,9 +187,7 @@ struct WriteInitialization : public TreeWalker {
    void writeColorGroup(DomColorGroup *colorGroup, const QString &group, const QString &paletteName);
    void writeBrush(const DomBrush *brush, const QString &brushName);
 
-   //
    // special initialization
-   //
    class Item
    {
     public:
@@ -208,23 +199,28 @@ struct WriteInitialization : public TreeWalker {
          ConstructItemOnly,
          ConstructItemAndVariable
       };
+
       QString writeSetupUi(const QString &parent, EmptyItemPolicy emptyItemPolicy = ConstructItemOnly);
       void writeRetranslateUi(const QString &parentPath);
+
       void addSetter(const QString &setter, const QString &directive = QString(),
-                     bool translatable = false); // don't call it if you already added *this as a child of another Item
+                     bool translatable = false); // do not call it if you already added *this as a child of another Item
+
       void addChild(Item *child); // all setters should already been added
+
       int setupUiCount() const {
          return m_setupUiData.setters.count();
       }
       int retranslateUiCount() const {
          return m_retranslateUiData.setters.count();
       }
+
     private:
       struct ItemData {
          ItemData() : policy(DontGenerate) {}
-         QMultiMap<QString, QString> setters; // directive to setter
+         QMultiMap<QString, QString> setters;       // directive to setter
          QSet<QString> directives;
-         enum TemporaryVariableGeneratorPolicy { // policies with priority, number describes the priority
+         enum TemporaryVariableGeneratorPolicy {   // policies with priority, number describes the priority
             DontGenerate = 1,
             GenerateWithMultiDirective = 2,
             Generate = 3
@@ -242,9 +238,8 @@ struct WriteInitialization : public TreeWalker {
       Driver *m_driver;
    };
 
-   void addInitializer(Item *item,
-                       const QString &name, int column, const QString &value, const QString &directive = QString(),
-                       bool translatable = false) const;
+   void addInitializer(Item *item, const QString &name, int column, const QString &value, const QString &directive = QString(),
+                  bool translatable = false) const;
 
    void addQtFlagsInitializer(Item *item, const DomPropertyMap &properties, const QString &name, int column = -1) const;
 
@@ -252,8 +247,8 @@ struct WriteInitialization : public TreeWalker {
 
    void addBrushInitializer(Item *item, const DomPropertyMap &properties, const QString &name, int column = -1);
 
-   void addStringInitializer(Item *item,
-                             const DomPropertyMap &properties, const QString &name, int column = -1, const QString &directive = QString()) const;
+   void addStringInitializer(Item *item, const DomPropertyMap &properties, const QString &name, int column = -1,
+                  const QString &directive = QString()) const;
 
    void addCommonInitializers(Item *item, const DomPropertyMap &properties, int column = -1);
 
@@ -267,7 +262,6 @@ struct WriteInitialization : public TreeWalker {
 
    QString disableSorting(DomWidget *w, const QString &varName);
    void enableSorting(DomWidget *w, const QString &varName, const QString &tempName);
-
 
    //
    // Sql
@@ -313,8 +307,10 @@ struct WriteInitialization : public TreeWalker {
    QHash<QString, DomAction *> m_registeredActions;
    typedef QHash<uint, QString> ColorBrushHash;
    ColorBrushHash m_colorBrushHash;
+
    // Map from font properties to  font variable name for reuse
    // Map from size policy to  variable for reuse
+
 #if defined(Q_OS_MAC) && defined(Q_CC_GNU) && (__GNUC__ == 3 && __GNUC_MINOR__ == 3)
    typedef QHash<FontHandle, QString> FontPropertiesNameMap;
    typedef QHash<IconHandle, QString> IconPropertiesNameMap;
@@ -324,6 +320,7 @@ struct WriteInitialization : public TreeWalker {
    typedef QMap<IconHandle, QString> IconPropertiesNameMap;
    typedef QMap<SizePolicyHandle, QString> SizePolicyNameMap;
 #endif
+
    FontPropertiesNameMap m_fontPropertiesNameMap;
    IconPropertiesNameMap m_iconPropertiesNameMap;
    SizePolicyNameMap     m_sizePolicyNameMap;
@@ -336,8 +333,7 @@ struct WriteInitialization : public TreeWalker {
       void acceptLayoutFunction(DomLayoutFunction *node);
 
       // Write out the layout margin and spacing properties applying the defaults.
-      void writeProperties(const QString &indent, const QString &varName,
-                           const DomPropertyMap &pm, int marginType,
+      void writeProperties(const QString &indent, const QString &varName,  const DomPropertyMap &pm, int marginType,
                            bool suppressMarginDefault, QTextStream &str) const;
     private:
       void writeProperty(int p, const QString &indent, const QString &objectName, const DomPropertyMap &pm,
@@ -374,7 +370,5 @@ struct WriteInitialization : public TreeWalker {
 };
 
 } // namespace CPP
-
-QT_END_NAMESPACE
 
 #endif // CPPWRITEINITIALIZATION_H

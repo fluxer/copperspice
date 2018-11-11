@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -55,18 +52,18 @@ class Q_GUI_EXPORT QMenu : public QWidget
    GUI_CS_PROPERTY_WRITE(toolTipsVisible, setToolTipsVisible)
 
  public:
-   explicit QMenu(QWidget *parent = 0);
-   explicit QMenu(const QString &title, QWidget *parent = 0);
+   explicit QMenu(QWidget *parent = nullptr);
+   explicit QMenu(const QString &title, QWidget *parent = nullptr);
    ~QMenu();
 
    using QWidget::addAction;
 
    QAction *addAction(const QString &text);
    QAction *addAction(const QIcon &icon, const QString &text);
-   QAction *addAction(const QString &text, const QObject *receiver,
-                      const char *member, const QKeySequence &shortcut = 0);
+   QAction *addAction(const QString &text, const QObject *receiver, const QString &member, const QKeySequence &shortcut = 0);
+
    QAction *addAction(const QIcon &icon, const QString &text,
-                      const QObject *receiver, const char *member, const QKeySequence &shortcut = 0);
+                      const QObject *receiver, const QString &member, const QKeySequence &shortcut = 0);
 
    QAction *addMenu(QMenu *menu);
    QMenu *addMenu(const QString &title);
@@ -92,15 +89,13 @@ class Q_GUI_EXPORT QMenu : public QWidget
    void setActiveAction(QAction *act);
    QAction *activeAction() const;
 
-   void popup(const QPoint &pos, QAction *at = 0);
+   void popup(const QPoint &pos, QAction *at = nullptr);
+
    QAction *exec();
-   QAction *exec(const QPoint &pos, QAction *at = 0);
+   QAction *exec(const QPoint &pos, QAction *at = nullptr);
+   static QAction *exec(const QList<QAction *> &actions, const QPoint &pos, QAction *at = nullptr, QWidget *parent = nullptr);
 
-   // ### Qt5/merge
-   static QAction *exec(QList<QAction *> actions, const QPoint &pos, QAction *at = 0);
-   static QAction *exec(QList<QAction *> actions, const QPoint &pos, QAction *at, QWidget *parent);
-
-   QSize sizeHint() const;
+   QSize sizeHint() const override;
 
    QRect actionGeometry(QAction *) const;
    QAction *actionAt(const QPoint &) const;
@@ -137,27 +132,27 @@ class Q_GUI_EXPORT QMenu : public QWidget
  protected:
    int columnCount() const;
 
-   void changeEvent(QEvent *);
-   void keyPressEvent(QKeyEvent *);
-   void mouseReleaseEvent(QMouseEvent *);
-   void mousePressEvent(QMouseEvent *);
-   void mouseMoveEvent(QMouseEvent *);
+   void changeEvent(QEvent *) override;
+   void keyPressEvent(QKeyEvent *) override;
+   void mouseReleaseEvent(QMouseEvent *) override;
+   void mousePressEvent(QMouseEvent *) override;
+   void mouseMoveEvent(QMouseEvent *) override;
 
 #ifndef QT_NO_WHEELEVENT
-   void wheelEvent(QWheelEvent *);
+   void wheelEvent(QWheelEvent *) override;
 #endif
 
-   void enterEvent(QEvent *);
-   void leaveEvent(QEvent *);
-   void hideEvent(QHideEvent *);
-   void paintEvent(QPaintEvent *);
-   void actionEvent(QActionEvent *);
-   void timerEvent(QTimerEvent *);
-   bool event(QEvent *);
-   bool focusNextPrevChild(bool next);
+   void enterEvent(QEvent *) override;
+   void leaveEvent(QEvent *) override;
+   void hideEvent(QHideEvent *) override;
+   void paintEvent(QPaintEvent *) override;
+   void actionEvent(QActionEvent *) override;
+   void timerEvent(QTimerEvent *) override;
+   bool event(QEvent *) override;
+   bool focusNextPrevChild(bool next) override;
    void initStyleOption(QStyleOptionMenuItem *option, const QAction *action) const;
 
-   QMenu(QMenuPrivate &dd, QWidget *parent = 0);
+   QMenu(QMenuPrivate &dd, QWidget *parent = nullptr);
 
  private :
    GUI_CS_SLOT_1(Private, void internalSetSloppyAction())

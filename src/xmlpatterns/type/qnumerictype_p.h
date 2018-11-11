@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -36,43 +33,43 @@ class NumericType : public AtomicType
  public:
    virtual ~NumericType();
 
-   virtual bool itemMatches(const Item &item) const;
-   virtual bool xdtTypeMatches(const ItemType::Ptr &other) const;
+   bool itemMatches(const Item &item) const override;
+   bool xdtTypeMatches(const ItemType::Ptr &other) const override;
 
    /**
     * @returns always "numeric". That is, no namespace prefix
     */
-   virtual QString displayName(const NamePool::Ptr &np) const;
+   QString displayName(const NamePool::Ptr &np) const override;
 
    /**
     * @returns always @c true
     */
-   virtual bool isAbstract() const;
+   bool isAbstract() const override;
 
    /**
     * @returns always @c false
     */
-   virtual bool isNodeType() const;
+   bool isNodeType() const override;
 
    /**
     * @returns always @c true
     */
-   virtual bool isAtomicType() const;
+   bool isAtomicType() const override;
 
    /**
     * @returns always xs:anyAtomicType
     */
-   virtual SchemaType::Ptr wxsSuperType() const;
+   SchemaType::Ptr wxsSuperType() const override;
 
    /**
     * @returns always xs:anyAtomicType
     */
-   virtual ItemType::Ptr xdtSuperType() const;
+   ItemType::Ptr xdtSuperType() const override;
 
    /**
     * @returns @c null. It makes no sense to atomize the abstract type @c fs:numeric.
     */
-   virtual ItemType::Ptr atomizedType() const;
+   ItemType::Ptr atomizedType() const override;
 
    /**
     * NumericType cannot be visited. This function is only implemented
@@ -80,8 +77,8 @@ class NumericType : public AtomicType
     *
     * @returns always a @c null pointer
     */
-   virtual AtomicTypeVisitorResult::Ptr accept(const AtomicTypeVisitor::Ptr &visitor,
-         const SourceLocationReflection *const) const;
+   AtomicTypeVisitorResult::Ptr accept(const AtomicTypeVisitor::Ptr &visitor,
+         const SourceLocationReflection *const) const override;
 
    /**
     * NumericType cannot be visited. This function is only implemented
@@ -89,9 +86,8 @@ class NumericType : public AtomicType
     *
     * @returns always a @c null pointer
     */
-   virtual AtomicTypeVisitorResult::Ptr accept(const ParameterizedAtomicTypeVisitor::Ptr &visitor,
-         const qint16 op,
-         const SourceLocationReflection *const) const;
+   AtomicTypeVisitorResult::Ptr accept(const ParameterizedAtomicTypeVisitor::Ptr &visitor,
+                  const qint16 op, const SourceLocationReflection *const) const override;
 
    /**
     * The type @c fs:numeric is an abstract type which therefore
@@ -101,7 +97,7 @@ class NumericType : public AtomicType
     *
     * @returns always a @c null pointer
     */
-   virtual AtomicComparatorLocator::Ptr comparatorLocator() const;
+   AtomicComparatorLocator::Ptr comparatorLocator() const override;
 
    /**
     * The type @c fs:numeric is an abstract type which therefore
@@ -111,7 +107,7 @@ class NumericType : public AtomicType
     *
     * @returns always a @c null pointer
     */
-   virtual AtomicMathematicianLocator::Ptr mathematicianLocator() const;
+   AtomicMathematicianLocator::Ptr mathematicianLocator() const override;
 
 
    /**
@@ -122,7 +118,7 @@ class NumericType : public AtomicType
     *
     * @returns always a @c null pointer
     */
-   virtual AtomicCasterLocator::Ptr casterLocator() const;
+   AtomicCasterLocator::Ptr casterLocator() const override;
 
  protected:
    friend class BuiltinTypes;

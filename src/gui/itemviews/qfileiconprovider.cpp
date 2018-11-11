@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -238,7 +235,7 @@ QIcon QFileIconProviderPrivate::getWinIcon(const QFileInfo &fileInfo) const
    const bool cacheableDirIcon = fileInfo.isDir() && !fileInfo.isRoot();
    if (!useCustomDirectoryIcons && defaultFolderIIcon >= 0 && cacheableDirIcon) {
       // We already have the default folder icon, just return it
-      key = QString::fromLatin1("qt_dir_%1").arg(defaultFolderIIcon);
+      key = QString::fromLatin1("qt_dir_%1").formatArg(defaultFolderIIcon);
       QPixmapCache::find(key, pixmap);
       if (!pixmap.isNull()) {
          retIcon.addPixmap(pixmap);
@@ -264,12 +261,11 @@ QIcon QFileIconProviderPrivate::getWinIcon(const QFileInfo &fileInfo) const
 
    if (cacheableDirIcon && !useCustomDirectoryIcons) {
       flags |= SHGFI_USEFILEATTRIBUTES;
-      val = SHGetFileInfo(L"dummy",
-                          FILE_ATTRIBUTE_DIRECTORY, &info,
-                          sizeof(SHFILEINFO), flags | SHGFI_SMALLICON);
+      val = SHGetFileInfo(L"dummy", FILE_ATTRIBUTE_DIRECTORY, &info, sizeof(SHFILEINFO), flags | SHGFI_SMALLICON);
+
    } else {
-      val = SHGetFileInfo((const wchar_t *)QDir::toNativeSeparators(fileInfo.filePath()).utf16(),
-                          0, &info, sizeof(SHFILEINFO), flags | SHGFI_SMALLICON);
+      std::wstring tmp(QDir::toNativeSeparators(fileInfo.filePath()).toStdWString());
+      val = SHGetFileInfo(&tmp[0], 0, &info, sizeof(SHFILEINFO), flags | SHGFI_SMALLICON);
    }
 
    // Even if GetFileInfo returns a valid result, hIcon can be empty in some cases
@@ -279,10 +275,12 @@ QIcon QFileIconProviderPrivate::getWinIcon(const QFileInfo &fileInfo) const
             defaultFolderIIcon = info.iIcon;
          }
          //using the unique icon index provided by windows save us from duplicate keys
-         key = QString::fromLatin1("qt_dir_%1").arg(info.iIcon);
+         key = QString::fromLatin1("qt_dir_%1").formatArg(info.iIcon);
          QPixmapCache::find(key, pixmap);
-         if (!pixmap.isNull()) {
+
+         if (! pixmap.isNull()) {
             retIcon.addPixmap(pixmap);
+
             if (QPixmapCache::find(key + QLatin1Char('l'), pixmap)) {
                retIcon.addPixmap(pixmap);
             }
@@ -293,11 +291,12 @@ QIcon QFileIconProviderPrivate::getWinIcon(const QFileInfo &fileInfo) const
       if (pixmap.isNull()) {
          pixmap = QPixmap::fromWinHICON(info.hIcon);
 
-         if (!pixmap.isNull()) {
+         if (! pixmap.isNull()) {
             retIcon.addPixmap(pixmap);
             if (!key.isEmpty()) {
                QPixmapCache::insert(key, pixmap);
             }
+
          } else {
             qWarning("QFileIconProviderPrivate::getWinIcon() no small icon found");
          }
@@ -305,25 +304,29 @@ QIcon QFileIconProviderPrivate::getWinIcon(const QFileInfo &fileInfo) const
       DestroyIcon(info.hIcon);
    }
 
-   //Get the big icon
-   val = SHGetFileInfo((const wchar_t *)QDir::toNativeSeparators(fileInfo.filePath()).utf16(), 0, &info,
-                       sizeof(SHFILEINFO), SHGFI_ICON | SHGFI_LARGEICON | SHGFI_SYSICONINDEX | SHGFI_ADDOVERLAYS | SHGFI_OVERLAYINDEX);
+   // get the big icon
+   std::wstring tmp(QDir::toNativeSeparators(fileInfo.filePath()).toStdWString());
+   val = SHGetFileInfo(&tmp[0], 0, &info,
+                  sizeof(SHFILEINFO), SHGFI_ICON | SHGFI_LARGEICON | SHGFI_SYSICONINDEX | SHGFI_ADDOVERLAYS | SHGFI_OVERLAYINDEX);
 
    if (val && info.hIcon) {
       if (fileInfo.isDir() && !fileInfo.isRoot()) {
          //using the unique icon index provided by windows save us from duplicate keys
-         key = QString::fromLatin1("qt_dir_%1").arg(info.iIcon);
+         key = QString("qt_dir_%1").formatArg(info.iIcon);
       }
       pixmap = QPixmap::fromWinHICON(info.hIcon);
 
-      if (!pixmap.isNull()) {
+      if (! pixmap.isNull()) {
          retIcon.addPixmap(pixmap);
-         if (!key.isEmpty()) {
+
+         if (! key.isEmpty()) {
             QPixmapCache::insert(key + QLatin1Char('l'), pixmap);
          }
+
       } else {
          qWarning("QFileIconProviderPrivate::getWinIcon() no large icon found");
       }
+
       DestroyIcon(info.hIcon);
    }
    return retIcon;
@@ -345,10 +348,13 @@ QIcon QFileIconProviderPrivate::getMacIcon(const QFileInfo &fi) const
 
    if (!pixmap.isNull()) {
       retIcon.addPixmap(pixmap);
+
       if (QPixmapCache::find(keyBase + QLatin1String("32"), pixmap)) {
          retIcon.addPixmap(pixmap);
+
          if (QPixmapCache::find(keyBase + QLatin1String("64"), pixmap)) {
             retIcon.addPixmap(pixmap);
+
             if (QPixmapCache::find(keyBase + QLatin1String("128"), pixmap)) {
                retIcon.addPixmap(pixmap);
                return retIcon;
@@ -359,8 +365,8 @@ QIcon QFileIconProviderPrivate::getMacIcon(const QFileInfo &fi) const
 
 
    FSRef macRef;
-   OSStatus status = FSPathMakeRef(reinterpret_cast<const UInt8 *>(fi.canonicalFilePath().toUtf8().constData()),
-                                   &macRef, 0);
+   OSStatus status = FSPathMakeRef(reinterpret_cast<const UInt8 *>(fi.canonicalFilePath().toUtf8().constData()), &macRef, 0);
+
    if (status != noErr) {
       return retIcon;
    }
@@ -378,6 +384,7 @@ QIcon QFileIconProviderPrivate::getMacIcon(const QFileInfo &fi) const
    if (status != noErr) {
       return retIcon;
    }
+
    qt_mac_constructQIconFromIconRef(iconRef, 0, &retIcon);
    ReleaseIconRef(iconRef);
 
@@ -421,29 +428,36 @@ QIcon QFileIconProvider::icon(const QFileInfo &info) const
 
 #ifdef Q_OS_MAC
    QIcon retIcon = d->getMacIcon(info);
-   if (!retIcon.isNull()) {
+   if (! retIcon.isNull()) {
       return retIcon;
    }
+
 #elif defined Q_OS_WIN
    QIcon icon = d->getWinIcon(info);
-   if (!icon.isNull()) {
+   if (! icon.isNull()) {
       return icon;
    }
 #endif
+
    if (info.isRoot())
 #if defined (Q_OS_WIN)
    {
-      UINT type = GetDriveType((wchar_t *)info.absoluteFilePath().utf16());
+      std::wstring tmp(info.absoluteFilePath().toStdWString());
+      UINT type = GetDriveType(&tmp[0]);
 
       switch (type) {
          case DRIVE_REMOVABLE:
             return d->getIcon(QStyle::SP_DriveFDIcon);
+
          case DRIVE_FIXED:
             return d->getIcon(QStyle::SP_DriveHDIcon);
+
          case DRIVE_REMOTE:
             return d->getIcon(QStyle::SP_DriveNetIcon);
+
          case DRIVE_CDROM:
             return d->getIcon(QStyle::SP_DriveCDIcon);
+
          case DRIVE_RAMDISK:
          case DRIVE_UNKNOWN:
          case DRIVE_NO_ROOT_DIR:
@@ -451,9 +465,11 @@ QIcon QFileIconProvider::icon(const QFileInfo &info) const
             return d->getIcon(QStyle::SP_DriveHDIcon);
       }
    }
+
 #else
       return d->getIcon(QStyle::SP_DriveHDIcon);
 #endif
+
    if (info.isFile()) {
       if (info.isSymLink()) {
          return d->getIcon(QStyle::SP_FileLinkIcon);
@@ -461,6 +477,7 @@ QIcon QFileIconProvider::icon(const QFileInfo &info) const
          return d->getIcon(QStyle::SP_FileIcon);
       }
    }
+
    if (info.isDir()) {
       if (info.isSymLink()) {
          return d->getIcon(QStyle::SP_DirLinkIcon);

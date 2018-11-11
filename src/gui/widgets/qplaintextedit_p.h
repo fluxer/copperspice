@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -52,24 +49,23 @@ class QPlainTextEditControl : public QTextControl
  public:
    QPlainTextEditControl(QPlainTextEdit *parent);
 
+   QMimeData *createMimeDataFromSelection() const override;
+   bool canInsertFromMimeData(const QMimeData *source) const override;
+   void insertFromMimeData(const QMimeData *source) override;
+   int hitTest(const QPointF &point, Qt::HitTestAccuracy = Qt::FuzzyHit) const override;
+   QRectF blockBoundingRect(const QTextBlock &block) const override;
 
-   QMimeData *createMimeDataFromSelection() const;
-   bool canInsertFromMimeData(const QMimeData *source) const;
-   void insertFromMimeData(const QMimeData *source);
-   int hitTest(const QPointF &point, Qt::HitTestAccuracy = Qt::FuzzyHit) const;
-   QRectF blockBoundingRect(const QTextBlock &block) const;
-
-   inline QRectF cursorRect(const QTextCursor &cursor) const {
+   QRectF cursorRect(const QTextCursor &cursor) const {
       QRectF r = QTextControl::cursorRect(cursor);
       r.setLeft(qMax(r.left(), (qreal) 0.));
       return r;
    }
 
-   inline QRectF cursorRect() {
+   QRectF cursorRect() {
       return cursorRect(textCursor());
    }
 
-   inline void ensureCursorVisible() {
+   void ensureCursorVisible() override {
       textEdit->ensureCursorVisible();
       emit microFocusChanged();
    }
@@ -78,12 +74,11 @@ class QPlainTextEditControl : public QTextControl
    int topBlock;
    QTextBlock firstVisibleBlock() const;
 
-   QVariant loadResource(int type, const QUrl &name) {
+   QVariant loadResource(int type, const QUrl &name) override {
       return textEdit->loadResource(type, name);
    }
 
 };
-
 
 class QPlainTextEditPrivate : public QAbstractScrollAreaPrivate
 {

@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,20 +23,20 @@
 #ifndef QTEXTENGINE_P_H
 #define QTEXTENGINE_P_H
 
-#include <QtCore/qglobal.h>
-#include <QtCore/qstring.h>
-#include <QtCore/qvarlengtharray.h>
-#include <QtCore/qnamespace.h>
-#include <QtGui/qtextlayout.h>
+#include <qglobal.h>
+#include <qstring.h>
+#include <qvarlengtharray.h>
+#include <qnamespace.h>
+#include <qtextlayout.h>
 #include <qtextformat_p.h>
 #include <qfont_p.h>
-#include <QtCore/qvector.h>
-#include <QtGui/qpaintengine.h>
-#include <QtGui/qtextobject.h>
-#include <QtGui/qtextoption.h>
-#include <QtGui/qtextcursor.h>
-#include <QtCore/qset.h>
-#include <QtCore/qdebug.h>
+#include <qvector.h>
+#include <qpaintengine.h>
+#include <qtextobject.h>
+#include <qtextoption.h>
+#include <qtextcursor.h>
+#include <qset.h>
+#include <qdebug.h>
 
 #ifndef QT_BUILD_COMPAT_LIB
 #include <qtextdocument_p.h>
@@ -53,7 +50,6 @@ QT_BEGIN_NAMESPACE
 
 class QFontPrivate;
 class QFontEngine;
-class QString;
 class QPainter;
 class QAbstractTextDocumentLayout;
 
@@ -136,10 +132,10 @@ struct QGlyphLayoutInstance {
 
 struct QGlyphLayout {
    // init to 0 not needed, done when shaping
-   QFixedPoint *offsets; // 8 bytes per element
-   HB_Glyph *glyphs; // 4 bytes per element
-   QFixed *advances_x; // 4 bytes per element
-   QFixed *advances_y; // 4 bytes per element
+   QFixedPoint *offsets;   // 8 bytes per element
+   HB_Glyph *glyphs;       // 4 bytes per element
+   QFixed *advances_x;     // 4 bytes per element
+   QFixed *advances_y;     // 4 bytes per element
    QGlyphJustification *justifications; // 4 bytes per element
    HB_GlyphAttributes *attributes; // 2 bytes per element
 
@@ -150,14 +146,19 @@ struct QGlyphLayout {
    inline explicit QGlyphLayout(char *address, int totalGlyphs) {
       offsets = reinterpret_cast<QFixedPoint *>(address);
       int offset = totalGlyphs * sizeof(HB_FixedPoint);
+
       glyphs = reinterpret_cast<HB_Glyph *>(address + offset);
       offset += totalGlyphs * sizeof(HB_Glyph);
+
       advances_x = reinterpret_cast<QFixed *>(address + offset);
       offset += totalGlyphs * sizeof(QFixed);
+
       advances_y = reinterpret_cast<QFixed *>(address + offset);
       offset += totalGlyphs * sizeof(QFixed);
+
       justifications = reinterpret_cast<QGlyphJustification *>(address + offset);
       offset += totalGlyphs * sizeof(QGlyphJustification);
+
       attributes = reinterpret_cast<HB_GlyphAttributes *>(address + offset);
       numGlyphs = totalGlyphs;
    }
@@ -214,9 +215,10 @@ struct QGlyphLayout {
       if (last == -1) {
          last = numGlyphs;
       }
-      if (first == 0 && last == numGlyphs
-            && reinterpret_cast<char *>(offsets + numGlyphs) == reinterpret_cast<char *>(glyphs)) {
+
+      if (first == 0 && last == numGlyphs && reinterpret_cast<char *>(offsets + numGlyphs) == reinterpret_cast<char *>(glyphs)) {
          memset(offsets, 0, spaceNeededForGlyphLayout(numGlyphs));
+
       } else {
          const int num = last - first;
          memset(offsets + first, 0, num * sizeof(QFixedPoint));
@@ -239,6 +241,7 @@ class QVarLengthGlyphLayoutArray : private QVarLengthArray<void *>, public QGlyp
 {
  private:
    typedef QVarLengthArray<void *> Array;
+
  public:
    QVarLengthGlyphLayoutArray(int totalGlyphs)
       : Array(spaceNeededForGlyphLayout(totalGlyphs) / sizeof(void *) + 1)
@@ -264,22 +267,23 @@ template <int N> struct QGlyphLayoutArray : public QGlyphLayout {
  private:
    void *buffer[(N * (sizeof(HB_Glyph) + sizeof(HB_GlyphAttributes)
                       + sizeof(QFixed) + sizeof(QFixed) + sizeof(QFixedPoint)
-                      + sizeof(QGlyphJustification)))
-                / sizeof(void *) + 1];
+                      + sizeof(QGlyphJustification))) / sizeof(void *) + 1];
 };
 
 struct QScriptItem;
-// Internal QTextItem
+
+// internal QTextItem
 class QTextItemInt : public QTextItem
 {
  public:
    inline QTextItemInt()
-      : justified(false), underlineStyle(QTextCharFormat::NoUnderline), num_chars(0), chars(0),
-        logClusters(0), f(0), fontEngine(0) {
+      : justified(false), underlineStyle(QTextCharFormat::NoUnderline), logClusters(0), f(0), fontEngine(0) {
    }
+
    QTextItemInt(const QScriptItem &si, QFont *font, const QTextCharFormat &format = QTextCharFormat());
-   QTextItemInt(const QGlyphLayout &g, QFont *font, const QChar *chars, int numChars, QFontEngine *fe,
-                const QTextCharFormat &format = QTextCharFormat());
+
+   QTextItemInt(const QGlyphLayout &g, QFont *font, QString::const_iterator begin, QString::const_iterator end,
+                  QFontEngine *fe, const QTextCharFormat &format = QTextCharFormat());
 
    // copy the structure items, adjusting the glyphs arrays to the right subarrays.
    // the width of the returned QTextItemInt is not adjusted, for speed reasons
@@ -294,8 +298,10 @@ class QTextItemInt : public QTextItem
    bool justified;
    QTextCharFormat::UnderlineStyle underlineStyle;
    const QTextCharFormat charFormat;
-   int num_chars;
-   const QChar *chars;
+
+   QString::const_iterator m_iter;
+   QString::const_iterator m_end;
+
    const unsigned short *logClusters;
    const QFont *f;
 
@@ -303,7 +309,7 @@ class QTextItemInt : public QTextItem
    QFontEngine *fontEngine;
 };
 
-inline bool qIsControlChar(ushort uc)
+inline bool qIsControlChar(QChar uc)
 {
    return uc >= 0x200b && uc <= 0x206f
           && (uc <= 0x200f /* ZW Space, ZWNJ, ZWJ, LRM and RLM */
@@ -396,10 +402,12 @@ class Q_GUI_EXPORT QTextEngine
       InLayout,
       LayoutFailed,
    };
+
    struct LayoutData {
       LayoutData(const QString &str, void **stack_memory, int mem_size);
       LayoutData();
       ~LayoutData();
+
       mutable QScriptItemArray items;
       int allocated;
       int available_glyphs;
@@ -439,6 +447,8 @@ class Q_GUI_EXPORT QTextEngine
    void itemize() const;
 
    bool isRightToLeft() const;
+   static bool isRightToLeft(QStringView str);
+
    static void bidiReorder(int numRuns, const quint8 *levels, int *visualOrder);
 
    const HB_CharAttributes *attributes() const;
@@ -456,15 +466,19 @@ class Q_GUI_EXPORT QTextEngine
       const QScriptItem &si = layoutData->items[item];
       int from = si.position;
       item++;
-      return (item < layoutData->items.size() ? layoutData->items[item].position : layoutData->string.length()) - from;
+
+      return (item < layoutData->items.size() ? layoutData->items[item].position : layoutData->string.size()) - from;
    }
+
    int length(const QScriptItem *si) const {
       int end;
+
       if (si + 1 < layoutData->items.constData() + layoutData->items.size()) {
          end = (si + 1)->position;
       } else {
-         end = layoutData->string.length();
+         end = layoutData->string.size();
       }
+
       return end - si->position;
    }
 

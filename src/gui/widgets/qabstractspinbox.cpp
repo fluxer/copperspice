@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -57,63 +54,6 @@
 #  define QASBDEBUG if (false) qDebug
 #endif
 
-QT_BEGIN_NAMESPACE
-
-/*!
-    \class QAbstractSpinBox
-    \brief The QAbstractSpinBox class provides a spinbox and a line edit to
-    display values.
-
-    \ingroup abstractwidgets
-
-    The class is designed as a common super class for widgets like
-    QSpinBox, QDoubleSpinBox and QDateTimeEdit
-
-    Here are the main properties of the class:
-
-    \list 1
-
-    \i \l text: The text that is displayed in the QAbstractSpinBox.
-
-    \i \l alignment: The alignment of the text in the QAbstractSpinBox.
-
-    \i \l wrapping: Whether the QAbstractSpinBox wraps from the
-    minimum value to the maximum value and vica versa.
-
-    \endlist
-
-    QAbstractSpinBox provides a virtual stepBy() function that is
-    called whenever the user triggers a step. This function takes an
-    integer value to signify how many steps were taken. E.g. Pressing
-    Qt::Key_Down will trigger a call to stepBy(-1).
-
-    QAbstractSpinBox also provide a virtual function stepEnabled() to
-    determine whether stepping up/down is allowed at any point. This
-    function returns a bitset of StepEnabled.
-
-    \sa QAbstractSlider, QSpinBox, QDoubleSpinBox, QDateTimeEdit,
-        {Spin Boxes Example}
-*/
-
-/*!
-    \enum QAbstractSpinBox::StepEnabledFlag
-
-    \value StepNone
-    \value StepUpEnabled
-    \value StepDownEnabled
-*/
-
-/*!
-  \fn void QAbstractSpinBox::editingFinished()
-
-  This signal is emitted editing is finished. This happens when the
-  spinbox loses focus and when enter is pressed.
-*/
-
-/*!
-    Constructs an abstract spinbox with the given \a parent with default
-    \l wrapping, and \l alignment properties.
-*/
 
 QAbstractSpinBox::QAbstractSpinBox(QWidget *parent)
    : QWidget(*new QAbstractSpinBoxPrivate, parent, 0)
@@ -140,35 +80,6 @@ QAbstractSpinBox::~QAbstractSpinBox()
 {
 }
 
-/*!
-    \enum QAbstractSpinBox::ButtonSymbols
-
-    This enum type describes the symbols that can be displayed on the buttons
-    in a spin box.
-
-    \inlineimage qspinbox-updown.png
-    \inlineimage qspinbox-plusminus.png
-
-    \value UpDownArrows Little arrows in the classic style.
-    \value PlusMinus \bold{+} and \bold{-} symbols.
-    \value NoButtons Don't display buttons.
-
-    \sa QAbstractSpinBox::buttonSymbols
-*/
-
-/*!
-    \property QAbstractSpinBox::buttonSymbols
-
-    \brief the current button symbol mode
-
-    The possible values can be either \c UpDownArrows or \c PlusMinus.
-    The default is \c UpDownArrows.
-
-    Note that some styles might render PlusMinus and UpDownArrows
-    identically.
-
-    \sa ButtonSymbols
-*/
 
 QAbstractSpinBox::ButtonSymbols QAbstractSpinBox::buttonSymbols() const
 {
@@ -176,62 +87,21 @@ QAbstractSpinBox::ButtonSymbols QAbstractSpinBox::buttonSymbols() const
    return d->buttonSymbols;
 }
 
-void QAbstractSpinBox::setButtonSymbols(ButtonSymbols buttonSymbols)
+void QAbstractSpinBox::setButtonSymbols(ButtonSymbols symbols)
 {
    Q_D(QAbstractSpinBox);
-   if (d->buttonSymbols != buttonSymbols) {
-      d->buttonSymbols = buttonSymbols;
+
+   if (d->buttonSymbols != symbols) {
+      d->buttonSymbols = symbols;
       d->updateEditFieldGeometry();
       update();
    }
 }
 
-/*!
-    \property QAbstractSpinBox::text
-
-    \brief the spin box's text, including any prefix and suffix
-
-    There is no default text.
-*/
-
 QString QAbstractSpinBox::text() const
 {
    return lineEdit()->displayText();
 }
-
-
-/*!
-    \property QAbstractSpinBox::specialValueText
-    \brief the special-value text
-
-    If set, the spin box will display this text instead of a numeric
-    value whenever the current value is equal to minimum(). Typical use
-    is to indicate that this choice has a special (default) meaning.
-
-    For example, if your spin box allows the user to choose a scale factor
-    (or zoom level) for displaying an image, and your application is able
-    to automatically choose one that will enable the image to fit completely
-    within the display window, you can set up the spin box like this:
-
-    \snippet examples/widgets/spinboxes/window.cpp 3
-
-    The user will then be able to choose a scale from 1% to 1000%
-    or select "Auto" to leave it up to the application to choose. Your code
-    must then interpret the spin box value of 0 as a request from the user
-    to scale the image to fit inside the window.
-
-    All values are displayed with the prefix and suffix (if set), \e
-    except for the special value, which only shows the special value
-    text. This special text is passed in the QSpinBox::valueChanged()
-    signal that passes a QString.
-
-    To turn off the special-value text display, call this function
-    with an empty string. The default is no special-value text, i.e.
-    the numeric value is shown as usual.
-
-    If no special-value text is set, specialValueText() returns an
-    empty string.
-*/
 
 QString QAbstractSpinBox::specialValueText() const
 {
@@ -249,19 +119,6 @@ void QAbstractSpinBox::setSpecialValueText(const QString &specialValueText)
    d->updateEdit();
 }
 
-/*!
-    \property QAbstractSpinBox::wrapping
-
-    \brief whether the spin box is circular.
-
-    If wrapping is true stepping up from maximum() value will take you
-    to the minimum() value and vica versa. Wrapping only make sense if
-    you have minimum() and maximum() values set.
-
-    \snippet doc/src/snippets/code/src_gui_widgets_qabstractspinbox.cpp 0
-
-    \sa QSpinBox::minimum(), QSpinBox::maximum()
-*/
 
 bool QAbstractSpinBox::wrapping() const
 {
@@ -274,21 +131,6 @@ void QAbstractSpinBox::setWrapping(bool wrapping)
    Q_D(QAbstractSpinBox);
    d->wrapping = wrapping;
 }
-
-
-/*!
-    \property QAbstractSpinBox::readOnly
-    \brief whether the spin box is read only.
-
-    In read-only mode, the user can still copy the text to the
-    clipboard, or drag and drop the text;
-    but cannot edit it.
-
-    The QLineEdit in the QAbstractSpinBox does not show a cursor in
-    read-only mode.
-
-    \sa QLineEdit::readOnly
-*/
 
 bool QAbstractSpinBox::isReadOnly() const
 {
@@ -304,26 +146,6 @@ void QAbstractSpinBox::setReadOnly(bool enable)
    update();
 }
 
-/*!
-    \property QAbstractSpinBox::keyboardTracking
-    \brief whether keyboard tracking is enabled for the spinbox.
-    \since 4.3
-
-    If keyboard tracking is enabled (the default), the spinbox
-    emits the valueChanged() signal while the new value is being
-    entered from the keyboard.
-
-    E.g. when the user enters the value 600 by typing 6, 0, and 0,
-    the spinbox emits 3 signals with the values 6, 60, and 600
-    respectively.
-
-    If keyboard tracking is disabled, the spinbox doesn't emit the
-    valueChanged() signal while typing. It emits the signal later,
-    when the return key is pressed, when keyboard focus is lost, or
-    when other spinbox functionality is used, e.g. pressing an arrow
-    key.
-*/
-
 bool QAbstractSpinBox::keyboardTracking() const
 {
    Q_D(const QAbstractSpinBox);
@@ -335,14 +157,6 @@ void QAbstractSpinBox::setKeyboardTracking(bool enable)
    Q_D(QAbstractSpinBox);
    d->keyboardTracking = enable;
 }
-
-/*!
-    \property QAbstractSpinBox::frame
-    \brief whether the spin box draws itself with a frame
-
-    If enabled (the default) the spin box draws itself inside a frame,
-    otherwise the spin box draws itself without any frame.
-*/
 
 bool QAbstractSpinBox::hasFrame() const
 {
@@ -359,16 +173,6 @@ void QAbstractSpinBox::setFrame(bool enable)
    d->updateEditFieldGeometry();
 }
 
-/*!
-    \property QAbstractSpinBox::accelerated
-    \brief whether the spin box will accelerate the frequency of the steps when
-    pressing the step Up/Down buttons.
-    \since 4.2
-
-    If enabled the spin box will increase/decrease the value faster
-    the longer you hold the button down.
-*/
-
 void QAbstractSpinBox::setAccelerated(bool accelerate)
 {
    Q_D(QAbstractSpinBox);
@@ -381,31 +185,6 @@ bool QAbstractSpinBox::isAccelerated() const
    return d->accelerate;
 }
 
-/*!
-    \enum QAbstractSpinBox::CorrectionMode
-
-    This enum type describes the mode the spinbox will use to correct
-    an \l{QValidator::}{Intermediate} value if editing finishes.
-
-    \value CorrectToPreviousValue The spinbox will revert to the last
-                                  valid value.
-
-    \value CorrectToNearestValue The spinbox will revert to the nearest
-                                 valid value.
-
-    \sa correctionMode
-*/
-
-/*!
-    \property QAbstractSpinBox::correctionMode
-    \brief the mode to correct an \l{QValidator::}{Intermediate}
-           value if editing finishes
-    \since 4.2
-
-    The default mode is QAbstractSpinBox::CorrectToPreviousValue.
-
-    \sa acceptableInput, validate(), fixup()
-*/
 void QAbstractSpinBox::setCorrectionMode(CorrectionMode correctionMode)
 {
    Q_D(QAbstractSpinBox);
@@ -419,33 +198,11 @@ QAbstractSpinBox::CorrectionMode QAbstractSpinBox::correctionMode() const
 }
 
 
-/*!
-  \property QAbstractSpinBox::acceptableInput
-  \brief whether the input satisfies the current validation
-  \since 4.2
-
-  \sa validate(), fixup(), correctionMode
-*/
-
 bool QAbstractSpinBox::hasAcceptableInput() const
 {
    Q_D(const QAbstractSpinBox);
    return d->edit->hasAcceptableInput();
 }
-
-/*!
-    \property QAbstractSpinBox::alignment
-    \brief the alignment of the spin box
-
-    Possible Values are Qt::AlignLeft, Qt::AlignRight, and Qt::AlignHCenter.
-
-    By default, the alignment is Qt::AlignLeft
-
-    Attempting to set the alignment to an illegal flag combination
-    does nothing.
-
-    \sa Qt::Alignment
-*/
 
 Qt::Alignment QAbstractSpinBox::alignment() const
 {
@@ -1714,10 +1471,10 @@ QVariant QAbstractSpinBoxPrivate::bound(const QVariant &val, const QVariant &old
     of \a ep it will also emit signals.
 */
 
-void QAbstractSpinBoxPrivate::setValue(const QVariant &val, EmitPolicy ep,
-                                       bool doUpdate)
+void QAbstractSpinBoxPrivate::setValue(const QVariant &val, EmitPolicy ep, bool doUpdate)
 {
    Q_Q(QAbstractSpinBox);
+
    const QVariant old = value;
    value = bound(val);
    pendingEmit = false;
@@ -1725,6 +1482,7 @@ void QAbstractSpinBoxPrivate::setValue(const QVariant &val, EmitPolicy ep,
    if (doUpdate) {
       updateEdit();
    }
+
    q->update();
 
    if (ep == AlwaysEmit || (ep == EmitIfChanged && old != value)) {
@@ -1755,7 +1513,7 @@ void QAbstractSpinBoxPrivate::updateEdit()
    const bool sb = edit->blockSignals(true);
    edit->setText(newText);
 
-   if (!specialValue()) {
+   if (! specialValue()) {
       cursor = qBound(prefix.size(), cursor, edit->displayText().size() - suffix.size());
 
       if (selsize > 0) {
@@ -1764,6 +1522,7 @@ void QAbstractSpinBoxPrivate::updateEdit()
          edit->setCursorPosition(empty ? prefix.size() : cursor);
       }
    }
+
    edit->blockSignals(sb);
    q->update();
 }
@@ -1955,25 +1714,32 @@ void QSpinBoxValidator::fixup(QString &input) const
 QVariant operator+(const QVariant &arg1, const QVariant &arg2)
 {
    QVariant ret;
+
    if (arg1.type() != arg2.type())
       qWarning("QAbstractSpinBox: Internal error: Different types (%s vs %s) (%s:%d)",
-               arg1.typeName(), arg2.typeName(), __FILE__, __LINE__);
+               csPrintable(arg1.typeName()), csPrintable(arg2.typeName()),  __FILE__, __LINE__);
+
    switch (arg1.type()) {
       case QVariant::Int:
          ret = QVariant(arg1.toInt() + arg2.toInt());
          break;
+
       case QVariant::Double:
          ret = QVariant(arg1.toDouble() + arg2.toDouble());
          break;
+
       case QVariant::DateTime: {
          QDateTime a2 = arg2.toDateTime();
          QDateTime a1 = arg1.toDateTime().addDays(QDATETIMEEDIT_DATETIME_MIN.daysTo(a2));
          a1.setTime(a1.time().addMSecs(QTime().msecsTo(a2.time())));
          ret = QVariant(a1);
       }
+      break;
+
       default:
          break;
    }
+
    return ret;
 }
 
@@ -1986,24 +1752,31 @@ QVariant operator+(const QVariant &arg1, const QVariant &arg2)
 QVariant operator-(const QVariant &arg1, const QVariant &arg2)
 {
    QVariant ret;
+
    if (arg1.type() != arg2.type())
       qWarning("QAbstractSpinBox: Internal error: Different types (%s vs %s) (%s:%d)",
-               arg1.typeName(), arg2.typeName(), __FILE__, __LINE__);
+               csPrintable(arg1.typeName()), csPrintable(arg2.typeName()),  __FILE__, __LINE__);
+
    switch (arg1.type()) {
       case QVariant::Int:
          ret = QVariant(arg1.toInt() - arg2.toInt());
          break;
+
       case QVariant::Double:
          ret = QVariant(arg1.toDouble() - arg2.toDouble());
          break;
+
       case QVariant::DateTime: {
          QDateTime a1 = arg1.toDateTime();
          QDateTime a2 = arg2.toDateTime();
+
          int days = a2.daysTo(a1);
          int secs = a2.secsTo(a1);
          int msecs = qMax(0, a1.time().msec() - a2.time().msec());
+
          if (days < 0 || secs < 0 || msecs < 0) {
             ret = arg1;
+
          } else {
             QDateTime dt = a2.addDays(days).addSecs(secs);
             if (msecs > 0) {
@@ -2012,9 +1785,12 @@ QVariant operator-(const QVariant &arg1, const QVariant &arg2)
             ret = QVariant(dt);
          }
       }
+      break;
+
       default:
          break;
    }
+
    return ret;
 }
 
@@ -2084,8 +1860,8 @@ int QAbstractSpinBoxPrivate::variantCompare(const QVariant &arg1, const QVariant
    switch (arg2.type()) {
       case QVariant::Date:
          Q_ASSERT_X(arg1.type() == QVariant::Date, "QAbstractSpinBoxPrivate::variantCompare",
-                    qPrintable(QString::fromAscii("Internal error 1 (%1)").
-                               arg(QString::fromAscii(arg1.typeName()))));
+                    csPrintable(QString("Internal error 1 (%1)").formatArg(arg1.typeName())));
+
          if (arg1.toDate() == arg2.toDate()) {
             return 0;
          } else if (arg1.toDate() < arg2.toDate()) {
@@ -2093,10 +1869,11 @@ int QAbstractSpinBoxPrivate::variantCompare(const QVariant &arg1, const QVariant
          } else {
             return 1;
          }
+
       case QVariant::Time:
          Q_ASSERT_X(arg1.type() == QVariant::Time, "QAbstractSpinBoxPrivate::variantCompare",
-                    qPrintable(QString::fromAscii("Internal error 2 (%1)").
-                               arg(QString::fromAscii(arg1.typeName()))));
+                    csPrintable(QString("Internal error 2 (%1)").formatArg(arg1.typeName())));
+
          if (arg1.toTime() == arg2.toTime()) {
             return 0;
          } else if (arg1.toTime() < arg2.toTime()) {
@@ -2104,7 +1881,6 @@ int QAbstractSpinBoxPrivate::variantCompare(const QVariant &arg1, const QVariant
          } else {
             return 1;
          }
-
 
       case QVariant::DateTime:
          if (arg1.toDateTime() == arg2.toDateTime()) {
@@ -2122,6 +1898,7 @@ int QAbstractSpinBoxPrivate::variantCompare(const QVariant &arg1, const QVariant
          } else {
             return 1;
          }
+
       case QVariant::Double:
          if (arg1.toDouble() == arg2.toDouble()) {
             return 0;
@@ -2130,24 +1907,24 @@ int QAbstractSpinBoxPrivate::variantCompare(const QVariant &arg1, const QVariant
          } else {
             return 1;
          }
+
       case QVariant::Invalid:
          if (arg2.type() == QVariant::Invalid) {
             return 0;
          }
+
       default:
-         Q_ASSERT_X(0, "QAbstractSpinBoxPrivate::variantCompare",
-                    qPrintable(QString::fromAscii("Internal error 3 (%1 %2)").
-                               arg(QString::fromAscii(arg1.typeName())).
-                               arg(QString::fromAscii(arg2.typeName()))));
+         Q_ASSERT_X(0, "QAbstractSpinBoxPrivate::variantCompare", csPrintable(QString("Internal error 3 (%1 %2)")
+                  .formatArg(arg1.typeName()).formatArg(arg2.typeName())));
    }
+
    return -2;
 }
 
-QVariant QAbstractSpinBoxPrivate::variantBound(const QVariant &min,
-      const QVariant &value,
-      const QVariant &max)
+QVariant QAbstractSpinBoxPrivate::variantBound(const QVariant &min, const QVariant &value, const QVariant &max)
 {
    Q_ASSERT(variantCompare(min, max) <= 0);
+
    if (variantCompare(min, value) < 0) {
       const int compMax = variantCompare(value, max);
       return (compMax < 0 ? value : max);
@@ -2167,8 +1944,5 @@ void QAbstractSpinBox::_q_editorCursorPositionChanged(int un_named_arg1, int un_
    Q_D(QAbstractSpinBox);
    d->_q_editorCursorPositionChanged(un_named_arg1, un_named_arg2);
 }
-
-
-QT_END_NAMESPACE
 
 #endif // QT_NO_SPINBOX

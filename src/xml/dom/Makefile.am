@@ -19,8 +19,6 @@ XML_PUBLIC_INCLUDES += \
 	QDomProcessingInstruction \
 	QDomText
 
-
-
 XML_DOM_INCLUDES = \
 	qdom.h \
 	qdomattr.h \
@@ -41,14 +39,11 @@ XML_DOM_INCLUDES = \
 	qdomprocessinginstruction.h \
 	qdomtext.h
 
-#XML_DOM_PRIVATE_INCLUDES =
-
 XML_INCLUDES += $(XML_DOM_INCLUDES)
-#XML_PRIVATE_INCLUDES += $(XML_DOM_PRIVATE_INCLUDES)
 
 noinst_HEADERS+=$(patsubst %,src/xml/dom/%,$(XML_DOM_INCLUDES)) \
 		$(patsubst %,src/xml/dom/%,$(XML_DOM_PRIVATE_INCLUDES))
 
-lib_libCsXml1_la_SOURCES += \
+lib_libCsXml@BUILD_ABI@_la_SOURCES += \
 	src/xml/dom/qdom.cpp
 

@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -72,7 +69,7 @@ class QFontListView : public QListView
       int row = QListView::currentIndex().row();
       return row < 0 ? QString() : model()->stringList().at(row);
    }
-   void currentChanged(const QModelIndex &current, const QModelIndex &previous) {
+   void currentChanged(const QModelIndex &current, const QModelIndex &previous)  override {
       QListView::currentChanged(current, previous);
       if (current.isValid()) {
          emit highlighted(current.row());
@@ -95,41 +92,7 @@ QFontListView::QFontListView(QWidget *parent)
 
 static const Qt::WindowFlags DefaultWindowFlags = Qt::Dialog | Qt::WindowSystemMenuHint;
 
-/*!
-  \class QFontDialog
-  \ingroup standard-dialogs
 
-  \brief The QFontDialog class provides a dialog widget for selecting a font.
-
-    A font dialog is created through one of the static getFont()
-    functions.
-
-  Examples:
-
-  \snippet doc/src/snippets/code/src_gui_dialogs_qfontdialog.cpp 0
-
-    The dialog can also be used to set a widget's font directly:
-  \snippet doc/src/snippets/code/src_gui_dialogs_qfontdialog.cpp 1
-  If the user clicks OK the font they chose will be used for myWidget,
-  and if they click Cancel the original font is used.
-
-  \image plastique-fontdialog.png A font dialog in the Plastique widget style.
-
-  \sa QFont, QFontInfo, QFontMetrics, QColorDialog, QFileDialog, QPrintDialog,
-      {Standard Dialogs Example}
-*/
-
-/*!
-    \since 4.5
-
-    Constructs a standard font dialog.
-
-    Use setCurrentFont() to set the initial font attributes.
-
-    The \a parent parameter is passed to the QDialog constructor.
-
-    \sa getFont()
-*/
 QFontDialog::QFontDialog(QWidget *parent)
    : QDialog(*new QFontDialogPrivate, parent, DefaultWindowFlags)
 {
@@ -137,12 +100,6 @@ QFontDialog::QFontDialog(QWidget *parent)
    d->init();
 }
 
-/*!
-    \since 4.5
-
-    Constructs a standard font dialog with the given \a parent and specified
-    \a initial font.
-*/
 QFontDialog::QFontDialog(const QFont &initial, QWidget *parent)
    : QDialog(*new QFontDialogPrivate, parent, DefaultWindowFlags)
 {
@@ -327,73 +284,13 @@ QFontDialog::~QFontDialog()
 #endif
 }
 
-/*!
-  Executes a modal font dialog and returns a font.
 
-  If the user clicks \gui OK, the selected font is returned. If the user
-  clicks \gui Cancel, the \a initial font is returned.
-
-  The dialog is constructed with the given \a parent and the options specified
-  in \a options. \a title is shown as the window title of the dialog and  \a
-  initial is the initially selected font. If the \a ok parameter is not-null,
-  the value it refers to is set to true if the user clicks \gui OK, and set to
-  false if the user clicks \gui Cancel.
-
-  Examples:
-  \snippet doc/src/snippets/code/src_gui_dialogs_qfontdialog.cpp 2
-
-    The dialog can also be used to set a widget's font directly:
-  \snippet doc/src/snippets/code/src_gui_dialogs_qfontdialog.cpp 3
-  In this example, if the user clicks OK the font they chose will be
-  used, and if they click Cancel the original font is used.
-
-  \warning Do not delete \a parent during the execution of the dialog.
-           If you want to do this, you should create the dialog
-           yourself using one of the QFontDialog constructors.
-*/
 QFont QFontDialog::getFont(bool *ok, const QFont &initial, QWidget *parent, const QString &title,
                            FontDialogOptions options)
 {
    return QFontDialogPrivate::getFont(ok, initial, parent, title, options);
 }
 
-/*!
-    \overload
-    \since 4.5
-*/
-QFont QFontDialog::getFont(bool *ok, const QFont &initial, QWidget *parent, const QString &title)
-{
-   return QFontDialogPrivate::getFont(ok, initial, parent, title, 0);
-}
-
-/*!
-    \overload
-*/
-QFont QFontDialog::getFont(bool *ok, const QFont &initial, QWidget *parent)
-{
-   return QFontDialogPrivate::getFont(ok, initial, parent, QString(), 0);
-}
-
-/*!
-    \overload
-
-  Executes a modal font dialog and returns a font.
-
-  If the user clicks \gui OK, the selected font is returned. If the user
-  clicks \gui Cancel, the Qt default font is returned.
-
-  The dialog is constructed with the given \a parent.
-  If the \a ok parameter is not-null, the value it refers to is set
-  to true if the user clicks \gui OK, and false if the user clicks
-  \gui Cancel.
-
-  Example:
-  \snippet doc/src/snippets/code/src_gui_dialogs_qfontdialog.cpp 4
-
-  \warning Do not delete \a parent during the execution of the dialog.
-           If you want to do this, you should create the dialog
-           yourself using one of the QFontDialog constructors.
-*/
 QFont QFontDialog::getFont(bool *ok, QWidget *parent)
 {
    QFont initial;
@@ -406,7 +303,8 @@ QFont QFontDialogPrivate::getFont(bool *ok, const QFont &initial, QWidget *paren
    QFontDialog dlg(parent);
    dlg.setOptions(options);
    dlg.setCurrentFont(initial);
-   if (!title.isEmpty()) {
+
+   if (! title.isEmpty()) {
       dlg.setWindowTitle(title);
    }
 
@@ -414,6 +312,7 @@ QFont QFontDialogPrivate::getFont(bool *ok, const QFont &initial, QWidget *paren
    if (ok) {
       *ok = !!ret;
    }
+
    if (ret) {
       return dlg.selectedFont();
    } else {
@@ -605,20 +504,25 @@ void QFontDialogPrivate::updateSizes()
 {
    Q_Q(QFontDialog);
 
-   if (!familyList->currentText().isEmpty()) {
+   if (! familyList->currentText().isEmpty()) {
       QList<int> sizes = fdb.pointSizes(familyList->currentText(), styleList->currentText());
 
-      int i = 0;
+      int i       = 0;
       int current = -1;
       QStringList str_sizes;
-      for (QList<int>::const_iterator it = sizes.constBegin(); it != sizes.constEnd(); ++it) {
-         str_sizes.append(QString::number(*it));
-         if (current == -1 && *it >= size) {
+
+      for (auto item : sizes) {
+         str_sizes.append(QString::number(item));
+
+         if (current == -1 && item >= size) {
             current = i;
          }
+
          ++i;
       }
+
       sizeList->model()->setStringList(str_sizes);
+
       if (current == -1) {
          // we request a size bigger than the ones in the list, select the biggest one
          current = sizeList->count() - 1;
@@ -627,11 +531,13 @@ void QFontDialogPrivate::updateSizes()
 
       sizeEdit->blockSignals(true);
       sizeEdit->setText((smoothScalable ? QString::number(size) : sizeList->currentText()));
-      if (q->style()->styleHint(QStyle::SH_FontDialog_SelectAssociatedText, 0, q)
-            && sizeList->hasFocus()) {
+
+      if (q->style()->styleHint(QStyle::SH_FontDialog_SelectAssociatedText, 0, q) && sizeList->hasFocus()) {
          sizeEdit->selectAll();
       }
+
       sizeEdit->blockSignals(false);
+
    } else {
       sizeEdit->clear();
    }
@@ -642,7 +548,7 @@ void QFontDialogPrivate::updateSizes()
 void QFontDialogPrivate::_q_updateSample()
 {
    // compute new font
-   int pSize = sizeEdit->text().toInt();
+   int pSize = sizeEdit->text().toInteger<int>();
    QFont newFont(fdb.font(familyList->currentText(), style, pSize));
    newFont.setStrikeOut(strikeout->isChecked());
    newFont.setUnderline(underline->isChecked());
@@ -724,7 +630,7 @@ void QFontDialogPrivate::_q_sizeHighlighted(int index)
       sizeEdit->selectAll();
    }
 
-   size = s.toInt();
+   size = s.toInteger<int>();
    _q_updateSample();
 }
 
@@ -737,7 +643,7 @@ void QFontDialogPrivate::_q_sizeHighlighted(int index)
 void QFontDialogPrivate::_q_sizeChanged(const QString &s)
 {
    // no need to check if the conversion is valid, since we have an QIntValidator in the size edit
-   int size = s.toInt();
+   int size = s.toInteger<int>();
    if (this->size == size) {
       return;
    }
@@ -746,7 +652,7 @@ void QFontDialogPrivate::_q_sizeChanged(const QString &s)
    if (sizeList->count() != 0) {
       int i;
       for (i = 0; i < sizeList->count() - 1; i++) {
-         if (sizeList->text(i).toInt() >= this->size) {
+         if (sizeList->text(i).toInteger<int>() >= this->size) {
             break;
          }
       }
@@ -930,7 +836,7 @@ bool QFontDialogPrivate::sharedFontPanelAvailable = true;
 
     The signal will be disconnected from the slot when the dialog is closed.
 */
-void QFontDialog::open(QObject *receiver, const char *member)
+void QFontDialog::open(QObject *receiver, const QString &member)
 {
    Q_D(QFontDialog);
 
@@ -1023,8 +929,7 @@ void QFontDialog::done(int result)
    }
 
    if (d->receiverToDisconnectOnClose) {
-      disconnect(this, SIGNAL(fontSelected(const QFont &)),
-                 d->receiverToDisconnectOnClose, d->memberToDisconnectOnClose);
+      disconnect(this, SIGNAL(fontSelected(const QFont &)), d->receiverToDisconnectOnClose, d->memberToDisconnectOnClose);
 
       d->receiverToDisconnectOnClose = 0;
    }
@@ -1045,8 +950,9 @@ bool QFontDialogPrivate::canBeNativeDialog()
       return false;
    }
 
-   QLatin1String staticName(QFontDialog::staticMetaObject().className());
-   QLatin1String dynamicName(q->metaObject()->className());
+   QString staticName(QFontDialog::staticMetaObject().className());
+   QString dynamicName(q->metaObject()->className());
+
    return (staticName == dynamicName);
 }
 #endif

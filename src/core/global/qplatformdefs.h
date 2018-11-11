@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -133,15 +130,15 @@
 
 #if ! defined(_WIN32_WINNT) || (_WIN32_WINNT-0 < 0x0500)
 typedef enum {
-    NameUnknown           = 0, 
-    NameFullyQualifiedDN  = 1, 
-    NameSamCompatible     = 2, 
-    NameDisplay           = 3, 
-    NameUniqueId          = 6, 
-    NameCanonical         = 7, 
-    NameUserPrincipal     = 8, 
-    NameCanonicalEx       = 9, 
-    NameServicePrincipal  = 10, 
+    NameUnknown           = 0,
+    NameFullyQualifiedDN  = 1,
+    NameSamCompatible     = 2,
+    NameDisplay           = 3,
+    NameUniqueId          = 6,
+    NameCanonical         = 7,
+    NameUserPrincipal     = 8,
+    NameCanonicalEx       = 9,
+    NameServicePrincipal  = 10,
     NameDnsDomain         = 12
 } EXTENDED_NAME_FORMAT, *PEXTENDED_NAME_FORMAT;
 #endif
@@ -265,11 +262,11 @@ typedef enum {
 
 
 // ***********
-#elif defined(Q_OS_MAC)
+#elif defined(Q_OS_DARWIN)
 
 #include <qplatformposix.h>
 
-#undef QT_OPEN_LARGEFILE                             
+#undef QT_OPEN_LARGEFILE
 #define QT_OPEN_LARGEFILE     0
 
 #undef QT_SOCKLEN_T
@@ -280,7 +277,7 @@ typedef enum {
 
 
 // ***********
-#elif defined(Q_OS_FREEBSD) || defined(Q_OS_NETBSD)
+#elif defined(Q_OS_FREEBSD) || defined(Q_OS_NETBSD) || defined(Q_OS_DRAGONFLY)
 
 #include <qplatformposix.h>
 

@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -45,21 +42,18 @@ class StackContextBase : public TSuperClass
     */
    StackContextBase(const DynamicContext::Ptr &prevContext);
 
-   virtual void setRangeVariable(const VariableSlotID slotNumber,
-                                 const Item &newValue);
-   virtual Item rangeVariable(const VariableSlotID slotNumber) const;
+   void setRangeVariable(const VariableSlotID slotNumber, const Item &newValue) override;
+   Item rangeVariable(const VariableSlotID slotNumber) const override;
 
-   virtual void setExpressionVariable(const VariableSlotID slotNumber,
-                                      const Expression::Ptr &newValue);
-   virtual Expression::Ptr expressionVariable(const VariableSlotID slotNumber) const;
+   void setExpressionVariable(const VariableSlotID slotNumber, const Expression::Ptr &newValue) override;
+   Expression::Ptr expressionVariable(const VariableSlotID slotNumber) const override;
 
-   virtual Item::Iterator::Ptr positionIterator(const VariableSlotID slot) const;
-   virtual void setPositionIterator(const VariableSlotID slot,
-                                    const Item::Iterator::Ptr &newValue);
-   virtual ItemCacheCell &itemCacheCell(const VariableSlotID slot);
-   virtual ItemSequenceCacheCell::Vector &itemSequenceCacheCells(const VariableSlotID slot);
+   Item::Iterator::Ptr positionIterator(const VariableSlotID slot) const override;
+   void setPositionIterator(const VariableSlotID slot, const Item::Iterator::Ptr &newValue) override;
+   ItemCacheCell &itemCacheCell(const VariableSlotID slot) override;
+   ItemSequenceCacheCell::Vector &itemSequenceCacheCells(const VariableSlotID slot) override;
 
-   virtual DynamicContext::TemplateParameterHash &templateParameterStore();
+   DynamicContext::TemplateParameterHash &templateParameterStore() override;
 
  protected:
    /**
@@ -67,10 +61,7 @@ class StackContextBase : public TSuperClass
     * know why it has to be, but it won't compile when private.
     */
    template<typename VectorType, typename UnitType>
-   inline
-   void setSlotVariable(const VariableSlotID slot,
-                        const UnitType &newValue,
-                        VectorType &container) const;
+   inline void setSlotVariable(const VariableSlotID slot, const UnitType &newValue, VectorType &container) const;
 
  private:
    Item::Vector                            m_rangeVariables;

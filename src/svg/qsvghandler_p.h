@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,15 +23,15 @@
 #ifndef QSVGHANDLER_P_H
 #define QSVGHANDLER_P_H
 
-#include "QtXml/qxmlstream.h"
+#include <qxmlstream.h>
 
 #ifndef QT_NO_SVG
 
-#include "QtCore/qhash.h"
-#include "QtCore/qstack.h"
-#include "qsvgstyle_p.h"
-#include "qcssparser_p.h"
-#include "qsvggraphics_p.h"
+#include <qhash.h>
+#include <qstack.h>
+#include <qsvgstyle_p.h>
+#include <qcssparser_p.h>
+#include <qsvggraphics_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -46,8 +43,8 @@ class QSvgStyleSelector;
 class QXmlStreamReader;
 
 struct QSvgCssAttribute {
-   QXmlStreamStringRef name;
-   QXmlStreamStringRef value;
+   QString name;
+   QString value;
 };
 
 class QSvgHandler
@@ -107,8 +104,8 @@ class QSvgHandler
 
  public:
    bool startElement(const QString &localName, const QXmlStreamAttributes &attributes);
-   bool endElement(const QStringRef &localName);
-   bool characters(const QStringRef &str);
+   bool endElement(QStringView localName);
+   bool characters(QStringView str);
    bool processingInstruction(const QString &target, const QString &data);
 
  private:
@@ -126,12 +123,7 @@ class QSvgHandler
    };
    QStack<CurrentNode> m_skipNodes;
 
-   /*!
-       Follows the depths of elements. The top is current xml:space
-       value that applies for a given element.
-    */
-   QStack<QSvgText::WhitespaceMode> m_whitespaceMode;
-
+   QStack<QSvgText::WhitespaceMode>  m_whitespaceMode;
    QSvgRefCounter<QSvgStyleProperty> m_style;
 
    LengthType m_defaultCoords;
@@ -151,10 +143,8 @@ class QSvgHandler
    void resolveGradients(QSvgNode *node);
 
    QPen m_defaultPen;
-   /**
-    * Whether we own the variable xml, and hence whether
-    * we need to delete it.
-    */
+
+   // Whether we own the variable xml, and hence whether we need to delete it.
    const bool m_ownsReader;
 };
 

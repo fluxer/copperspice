@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -219,7 +216,7 @@ static bool createFileFromTemplate(NativeFileHandle &file,
    Q_ASSERT(false);
 }
 
-//************* QTemporaryFileEngine
+
 QTemporaryFileEngine::~QTemporaryFileEngine()
 {
    QFSFileEngine::close();
@@ -389,7 +386,6 @@ bool QTemporaryFileEngine::close()
    return true;
 }
 
-//************* QTemporaryFilePrivate
 QTemporaryFilePrivate::QTemporaryFilePrivate() : autoRemove(true)
 {
 }
@@ -401,91 +397,26 @@ QTemporaryFilePrivate::~QTemporaryFilePrivate()
 static QString defaultTemplateName()
 {
    QString baseName;
+
 #if defined(QT_BUILD_CORE_LIB)
    baseName = QCoreApplication::applicationName();
    if (baseName.isEmpty())
 #endif
-      baseName = QLatin1String("qt_temp");
+      baseName = QLatin1String("c_temp");
 
    return QDir::tempPath() + QLatin1Char('/') + baseName + QLatin1String(".XXXXXX");
 }
 
-//************* QTemporaryFile
-
-/*!
-    \class QTemporaryFile
-    \reentrant
-    \brief The QTemporaryFile class is an I/O device that operates on temporary files.
-
-    \ingroup io
-
-
-    QTemporaryFile is used to create unique temporary files safely.
-    The file itself is created by calling open(). The name of the
-    temporary file is guaranteed to be unique (i.e., you are
-    guaranteed to not overwrite an existing file), and the file will
-    subsequently be removed upon destruction of the QTemporaryFile
-    object. This is an important technique that avoids data
-    corruption for applications that store data in temporary files.
-    The file name is either auto-generated, or created based on a
-    template, which is passed to QTemporaryFile's constructor.
-
-    Example:
-
-    \snippet doc/src/snippets/code/src_corelib_io_qtemporaryfile.cpp 0
-
-    Reopening a QTemporaryFile after calling close() is safe. For as long as
-    the QTemporaryFile object itself is not destroyed, the unique temporary
-    file will exist and be kept open internally by QTemporaryFile.
-
-    The file name of the temporary file can be found by calling fileName().
-    Note that this is only defined after the file is first opened; the function
-    returns an empty string before this.
-
-    A temporary file will have some static part of the name and some
-    part that is calculated to be unique. The default filename \c
-    qt_temp will be placed into the temporary path as returned by
-    QDir::tempPath(). If you specify your own filename, a relative
-    file path will not be placed in the temporary directory by
-    default, but be relative to the current working directory.
-
-    Specified filenames can contain the following template \c XXXXXX
-    (six upper case "X" characters), which will be replaced by the
-    auto-generated portion of the filename. Note that the template is
-    case sensitive. If the template is not present in the filename,
-    QTemporaryFile appends the generated part to the filename given.
-
-    \sa QDir::tempPath(), QFile
-*/
-
-
-/*!
-    Constructs a QTemporaryFile in QDir::tempPath(), using the file template
-    "qt_temp.XXXXXX". The file is stored in the system's temporary directory.
-
-    \sa setFileTemplate(), QDir::tempPath()
-*/
 QTemporaryFile::QTemporaryFile()
    : QFile(*new QTemporaryFilePrivate, 0)
 {
    Q_D(QTemporaryFile);
    d->templateName = defaultTemplateName();
+
+   // uses the form "c_temp.XXXXXX"
+
 }
 
-/*!
-    Constructs a QTemporaryFile with a template filename of \a
-    templateName. Upon opening the temporary file this will be used to create
-    a unique filename.
-
-    If the \a templateName does not contain XXXXXX it will automatically be
-    appended and used as the dynamic portion of the filename.
-
-    If \a templateName is a relative path, the path will be relative to the
-    current working directory. You can use QDir::tempPath() to construct \a
-    templateName if you want use the system's temporary directory.
-
-    \sa open(), fileTemplate()
-*/
 QTemporaryFile::QTemporaryFile(const QString &templateName)
    : QFile(*new QTemporaryFilePrivate, 0)
 {
@@ -493,34 +424,15 @@ QTemporaryFile::QTemporaryFile(const QString &templateName)
    d->templateName = templateName;
 }
 
-/*!
-    Constructs a QTemporaryFile (with the given \a parent) in
-    QDir::tempPath(), using the file template "qt_temp.XXXXXX".
-
-    \sa setFileTemplate()
-*/
 QTemporaryFile::QTemporaryFile(QObject *parent)
    : QFile(*new QTemporaryFilePrivate, parent)
 {
    Q_D(QTemporaryFile);
    d->templateName = defaultTemplateName();
+
+   // uses the form "c_temp.XXXXXX"
 }
 
-/*!
-    Constructs a QTemporaryFile with a template filename of \a
-    templateName and the specified \a parent.
-    Upon opening the temporary file this will be used to
-    create a unique filename.
-
-    If the \a templateName does not contain XXXXXX it will automatically be
-    appended and used as the dynamic portion of the filename.
-
-    If \a templateName is a relative path, the path will be relative to the
-    current working directory. You can use QDir::tempPath() to construct \a
-    templateName if you want use the system's temporary directory.
-
-    \sa open(), fileTemplate()
-*/
 QTemporaryFile::QTemporaryFile(const QString &templateName, QObject *parent)
    : QFile(*new QTemporaryFilePrivate, parent)
 {
@@ -605,12 +517,6 @@ QString QTemporaryFile::fileName() const
    return d->engine()->fileName(QAbstractFileEngine::DefaultName);
 }
 
-/*!
-  Returns the set file template. The default file template will be
-  called qt_temp and be placed in QDir::tempPath().
-
-  \sa setFileTemplate()
-*/
 QString QTemporaryFile::fileTemplate() const
 {
    Q_D(const QTemporaryFile);

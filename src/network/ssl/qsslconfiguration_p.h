@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -31,28 +28,34 @@
 #include <qsslcertificate.h>
 #include <qsslcipher.h>
 #include <qsslkey.h>
+#include <qsslellipticcurve.h>
 
 QT_BEGIN_NAMESPACE
 
-class QSslConfigurationPrivate: public QSharedData
+class QSslConfigurationPrivate : public QSharedData
 {
- public:
+public:
    QSslConfigurationPrivate()
-      : protocol(QSsl::SecureProtocols),
-        peerVerifyMode(QSslSocket::AutoVerifyPeer),
-        peerVerifyDepth(0),
-        allowRootCertOnDemandLoading(true),
-        sslOptions(QSsl::SslOptionDisableEmptyFragments
-                   | QSsl::SslOptionDisableLegacyRenegotiation
-                   | QSsl::SslOptionDisableCompression) {
+      : sessionProtocol(QSsl::UnknownProtocol),
+      protocol(QSsl::SecureProtocols),
+      peerVerifyMode(QSslSocket::AutoVerifyPeer),
+      peerVerifyDepth(0),
+      allowRootCertOnDemandLoading(true),
+      peerSessionShared(false),
+      sslOptions(QSslConfigurationPrivate::defaultSslOptions),
+      sslSessionTicketLifeTimeHint(-1),
+      nextProtocolNegotiationStatus(QSslConfiguration::NextProtocolNegotiationNone)
+   {
    }
 
    QSslCertificate peerCertificate;
    QList<QSslCertificate> peerCertificateChain;
-   QSslCertificate localCertificate;
+
+   QList<QSslCertificate> localCertificateChain;
 
    QSslKey privateKey;
    QSslCipher sessionCipher;
+   QSsl::SslProtocol sessionProtocol;
    QList<QSslCipher> ciphers;
    QList<QSslCertificate> caCertificates;
 
@@ -60,8 +63,21 @@ class QSslConfigurationPrivate: public QSharedData
    QSslSocket::PeerVerifyMode peerVerifyMode;
    int peerVerifyDepth;
    bool allowRootCertOnDemandLoading;
+   bool peerSessionShared;
+
+   static bool peerSessionWasShared(const QSslConfiguration &configuration);
 
    QSsl::SslOptions sslOptions;
+   static const QSsl::SslOptions defaultSslOptions;
+
+   QVector<QSslEllipticCurve> ellipticCurves;
+
+   QByteArray sslSession;
+   int sslSessionTicketLifeTimeHint;
+
+   QList<QByteArray> nextAllowedProtocols;
+   QByteArray nextNegotiatedProtocol;
+   QSslConfiguration::NextProtocolNegotiationStatus nextProtocolNegotiationStatus;
 
    // in qsslsocket.cpp:
    static QSslConfiguration defaultConfiguration();

@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -71,7 +68,7 @@ class DelegatingReflectionExpression : public Literal
       , m_reflection(reflection) {
    }
 
-   virtual const SourceLocationReflection *actualReflection() const {
+   const SourceLocationReflection *actualReflection() const override {
       return m_reflection;
    }
 
@@ -98,10 +95,8 @@ Item ArithmeticExpression::flexiblyCalculate(const Item &op1,
 
    const AtomicMathematician::Ptr ingela(fetchMathematician(a1, a2, op, true, context, reflection, code, isCompat));
 
-   return ingela->calculate(a1->evaluateSingleton(context),
-                            op,
-                            a2->evaluateSingleton(context),
-                            context);
+   return ingela->calculate(a1->evaluateSingleton(context), op,
+                            a2->evaluateSingleton(context), context);
 }
 
 Expression::Ptr ArithmeticExpression::typeCheck(const StaticContext::Ptr &context,
@@ -171,11 +166,10 @@ ArithmeticExpression::fetchMathematician(Expression::Ptr &op1,
          return AtomicMathematician::Ptr();
       }
 
-      context->error(QtXmlPatterns::tr(
-                        "Operator %1 cannot be used on type %2.")
-                     .arg(formatKeyword(AtomicMathematician::displayName(op)))
-                     .arg(formatType(context->namePool(), t1)),
-                     code, reflection);
+      context->error(QtXmlPatterns::tr("Operator %1 cannot be used on type %2.")
+                     .formatArg(formatKeyword(AtomicMathematician::displayName(op)))
+                     .formatArg(formatType(context->namePool(), t1)), code, reflection);
+
       return AtomicMathematician::Ptr();
    }
 
@@ -190,12 +184,11 @@ ArithmeticExpression::fetchMathematician(Expression::Ptr &op1,
       return AtomicMathematician::Ptr();
    }
 
-   context->error(QtXmlPatterns::tr("Operator %1 cannot be used on "
-                                    "atomic values of type %2 and %3.")
-                  .arg(formatKeyword(AtomicMathematician::displayName(op)))
-                  .arg(formatType(context->namePool(), t1))
-                  .arg(formatType(context->namePool(), t2)),
-                  code, reflection);
+   context->error(QtXmlPatterns::tr("Operator %1 cannot be used on atomic values of type %2 and %3.")
+                  .formatArg(formatKeyword(AtomicMathematician::displayName(op)))
+                  .formatArg(formatType(context->namePool(), t1))
+                  .formatArg(formatType(context->namePool(), t2)), code, reflection);
+
    return AtomicMathematician::Ptr();
 }
 

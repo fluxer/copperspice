@@ -1,13 +1,16 @@
-# - Try to find Freetype2
-# Once done this will define
 #
-#  FREETYPE_FOUND - system has Freetype2
-#  FREETYPE_INCLUDES - the Freetype2 include directory
-#  FREETYPE_LIBRARIES - The libraries needed to use Freetype2
+# Copyright (C) 2012-2018 Barbara Geller
+# Copyright (C) 2012-2018 Ansel Sermersheim
+# All rights reserved.    
 #
 # Copyright (c) 2015, Ivailo Monev, <xakepa10@gmail.com>
-#
 # Redistribution and use is allowed according to the terms of the BSD license.
+
+# Find Freetype2, this will define
+#
+#  FREETYPE_FOUND     - system has Freetype2
+#  FREETYPE_INCLUDES  - the Freetype2 include directory
+#  FREETYPE_LIBRARIES - The libraries needed to use Freetype2
 
 if(FREETYPE_INCLUDES AND FREETYPE_LIBRARIES)
     set(FREETYPE_FIND_QUIETLY TRUE)
@@ -20,7 +23,7 @@ endif()
 
 find_path(FREETYPE_INCLUDES
     NAMES
-    freetype.h
+    ft2build.h
     PATH_SUFFIXES freetype2 freetype2/freetype
     HINTS
     $ENV{FREETYPEDIR}/include

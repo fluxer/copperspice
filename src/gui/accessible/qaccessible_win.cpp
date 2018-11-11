@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -50,13 +47,10 @@
 #include <comdef.h>
 #endif
 
-QT_BEGIN_NAMESPACE
-
 //#define DEBUG_SHOW_ATCLIENT_COMMANDS
 #ifdef DEBUG_SHOW_ATCLIENT_COMMANDS
-QT_BEGIN_INCLUDE_NAMESPACE
+
 #include <qdebug.h>
-QT_END_INCLUDE_NAMESPACE
 
 static const char *roleString(QAccessible::Role role)
 {
@@ -310,19 +304,19 @@ void QAccessible::updateAccessibility(QObject *o, int who, Event reason)
    }
 
    if (soundName.size()) {
-#ifndef QT_NO_SETTINGS
-      QSettings settings(QLatin1String("HKEY_CURRENT_USER\\AppEvents\\Schemes\\Apps\\.Default\\") + soundName,
-                         QSettings::NativeFormat);
-      QString file = settings.value(QLatin1String(".Current/.")).toString();
-#else
       QString file;
+
+#ifndef QT_NO_SETTINGS
+      QSettings settings(QLatin1String("HKEY_CURRENT_USER\\AppEvents\\Schemes\\Apps\\.Default\\") + soundName, QSettings::NativeFormat);
+      file = settings.value(".Current/.").toString();
 #endif
-      if (!file.isEmpty()) {
-         PlaySound(reinterpret_cast<const wchar_t *>(soundName.utf16()), 0, SND_ALIAS | SND_ASYNC | SND_NODEFAULT | SND_NOWAIT);
+
+      if (! file.isEmpty()) {
+         PlaySound(&soundName.toStdWString()[0], 0, SND_ALIAS | SND_ASYNC | SND_NODEFAULT | SND_NOWAIT);
       }
    }
 
-   if (!isActive()) {
+   if (! isActive()) {
       return;
    }
 
@@ -330,6 +324,7 @@ void QAccessible::updateAccessibility(QObject *o, int who, Event reason)
 
    static PtrNotifyWinEvent ptrNotifyWinEvent = 0;
    static bool resolvedNWE = false;
+
    if (!resolvedNWE) {
       ptrNotifyWinEvent = (PtrNotifyWinEvent)QSystemLibrary::resolve(QLatin1String("user32"), "NotifyWinEvent");
       resolvedNWE = true;
@@ -496,14 +491,14 @@ class QWindowsEnumerate : public IEnumVARIANT
 
    virtual ~QWindowsEnumerate() {}
 
-   HRESULT STDMETHODCALLTYPE QueryInterface(REFIID, LPVOID *);
-   ULONG STDMETHODCALLTYPE AddRef();
-   ULONG STDMETHODCALLTYPE Release();
+   HRESULT STDMETHODCALLTYPE QueryInterface(REFIID, LPVOID *) override;
+   ULONG STDMETHODCALLTYPE AddRef() override;
+   ULONG STDMETHODCALLTYPE Release() override;
 
-   HRESULT STDMETHODCALLTYPE Clone(IEnumVARIANT **ppEnum);
-   HRESULT STDMETHODCALLTYPE Next(unsigned long  celt, VARIANT FAR  *rgVar, unsigned long FAR  *pCeltFetched);
-   HRESULT STDMETHODCALLTYPE Reset();
-   HRESULT STDMETHODCALLTYPE Skip(unsigned long celt);
+   HRESULT STDMETHODCALLTYPE Clone(IEnumVARIANT **ppEnum) override;
+   HRESULT STDMETHODCALLTYPE Next(unsigned long  celt, VARIANT FAR  *rgVar, unsigned long FAR  *pCeltFetched) override;
+   HRESULT STDMETHODCALLTYPE Reset() override;
+   HRESULT STDMETHODCALLTYPE Skip(unsigned long celt) override;
 
  private:
    ULONG ref;
@@ -642,45 +637,45 @@ class QWindowsAccessible : public IAccessible, IOleWindow, QAccessible
    }
 
    /* IUnknown */
-   HRESULT STDMETHODCALLTYPE QueryInterface(REFIID, LPVOID *);
-   ULONG STDMETHODCALLTYPE AddRef();
-   ULONG STDMETHODCALLTYPE Release();
+   HRESULT STDMETHODCALLTYPE QueryInterface(REFIID, LPVOID *) override;
+   ULONG STDMETHODCALLTYPE AddRef() override;
+   ULONG STDMETHODCALLTYPE Release() override;
 
    /* IDispatch */
-   HRESULT STDMETHODCALLTYPE GetTypeInfoCount(unsigned int *);
-   HRESULT STDMETHODCALLTYPE GetTypeInfo(unsigned int, unsigned long, ITypeInfo **);
-   HRESULT STDMETHODCALLTYPE GetIDsOfNames(const _GUID &, wchar_t **, unsigned int, unsigned long, long *);
+   HRESULT STDMETHODCALLTYPE GetTypeInfoCount(unsigned int *) override;
+   HRESULT STDMETHODCALLTYPE GetTypeInfo(unsigned int, unsigned long, ITypeInfo **) override;
+   HRESULT STDMETHODCALLTYPE GetIDsOfNames(const _GUID &, wchar_t **, unsigned int, unsigned long, long *) override;
    HRESULT STDMETHODCALLTYPE Invoke(long, const _GUID &, unsigned long,
-                                    unsigned short, tagDISPPARAMS *, tagVARIANT *, tagEXCEPINFO *, unsigned int *);
+                  unsigned short, tagDISPPARAMS *, tagVARIANT *, tagEXCEPINFO *, unsigned int *) override;
 
    /* IAccessible */
-   HRESULT STDMETHODCALLTYPE accHitTest(long xLeft, long yTop, VARIANT *pvarID);
-   HRESULT STDMETHODCALLTYPE accLocation(long *pxLeft, long *pyTop, long *pcxWidth, long *pcyHeight, VARIANT varID);
-   HRESULT STDMETHODCALLTYPE accNavigate(long navDir, VARIANT varStart, VARIANT *pvarEnd);
-   HRESULT STDMETHODCALLTYPE get_accChild(VARIANT varChildID, IDispatch **ppdispChild);
-   HRESULT STDMETHODCALLTYPE get_accChildCount(long *pcountChildren);
-   HRESULT STDMETHODCALLTYPE get_accParent(IDispatch **ppdispParent);
+   HRESULT STDMETHODCALLTYPE accHitTest(long xLeft, long yTop, VARIANT *pvarID) override;
+   HRESULT STDMETHODCALLTYPE accLocation(long *pxLeft, long *pyTop, long *pcxWidth, long *pcyHeight, VARIANT varID) override;
+   HRESULT STDMETHODCALLTYPE accNavigate(long navDir, VARIANT varStart, VARIANT *pvarEnd) override;
+   HRESULT STDMETHODCALLTYPE get_accChild(VARIANT varChildID, IDispatch **ppdispChild) override;
+   HRESULT STDMETHODCALLTYPE get_accChildCount(long *pcountChildren) override;
+   HRESULT STDMETHODCALLTYPE get_accParent(IDispatch **ppdispParent) override;
 
-   HRESULT STDMETHODCALLTYPE accDoDefaultAction(VARIANT varID);
-   HRESULT STDMETHODCALLTYPE get_accDefaultAction(VARIANT varID, BSTR *pszDefaultAction);
-   HRESULT STDMETHODCALLTYPE get_accDescription(VARIANT varID, BSTR *pszDescription);
-   HRESULT STDMETHODCALLTYPE get_accHelp(VARIANT varID, BSTR *pszHelp);
-   HRESULT STDMETHODCALLTYPE get_accHelpTopic(BSTR *pszHelpFile, VARIANT varChild, long *pidTopic);
-   HRESULT STDMETHODCALLTYPE get_accKeyboardShortcut(VARIANT varID, BSTR *pszKeyboardShortcut);
-   HRESULT STDMETHODCALLTYPE get_accName(VARIANT varID, BSTR *pszName);
-   HRESULT STDMETHODCALLTYPE put_accName(VARIANT varChild, BSTR szName);
-   HRESULT STDMETHODCALLTYPE get_accRole(VARIANT varID, VARIANT *pvarRole);
-   HRESULT STDMETHODCALLTYPE get_accState(VARIANT varID, VARIANT *pvarState);
-   HRESULT STDMETHODCALLTYPE get_accValue(VARIANT varID, BSTR *pszValue);
-   HRESULT STDMETHODCALLTYPE put_accValue(VARIANT varChild, BSTR szValue);
+   HRESULT STDMETHODCALLTYPE accDoDefaultAction(VARIANT varID) override;
+   HRESULT STDMETHODCALLTYPE get_accDefaultAction(VARIANT varID, BSTR *pszDefaultAction) override;
+   HRESULT STDMETHODCALLTYPE get_accDescription(VARIANT varID, BSTR *pszDescription) override;
+   HRESULT STDMETHODCALLTYPE get_accHelp(VARIANT varID, BSTR *pszHelp) override;
+   HRESULT STDMETHODCALLTYPE get_accHelpTopic(BSTR *pszHelpFile, VARIANT varChild, long *pidTopic) override;
+   HRESULT STDMETHODCALLTYPE get_accKeyboardShortcut(VARIANT varID, BSTR *pszKeyboardShortcut) override;
+   HRESULT STDMETHODCALLTYPE get_accName(VARIANT varID, BSTR *pszName) override;
+   HRESULT STDMETHODCALLTYPE put_accName(VARIANT varChild, BSTR szName) override;
+   HRESULT STDMETHODCALLTYPE get_accRole(VARIANT varID, VARIANT *pvarRole) override;
+   HRESULT STDMETHODCALLTYPE get_accState(VARIANT varID, VARIANT *pvarState) override;
+   HRESULT STDMETHODCALLTYPE get_accValue(VARIANT varID, BSTR *pszValue) override;
+   HRESULT STDMETHODCALLTYPE put_accValue(VARIANT varChild, BSTR szValue) override;
 
-   HRESULT STDMETHODCALLTYPE accSelect(long flagsSelect, VARIANT varID);
-   HRESULT STDMETHODCALLTYPE get_accFocus(VARIANT *pvarID);
-   HRESULT STDMETHODCALLTYPE get_accSelection(VARIANT *pvarChildren);
+   HRESULT STDMETHODCALLTYPE accSelect(long flagsSelect, VARIANT varID) override;
+   HRESULT STDMETHODCALLTYPE get_accFocus(VARIANT *pvarID) override;
+   HRESULT STDMETHODCALLTYPE get_accSelection(VARIANT *pvarChildren) override;
 
    /* IOleWindow */
-   HRESULT STDMETHODCALLTYPE GetWindow(HWND *phwnd);
-   HRESULT STDMETHODCALLTYPE ContextSensitiveHelp(BOOL fEnterMode);
+   HRESULT STDMETHODCALLTYPE GetWindow(HWND *phwnd) override;
+   HRESULT STDMETHODCALLTYPE ContextSensitiveHelp(BOOL fEnterMode) override;
 
  private:
    ULONG ref;
@@ -689,11 +684,9 @@ class QWindowsAccessible : public IAccessible, IOleWindow, QAccessible
 
 static inline BSTR QStringToBSTR(const QString &str)
 {
-   return SysAllocStringLen((OLECHAR *)str.unicode(), str.length());
+   return SysAllocStringLen(&str.toStdWString()[0], str.length());
 }
 
-/*
-*/
 IAccessible *qt_createWindowsAccessible(QAccessibleInterface *access)
 {
    QWindowsAccessible *acc = new QWindowsAccessible(access);
@@ -703,9 +696,6 @@ IAccessible *qt_createWindowsAccessible(QAccessibleInterface *access)
    return iface;
 }
 
-/*
-  IUnknown
-*/
 HRESULT STDMETHODCALLTYPE QWindowsAccessible::QueryInterface(REFIID id, LPVOID *iface)
 {
    *iface = 0;
@@ -1367,12 +1357,14 @@ HRESULT STDMETHODCALLTYPE QWindowsAccessible::get_accValue(VARIANT varID, BSTR *
 
    AccessibleElement elem(varID.lVal, accessible);
    QString value = elem.text(Value);
-   if (!value.isNull()) {
+
+   if (! value.isEmpty()) {
       *pszValue = QStringToBSTR(value);
       return S_OK;
    }
 
    *pszValue = 0;
+
    return S_FALSE;
 }
 
@@ -1513,7 +1505,5 @@ HRESULT STDMETHODCALLTYPE QWindowsAccessible::ContextSensitiveHelp(BOOL)
 {
    return S_OK;
 }
-
-QT_END_NAMESPACE
 
 #endif // QT_NO_ACCESSIBILITY

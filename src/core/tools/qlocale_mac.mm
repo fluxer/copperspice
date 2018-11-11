@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -27,27 +24,25 @@
 #include <qstringlist.h>
 #include <qvariant.h>
 #include <qdatetime.h>
-#include <qstringbuilder.h>
 
-#if !defined(QWS) && defined(Q_OS_MAC)
+#if ! defined(QWS) && defined(Q_OS_DARWIN)
 #include <qcore_mac_p.h>
-#include <CoreFoundation/CoreFoundation.h>
 #endif
 
 QT_BEGIN_NAMESPACE
 
-/******************************************************************************
-** Wrappers for Mac locale system functions
-*/
 
 static QByteArray envVarLocale()
 {
    static QByteArray lang = 0;
+
 #ifdef Q_OS_UNIX
    lang = qgetenv("LC_ALL");
+
    if (lang.isEmpty()) {
       lang = qgetenv("LC_NUMERIC");
    }
+
    if (lang.isEmpty())
 #endif
       lang = qgetenv("LANG");
@@ -59,12 +54,15 @@ static QByteArray getMacLocaleName()
    QByteArray result = envVarLocale();
 
    QString lang, script, cntry;
+
    if (result.isEmpty() ||
-         (result != "C" && !qt_splitLocaleName(QString::fromLocal8Bit(result), lang, script, cntry))) {
+         (result != "C" && !qt_splitLocaleName(QString::fromUtf8(result), lang, script, cntry))) {
+
       QCFType<CFLocaleRef> l = CFLocaleCopyCurrent();
       CFStringRef locale = CFLocaleGetIdentifier(l);
       result = QCFString::toQString(locale).toUtf8();
    }
+
    return result;
 }
 
@@ -111,12 +109,13 @@ static QString macDayName(int day, bool short_format)
 static QString macDateToString(const QDate &date, bool short_format)
 {
    CFGregorianDate macGDate;
-   macGDate.year = date.year();
-   macGDate.month = date.month();
-   macGDate.day = date.day();
-   macGDate.hour = 0;
+   macGDate.year   = date.year();
+   macGDate.month  = date.month();
+   macGDate.day    = date.day();
+   macGDate.hour   = 0;
    macGDate.minute = 0;
    macGDate.second = 0.0;
+
    QCFType<CFDateRef> myDate
       = CFDateCreate(0, CFGregorianDateGetAbsoluteTime(macGDate,
                      QCFType<CFTimeZoneRef>(CFTimeZoneCopyDefault())));
@@ -384,37 +383,36 @@ static QString macFormatCurrency(const QSystemLocale::CurrencyToStringArgument &
    return QCFString::toQString(result);
 }
 
-static QVariant macQuoteString(QSystemLocale::QueryType type, const QStringRef &str)
+static QVariant macQuoteString(QSystemLocale::QueryType type, QStringView str)
 {
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_6 && !defined(Q_OS_IOS)
-   if (QSysInfo::MacintoshVersion < QSysInfo::MV_10_6) {
-      return QVariant();
-   }
 
+#if ! defined(Q_OS_IOS)
    QString begin, end;
    QCFType<CFLocaleRef> locale = CFLocaleCopyCurrent();
+
    switch (type) {
       case QSystemLocale::StringToStandardQuotation:
          begin = QCFString::toQString(static_cast<CFStringRef>(CFLocaleGetValue(locale, kCFLocaleQuotationBeginDelimiterKey)));
-         end = QCFString::toQString(static_cast<CFStringRef>(CFLocaleGetValue(locale, kCFLocaleQuotationEndDelimiterKey)));
-         return QString(begin % str % end);
+         end   = QCFString::toQString(static_cast<CFStringRef>(CFLocaleGetValue(locale, kCFLocaleQuotationEndDelimiterKey)));
+         return QString(begin + str + end);
+
       case QSystemLocale::StringToAlternateQuotation:
-         begin = QCFString::toQString(static_cast<CFStringRef>(CFLocaleGetValue(locale,
-                                      kCFLocaleAlternateQuotationBeginDelimiterKey)));
-         end = QCFString::toQString(static_cast<CFStringRef>(CFLocaleGetValue(locale,
-                                    kCFLocaleAlternateQuotationEndDelimiterKey)));
-         return QString(begin % str % end);
+         begin = QCFString::toQString(static_cast<CFStringRef>(CFLocaleGetValue(locale, kCFLocaleAlternateQuotationBeginDelimiterKey)));
+         end   = QCFString::toQString(static_cast<CFStringRef>(CFLocaleGetValue(locale, kCFLocaleAlternateQuotationEndDelimiterKey)));
+         return QString(begin + str + end);
+
       default:
          break;
    }
 #endif
+
    return QVariant();
 }
 #endif //QT_NO_SYSTEMLOCALE
 
 #ifndef QT_NO_SYSTEMLOCALE
 
-QLocale QSystemLocale::fallbackLocale() const
+QLocale QSystemLocale::fallbackUiLocale() const
 {
    return QLocale(QString::fromUtf8(getMacLocaleName().constData()));
 }
@@ -428,10 +426,12 @@ QVariant QSystemLocale::query(QueryType type, QVariant in = QVariant()) const
          QString value = getCFLocaleValue(kCFLocaleDecimalSeparator);
          return value.isEmpty() ? QVariant() : value;
       }
+
       case GroupSeparator: {
          QString value = getCFLocaleValue(kCFLocaleGroupingSeparator);
          return value.isEmpty() ? QVariant() : value;
       }
+
       case DateFormatLong:
       case DateFormatShort:
          return getMacDateFormat(type == DateFormatShort
@@ -486,6 +486,7 @@ QVariant QSystemLocale::query(QueryType type, QVariant in = QVariant()) const
                kCFPreferencesAnyApplication,
                kCFPreferencesCurrentUser,
                kCFPreferencesAnyHost);
+
          QStringList result;
          if (!languages) {
             return QVariant(result);
@@ -494,23 +495,28 @@ QVariant QSystemLocale::query(QueryType type, QVariant in = QVariant()) const
          CFTypeID typeId = CFGetTypeID(languages);
          if (typeId == CFArrayGetTypeID()) {
             const int cnt = CFArrayGetCount(languages.as<CFArrayRef>());
-            result.reserve(cnt);
+
             for (int i = 0; i < cnt; ++i) {
                const QString lang = QCFString::toQString(
                                        static_cast<CFStringRef>(CFArrayGetValueAtIndex(languages.as<CFArrayRef>(), i)));
                result.append(lang);
             }
+
          } else if (typeId == CFStringGetTypeID()) {
             result = QStringList(QCFString::toQString(languages.as<CFStringRef>()));
+
          } else {
-            qWarning("QLocale::uiLanguages(): CFPreferencesCopyValue returned unhandled type \"%s\"; please report to http://bugreports.qt-project.org",
-                     qPrintable(QCFString::toQString(CFCopyTypeIDDescription(typeId))));
+            qWarning("QLocale::uiLanguages(): CFPreferencesCopyValue returned unhandled type \"%s\". "
+                  "Report to info@copperspice.com",
+                   qPrintable(QCFString::toQString(CFCopyTypeIDDescription(typeId))));
          }
          return QVariant(result);
       }
+
       case StringToStandardQuotation:
       case StringToAlternateQuotation:
-         return macQuoteString(type, in.value<QStringRef>());
+         return macQuoteString(type, in.value<QStringView>());
+
       default:
          break;
    }

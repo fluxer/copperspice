@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -56,13 +53,13 @@ class Q_GUI_EXPORT QSlider : public QAbstractSlider
       TicksBothSides = 3
    };
 
-   explicit QSlider(QWidget *parent = 0);
-   explicit QSlider(Qt::Orientation orientation, QWidget *parent = 0);
+   explicit QSlider(QWidget *parent = nullptr);
+   explicit QSlider(Qt::Orientation orientation, QWidget *parent = nullptr);
 
    ~QSlider();
 
-   QSize sizeHint() const;
-   QSize minimumSizeHint() const;
+   QSize sizeHint() const override;
+   QSize minimumSizeHint() const override;
 
    void setTickPosition(TickPosition position);
    TickPosition tickPosition() const;
@@ -70,13 +67,13 @@ class Q_GUI_EXPORT QSlider : public QAbstractSlider
    void setTickInterval(int ti);
    int tickInterval() const;
 
-   bool event(QEvent *event);
+   bool event(QEvent *event) override;
 
  protected:
-   void paintEvent(QPaintEvent *ev);
-   void mousePressEvent(QMouseEvent *ev);
-   void mouseReleaseEvent(QMouseEvent *ev);
-   void mouseMoveEvent(QMouseEvent *ev);
+   void paintEvent(QPaintEvent *ev) override;
+   void mousePressEvent(QMouseEvent *ev) override;
+   void mouseReleaseEvent(QMouseEvent *ev) override;
+   void mouseMoveEvent(QMouseEvent *ev) override;
    void initStyleOption(QStyleOptionSlider *option) const;
 
  private:

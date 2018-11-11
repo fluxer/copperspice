@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -35,8 +32,6 @@
 #include <QtGui/qheaderview.h>
 
 #ifndef QT_NO_TREEWIDGET
-
-QT_BEGIN_NAMESPACE
 
 class QTreeWidgetItem;
 class QTreeWidgetItemIterator;
@@ -68,23 +63,23 @@ class QTreeModel : public QAbstractItemModel
    void itemChanged(QTreeWidgetItem *item);
 
    QModelIndex index(const QTreeWidgetItem *item, int column) const;
-   QModelIndex index(int row, int column, const QModelIndex &parent) const;
-   QModelIndex parent(const QModelIndex &child) const;
-   int rowCount(const QModelIndex &parent) const;
-   int columnCount(const QModelIndex &parent = QModelIndex()) const;
-   bool hasChildren(const QModelIndex &parent) const;
+   QModelIndex index(int row, int column, const QModelIndex &parent) const override;
+   QModelIndex parent(const QModelIndex &child) const override;
+   int rowCount(const QModelIndex &parent) const override;
+   int columnCount(const QModelIndex &parent = QModelIndex()) const override;
+   bool hasChildren(const QModelIndex &parent) const override;
 
-   QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
-   bool setData(const QModelIndex &index, const QVariant &value, int role);
+   QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
+   bool setData(const QModelIndex &index, const QVariant &value, int role) override;
 
-   QMap<int, QVariant> itemData(const QModelIndex &index) const;
+   QMap<int, QVariant> itemData(const QModelIndex &index) const override;
 
-   QVariant headerData(int section, Qt::Orientation orientation, int role) const;
-   bool setHeaderData(int section, Qt::Orientation orientation, const QVariant &value,int role);
+   QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
+   bool setHeaderData(int section, Qt::Orientation orientation, const QVariant &value,int role) override;
 
-   Qt::ItemFlags flags(const QModelIndex &index) const;
+   Qt::ItemFlags flags(const QModelIndex &index) const override;
 
-   void sort(int column, Qt::SortOrder order);
+   void sort(int column, Qt::SortOrder order) override;
    void ensureSorted(int column, Qt::SortOrder order, int start, int end, const QModelIndex &parent);
    static bool itemLessThan(const QPair<QTreeWidgetItem *, int> &left,const QPair<QTreeWidgetItem *, int> &right);
 
@@ -95,16 +90,16 @@ class QTreeModel : public QAbstractItemModel
       const QList<QTreeWidgetItem *>::iterator &end,
       Qt::SortOrder order, QTreeWidgetItem *item);
 
-   bool insertRows(int row, int count, const QModelIndex &);
-   bool insertColumns(int column, int count, const QModelIndex &);
+   bool insertRows(int row, int count, const QModelIndex &) override;
+   bool insertColumns(int column, int count, const QModelIndex &) override;
 
-   bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex());
+   bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
 
    // dnd
-   QStringList mimeTypes() const;
-   QMimeData *mimeData(const QModelIndexList &indexes) const;
-   bool dropMimeData(const QMimeData *data, Qt::DropAction action,int row, int column, const QModelIndex &parent);
-   Qt::DropActions supportedDropActions() const;
+   QStringList mimeTypes() const override;
+   QMimeData *mimeData(const QModelIndexList &indexes) const override;
+   bool dropMimeData(const QMimeData *data, Qt::DropAction action,int row, int column, const QModelIndex &parent) override;
+   Qt::DropActions supportedDropActions() const override;
 
    QMimeData *internalMimeData() const;
 
@@ -132,7 +127,7 @@ class QTreeModel : public QAbstractItemModel
    void beginRemoveItems(QTreeWidgetItem *parent, int row, int count);
    void endRemoveItems();
    void sortItems(QList<QTreeWidgetItem *> *items, int column, Qt::SortOrder order);
-   void timerEvent(QTimerEvent *);
+   void timerEvent(QTimerEvent *) override;
 
  private:
    QTreeWidgetItem *rootItem;
@@ -146,14 +141,12 @@ class QTreeModel : public QAbstractItemModel
    bool inline executePendingSort() const;
 
    bool isChanging() const;
- 
+
    Q_DECLARE_PRIVATE(QTreeModel)
 
 };
 
-QT_BEGIN_INCLUDE_NAMESPACE
 #include <qabstractitemmodel_p.h>
-QT_END_INCLUDE_NAMESPACE
 
 class QTreeModelPrivate : public QAbstractItemModelPrivate
 {
@@ -224,8 +217,6 @@ class QTreeWidgetPrivate : public QTreeViewPrivate
    // used by QTreeWidgetItem::sortChildren to make sure the column argument is used
    int explicitSortColumn;
 };
-
-QT_END_NAMESPACE
 
 #endif // QT_NO_TREEWIDGET
 

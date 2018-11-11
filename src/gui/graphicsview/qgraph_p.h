@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -111,13 +108,6 @@ class Graph
       return const_iterator(this, false);
    }
 
-   /*!
-    * \internal
-    *
-    * If there is an edge between \a first and \a second, it will return a structure
-    * containing the data associated with the edge, otherwise it will return 0.
-    *
-    */
    EdgeData *edgeData(Vertex *first, Vertex *second) {
       QHash<Vertex *, EdgeData *> *row = m_graph.value(first);
       return row ? row->value(second) : 0;
@@ -201,20 +191,20 @@ class Graph
             EdgeData *data = edgeData(v, v1);
             bool forward = data->from == v;
             if (forward) {
-               edges += QString::fromAscii("\"%1\"->\"%2\" [label=\"[%3,%4,%5,%6,%7]\" color=\"#000000\"] \n")
-                        .arg(v->toString())
-                        .arg(v1->toString())
-                        .arg(data->minSize)
-                        .arg(data->minPrefSize)
-                        .arg(data->prefSize)
-                        .arg(data->maxPrefSize)
-                        .arg(data->maxSize)
+               edges += QString::fromLatin1("\"%1\"->\"%2\" [label=\"[%3,%4,%5,%6,%7]\" color=\"#000000\"] \n")
+                        .formatArg(v->toString())
+                        .formatArg(v1->toString())
+                        .formatArg(data->minSize)
+                        .formatArg(data->minPrefSize)
+                        .formatArg(data->prefSize)
+                        .formatArg(data->maxPrefSize)
+                        .formatArg(data->maxSize)
                         ;
             }
          }
-         strVertices += QString::fromAscii("\"%1\" [label=\"%2\"]\n").arg(v->toString()).arg(v->toString());
+         strVertices += QString::fromLatin1("\"%1\" [label=\"%2\"]\n").formatArg(v->toString()).formatArg(v->toString());
       }
-      return QString::fromAscii("%1\n%2\n").arg(strVertices).arg(edges);
+      return QString::fromLatin1("%1\n%2\n").formatArg(strVertices).formatArg(edges);
    }
 #endif
 

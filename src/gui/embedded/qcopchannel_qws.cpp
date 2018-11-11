@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -52,14 +49,14 @@ class QCopServerRegexp
 
    QString channel;
    QWSClient *client;
-   QRegExp regexp;
+   QRegularExpression regexp;
 };
 
 QCopServerRegexp::QCopServerRegexp( const QString &channel, QWSClient *client )
 {
    this->channel = channel;
    this->client = client;
-   this->regexp = QRegExp( channel, Qt::CaseSensitive, QRegExp::Wildcard );
+   this->regexp = QRegularExpression( channel, Qt::CaseSensitive, QRegularExpression::Wildcard );
 }
 
 QCopServerRegexp::QCopServerRegexp( const QCopServerRegexp &other )
@@ -160,7 +157,7 @@ void QCopChannel::init(const QString &channel)
       }
 
       // do we need a new channel list ?
-      QCopClientMap::Iterator it = qcopClientMap->find(channel);
+      QCopClientMap::iterator it = qcopClientMap->find(channel);
       if (it != qcopClientMap->end()) {
          it.value().append(this);
          return;
@@ -182,7 +179,7 @@ void QCopChannel::init(const QString &channel)
 void QCopChannel::reregisterAll()
 {
    if (qcopClientMap)
-      for (QCopClientMap::Iterator iter = qcopClientMap->begin();
+      for (QCopClientMap::iterator iter = qcopClientMap->begin();
             iter != qcopClientMap->end();
             ++iter) {
          qt_fbdpy->registerChannel(iter.key());
@@ -202,7 +199,7 @@ void QCopChannel::reregisterAll()
 QCopChannel::~QCopChannel()
 {
    QMutexLocker locker(qcopClientMapMutex());
-   QCopClientMap::Iterator it = qcopClientMap->find(d->channel);
+   QCopClientMap::iterator it = qcopClientMap->find(d->channel);
    Q_ASSERT(it != qcopClientMap->end());
    it.value().removeAll(this);
    // still any clients connected locally ?
@@ -405,7 +402,7 @@ void QCopChannel::registerChannel(const QString &ch, QWSClient *cl)
    }
 
    // do we need a new channel list ?
-   QCopServerMap::Iterator it = qcopServerMap->find(ch);
+   QCopServerMap::iterator it = qcopServerMap->find(ch);
    if (it == qcopServerMap->end()) {
       it = qcopServerMap->insert(ch, QList<QWSClient *>());
    }
@@ -442,7 +439,7 @@ void QCopChannel::detach(QWSClient *cl)
       return;
    }
 
-   QCopServerMap::Iterator it = qcopServerMap->begin();
+   QCopServerMap::iterator it = qcopServerMap->begin();
    for (; it != qcopServerMap->end(); ++it) {
       if (it.value().contains(cl)) {
          it.value().removeAll(cl);
@@ -460,7 +457,7 @@ void QCopChannel::detach(QWSClient *cl)
       return;
    }
 
-   QCopServerRegexpList::Iterator it2 = qcopServerRegexpList->begin();
+   QCopServerRegexpList::iterator it2 = qcopServerRegexpList->begin();
    while (it2 != qcopServerRegexpList->end()) {
       if ((*it2).client == cl) {
          it2 = qcopServerRegexpList->erase(it2);
@@ -497,7 +494,7 @@ void QCopChannel::answer(QWSClient *cl, const QString &ch,
          QDataStream s(data);
          s >> c;
          Q_ASSERT(qcopServerMap);
-         QCopServerMap::Iterator it = qcopServerMap->find(c);
+         QCopServerMap::iterator it = qcopServerMap->find(c);
          if (it != qcopServerMap->end()) {
             //Q_ASSERT(it.value().contains(cl));
             it.value().removeAll(cl);
@@ -512,7 +509,7 @@ void QCopChannel::answer(QWSClient *cl, const QString &ch,
          }
          if (qcopServerRegexpList && containsWildcards(c)) {
             // Remove references to a wildcarded channel.
-            QCopServerRegexpList::Iterator it
+            QCopServerRegexpList::iterator it
                = qcopServerRegexpList->begin();
             while (it != qcopServerRegexpList->end()) {
                if ((*it).client == cl && (*it).channel == c) {
@@ -540,7 +537,8 @@ void QCopChannel::answer(QWSClient *cl, const QString &ch,
 
    if (qcopServerRegexpList && !containsWildcards(ch)) {
       // Search for wildcard matches and forward the message on.
-      QCopServerRegexpList::ConstIterator it = qcopServerRegexpList->constBegin();
+      QCopServerRegexpList::const_iterator it = qcopServerRegexpList->constBegin();
+
       for (; it != qcopServerRegexpList->constEnd(); ++it) {
          if ((*it).regexp.exactMatch(ch)) {
             QByteArray newData;

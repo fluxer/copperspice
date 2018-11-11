@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -239,12 +236,12 @@ int applyNumberHeuristic(Translator &tor)
       if (untranslated[i]) {
          TranslatorMessage &msg = tor.message(i);
          const QString &key = zeroKey(msg.sourceText());
+
          if (!key.isEmpty()) {
-            QMap<QString, QPair<QString, QString> >::ConstIterator t =
-               translated.constFind(key);
+            QMap<QString, QPair<QString, QString> >::const_iterator t = translated.constFind(key);
+
             if (t != translated.constEnd() && t->first != msg.sourceText()) {
-               msg.setTranslation(translationAttempt(t->second, t->first,
-                                                     msg.sourceText()));
+               msg.setTranslation(translationAttempt(t->second, t->first, msg.sourceText()));
                inserted++;
             }
          }
@@ -277,9 +274,11 @@ int applySameTextHeuristic(Translator &tor)
          if (msg.type() == TranslatorMessage::Unfinished) {
             untranslated[i] = true;
          }
+
       } else {
          const QString &key = msg.sourceText();
-         QMap<QString, QStringList>::ConstIterator t = translated.constFind(key);
+         QMap<QString, QStringList>::const_iterator t = translated.constFind(key);
+
          if (t != translated.constEnd()) {
             /*
               The same source text is translated at least two
@@ -289,6 +288,7 @@ int applySameTextHeuristic(Translator &tor)
                translated.remove(key);
                avoid.insert(key, true);
             }
+
          } else if (!avoid.contains(key)) {
             translated.insert(key, msg.translations());
          }
@@ -298,7 +298,8 @@ int applySameTextHeuristic(Translator &tor)
    for (int i = 0; i < tor.messageCount(); ++i) {
       if (untranslated[i]) {
          TranslatorMessage &msg = tor.message(i);
-         QMap<QString, QStringList>::ConstIterator t = translated.constFind(msg.sourceText());
+         QMap<QString, QStringList>::const_iterator t = translated.constFind(msg.sourceText());
+
          if (t != translated.constEnd()) {
             msg.setTranslations(*t);
             ++inserted;
@@ -307,7 +308,6 @@ int applySameTextHeuristic(Translator &tor)
    }
    return inserted;
 }
-
 
 
 /*
@@ -492,7 +492,7 @@ Translator merge(const Translator &tor, const Translator &virginTor,
 
    if (options & Verbose) {
       int totalFound = neww + known;
-      err += LU::tr("    Found %n source text(s) (%1 new and %2 already existing)\n", 0, totalFound).arg(neww).arg(known);
+      err += LU::tr("    Found %n source text(s) (%1 new and %2 already existing)\n", 0, totalFound).formatArg(neww).formatArg(known);
 
       if (obsoleted) {
          if (options & NoObsolete) {

@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -28,18 +25,20 @@
 
 #include <phonon/videowidget.h>
 #include <phonon/videowidgetinterface.h>
-#include "backend.h"
-#include "common.h"
-#include "medianode.h"
-#include "abstractrenderer.h"
-#include "videowidget.h"
+
+// located in gstreamer
+#include <backend.h>
+#include <common.h>
+#include <medianode.h>
+#include <abstractrenderer.h>
+#include <videowidget.h>
+
+#include <qstringfwd.h>
 #include <gst/gst.h>
 
 #ifndef QT_NO_PHONON_VIDEO
 
 QT_BEGIN_NAMESPACE
-
-class QString;
 
 namespace Phonon
 {
@@ -50,34 +49,34 @@ class VideoWidget : public QWidget, public Phonon::VideoWidgetInterface, public 
 {
     GSTRM_CS_OBJECT(VideoWidget)
     CS_INTERFACES(Phonon::VideoWidgetInterface, Phonon::Gstreamer::MediaNode)
-   
+
 public:
-    VideoWidget(Backend *backend, QWidget *parent = 0);
+    VideoWidget(Backend *backend, QWidget *parent = nullptr);
     ~VideoWidget();
 
     void setupVideoBin();
-    void paintEvent(QPaintEvent *event);
-    void mediaNodeEvent(const MediaNodeEvent *event);
-    void setVisible(bool);
+    void paintEvent(QPaintEvent *event) override;
+    void mediaNodeEvent(const MediaNodeEvent *event) override;
+    void setVisible(bool) override;
 
-    Phonon::VideoWidget::AspectRatio aspectRatio() const;
-    void setAspectRatio(Phonon::VideoWidget::AspectRatio aspectRatio);
-    Phonon::VideoWidget::ScaleMode scaleMode() const;
-    void setScaleMode(Phonon::VideoWidget::ScaleMode);
-    qreal brightness() const;
-    void setBrightness(qreal);
-    qreal contrast() const;
-    void setContrast(qreal);
-    qreal hue() const;
-    void setHue(qreal);
-    qreal saturation() const;
-    void setSaturation(qreal);
+    Phonon::VideoWidget::AspectRatio aspectRatio() const override;
+    void setAspectRatio(Phonon::VideoWidget::AspectRatio aspectRatio) override;
+    Phonon::VideoWidget::ScaleMode scaleMode() const override;
+    void setScaleMode(Phonon::VideoWidget::ScaleMode) override;
+    qreal brightness() const override;
+    void setBrightness(qreal) override;
+    qreal contrast() const override;
+    void setContrast(qreal) override;
+    qreal hue() const override;
+    void setHue(qreal) override;
+    qreal saturation() const override;
+    void setSaturation(qreal) override;
     void setMovieSize(const QSize &size);
-    QSize sizeHint() const;
+    QSize sizeHint() const override;
     QRect scaleToAspect(QRect srcRect, int w, int h) const;
     QRect calculateDrawFrameRect() const;
 
-    GstElement *videoElement()
+    GstElement *videoElement() override
     {
         Q_ASSERT(m_videoBin);
         return m_videoBin;
@@ -87,9 +86,9 @@ public:
         return m_movieSize;
     }
 
-    bool event(QEvent *);
+    bool event(QEvent *) override;
 
-    QWidget *widget() {
+    QWidget *widget() override {
         return this;
     }
 

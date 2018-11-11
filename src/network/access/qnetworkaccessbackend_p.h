@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -27,7 +24,8 @@
 #define QNETWORKACCESSBACKEND_P_H
 
 #include <qnetworkreplyimpl_p.h>
-#include <QtCore/qobject.h>
+#include <qobject.h>
+#include <qsslerror.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -35,6 +33,7 @@ class QAuthenticator;
 class QNetworkProxy;
 class QNetworkProxyQuery;
 class QNetworkRequest;
+class QStringList;
 class QUrl;
 class QUrlInfo;
 class QSslConfiguration;
@@ -90,8 +89,7 @@ class QNetworkAccessBackend : public QObject
    // slot-like:
    virtual void downstreamReadyWrite();
    virtual void setDownstreamLimited(bool b);
-   virtual void setReadBufferSize(qint64 size);
-   virtual void emitReadBufferFreed(qint64 size);
+
    virtual void copyFinished(QIODevice *);
    virtual void ignoreSslErrors();
    virtual void ignoreSslErrors(const QList<QSslError> &errors);
@@ -175,7 +173,7 @@ class QNetworkAccessBackend : public QObject
    char *getDownloadBuffer(qint64);
 
    QSharedPointer<QNonContiguousByteDevice> uploadByteDevice;
-  
+
    NET_CS_SLOT_1(Protected, void finished())
    NET_CS_SLOT_2(finished)
 
@@ -195,6 +193,9 @@ class QNetworkAccessBackend : public QObject
 
    NET_CS_SLOT_1(Protected, void redirectionRequested(const QUrl &destination))
    NET_CS_SLOT_2(redirectionRequested)
+
+   NET_CS_SLOT_1(Protected, void encrypted())
+   NET_CS_SLOT_2(encrypted)
 
    NET_CS_SLOT_1(Protected, void sslErrors(const QList <QSslError> &errors))
    NET_CS_SLOT_2(sslErrors)
@@ -220,6 +221,8 @@ class QNetworkAccessBackendFactory
  public:
    QNetworkAccessBackendFactory();
    virtual ~QNetworkAccessBackendFactory();
+
+   virtual QStringList supportedSchemes() const = 0;
    virtual QNetworkAccessBackend *create(QNetworkAccessManager::Operation op, const QNetworkRequest &request) const = 0;
 };
 

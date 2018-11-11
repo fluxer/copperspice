@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -60,29 +57,30 @@ class Q_GUI_EXPORT QTransform
               qreal h22, qreal dx, qreal dy);
    explicit QTransform(const QMatrix &mtx);
 
-   bool isAffine() const;
-   bool isIdentity() const;
-   bool isInvertible() const;
-   bool isScaling() const;
-   bool isRotating() const;
-   bool isTranslating() const;
+   inline bool isAffine() const;
+   inline bool isIdentity() const;
+   inline bool isInvertible() const;
+   inline bool isScaling() const;
+   inline bool isRotating() const;
+   inline bool isTranslating() const;
 
    TransformationType type() const;
 
    inline qreal determinant() const;
-   qreal det() const;
+   inline qreal det() const;
 
-   qreal m11() const;
-   qreal m12() const;
-   qreal m13() const;
-   qreal m21() const;
-   qreal m22() const;
-   qreal m23() const;
-   qreal m31() const;
-   qreal m32() const;
-   qreal m33() const;
-   qreal dx() const;
-   qreal dy() const;
+   inline qreal m11() const;
+   inline qreal m12() const;
+   inline qreal m13() const;
+   inline qreal m21() const;
+   inline qreal m22() const;
+   inline qreal m23() const;
+   inline qreal m31() const;
+   inline qreal m32() const;
+   inline qreal m33() const;
+
+   inline qreal dx() const;
+   inline qreal dy() const;
 
    void setMatrix(qreal m11, qreal m12, qreal m13, qreal m21, qreal m22, qreal m23, qreal m31, qreal m32, qreal m33);
 
@@ -127,10 +125,10 @@ class Q_GUI_EXPORT QTransform
 
    const QMatrix &toAffine() const;
 
-   QTransform &operator*=(qreal div);
-   QTransform &operator/=(qreal div);
-   QTransform &operator+=(qreal div);
-   QTransform &operator-=(qreal div);
+   inline QTransform &operator*=(qreal div);
+   inline QTransform &operator/=(qreal div);
+   inline QTransform &operator+=(qreal div);
+   inline QTransform &operator-=(qreal div);
 
    static QTransform fromTranslate(qreal dx, qreal dy);
    static QTransform fromScale(qreal dx, qreal dy);

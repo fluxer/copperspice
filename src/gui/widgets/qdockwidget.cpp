@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -54,6 +51,23 @@ extern QString qt_setWindowTitle_helperHelper(const QString &, const QWidget *);
 
 // qmainwindow.cpp
 extern QMainWindowLayout *qt_mainwindow_layout(const QMainWindow *window);
+
+static inline QMainWindowLayout *qt_mainwindow_layout_from_dock(const QDockWidget *dock)
+{
+    const QWidget *p = dock->parentWidget();
+
+    while (p) {
+        const QMainWindow *window = qobject_cast<const QMainWindow*>(p);
+
+        if (window) {
+           return qt_mainwindow_layout(window);
+        }
+
+        p = p->parentWidget();
+    }
+
+    return nullptr;
+}
 
 static inline bool hasFeature(const QDockWidgetPrivate *priv, QDockWidget::DockWidgetFeature feature)
 {
@@ -103,16 +117,15 @@ class QDockWidgetTitleButton : public QAbstractButton
  public:
    QDockWidgetTitleButton(QDockWidget *dockWidget);
 
-   QSize sizeHint() const;
-   inline QSize minimumSizeHint() const {
+   QSize sizeHint() const override;
+   inline QSize minimumSizeHint() const override{
       return sizeHint();
    }
 
-   void enterEvent(QEvent *event);
-   void leaveEvent(QEvent *event);
-   void paintEvent(QPaintEvent *event);
+   void enterEvent(QEvent *event) override;
+   void leaveEvent(QEvent *event) override;
+   void paintEvent(QPaintEvent *event) override;
 };
-
 
 QDockWidgetTitleButton::QDockWidgetTitleButton(QDockWidget *dockWidget)
    : QAbstractButton(dockWidget)
@@ -694,9 +707,6 @@ void QDockWidgetPrivate::updateButtons()
    button->setIcon(q->style()->standardIcon(QStyle::SP_TitleBarCloseButton, &opt, q));
    button->setVisible(canClose && !hideButtons);
 
-   q->setAttribute(Qt::WA_ContentsPropagated,
-                   (canFloat || canClose) && !hideButtons);
-
    layout->invalidate();
 }
 
@@ -708,19 +718,17 @@ void QDockWidgetPrivate::_q_toggleTopLevel()
 
 void QDockWidgetPrivate::initDrag(const QPoint &pos, bool nca)
 {
+   Q_Q(QDockWidget);
+
    if (state != 0) {
       return;
    }
 
-   Q_Q(QDockWidget);
-
-   QMainWindow *win = qobject_cast<QMainWindow *>(q->parent());
-   Q_ASSERT(win != 0);
-
-   QMainWindowLayout *layout = qt_mainwindow_layout(win);
+   QMainWindowLayout *layout = qt_mainwindow_layout_from_dock(q);
    Q_ASSERT(layout != 0);
 
-   if (layout->pluggingWidget != 0) { // the main window is animating a docking operation
+   if (layout->pluggingWidget != 0) {
+      // the main window is animating a docking operation
       return;
    }
 
@@ -752,7 +760,7 @@ void QDockWidgetPrivate::startDrag()
       return;
    }
 
-   QMainWindowLayout *layout = qt_mainwindow_layout(qobject_cast<QMainWindow *>(q->parentWidget()));
+   QMainWindowLayout *layout = qt_mainwindow_layout_from_dock(q);
    Q_ASSERT(layout != 0);
 
    state->widgetItem = layout->unplug(q);
@@ -780,7 +788,7 @@ void QDockWidgetPrivate::endDrag(bool abort)
    q->releaseMouse();
 
    if (state->dragging) {
-      QMainWindowLayout *mwLayout = qt_mainwindow_layout(qobject_cast<QMainWindow *>(q->parentWidget()));
+      QMainWindowLayout *mwLayout = qt_mainwindow_layout_from_dock(q);
       Q_ASSERT(mwLayout != 0);
 
       if (abort || !mwLayout->plug(state->widgetItem)) {
@@ -789,6 +797,7 @@ void QDockWidgetPrivate::endDrag(bool abort)
                delete state->widgetItem;
             }
             mwLayout->restore();
+
 #ifdef Q_WS_X11
             // get rid of the X11BypassWindowManager window flag and activate the resizer
             Qt::WindowFlags flags = q->windowFlags();
@@ -817,17 +826,13 @@ bool QDockWidgetPrivate::isAnimating() const
 {
    Q_Q(const QDockWidget);
 
-   QMainWindow *mainWin = qobject_cast<QMainWindow *>(q->parent());
-   if (mainWin == 0) {
+   QMainWindowLayout *mainWinLayout = qt_mainwindow_layout_from_dock(q);
+
+   if (mainWinLayout == nullptr) {
       return false;
    }
 
-   QMainWindowLayout *mainWinLayout = qt_mainwindow_layout(mainWin);
-   if (mainWinLayout == 0) {
-      return false;
-   }
-
-   return (void *)mainWinLayout->pluggingWidget == (void *)q;
+   return (const void *)mainWinLayout->pluggingWidget == (const void *)q;
 }
 
 bool QDockWidgetPrivate::mousePressEvent(QMouseEvent *event)
@@ -882,6 +887,7 @@ bool QDockWidgetPrivate::mouseDoubleClickEvent(QMouseEvent *event)
 bool QDockWidgetPrivate::mouseMoveEvent(QMouseEvent *event)
 {
    bool ret = false;
+
 #if !defined(QT_NO_MAINWINDOW)
    Q_Q(QDockWidget);
 
@@ -889,15 +895,15 @@ bool QDockWidgetPrivate::mouseMoveEvent(QMouseEvent *event)
       return ret;
    }
 
-   QDockWidgetLayout *dwlayout
-      = qobject_cast<QDockWidgetLayout *>(layout);
-   QMainWindowLayout *mwlayout = qt_mainwindow_layout(qobject_cast<QMainWindow *>(q->parentWidget()));
-   if (!dwlayout->nativeWindowDeco()) {
-      if (!state->dragging
-            && mwlayout->pluggingWidget == 0
-            && (event->pos() - state->pressPos).manhattanLength()
-            > QApplication::startDragDistance()) {
+   QDockWidgetLayout *dwlayout = qobject_cast<QDockWidgetLayout *>(layout);
+
+   QMainWindowLayout *mwlayout = qt_mainwindow_layout_from_dock(q);
+
+   if (! dwlayout->nativeWindowDeco()) {
+      if (! state->dragging && mwlayout->pluggingWidget == 0
+            && (event->pos() - state->pressPos).manhattanLength() > QApplication::startDragDistance()) {
          startDrag();
+
 #ifdef Q_OS_WIN
          grabMouseWhileInWindow();
 #else
@@ -990,9 +996,11 @@ void QDockWidgetPrivate::nonClientAreaMouseEvent(QMouseEvent *event)
          if (state->nca) {
             endDrag();
          }
+
 #ifdef Q_OS_MAC
          else { // workaround for lack of mouse-grab on Mac
-            QMainWindowLayout *layout = qt_mainwindow_layout(qobject_cast<QMainWindow *>(q->parentWidget()));
+
+            QMainWindowLayout *layout = qt_mainwindow_layout_from_dock(q);
             Q_ASSERT(layout != 0);
 
             q->move(event->globalPos() - state->pressPos);
@@ -1025,14 +1033,13 @@ void QDockWidgetPrivate::moveEvent(QMoveEvent *event)
       return;
    }
 
-   // When the native window frame is being dragged, all we get is these mouse
-   // move events.
+   // When the native window frame is being dragged, all we get is these mouse  move events
 
    if (state->ctrlDrag) {
       return;
    }
 
-   QMainWindowLayout *layout = qt_mainwindow_layout(qobject_cast<QMainWindow *>(q->parentWidget()));
+   QMainWindowLayout *layout = qt_mainwindow_layout_from_dock(q);
    Q_ASSERT(layout != 0);
 
    QPoint globalMousePos = event->pos() + state->pressPos;
@@ -1066,8 +1073,9 @@ void QDockWidgetPrivate::setWindowState(bool floating, bool unplug, const QRect 
 {
    Q_Q(QDockWidget);
 
-   if (!floating && q->parent()) {
-      QMainWindowLayout *mwlayout = qt_mainwindow_layout(qobject_cast<QMainWindow *>(q->parentWidget()));
+   if (! floating && q->parent()) {
+      QMainWindowLayout *mwlayout = qt_mainwindow_layout_from_dock(q);
+
       if (mwlayout && mwlayout->dockWidgetArea(q) == Qt::NoDockWidgetArea) {
          return;   // this dockwidget can't be redocked
       }
@@ -1106,14 +1114,16 @@ void QDockWidgetPrivate::setWindowState(bool floating, bool unplug, const QRect 
 
    updateButtons();
 
-   if (!hidden) {
+   if (! hidden) {
       q->show();
    }
 
    if (floating != wasFloating) {
       emit q->topLevelChanged(floating);
-      if (!floating && q->parent()) {
-         QMainWindowLayout *mwlayout = qt_mainwindow_layout(qobject_cast<QMainWindow *>(q->parentWidget()));
+
+      if (! floating && q->parent()) {
+         QMainWindowLayout *mwlayout = qt_mainwindow_layout_from_dock(q);
+
          if (mwlayout) {
             emit q->dockLocationChanged(mwlayout->dockWidgetArea(q));
          }
@@ -1386,21 +1396,24 @@ void QDockWidget::changeEvent(QEvent *event)
       case QEvent::ModifiedChange:
       case QEvent::WindowTitleChange:
          update(layout->titleArea());
+
 #ifndef QT_NO_ACTION
          d->fixedWindowTitle = qt_setWindowTitle_helperHelper(windowTitle(), this);
          d->toggleViewAction->setText(d->fixedWindowTitle);
 #endif
+
 #ifndef QT_NO_TABBAR
          {
-            QMainWindow *win = qobject_cast<QMainWindow *>(parentWidget());
-            if (QMainWindowLayout *winLayout = qt_mainwindow_layout(win)) {
+            if (QMainWindowLayout *winLayout = qt_mainwindow_layout_from_dock(this)) {
                if (QDockAreaLayoutInfo *info = winLayout->layoutState.dockAreaLayout.info(this)) {
                   info->updateTabBar();
                }
             }
          }
 #endif // QT_NO_TABBAR
+
          break;
+
       default:
          break;
    }
@@ -1451,17 +1464,20 @@ bool QDockWidget::event(QEvent *event)
    Q_D(QDockWidget);
 
    QMainWindow *win = qobject_cast<QMainWindow *>(parentWidget());
-   QMainWindowLayout *layout = qt_mainwindow_layout(win);
+   QMainWindowLayout *layout = qt_mainwindow_layout_from_dock(this);
 
    switch (event->type()) {
+
 #ifndef QT_NO_ACTION
       case QEvent::Hide:
-         if (layout != 0) {
+         if (layout != nullptr) {
             layout->keepSize(this);
          }
+
          d->toggleViewAction->setChecked(false);
          emit visibilityChanged(false);
          break;
+
       case QEvent::Show: {
          d->toggleViewAction->setChecked(true);
          const QPoint parentTopLeft = isWindow() ?

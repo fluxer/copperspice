@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -113,7 +110,7 @@ class Q_GUI_EXPORT QWizard : public QDialog
 
    using WizardOptions = QFlags<WizardOption>;
 
-   explicit QWizard(QWidget *parent = 0, Qt::WindowFlags flags = 0);
+   explicit QWizard(QWidget *parent = nullptr, Qt::WindowFlags flags = 0);
    ~QWizard();
 
    int addPage(QWizardPage *page);
@@ -158,10 +155,10 @@ class Q_GUI_EXPORT QWizard : public QDialog
    void setSideWidget(QWidget *widget);
    QWidget *sideWidget() const;
 
-   void setDefaultProperty(const char *className, const char *property, const char *changedSignal);
+   void setDefaultProperty(const QString &className, const QString &property, const QString &changedSignal);
 
-   void setVisible(bool visible);
-   QSize sizeHint() const;
+   void setVisible(bool visible) override;
+   QSize sizeHint() const override;
 
    GUI_CS_SIGNAL_1(Public, void currentIdChanged(int id))
    GUI_CS_SIGNAL_2(currentIdChanged, id)
@@ -182,14 +179,14 @@ class Q_GUI_EXPORT QWizard : public QDialog
    GUI_CS_SLOT_2(restart)
 
  protected:
-   bool event(QEvent *event);
-   void resizeEvent(QResizeEvent *event);
-   void paintEvent(QPaintEvent *event);
+   bool event(QEvent *event) override;
+   void resizeEvent(QResizeEvent *event) override;
+   void paintEvent(QPaintEvent *event) override;
 
 #if defined(Q_OS_WIN)
-   bool winEvent(MSG *message, long *result);
+   bool winEvent(MSG *message, long *result) override;
 #endif
-   void done(int result);
+   void done(int result) override;
    virtual void initializePage(int id);
    virtual void cleanupPage(int id);
 
@@ -221,7 +218,7 @@ class Q_GUI_EXPORT QWizardPage : public QWidget
    GUI_CS_PROPERTY_WRITE(subTitle, setSubTitle)
 
  public:
-   QWizardPage(QWidget *parent = 0);
+   QWizardPage(QWidget *parent = nullptr);
 
    void setTitle(const QString &title);
    QString title() const;
@@ -248,8 +245,7 @@ class Q_GUI_EXPORT QWizardPage : public QWidget
  protected:
    void setField(const QString &name, const QVariant &value);
    QVariant field(const QString &name) const;
-   void registerField(const QString &name, QWidget *widget, const char *property = 0,
-                      const char *changedSignal = 0);
+   void registerField(const QString &name, QWidget *widget, const QString &property = QString(), const QString &changedSignal = QString());
    QWizard *wizard() const;
 
  private:

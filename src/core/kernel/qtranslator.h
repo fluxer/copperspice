@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -30,8 +27,6 @@
 #include <QtCore/qbytearray.h>
 #include <QScopedPointer>
 
-QT_BEGIN_NAMESPACE
-
 #ifndef QT_NO_TRANSLATION
 
 class QLocale;
@@ -42,20 +37,17 @@ class Q_CORE_EXPORT QTranslator : public QObject
    CORE_CS_OBJECT(QTranslator)
 
  public:
-   explicit QTranslator(QObject *parent = 0);
+   explicit QTranslator(QObject *parent = nullptr);
    ~QTranslator();
 
-   // ### Qt5/Merge (with "int n = -1")
-   virtual QString translate(const char *context, const char *sourceText, const char *disambiguation = 0) const;
-   QString translate(const char *context, const char *sourceText, const char *disambiguation, int n) const;
-
+   virtual QString translate(const char *context, const char *sourceText, const char *disambiguation = 0, int n = -1) const;
    virtual bool isEmpty() const;
 
    bool load(const QString &filename, const QString &directory = QString(), const QString &search_delimiters = QString(),
-             const QString &suffix = QString());
- 
-   bool load(const QLocale &locale, const QString &filename, const QString &prefix = QString(), const QString &directory = QString(),
-             const QString &suffix = QString());
+                   const QString &suffix = QString());
+
+   bool load(const QLocale &locale, const QString &filename, const QString &prefix = QString(),
+                  const QString &directory = QString(), const QString &suffix = QString());
 
    bool load(const uchar *data, int len);
 
@@ -69,7 +61,5 @@ class Q_CORE_EXPORT QTranslator : public QObject
 };
 
 #endif // QT_NO_TRANSLATION
-
-QT_END_NAMESPACE
 
 #endif // QTRANSLATOR_H

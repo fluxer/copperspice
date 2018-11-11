@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -34,8 +31,6 @@
 #include <QScopedPointer>
 
 #include <limits.h>
-
-QT_BEGIN_NAMESPACE
 
 class QLayout;
 class QSize;
@@ -93,8 +88,8 @@ class Q_GUI_EXPORT QLayout : public QObject, public QLayoutItem
 
    QWidget *parentWidget() const;
 
-   void invalidate();
-   QRect geometry() const;
+   void invalidate() override;
+   QRect geometry() const override;
    bool activate();
    void update();
 
@@ -104,21 +99,23 @@ class Q_GUI_EXPORT QLayout : public QObject, public QLayoutItem
    void removeWidget(QWidget *w);
    void removeItem(QLayoutItem *);
 
-   Qt::Orientations expandingDirections() const;
-   QSize minimumSize() const;
-   QSize maximumSize() const;
-   virtual void setGeometry(const QRect &);
+   Qt::Orientations expandingDirections() const override;
+   QSize minimumSize() const override;
+   QSize maximumSize() const override;
+   void setGeometry(const QRect &) override;
+
    virtual QLayoutItem *itemAt(int index) const = 0;
    virtual QLayoutItem *takeAt(int index) = 0;
    virtual int indexOf(QWidget *) const;
    virtual int count() const = 0;
-   bool isEmpty() const;
+
+   bool isEmpty() const override;
 
    int totalHeightForWidth(int w) const;
    QSize totalMinimumSize() const;
    QSize totalMaximumSize() const;
    QSize totalSizeHint() const;
-   QLayout *layout();
+   QLayout *layout() override;
 
    void setEnabled(bool);
    bool isEnabled() const;
@@ -127,7 +124,7 @@ class Q_GUI_EXPORT QLayout : public QObject, public QLayoutItem
 
  protected:
    void widgetEvent(QEvent *);
-   void childEvent(QChildEvent *e);
+   void childEvent(QChildEvent *e) override;
    void addChildLayout(QLayout *l);
    void addChildWidget(QWidget *w);
    bool adoptLayout(QLayout *layout);
@@ -146,11 +143,7 @@ class Q_GUI_EXPORT QLayout : public QObject, public QLayoutItem
    friend class QWidget;
 };
 
-QT_BEGIN_INCLUDE_NAMESPACE
 #include <QtGui/qboxlayout.h>
 #include <QtGui/qgridlayout.h>
-QT_END_INCLUDE_NAMESPACE
-
-QT_END_NAMESPACE
 
 #endif // QLAYOUT_H

@@ -1,39 +1,36 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
 
 // do not move include, if qcoreapplication.h is included directly forward declarations are not sufficient 12/30/2013
-#include <QtCore/qobject.h>
+#include <qobject.h>
 
 #ifndef QCOREAPPLICATION_H
 #define QCOREAPPLICATION_H
 
-#include <QtCore/qcoreevent.h>
-#include <QtCore/qeventloop.h>
+#include <qcoreevent.h>
+#include <qeventloop.h>
 #include <QScopedPointer>
 
-#if defined(Q_OS_WIN) && !defined(tagMSG)
+#if defined(Q_OS_WIN) && ! defined(tagMSG)
 typedef struct tagMSG MSG;
 #endif
 
@@ -142,10 +139,8 @@ class Q_CORE_EXPORT QCoreApplication : public QObject
 
    enum Encoding { CodecForTr, UnicodeUTF8, DefaultCodec = CodecForTr };
 
-   // ### Qt5/merge
-   static QString translate(const char *context, const char *key, const char *disambiguation = 0, Encoding encoding = CodecForTr);
-
-   static QString translate(const char *context, const char *key, const char *disambiguation, Encoding encoding, int n);
+   static QString translate(const char *context, const char *key, const char *disambiguation = nullptr,
+                  Encoding encoding = CodecForTr, int n = -1);
 
    static void flush();
 
@@ -171,7 +166,7 @@ class Q_CORE_EXPORT QCoreApplication : public QObject
    CORE_CS_SIGNAL_2(unixSignal, un_named_arg1)
 
  protected:
-   bool event(QEvent *);
+   bool event(QEvent *) override;
 
    virtual bool compressEvent(QEvent *, QObject *receiver, QPostEventList *);
 
@@ -313,10 +308,11 @@ public: \
                                              QCoreApplication::UnicodeUTF8, n); } \
 private:
 
-// * *
+//
+using QtStartUpFunction = void (*)();
 using QtCleanUpFunction = void (*)();
 
-
+Q_CORE_EXPORT void qAddPreRoutine(QtStartUpFunction);
 Q_CORE_EXPORT void qAddPostRoutine(QtCleanUpFunction);
 Q_CORE_EXPORT void qRemovePostRoutine(QtCleanUpFunction);
 Q_CORE_EXPORT QString qAppName();

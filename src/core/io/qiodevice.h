@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,15 +23,13 @@
 #ifndef QIODEVICE_H
 #define QIODEVICE_H
 
-#include <QtCore/qobject.h>
-#include <QtCore/qstring.h>
+#include <qobject.h>
+#include <qstring.h>
 #include <QScopedPointer>
 
 #ifdef open
 #error qiodevice.h must be included before any header file that defines open
 #endif
-
-QT_BEGIN_NAMESPACE
 
 class QByteArray;
 class QIODevicePrivate;
@@ -43,15 +38,15 @@ class Q_CORE_EXPORT QIODevice : public QObject
 {
    CORE_CS_OBJECT(QIODevice)
 
- public:   
+ public:
    enum OpenModeFlag {
-      NotOpen = 0x0000,
-      ReadOnly = 0x0001,
-      WriteOnly = 0x0002,
-      ReadWrite = ReadOnly | WriteOnly,
-      Append = 0x0004,
-      Truncate = 0x0008,
-      Text = 0x0010,
+      NotOpen    = 0x0000,
+      ReadOnly   = 0x0001,
+      WriteOnly  = 0x0002,
+      ReadWrite  = ReadOnly | WriteOnly,
+      Append     = 0x0004,
+      Truncate   = 0x0008,
+      Text       = 0x0010,
       Unbuffered = 0x0020
    };
    using OpenMode = QFlags<OpenModeFlag>;
@@ -123,7 +118,7 @@ class Q_CORE_EXPORT QIODevice : public QObject
    CORE_CS_SIGNAL_2(readChannelFinished)
 
  protected:
-   QIODevice(QIODevicePrivate &dd, QObject *parent = 0);
+   QIODevice(QIODevicePrivate &dd, QObject *parent = nullptr);
 
    virtual qint64 readData(char *data, qint64 maxlen) = 0;
    virtual qint64 readLineData(char *data, qint64 maxlen);
@@ -145,8 +140,5 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(QIODevice::OpenMode)
 
 class QDebug;
 Q_CORE_EXPORT QDebug operator<<(QDebug debug, QIODevice::OpenMode modes);
-
-QT_END_NAMESPACE
-
 
 #endif // QIODEVICE_H

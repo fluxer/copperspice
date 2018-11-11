@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -61,8 +58,6 @@
 #endif
 
 #include <qhexstring_p.h>
-
-QT_BEGIN_NAMESPACE
 
 extern Drawable qt_x11Handle(const QPaintDevice *pd);
 extern const QX11Info *qt_x11Info(const QPaintDevice *pd);
@@ -163,7 +158,7 @@ static inline void x11SetClipRegion(Display *dpy, GC gc, GC gc2,
    }
 #else
    Q_UNUSED(picture);
-#endif // QT_NO_XRENDER
+#endif
 }
 
 
@@ -190,7 +185,7 @@ static inline void x11ClearClipRegion(Display *dpy, GC gc, GC gc2,
    }
 #else
    Q_UNUSED(picture);
-#endif // QT_NO_XRENDER
+#endif
 }
 
 
@@ -217,14 +212,13 @@ static const uchar base_dither_matrix[DITHER_SIZE][DITHER_SIZE] = {
 static QPixmap qt_patternForAlpha(uchar alpha, int screen)
 {
    QPixmap pm;
-   QString key = QLatin1Literal("$qt-alpha-brush$")
-                 % HexString<uchar>(alpha)
-                 % HexString<int>(screen);
+   QString key = "$cs_alpha_brush$" + HexString<uchar>(alpha) + HexString<int>(screen);
 
-   if (!QPixmapCache::find(key, pm)) {
-      // #### why not use a mono image here????
+   if (! QPixmapCache::find(key, pm)) {
+      // #### why not use a mono image here?
       QImage pattern(DITHER_SIZE, DITHER_SIZE, QImage::Format_ARGB32);
       pattern.fill(0xffffffff);
+
       for (int y = 0; y < DITHER_SIZE; ++y) {
          for (int x = 0; x < DITHER_SIZE; ++x) {
             if (base_dither_matrix[x][y] <= alpha) {
@@ -232,10 +226,12 @@ static QPixmap qt_patternForAlpha(uchar alpha, int screen)
             }
          }
       }
+
       pm = QBitmap::fromImage(pattern);
       pm.x11SetScreen(screen);
       QPixmapCache::insert(key, pm);
    }
+
    return pm;
 }
 
@@ -248,10 +244,11 @@ class QXRenderTessellator : public QTessellator
    ~QXRenderTessellator() {
       free(traps);
    }
+
    XTrapezoid *traps;
    int allocated;
    int size;
-   void addTrap(const Trapezoid &trap);
+   void addTrap(const Trapezoid &trap) override;
    QRect tessellate(const QPointF *points, int nPoints, bool winding) {
       size = 0;
       setWinding(winding);
@@ -440,12 +437,6 @@ static QPaintEngine::PaintEngineFeatures qt_decide_features()
       features |= QPaintEngine::Antialiasing;
       features |= QPaintEngine::PorterDuff;
       features |= QPaintEngine::MaskedBrush;
-#if 0
-      if (X11->xrender_version > 10) {
-         features |= QPaintEngine::LinearGradientFill;
-         // ###
-      }
-#endif
    }
 
    return features;
@@ -481,6 +472,7 @@ bool QX11PaintEngine::begin(QPaintDevice *pdev)
    d->xinfo = qt_x11Info(pdev);
    QWidget *w = d->pdev->devType() == QInternal::Widget ? static_cast<QWidget *>(d->pdev) : 0;
    const bool isAlienWidget = w && !w->internalWinId() && w->testAttribute(Qt::WA_WState_Created);
+
 #ifndef QT_NO_XRENDER
    if (w) {
       if (isAlienWidget) {
@@ -499,6 +491,7 @@ bool QX11PaintEngine::begin(QPaintDevice *pdev)
 #else
    d->picture = 0;
 #endif
+
    d->hd = !isAlienWidget ? qt_x11Handle(pdev) : qt_x11Handle(w->nativeParentWidget());
 
    Q_ASSERT(d->xinfo != 0);
@@ -1349,6 +1342,7 @@ void QX11PaintEngine::updateBrush(const QBrush &brush, const QPointF &origin)
    d->cbrush = brush;
    d->bg_origin = origin;
    d->adapted_brush_origin = false;
+
 #if !defined(QT_NO_XRENDER)
    d->current_brush = 0;
 #endif
@@ -2186,7 +2180,7 @@ void QX11PaintEngine::drawTiledPixmap(const QRectF &r, const QPixmap &pixmap, co
 #ifndef QT_NO_XRENDER
    if (X11->use_xrender && d->picture && pixmap.x11PictureHandle()) {
 #if 0
-      // ### Qt 5: enable this
+      // ### Qt5: enable this
       XRenderPictureAttributes attrs;
       attrs.repeat = true;
       XRenderChangePicture(d->dpy, pixmap.x11PictureHandle(), CPRepeat, &attrs);
@@ -2310,14 +2304,15 @@ void QX11PaintEngine::drawTextItem(const QPointF &p, const QTextItem &textItem)
       case QFontEngine::Box:
          d_func()->drawBoxTextItem(p, ti);
          break;
+
       case QFontEngine::XLFD:
          drawXLFD(p, ti);
          break;
-#ifndef QT_NO_FONTCONFIG
+
       case QFontEngine::Freetype:
          drawFreetype(p, ti);
          break;
-#endif
+
       default:
          Q_ASSERT(false);
    }
@@ -2364,7 +2359,6 @@ void QX11PaintEngine::drawXLFD(const QPointF &p, const QTextItemInt &ti)
    }
 }
 
-#ifndef QT_NO_FONTCONFIG
 static QPainterPath path_for_glyphs(const QVarLengthArray<glyph_t> &glyphs,
                                     const QVarLengthArray<QFixedPoint> &positions,
                                     const QFontEngineFT *ft)
@@ -2572,6 +2566,4 @@ void QX11PaintEngine::drawFreetype(const QPointF &p, const QTextItemInt &ti)
    }
 
 }
-#endif // !QT_NO_XRENDER
 
-QT_END_NAMESPACE

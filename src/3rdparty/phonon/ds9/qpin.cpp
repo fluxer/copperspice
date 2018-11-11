@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -55,8 +52,7 @@ namespace Phonon
                 m_pin->Release();
             }
 
-            STDMETHODIMP QueryInterface(const IID &iid,void **out)
-            {
+            STDMETHODIMP QueryInterface(const IID &iid,void **out) override {
                 if (!out) {
                     return E_POINTER;
                 }
@@ -77,12 +73,12 @@ namespace Phonon
                 return hr;
             }
 
-            STDMETHODIMP_(ULONG) AddRef()
+            STDMETHODIMP_(ULONG) AddRef() override
             {
                 return InterlockedIncrement(&m_refCount);
             }
 
-            STDMETHODIMP_(ULONG) Release()
+            STDMETHODIMP_(ULONG) Release() override
             {
                 ULONG refCount = InterlockedDecrement(&m_refCount);
                 if (refCount == 0) {
@@ -92,7 +88,7 @@ namespace Phonon
                 return refCount;
             }
 
-            STDMETHODIMP Next(ULONG count, AM_MEDIA_TYPE **out, ULONG *fetched)
+            STDMETHODIMP Next(ULONG count, AM_MEDIA_TYPE **out, ULONG *fetched) override
             {
                 QMutexLocker locker(&m_mutex);
                 if (!out) {
@@ -121,21 +117,21 @@ namespace Phonon
                 return nbFetched == count ? S_OK : S_FALSE;
             }
 
-            STDMETHODIMP Skip(ULONG count)
+            STDMETHODIMP Skip(ULONG count) override
             {
                 QMutexLocker locker(&m_mutex);
                 m_index = qMin(m_index + int(count), m_pin->mediaTypes().count());
                 return  (m_index == m_pin->mediaTypes().count()) ? S_FALSE : S_OK;
             }
 
-            STDMETHODIMP Reset()
+            STDMETHODIMP Reset() override
             {
                 QMutexLocker locker(&m_mutex);
                 m_index = 0;
                 return S_OK;
             }
 
-            STDMETHODIMP Clone(IEnumMediaTypes **out)
+            STDMETHODIMP Clone(IEnumMediaTypes **out) override
             {
                 QMutexLocker locker(&m_mutex);
                 if (!out) {

@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -102,8 +99,7 @@ QFixed QTextureGlyphCache::subPixelPositionForX(QFixed x) const
    return subPixelPosition;
 }
 
-bool QTextureGlyphCache::populate(QFontEngine *fontEngine, int numGlyphs, const glyph_t *glyphs,
-                                  const QFixedPoint *positions)
+bool QTextureGlyphCache::populate(QFontEngine *fontEngine, int numGlyphs, const glyph_t *glyphs, const QFixedPoint *positions)
 {
 #ifdef CACHE_DEBUG
    printf("Populating with %d glyphs\n", numGlyphs);
@@ -115,18 +111,23 @@ bool QTextureGlyphCache::populate(QFontEngine *fontEngine, int numGlyphs, const 
    const int paddingDoubled = glyphPadding() * 2;
 
    bool supportsSubPixelPositions = fontEngine->supportsSubPixelPositions();
+
    if (m_subPixelPositionCount == 0) {
-      if (!supportsSubPixelPositions) {
+      if (! supportsSubPixelPositions) {
          m_subPixelPositionCount = 1;
+
       } else {
-#if !defined(Q_WS_X11)
+
+#if ! defined(Q_WS_X11)
          int i = 0;
+
          while (m_subPixelPositionCount == 0 && i < numGlyphs) {
             m_subPixelPositionCount = calculateSubPixelPositionCount(glyphs[i++]);
          }
 #else
          m_subPixelPositionCount = 4;
 #endif
+
       }
    }
 
@@ -151,6 +152,7 @@ bool QTextureGlyphCache::populate(QFontEngine *fontEngine, int numGlyphs, const 
       const glyph_t glyph = glyphs[i];
 
       QFixed subPixelPosition;
+
       if (supportsSubPixelPositions) {
          QFixed x = positions != 0 ? positions[i].x : QFixed();
          subPixelPosition = subPixelPositionForX(x);
@@ -159,6 +161,7 @@ bool QTextureGlyphCache::populate(QFontEngine *fontEngine, int numGlyphs, const 
       if (coords.contains(GlyphAndSubPixelPosition(glyph, subPixelPosition))) {
          continue;
       }
+
       if (listItemCoordinates.contains(GlyphAndSubPixelPosition(glyph, subPixelPosition))) {
          continue;
       }
@@ -174,17 +177,21 @@ bool QTextureGlyphCache::populate(QFontEngine *fontEngine, int numGlyphs, const 
              metrics.x.toReal(),
              metrics.y.toReal());
 #endif
+
       GlyphAndSubPixelPosition key(glyph, subPixelPosition);
       int glyph_width = metrics.width.ceil().toInt();
       int glyph_height = metrics.height.ceil().toInt();
+
       if (glyph_height == 0 || glyph_width == 0) {
          // Avoid multiple calls to boundingBox() for non-printable characters
          Coord c = { 0, 0, 0, 0, 0, 0 };
          coords.insert(key, c);
          continue;
       }
+
       glyph_width += margin * 2 + 4;
       glyph_height += margin * 2 + 4;
+
       // align to 8-bit boundary
       if (m_type == QFontEngineGlyphCache::Raster_Mono) {
          glyph_width = (glyph_width + 7) & ~7;
@@ -200,6 +207,7 @@ bool QTextureGlyphCache::populate(QFontEngine *fontEngine, int numGlyphs, const 
       listItemCoordinates.insert(key, c);
       rowHeight = qMax(rowHeight, glyph_height);
    }
+
    if (listItemCoordinates.isEmpty()) {
       return true;
    }
@@ -217,6 +225,7 @@ bool QTextureGlyphCache::populate(QFontEngine *fontEngine, int numGlyphs, const 
    // now actually use the coords and paint the wanted glyps into cache.
    QHash<GlyphAndSubPixelPosition, Coord>::iterator iter = listItemCoordinates.begin();
    int requiredWidth = m_w;
+
    while (iter != listItemCoordinates.end()) {
       Coord c = iter.value();
 
@@ -224,9 +233,11 @@ bool QTextureGlyphCache::populate(QFontEngine *fontEngine, int numGlyphs, const 
 
       if (m_cx + c.w > requiredWidth) {
          int new_width = requiredWidth * 2;
+
          while (new_width < m_cx + c.w) {
             new_width *= 2;
          }
+
          if (new_width <= maxTextureWidth()) {
             requiredWidth = new_width;
          } else {
@@ -251,6 +262,7 @@ bool QTextureGlyphCache::populate(QFontEngine *fontEngine, int numGlyphs, const 
       m_cx += c.w + paddingDoubled;
       ++iter;
    }
+
    return true;
 
 }
@@ -262,13 +274,15 @@ void QTextureGlyphCache::fillInPendingGlyphs()
    }
 
    int requiredHeight = m_h;
-   int requiredWidth = m_w; // Use a minimum size to avoid a lot of initial reallocations
+   int requiredWidth  = m_w; // Use a minimum size to avoid a lot of initial reallocations
+
    {
       QHash<GlyphAndSubPixelPosition, Coord>::iterator iter = m_pendingGlyphs.begin();
+
       while (iter != m_pendingGlyphs.end()) {
          Coord c = iter.value();
          requiredHeight = qMax(requiredHeight, c.y + c.h);
-         requiredWidth = qMax(requiredWidth, c.x + c.w);
+         requiredWidth  = qMax(requiredWidth, c.x + c.w);
          ++iter;
       }
    }
@@ -283,6 +297,7 @@ void QTextureGlyphCache::fillInPendingGlyphs()
 
    {
       QHash<GlyphAndSubPixelPosition, Coord>::iterator iter = m_pendingGlyphs.begin();
+
       while (iter != m_pendingGlyphs.end()) {
          GlyphAndSubPixelPosition key = iter.key();
          fillTexture(iter.value(), key.glyph, key.subPixelPosition);
@@ -473,7 +488,7 @@ void QImageTextureGlyphCache::fillTexture(const Coord &c, glyph_t g, QFixed subP
    if (m_image.rect().contains(base)) {
       m_image.setPixel(base, 255);
    }
-   m_image.save(QString::fromLatin1("cache-%1.png").arg(qint64(this)));
+   m_image.save(QString::fromLatin1("cache-%1.png").formatArg(qint64(this)));
 #endif
 }
 

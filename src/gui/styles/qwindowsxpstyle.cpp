@@ -1,27 +1,26 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
+
+#include <algorithm>
 
 #include <qwindowsxpstyle.h>
 #include <qwindowsxpstyle_p.h>
@@ -53,8 +52,6 @@
 #include <qlabel.h>
 #include <qvarlengtharray.h>
 #include <qdebug.h>
-
-QT_BEGIN_NAMESPACE
 
 // Runtime resolved theme engine function calls
 typedef bool (WINAPI *PtrIsAppThemed)();
@@ -133,39 +130,31 @@ static const int windowsRightBorder      = 12; // right border on windows
 extern Q_GUI_EXPORT HDC qt_win_display_dc();
 extern QRegion qt_region_from_HRGN(HRGN rgn);
 
-
-
-// Theme data helper ------------------------------------------------------------------------------
-/* \internal
-    Returns true if the themedata is valid for use.
-*/
 bool XPThemeData::isValid()
 {
    return QWindowsXPStylePrivate::useXP() && name.size() && handle();
 }
 
-
-/* \internal
-    Returns the theme engine handle to the specific class.
-    If the handle hasn't been opened before, it opens the data, and
-    adds it to a static map, for caching.
-*/
+// internal
 HTHEME XPThemeData::handle()
 {
-   if (!QWindowsXPStylePrivate::useXP()) {
+   if (! QWindowsXPStylePrivate::useXP()) {
       return 0;
    }
 
-   if (!htheme && QWindowsXPStylePrivate::handleMap) {
+   if (! htheme && QWindowsXPStylePrivate::handleMap) {
       htheme = QWindowsXPStylePrivate::handleMap->operator[](name);
    }
 
-   if (!htheme) {
-      htheme = pOpenThemeData(QWindowsXPStylePrivate::winId(widget), (wchar_t *)name.utf16());
+   if (! htheme) {
+      std::wstring tmp(name.toStdWString());
+      htheme = pOpenThemeData(QWindowsXPStylePrivate::winId(widget), &tmp[0]);
+
       if (htheme) {
-         if (!QWindowsXPStylePrivate::handleMap) {
+         if (! QWindowsXPStylePrivate::handleMap) {
             QWindowsXPStylePrivate::handleMap = new QMap<QString, HTHEME>;
          }
+
          QWindowsXPStylePrivate::handleMap->operator[](name) = htheme;
       }
    }
@@ -173,9 +162,7 @@ HTHEME XPThemeData::handle()
    return htheme;
 }
 
-/* \internal
-    Converts a QRect to the native RECT structure.
-*/
+// internal
 RECT XPThemeData::toRECT(const QRect &qr)
 {
    RECT r;
@@ -183,6 +170,7 @@ RECT XPThemeData::toRECT(const QRect &qr)
    r.right = qr.x() + qr.width();
    r.top = qr.y();
    r.bottom = qr.y() + qr.height();
+
    return r;
 }
 
@@ -213,7 +201,7 @@ QPixmap *QWindowsXPStylePrivate::tabbody = 0;
 QMap<QString, HTHEME> *QWindowsXPStylePrivate::handleMap = 0;
 bool QWindowsXPStylePrivate::use_xp = false;
 
-QAtomicInt QWindowsXPStylePrivate::ref = -1; 
+QAtomicInt QWindowsXPStylePrivate::ref = -1;
 
 /* \internal
     Checks if the theme engine can/should be used, or if we should
@@ -293,7 +281,7 @@ void QWindowsXPStylePrivate::cleanupHandleMap()
       return;
    }
 
-   QMap<QString, HTHEME>::Iterator it;
+   QMap<QString, HTHEME>::iterator it;
    for (it = handleMap->begin(); it != handleMap->end(); ++it) {
       pCloseThemeData(it.value());
    }
@@ -801,9 +789,9 @@ void QWindowsXPStylePrivate::drawBackgroundThruNativeBuffer(XPThemeData &themeDa
    bool inspectData;
    bool potentialInvalidAlpha;
 
-   QString pixmapCacheKey = QString::fromLatin1("$qt_xp_%1p%2s%3s%4b%5c%6w%7h").arg(themeData.name)
-                            .arg(partId).arg(stateId).arg(!themeData.noBorder).arg(!themeData.noContent)
-                            .arg(w).arg(h);
+   QString pixmapCacheKey = QString::fromLatin1("$qt_xp_%1p%2s%3s%4b%5c%6w%7h").formatArg(themeData.name)
+                            .formatArg(partId).formatArg(stateId).formatArg(!themeData.noBorder).formatArg(!themeData.noContent)
+                            .formatArg(w).formatArg(h);
    QPixmap cachedPixmap;
    ThemeMapKey key(themeData);
    ThemeMapData data = alphaCache.value(key);
@@ -1168,10 +1156,6 @@ void QWindowsXPStyle::polish(QWidget *widget)
       widget->setWindowOpacity(0.6);
    }
 #endif
-
-   if (qobject_cast<QStackedWidget *>(widget) && qobject_cast<QTabWidget *>(widget->parent())) {
-      widget->parentWidget()->setAttribute(Qt::WA_ContentsPropagated);
-   }
 
    Q_D(QWindowsXPStyle);
    if (!d->hasInitColors) {
@@ -3242,8 +3226,9 @@ void QWindowsXPStyle::drawComplexControl(ComplexControl cc, const QStyleOptionCo
             }
             if (sub & SC_TitleBarCloseButton && tb->titleBarFlags & Qt::WindowSystemMenuHint) {
                theme.rect = proxy()->subControlRect(CC_TitleBar, option, SC_TitleBarCloseButton, widget);
-               //partId = titlebar->testWFlags(Qt::WA_WState_Tool) ? WP_SMALLCLOSEBUTTON : WP_CLOSEBUTTON;
+
                partId = WP_CLOSEBUTTON;
+
                if (widget && !widget->isEnabled()) {
                   stateId = CBS_DISABLED;
                } else if (option->activeSubControls == SC_TitleBarCloseButton && (option->state & State_Sunken)) {
@@ -4133,14 +4118,14 @@ QWindowsXPStyle::QWindowsXPStyle(QWindowsXPStylePrivate &dd) : QWindowsStyle(dd)
 // debugging code when you uncomment the DEBUG_XP_STYLE define at the top of the file.
 
 #ifdef DEBUG_XP_STYLE
-// The schema file expects these to be defined by the user.
+
+// schema file expects these to be defined by the user.
 #define TMT_ENUMDEF 8
 #define TMT_ENUMVAL TEXT('A')
 #define TMT_ENUM    TEXT('B')
 #define SCHEMA_STRINGS // For 2nd pass on schema file
-QT_BEGIN_INCLUDE_NAMESPACE
+
 #include <tmschema.h>
-QT_END_INCLUDE_NAMESPACE
 
 // A property's value, type and name combo
 struct PropPair {
@@ -4353,7 +4338,8 @@ void QWindowsXPStylePrivate::showProperties(XPThemeData &themeData)
                }
          }
       }
-      qSort(all_props);
+
+      std::sort(all_props.begin(), all_props_end());
 
       {
          // List all properties
@@ -4394,9 +4380,5 @@ void QWindowsXPStylePrivate::showProperties(XPThemeData &themeData)
    }
 }
 #endif
-// Debugging code -----------------------------------------------------------------------[ END ]---
-
-
-QT_END_NAMESPACE
 
 #endif //QT_NO_WINDOWSXP

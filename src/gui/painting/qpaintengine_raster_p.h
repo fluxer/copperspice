@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -112,23 +109,26 @@ class
 
    QRasterPaintEngine(QPaintDevice *device);
    ~QRasterPaintEngine();
-   bool begin(QPaintDevice *device);
-   bool end();
 
-   void penChanged();
-   void brushChanged();
-   void brushOriginChanged();
-   void opacityChanged();
-   void compositionModeChanged();
-   void renderHintsChanged();
-   void transformChanged();
-   void clipEnabledChanged();
+   bool begin(QPaintDevice *device) override;
+   bool end() override;
 
-   void setState(QPainterState *s);
-   QPainterState *createState(QPainterState *orig) const;
+   void penChanged() override;
+   void brushChanged() override;
+   void brushOriginChanged() override;
+   void opacityChanged() override;
+   void compositionModeChanged() override;
+   void renderHintsChanged() override;
+   void transformChanged() override;
+   void clipEnabledChanged() override;
+
+   void setState(QPainterState *s) override;
+   QPainterState *createState(QPainterState *orig) const override;
+
    inline QRasterPaintEngineState *state() {
       return static_cast<QRasterPaintEngineState *>(QPaintEngineEx::state());
    }
+
    inline const QRasterPaintEngineState *state() const {
       return static_cast<const QRasterPaintEngineState *>(QPaintEngineEx::state());
    }
@@ -138,45 +138,49 @@ class
 
    void updateMatrix(const QTransform &matrix);
 
-   void drawPolygon(const QPointF *points, int pointCount, PolygonDrawMode mode);
-   void drawPolygon(const QPoint *points, int pointCount, PolygonDrawMode mode);
+   void drawPolygon(const QPointF *points, int pointCount, PolygonDrawMode mode) override;
+   void drawPolygon(const QPoint *points, int pointCount, PolygonDrawMode mode) override;
    void fillPath(const QPainterPath &path, QSpanData *fillData);
    void fillPolygon(const QPointF *points, int pointCount, PolygonDrawMode mode);
 
-   void drawEllipse(const QRectF &rect);
+   void drawEllipse(const QRectF &rect) override;
 
-   void fillRect(const QRectF &rect, const QBrush &brush);
-   void fillRect(const QRectF &rect, const QColor &color);
+   void fillRect(const QRectF &rect, const QBrush &brush) override;
+   void fillRect(const QRectF &rect, const QColor &color) override;
 
-   void drawRects(const QRect  *rects, int rectCount);
-   void drawRects(const QRectF *rects, int rectCount);
+   void drawRects(const QRect  *rects, int rectCount) override;
+   void drawRects(const QRectF *rects, int rectCount) override;
 
-   void drawPixmap(const QPointF &p, const QPixmap &pm);
-   void drawPixmap(const QRectF &r, const QPixmap &pm, const QRectF &sr);
+   void drawPixmap(const QPointF &p, const QPixmap &pm) override;
+   void drawPixmap(const QRectF &r, const QPixmap &pm, const QRectF &sr) override;
+
    void drawImage(const QPointF &p, const QImage &img);
-   void drawImage(const QRectF &r, const QImage &pm, const QRectF &sr, Qt::ImageConversionFlags flags = Qt::AutoColor);
-   void drawTiledPixmap(const QRectF &r, const QPixmap &pm, const QPointF &sr);
-   void drawTextItem(const QPointF &p, const QTextItem &textItem);
+   void drawImage(const QRectF &r, const QImage &pm, const QRectF &sr, Qt::ImageConversionFlags flags = Qt::AutoColor) override;
 
-   void drawLines(const QLine *line, int lineCount);
-   void drawLines(const QLineF *line, int lineCount);
+   void drawTiledPixmap(const QRectF &r, const QPixmap &pm, const QPointF &sr) override;
 
-   void drawPoints(const QPointF *points, int pointCount);
-   void drawPoints(const QPoint *points, int pointCount);
+   void drawTextItem(const QPointF &p, const QTextItem &textItem) override;
 
-   void stroke(const QVectorPath &path, const QPen &pen);
-   void fill(const QVectorPath &path, const QBrush &brush);
+   void drawLines(const QLine *line, int lineCount) override;
+   void drawLines(const QLineF *line, int lineCount) override;
 
-   void clip(const QVectorPath &path, Qt::ClipOperation op);
-   void clip(const QRect &rect, Qt::ClipOperation op);
-   void clip(const QRegion &region, Qt::ClipOperation op);
+   void drawPoints(const QPointF *points, int pointCount) override;
+   void drawPoints(const QPoint *points, int pointCount) override;
 
-   void drawStaticTextItem(QStaticTextItem *textItem);
+   void stroke(const QVectorPath &path, const QPen &pen) override;
+   void fill(const QVectorPath &path, const QBrush &brush) override;
+
+   void clip(const QVectorPath &path, Qt::ClipOperation op) override;
+   void clip(const QRect &rect, Qt::ClipOperation op) override;
+   void clip(const QRegion &region, Qt::ClipOperation op) override;
+
+   void drawStaticTextItem(QStaticTextItem *textItem) override;
 
    enum ClipType {
       RectClip,
       ComplexClip
    };
+
    ClipType clipType() const;
    QRect clipBoundingRect() const;
 
@@ -198,17 +202,17 @@ class
 
 #ifdef Q_OS_WIN
    void setDC(HDC hdc);
-   HDC getDC() const;
-   void releaseDC(HDC hdc) const;
+   HDC getDC() const override;
+   void releaseDC(HDC hdc) const override;
 #endif
 
    void alphaPenBlt(const void *src, int bpl, int depth, int rx, int ry, int w, int h);
 
-   Type type() const {
+   Type type() const  override{
       return Raster;
    }
 
-   QPoint coordinateOffset() const;
+   QPoint coordinateOffset() const override;
 
 #if defined(Q_WS_QWS) && !defined(QT_NO_RASTERCALLBACKS)
    virtual void drawColorSpans(const QSpan *spans, int count, uint color);
@@ -216,7 +220,7 @@ class
                                int x, int y, int length, uint const_alpha);
 #endif
    bool supportsTransformations(const QFontEngine *fontEngine) const;
-   bool supportsTransformations(qreal pixelSize, const QTransform &m) const;
+   bool supportsTransformations(qreal pixelSize, const QTransform &m) const override;
 
  protected:
    QRasterPaintEngine(QRasterPaintEnginePrivate &d, QPaintDevice *);
@@ -225,6 +229,7 @@ class
    friend struct QSpanData;
    friend class QBlitterPaintEngine;
    friend class QBlitterPaintEnginePrivate;
+
    void init();
 
    void fillRect(const QRectF &rect, QSpanData *data);
@@ -281,7 +286,7 @@ class
    void rasterize(QT_FT_Outline *outline, ProcessSpans callback, void *userData, QRasterBuffer *rasterBuffer);
    void updateMatrixData(QSpanData *spanData, const QBrush &brush, const QTransform &brushMatrix);
 
-   void systemStateChanged();
+   void systemStateChanged() override;
 
    void drawImage(const QPointF &pt, const QImage &img, SrcOverBlendFunc func,
                   const QRect &clip, int alpha, const QRect &sr = QRect());
@@ -354,10 +359,10 @@ class
 
 #ifdef Q_WS_QWS
    class Q_GUI_EXPORT QClipData
-#else 
+#else
    class QClipData
 #endif
-   
+
 {
  public:
    QClipData(int height);

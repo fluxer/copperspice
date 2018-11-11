@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -29,9 +26,9 @@
 #include <qmath_p.h>
 #include <qdrawhelper_p.h>
 #include <qpaintengine_p.h>
-#include "qapplication.h"
-#include "qbrush.h"
-#include "qgl.h"
+#include <qapplication.h>
+#include <qbrush.h>
+#include <qgl.h>
 #include <qgl_p.h>
 #include <qglpaintdevice_p.h>
 #include <qpainter_p.h>
@@ -709,7 +706,7 @@ class QOpenGLPaintEnginePrivate : public QPaintEngineExPrivate
    void strokeLines(const QPainterPath &path);
 
    void updateDepthClip();
-   void systemStateChanged();
+   void systemStateChanged() override;
 
    void cleanupGLContextRefs(const QGLContext *context) {
       if (context == shader_ctx) {
@@ -1320,12 +1317,13 @@ bool QOpenGLPaintEngine::begin(QPaintDevice *pdev)
    static bool nvidia_workaround_needs_init = true;
    if (nvidia_workaround_needs_init) {
       // nvidia 9x.xx unix drivers contain a bug which requires us to
-      // call glFinish before releasing an fbo to avoid painting
-      // artifacts
-      const QByteArray versionString(reinterpret_cast<const char *>(glGetString(GL_VERSION)));
-      const int pos = versionString.indexOf("NVIDIA");
+      // call glFinish before releasing an fbo to avoid painting artifacts
+
+      const QString &versionStr = cs_glGetString(GL_VERSION);
+      const int pos = versionStr.indexOf("NVIDIA");
+
       if (pos >= 0) {
-         const float nvidiaDriverVersion = versionString.mid(pos + strlen("NVIDIA")).toFloat();
+         const float nvidiaDriverVersion = versionStr.mid(pos + strlen("NVIDIA")).toFloat();
          qt_nvidiaFboNeedsFinish = nvidiaDriverVersion >= 90.0 && nvidiaDriverVersion < 100.0;
       }
       nvidia_workaround_needs_init = false;
@@ -1746,7 +1744,7 @@ QGLTrapezoid QOpenGLTessellator::toGLTrapezoid(const Trapezoid &trap)
 class QOpenGLImmediateModeTessellator : public QOpenGLTessellator
 {
  public:
-   void addTrap(const Trapezoid &trap);
+   void addTrap(const Trapezoid &trap) override;
    void tessellate(const QPointF *points, int nPoints, bool winding) {
       trapezoids.reserve(trapezoids.size() + nPoints);
       setWinding(winding);
@@ -1833,7 +1831,8 @@ class QOpenGLTrapezoidToArrayTessellator : public QOpenGLTessellator
    int allocated;
    int size;
    QRectF bounds;
-   void addTrap(const Trapezoid &trap);
+
+   void addTrap(const Trapezoid &trap) override;
    void tessellate(const QPointF *points, int nPoints, bool winding) {
       size = 0;
       setWinding(winding);
@@ -2004,7 +2003,8 @@ void QOpenGLPaintEnginePrivate::drawVertexArrays()
    glEnableClientState(GL_VERTEX_ARRAY);
    glVertexPointer(2, GL_DOUBLE, 0, tess_points.data());
    int previous_stop = 0;
-   foreach(int stop, tess_points_stops) {
+
+   for (int stop : tess_points_stops) {
       glDrawArrays(GL_TRIANGLE_FAN, previous_stop, stop - previous_stop);
       previous_stop = stop;
    }
@@ -3116,8 +3116,8 @@ class QGLTrapezoidMaskGenerator : public QGLMaskGenerator
    QGLTrapezoidMaskGenerator(const QPainterPath &path, const QTransform &matrix, QGLOffscreen &offscreen,
                              GLuint maskFragmentProgram, qreal strokeWidth = -1.0);
 
-   QRect screenRect();
-   void drawMask(const QRect &rect);
+   QRect screenRect() override;
+   void drawMask(const QRect &rect) override;
 
  private:
    QRect screen_rect;
@@ -3138,8 +3138,8 @@ class QGLPathMaskGenerator : public QGLTrapezoidMaskGenerator
                         GLuint maskFragmentProgram);
 
  private:
-   QVector<QGLTrapezoid> generateTrapezoids();
-   QRect computeScreenRect();
+   QVector<QGLTrapezoid> generateTrapezoids() override;
+   QRect computeScreenRect() override;
 
    QPolygonF poly;
 };
@@ -3151,8 +3151,8 @@ class QGLLineMaskGenerator : public QGLTrapezoidMaskGenerator
                         GLuint maskFragmentProgram);
 
  private:
-   QVector<QGLTrapezoid> generateTrapezoids();
-   QRect computeScreenRect();
+   QVector<QGLTrapezoid> generateTrapezoids() override;
+   QRect computeScreenRect() override;
 
    QPainterPath transformedPath;
 };
@@ -3164,8 +3164,8 @@ class QGLRectMaskGenerator : public QGLTrapezoidMaskGenerator
                         GLuint maskFragmentProgram);
 
  private:
-   QVector<QGLTrapezoid> generateTrapezoids();
-   QRect computeScreenRect();
+   QVector<QGLTrapezoid> generateTrapezoids() override;
+   QRect computeScreenRect() override;
 
    QPainterPath transformedPath;
 };
@@ -3176,8 +3176,8 @@ class QGLEllipseMaskGenerator : public QGLMaskGenerator
    QGLEllipseMaskGenerator(const QRectF &rect, const QTransform &matrix, QGLOffscreen &offscreen,
                            GLuint maskFragmentProgram, int *maskVariableLocations);
 
-   QRect screenRect();
-   void drawMask(const QRect &rect);
+   QRect screenRect() override;
+   void drawMask(const QRect &rect) override;
 
  private:
    QRect screen_rect;
@@ -4803,7 +4803,8 @@ void QGLGlyphCache::cleanCache()
    QList<const QGLContext *> keys = qt_context_cache.keys();
    for (int i = 0; i < keys.size(); ++i) {
       QGLFontGlyphHash *font_cache = qt_context_cache.value(keys.at(i));
-      QGLFontGlyphHash::Iterator it = font_cache->begin();
+      QGLFontGlyphHash::iterator it = font_cache->begin();
+
       for (; it != font_cache->end(); ++it) {
          qt_delete_glyph_hash(it.value());
       }
@@ -5138,6 +5139,7 @@ void QOpenGLPaintEngine::drawTextItem(const QPointF &p, const QTextItem &textIte
    // we use a gradient pen
    if ((d->matrix.det() > 1) || (d->pen_brush_style >= Qt::LinearGradientPattern
                                  && d->pen_brush_style <= Qt::ConicalGradientPattern)) {
+
       QPaintEngine::drawTextItem(p, textItem);
       return;
    }
@@ -5146,21 +5148,20 @@ void QOpenGLPaintEngine::drawTextItem(const QPointF &p, const QTextItem &textIte
    QVarLengthArray<QFixedPoint> positions;
    QVarLengthArray<glyph_t> glyphs;
    QTransform matrix = QTransform::fromTranslate(qRound(p.x()), qRound(p.y()));
+
    ti.fontEngine->getGlyphPositions(ti.glyphs, matrix, ti.flags, glyphs, positions);
 
    {
       QStaticTextItem staticTextItem;
-      staticTextItem.chars = const_cast<QChar *>(ti.chars);
+
       staticTextItem.setFontEngine(ti.fontEngine);
       staticTextItem.glyphs = glyphs.data();
-      staticTextItem.numChars = ti.num_chars;
       staticTextItem.numGlyphs = glyphs.size();
       staticTextItem.glyphPositions = positions.data();
       drawStaticTextItem(&staticTextItem);
    }
 
 }
-
 
 void QOpenGLPaintEngine::drawEllipse(const QRectF &rect)
 {
@@ -5469,7 +5470,7 @@ void QOpenGLPaintEnginePrivate::cacheItemErased(int channel, const QRect &rect)
 {
    bool isInDrawQueue = false;
 
-   foreach (const QDrawQueueItem & item, drawQueue) {
+   for (const QDrawQueueItem & item : drawQueue) {
       if (item.location.channel == channel && item.location.rect == rect) {
          isInDrawQueue = true;
          break;
@@ -5530,8 +5531,9 @@ void QOpenGLPaintEnginePrivate::flushDrawQueue()
 
       high_quality_antialiasing = true;
 
-      foreach (const QDrawQueueItem & item, drawQueue)
-      drawItem(item);
+      for (const QDrawQueueItem & item : drawQueue) {
+         drawItem(item);
+      }
 
       opacity = old_opacity;
       brush_origin = old_brush_origin;

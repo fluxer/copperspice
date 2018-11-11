@@ -1,27 +1,26 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
+
+#include <algorithm>
 
 #include <qshortcutmap_p.h>
 #include <qkeysequence.h>
@@ -143,8 +142,9 @@ int QShortcutMap::addShortcut(QObject *owner, const QKeySequence &key, Qt::Short
    Q_D(QShortcutMap);
 
    QShortcutEntry newEntry(owner, key, context, --(d->currentId), true);
-   QList<QShortcutEntry>::iterator it = qUpperBound(d->sequences.begin(), d->sequences.end(), newEntry);
+   QList<QShortcutEntry>::iterator it = std::upper_bound(d->sequences.begin(), d->sequences.end(), newEntry);
    d->sequences.insert(it, newEntry); // Insert sorted
+
 #if defined(DEBUG_QSHORTCUTMAP)
    qDebug().nospace()
          << "QShortcutMap::addShortcut(" << owner << ", "
@@ -410,8 +410,8 @@ bool QShortcutMap::hasShortcutForKeySequence(const QKeySequence &seq) const
 {
    Q_D(const QShortcutMap);
    QShortcutEntry entry(seq); // needed for searching
-   QList<QShortcutEntry>::ConstIterator itEnd = d->sequences.constEnd();
-   QList<QShortcutEntry>::ConstIterator it = qLowerBound(d->sequences.constBegin(), itEnd, entry);
+   QList<QShortcutEntry>::const_iterator itEnd = d->sequences.constEnd();
+   QList<QShortcutEntry>::const_iterator it = std::lower_bound(d->sequences.constBegin(), itEnd, entry);
 
    for (; it != itEnd; ++it) {
       if (matches(entry.keyseq, (*it).keyseq) == QKeySequence::ExactMatch && correctContext(*it) && (*it).enabled) {
@@ -456,11 +456,11 @@ QKeySequence::SequenceMatch QShortcutMap::find(QKeyEvent *e)
    bool identicalDisabledFound = false;
    QVector<QKeySequence> okEntries;
    int result = QKeySequence::NoMatch;
+
    for (int i = d->newEntries.count() - 1; i >= 0 ; --i) {
       QShortcutEntry entry(d->newEntries.at(i)); // needed for searching
-      QList<QShortcutEntry>::ConstIterator itEnd = d->sequences.constEnd();
-      QList<QShortcutEntry>::ConstIterator it =
-         qLowerBound(d->sequences.constBegin(), itEnd, entry);
+      QList<QShortcutEntry>::const_iterator itEnd = d->sequences.constEnd();
+      QList<QShortcutEntry>::const_iterator it = std::lower_bound(d->sequences.constBegin(), itEnd, entry);
 
       int oneKSResult = QKeySequence::NoMatch;
       int tempRes = QKeySequence::NoMatch;

@@ -1,30 +1,29 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
 
 #ifndef QGRAPHICSANCHORLAYOUT_P_H
 #define QGRAPHICSANCHORLAYOUT_P_H
+
+#include <qmultihash.h>
 
 #include <QGraphicsWidget>
 #include <qgraphicslayout_p.h>
@@ -61,11 +60,9 @@ struct AnchorVertex {
    qreal distance;
 };
 
-/*!
-  \internal
+// internal
+// Represents an edge (anchor) in the internal graph.
 
-  Represents an edge (anchor) in the internal graph.
-*/
 struct AnchorData : public QSimplexVariable {
    enum Type {
       Normal = 0,
@@ -140,7 +137,7 @@ struct AnchorData : public QSimplexVariable {
 #ifdef QT_DEBUG
 inline QString AnchorData::toString() const
 {
-   return QString::fromAscii("Anchor(%1)").arg(name);
+   return QString("Anchor(%1)").formatArg(name);
 }
 #endif
 
@@ -149,12 +146,13 @@ struct SequentialAnchorData : public AnchorData {
       : AnchorData(), m_children(vertices), m_edges(edges) {
       type = AnchorData::Sequential;
       orientation = m_edges.at(0)->orientation;
+
 #ifdef QT_DEBUG
-      name = QString::fromAscii("%1 -- %2").arg(vertices.first()->toString(), vertices.last()->toString());
+      name = QString::fromLatin1("%1 -- %2").formatArgs(vertices.first()->toString(), vertices.last()->toString());
 #endif
    }
 
-   virtual void updateChildrenSizes();
+   void updateChildrenSizes() override;
    void calculateSizeHints();
 
    QVector<AnchorVertex *> m_children;         // list of vertices in the sequence
@@ -175,12 +173,14 @@ struct ParallelAnchorData : public AnchorData {
       // direction as the first anchor.
       from = first->from;
       to = first->to;
+
 #ifdef QT_DEBUG
-      name = QString::fromAscii("%1 | %2").arg(first->toString(), second->toString());
+      name = QString("%1 | %2").formatArgs(first->toString(), second->toString());
 #endif
+
    }
 
-   virtual void updateChildrenSizes();
+   void updateChildrenSizes() override;
    bool calculateSizeHints();
 
    bool secondForward() const {
@@ -214,14 +214,15 @@ struct AnchorVertexPair : public AnchorVertex {
 #ifdef QT_DEBUG
 inline QString AnchorVertex::toString() const
 {
-   if (!this) {
+   if (! this) {
       return QLatin1String("NULL");
    } else if (m_type == Pair) {
       const AnchorVertexPair *vp = static_cast<const AnchorVertexPair *>(this);
-      return QString::fromAscii("(%1, %2)").arg(vp->m_first->toString()).arg(vp->m_second->toString());
+      return QString::fromLatin1("(%1, %2)").formatArg(vp->m_first->toString()).formatArg(vp->m_second->toString());
    } else if (!m_item) {
-      return QString::fromAscii("NULL_%1").arg(quintptr(this));
+      return QString::fromLatin1("NULL_%1").formatArg(quintptr(this));
    }
+
    QString edge;
    switch (m_edge) {
       case Qt::AnchorLeft:
@@ -255,12 +256,12 @@ inline QString AnchorVertex::toString() const
       }
    }
    edge.insert(0, QLatin1String("%1_"));
-   return edge.arg(itemName);
+   return edge.formatArg(itemName);
 }
 #endif
 
-/*!
-  \internal
+/*
+  internal
 
   Representation of a valid path for a given vertex in the graph.
   In this struct, "positives" is the set of anchors that have been
@@ -284,9 +285,8 @@ class GraphPath
 };
 
 class QGraphicsAnchorLayoutPrivate;
-/*!
-    \internal
-*/
+
+// internal
 class QGraphicsAnchorPrivate
 {
    Q_DECLARE_PUBLIC(QGraphicsAnchor)
@@ -315,12 +315,6 @@ class QGraphicsAnchorPrivate
 
 };
 
-
-/*!
-  \internal
-
-  QGraphicsAnchorLayout private methods and attributes.
-*/
 class QGraphicsAnchorLayoutPrivate : public QGraphicsLayoutPrivate
 {
    Q_DECLARE_PUBLIC(QGraphicsAnchorLayout)

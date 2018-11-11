@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -47,11 +44,11 @@ class QTabBarPrivate  : public QWidgetPrivate
 
  public:
    QTabBarPrivate()
-      : currentIndex(-1), pressedIndex(-1), shape(QTabBar::RoundedNorth), layoutDirty(false),
-        drawBase(true), scrollOffset(0), elideModeSetByUser(false), useScrollButtonsSetByUser(false), expanding(true),
-        closeButtonOnTabs(false),
-        selectionBehaviorOnRemove(QTabBar::SelectRightTab), paintWithOffsets(true), movable(false),
-        dragInProgress(false), documentMode(false), movingTab(0)
+                  : currentIndex(-1), pressedIndex(-1), shape(QTabBar::RoundedNorth), layoutDirty(false),
+                  drawBase(true), scrollOffset(0), elideModeSetByUser(false), useScrollButtonsSetByUser(false),
+                  expanding(true), closeButtonOnTabs(false), selectionBehaviorOnRemove(QTabBar::SelectRightTab),
+                  paintWithOffsets(true), movable(false), dragInProgress(false), documentMode(false), movingTab(0)
+
 #ifdef Q_OS_MAC
         , previousPressedIndex(-1)
 #endif
@@ -64,18 +61,15 @@ class QTabBarPrivate  : public QWidgetPrivate
    bool drawBase;
    int scrollOffset;
 
-   struct Tab {
-      inline Tab(const QIcon &ico, const QString &txt)
-         : enabled(true) , shortcutId(0), text(txt), icon(ico),
-           leftWidget(0), rightWidget(0), lastTab(-1), dragOffset(0)
+   struct Tab : public QEnableSharedFromThis<Tab> {
+      Tab(const QIcon &ico, const QString &txt)
+          : enabled(true) , shortcutId(0), text(txt), icon(ico), leftWidget(0), rightWidget(0), lastTab(-1), dragOffset(0)
+
 #ifndef QT_NO_ANIMATION
            , animation(0)
 #endif
       {}
 
-      bool operator==(const Tab &other) const {
-         return &other == this;
-      }
       bool enabled;
       int shortcutId;
       QString text;
@@ -87,6 +81,7 @@ class QTabBarPrivate  : public QWidgetPrivate
 #ifndef QT_NO_WHATSTHIS
       QString whatsThis;
 #endif
+
       QIcon icon;
       QRect rect;
       QRect minRect;
@@ -100,35 +95,36 @@ class QTabBarPrivate  : public QWidgetPrivate
       int dragOffset;
 
 #ifndef QT_NO_ANIMATION
+
       ~Tab() {
          delete animation;
       }
 
       struct TabBarAnimation : public QVariantAnimation {
-         TabBarAnimation(Tab *t, QTabBarPrivate *_priv) : tab(t), priv(_priv) {
+         TabBarAnimation(QSharedPointer<Tab> t, QTabBarPrivate *_priv) : tab(t), priv(_priv) {
             setEasingCurve(QEasingCurve::InOutQuad);
          }
 
-         inline void updateCurrentValue(const QVariant &current) {
-            priv->moveTab(priv->tabList.indexOf(*tab), current.toInt());
+         void updateCurrentValue(const QVariant &current) override {
+            priv->moveTab(priv->tabList.indexOf(tab), current.toInt());
          }
 
-         inline void updateState(State, State newState) {
+         void updateState(State, State newState) override {
             if (newState == Stopped) {
-               priv->moveTabFinished(priv->tabList.indexOf(*tab));
+               priv->moveTabFinished(priv->tabList.indexOf(tab));
             }
          }
 
        private:
-         //these are needed for the callbacks
-         Tab *tab;
+         // these are needed for the callbacks
+         QSharedPointer<Tab> tab;
          QTabBarPrivate *priv;
 
       } *animation;
 
-      inline void startAnimation(QTabBarPrivate *priv, int duration) {
-         if (!animation) {
-            animation = new TabBarAnimation(this, priv);
+      void startAnimation(QTabBarPrivate *priv, int duration) {
+         if (! animation) {
+            animation = new TabBarAnimation(sharedFromThis(), priv);
          }
 
          animation->setStartValue(dragOffset);
@@ -137,36 +133,35 @@ class QTabBarPrivate  : public QWidgetPrivate
          animation->start();
       }
 #else
-      inline void startAnimation(QTabBarPrivate *priv, int duration) {
+      void startAnimation(QTabBarPrivate *priv, int duration) {
          Q_UNUSED(duration);
-         priv->moveTabFinished(priv->tabList.indexOf(*this));
+         priv->moveTabFinished(priv->tabList.indexOf(sharedFromThis()));
       }
 
 #endif //QT_NO_ANIMATION
+
    }; //struct Tab
 
-   QList<Tab> tabList;
+   QList<QSharedPointer<Tab>> tabList;
 
    int calculateNewPosition(int from, int to, int index) const;
    void slide(int from, int to);
    void init();
    int extraWidth() const;
 
-   Tab *at(int index);
-   const Tab *at(int index) const;
+   QSharedPointer<Tab> at(int index);
+   QSharedPointer<const Tab> at(int index) const;
 
    int indexAtPos(const QPoint &p) const;
 
-   inline bool validIndex(int index) const {
+   bool validIndex(int index) const {
       return index >= 0 && index < tabList.count();
    }
 
    void setCurrentNextEnabledIndex(int offset);
 
-   QSize minimumTabSizeHint(int index);
-
-   QToolButton *rightB; // right or bottom
-   QToolButton *leftB;  // left or top
+   QToolButton *rightB;    // right or bottom
+   QToolButton *leftB;     // left or top
 
    void _q_scrollTabs();
    void _q_closeTab();
@@ -208,32 +203,39 @@ class QTabBarPrivate  : public QWidgetPrivate
    static void initStyleBaseOption(QStyleOptionTabBarBaseV2 *optTabBase, QTabBar *tabbar, QSize size) {
       QStyleOptionTab tabOverlap;
       tabOverlap.shape = tabbar->shape();
+
       int overlap = tabbar->style()->pixelMetric(QStyle::PM_TabBarBaseOverlap, &tabOverlap, tabbar);
       QWidget *theParent = tabbar->parentWidget();
+
       optTabBase->init(tabbar);
       optTabBase->shape = tabbar->shape();
       optTabBase->documentMode = tabbar->documentMode();
 
       if (theParent && overlap > 0) {
          QRect rect;
+
          switch (tabOverlap.shape) {
             case QTabBar::RoundedNorth:
             case QTabBar::TriangularNorth:
                rect.setRect(0, size.height() - overlap, size.width(), overlap);
                break;
+
             case QTabBar::RoundedSouth:
             case QTabBar::TriangularSouth:
                rect.setRect(0, 0, size.width(), overlap);
                break;
+
             case QTabBar::RoundedEast:
             case QTabBar::TriangularEast:
                rect.setRect(0, 0, overlap, size.height());
                break;
+
             case QTabBar::RoundedWest:
             case QTabBar::TriangularWest:
                rect.setRect(size.width() - overlap, 0, overlap, size.height());
                break;
          }
+
          optTabBase->rect = rect;
       }
    }
@@ -245,17 +247,17 @@ class CloseButton : public QAbstractButton
    GUI_CS_OBJECT(CloseButton)
 
  public:
-   CloseButton(QWidget *parent = 0);
+   CloseButton(QWidget *parent = nullptr);
 
-   QSize sizeHint() const;
+   QSize sizeHint() const override;
 
-   inline QSize minimumSizeHint() const {
+   QSize minimumSizeHint() const override {
       return sizeHint();
    }
 
-   void enterEvent(QEvent *event);
-   void leaveEvent(QEvent *event);
-   void paintEvent(QPaintEvent *event);
+   void enterEvent(QEvent *event) override;
+   void leaveEvent(QEvent *event) override;
+   void paintEvent(QPaintEvent *event) override;
 };
 
 QT_END_NAMESPACE

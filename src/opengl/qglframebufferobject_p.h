@@ -1,40 +1,31 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
 
-#ifndef QGLFRAMEBUFFEROBJECT_P_H
-#define QGLFRAMEBUFFEROBJECT_P_H
-
-QT_BEGIN_NAMESPACE
-
-QT_BEGIN_INCLUDE_NAMESPACE
+#ifndef QGL_FRAMEBUFFEROBJECT_P_H
+#define QGL_FRAMEBUFFEROBJECT_P_H
 
 #include <qglframebufferobject.h>
 #include <qglpaintdevice_p.h>
 #include <qgl_p.h>
-
-QT_END_INCLUDE_NAMESPACE
 
 #ifndef QT_OPENGL_ES
 #define DEFAULT_FORMAT GL_RGBA8
@@ -81,17 +72,21 @@ class QGLFramebufferObjectFormatPrivate
 class QGLFBOGLPaintDevice : public QGLPaintDevice
 {
  public:
-   virtual QPaintEngine *paintEngine() const {
+   QPaintEngine *paintEngine() const override {
       return fbo->paintEngine();
    }
-   virtual QSize size() const {
+
+   QSize size() const override {
       return fbo->size();
    }
-   virtual QGLContext *context() const;
-   virtual QGLFormat format() const {
+
+   QGLContext *context() const override;
+
+   QGLFormat format() const override {
       return fboFormat;
    }
-   virtual bool alphaRequested() const {
+
+   bool alphaRequested() const override {
       return reqAlpha;
    }
 
@@ -134,8 +129,5 @@ class QGLFramebufferObjectPrivate
       return fbo_guard.id();
    }
 };
-
-
-QT_END_NAMESPACE
 
 #endif // QGLFRAMEBUFFEROBJECT_P_H

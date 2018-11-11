@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -30,13 +27,13 @@
 #include <QtCore/qbytearray.h>
 #include <QtCore/qsharedpointer.h>
 #include <QtNetwork/qssl.h>
+#include <qcontainerfwd.h>
 
 QT_BEGIN_NAMESPACE
 
-#ifndef QT_NO_OPENSSL
+#ifdef QT_SSL
 
-template <typename A, typename B> struct QPair;
-
+class QDebug;
 class QIODevice;
 class QSslKeyPrivate;
 
@@ -45,14 +42,22 @@ class Q_NETWORK_EXPORT QSslKey
 
  public:
    QSslKey();
-   QSslKey(const QByteArray &encoded, QSsl::KeyAlgorithm algorithm, QSsl::EncodingFormat format = QSsl::Pem, 
+   QSslKey(const QByteArray &encoded, QSsl::KeyAlgorithm algorithm, QSsl::EncodingFormat format = QSsl::Pem,
            QSsl::KeyType type = QSsl::PrivateKey, const QByteArray &passPhrase = QByteArray());
 
    QSslKey(QIODevice *device, QSsl::KeyAlgorithm algorithm, QSsl::EncodingFormat format = QSsl::Pem,
            QSsl::KeyType type = QSsl::PrivateKey, const QByteArray &passPhrase = QByteArray());
 
+   explicit QSslKey(Qt::HANDLE handle, QSsl::KeyType type = QSsl::PrivateKey);
    QSslKey(const QSslKey &other);
+
    ~QSslKey();
+
+   QSslKey &operator=(QSslKey &&other) {
+      swap(other);
+      return *this;
+   }
+
    QSslKey &operator=(const QSslKey &other);
 
    bool isNull() const;
@@ -67,6 +72,10 @@ class Q_NETWORK_EXPORT QSslKey
 
    Qt::HANDLE handle() const;
 
+   void swap(QSslKey &other) {
+      qSwap(d, other.d);
+   }
+
    bool operator==(const QSslKey &key) const;
    inline bool operator!=(const QSslKey &key) const {
       return !operator==(key);
@@ -75,12 +84,12 @@ class Q_NETWORK_EXPORT QSslKey
  private:
    QExplicitlySharedDataPointer<QSslKeyPrivate> d;
    friend class QSslCertificate;
+   friend class QSslSocketBackendPrivate;
 };
 
-class QDebug;
 Q_NETWORK_EXPORT QDebug operator<<(QDebug debug, const QSslKey &key);
 
-#endif // QT_NO_OPENSSL
+#endif
 
 QT_END_NAMESPACE
 

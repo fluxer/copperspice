@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -91,14 +88,15 @@ QLayout::QLayout(QLayoutPrivate &dd, QLayout *lay, QWidget *w)
 
    } else if (w) {
       if (w->layout()) {
-         qWarning("QLayout: Attempting to add QLayout \"%s\" to %s \"%s\", which"
-                  " already has a layout",
-                  qPrintable(QObject::objectName()), w->metaObject()->className(),
-                  w->objectName().toLocal8Bit().data());
+         qWarning("QLayout: Attempting to add QLayout \"%s\" to %s \"%s\", which  already has a layout",
+                  csPrintable(QObject::objectName()), csPrintable(w->metaObject()->className()), csPrintable(w->objectName()));
+
          setParent(0);
+
       } else {
          d->topLevel = true;
          w->d_func()->layout = this;
+
          QT_TRY {
             invalidate();
          } QT_CATCH(...) {
@@ -427,8 +425,10 @@ QMargins QLayout::contentsMargins() const
 QRect QLayout::contentsRect() const
 {
    Q_D(const QLayout);
+
    int left, top, right, bottom;
    getContentsMargins(&left, &top, &right, &bottom);
+
    return d->rect.adjusted(+left, +top, -right, -bottom);
 }
 
@@ -444,17 +444,22 @@ QRect QLayout::contentsRect() const
 QWidget *QLayout::parentWidget() const
 {
    Q_D(const QLayout);
-   if (!d->topLevel) {
+
+   if (! d->topLevel) {
       if (parent()) {
          QLayout *parentLayout = qobject_cast<QLayout *>(parent());
-         if (!parentLayout) {
+
+         if (! parentLayout) {
             qWarning("QLayout::parentWidget: A layout can only have another layout as a parent.");
-            return 0;
+            return nullptr;
          }
+
          return parentLayout->parentWidget();
+
       } else {
-         return 0;
+         return nullptr;
       }
+
    } else {
       Q_ASSERT(parent() && parent()->isWidgetType());
       return static_cast<QWidget *>(parent());
@@ -532,15 +537,21 @@ static bool removeWidgetRecursively(QLayoutItem *li, QWidget *w)
 void QLayoutPrivate::doResize(const QSize &r)
 {
    Q_Q(QLayout);
+
    int mbh = menuBarHeightForWidth(menubar, r.width());
+
    QWidget *mw = q->parentWidget();
+
    QRect rect = mw->testAttribute(Qt::WA_LayoutOnEntireRect) ? mw->rect() : mw->contentsRect();
    rect.setTop(rect.top() + mbh);
+
    q->setGeometry(rect);
+
 #ifndef QT_NO_MENUBAR
    if (menubar) {
       menubar->setGeometry(0, 0, r.width(), mbh);
    }
+
 #endif
 }
 
@@ -735,7 +746,7 @@ QLayout::~QLayout()
    */
    if (d->topLevel && parent() && parent()->isWidgetType() &&
          ((QWidget *)parent())->layout() == this) {
-      ((QWidget *)parent())->d_func()->layout = 0;
+      ((QWidget *)parent())->d_func()->layout = nullptr;
    }
 }
 
@@ -751,8 +762,7 @@ QLayout::~QLayout()
 void QLayout::addChildLayout(QLayout *l)
 {
    if (l->parent()) {
-      qWarning("QLayout::addChildLayout: layout \"%s\" already has a parent",
-               l->objectName().toLocal8Bit().data());
+      qWarning("QLayout::addChildLayout: layout \"%s\" already has a parent", csPrintable(l->objectName()));
       return;
    }
    l->setParent(this);
@@ -795,15 +805,19 @@ void QLayoutPrivate::reparentChildWidgets(QWidget *mw)
       menubar->setParent(mw);
    }
 #endif
+
    bool mwVisible = mw && mw->isVisible();
    for (int i = 0; i < n; ++i) {
+
       QLayoutItem *item = q->itemAt(i);
+
       if (QWidget *w = item->widget()) {
          QWidget *pw = w->parentWidget();
+
 #ifdef QT_DEBUG
          if (pw && pw != mw && layoutDebug()) {
-            qWarning("QLayout::addChildLayout() Widget %s \"%s\" in wrong parent; moved to correct parent",
-                     w->metaObject()->className(), w->objectName().toLocal8Bit().data());
+            qWarning("QLayout::addChildLayout() Widget %s \"%s\" in wrong parent, moved to correct parent",
+                     csPrintable(w->metaObject()->className()), csPrintable(w->objectName()));
          }
 #endif
          bool needShow = mwVisible && !(w->isHidden() && w->testAttribute(Qt::WA_WState_ExplicitShowHide));
@@ -813,6 +827,7 @@ void QLayoutPrivate::reparentChildWidgets(QWidget *mw)
          if (needShow) {
             QMetaObject::invokeMethod(w, "_q_showIfNotHidden", Qt::QueuedConnection);   //show later
          }
+
       } else if (QLayout *l = item->layout()) {
          l->d_func()->reparentChildWidgets(mw);
       }
@@ -837,19 +852,22 @@ void QLayout::addChildWidget(QWidget *w)
       QLayout *l = pw->layout();
 
       if (l && removeWidgetRecursively(l, w)) {
+
 #ifdef QT_DEBUG
-         if (layoutDebug())
+         if (layoutDebug()) {
             qWarning("QLayout::addChildWidget: %s \"%s\" is already in a layout; moved to new layout",
-                     w->metaObject()->className(), w->objectName().toLocal8Bit().data());
+                     csPrintable(w->metaObject()->className()), csPrintable(w->objectName()));
+         }
 #endif
       }
    }
 
    if (pw && mw && pw != mw) {
+
 #ifdef QT_DEBUG
       if (layoutDebug())
          qWarning("QLayout::addChildWidget: %s \"%s\" in wrong parent; moved to correct parent",
-                  w->metaObject()->className(), w->objectName().toLocal8Bit().data());
+                  csPrintable(w->metaObject()->className()), csPrintable(w->objectName()));
 #endif
       pw = 0;
    }
@@ -969,10 +987,13 @@ void QLayout::activateRecursiveHelper(QLayoutItem *item)
 void QLayout::update()
 {
    QLayout *layout = this;
+
    while (layout && layout->d_func()->activated) {
       layout->d_func()->activated = false;
+
       if (layout->d_func()->topLevel) {
          Q_ASSERT(layout->parent()->isWidgetType());
+
          QWidget *mw = static_cast<QWidget *>(layout->parent());
          QApplication::postEvent(mw, new QEvent(QEvent::LayoutRequest));
          break;
@@ -993,7 +1014,7 @@ void QLayout::update()
 bool QLayout::activate()
 {
    Q_D(QLayout);
-   if (!d->enabled || !parent()) {
+   if (!d->enabled || ! parent()) {
       return false;
    }
    if (!d->topLevel) {
@@ -1002,10 +1023,11 @@ bool QLayout::activate()
    if (d->activated) {
       return false;
    }
+
    QWidget *mw = static_cast<QWidget *>(parent());
    if (mw == 0) {
       qWarning("QLayout::activate: %s \"%s\" does not have a main widget",
-               QObject::metaObject()->className(), QObject::objectName().toLocal8Bit().data());
+               csPrintable(QObject::metaObject()->className()), csPrintable(QObject::objectName()));
       return false;
    }
    activateRecursiveHelper(this);

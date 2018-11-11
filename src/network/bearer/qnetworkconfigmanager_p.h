@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -28,12 +25,10 @@
 
 #include <qnetworkconfigmanager.h>
 #include <qnetworkconfiguration_p.h>
-#include <QtCore/qmutex.h>
-#include <QtCore/qset.h>
+#include <qmutex.h>
+#include <qset.h>
 
 #ifndef QT_NO_BEARERMANAGEMENT
-
-QT_BEGIN_NAMESPACE
 
 class QBearerEngine;
 class QTimer;
@@ -67,8 +62,8 @@ class Q_NETWORK_EXPORT QNetworkConfigurationManagerPrivate : public QObject
    NET_CS_SLOT_1(Public, void updateConfigurations())
    NET_CS_SLOT_2(updateConfigurations)
 
-   NET_CS_SLOT_1(Public, static void addPostRoutine())
-   NET_CS_SLOT_2(addPostRoutine)
+   NET_CS_SLOT_1(Public, static void addPreAndPostRoutine())
+   NET_CS_SLOT_2(addPreAndPostRoutine)
 
    NET_CS_SIGNAL_1(Public, void configurationAdded(const QNetworkConfiguration &config))
    NET_CS_SIGNAL_OVERLOAD(configurationAdded, (const QNetworkConfiguration &), config)
@@ -81,6 +76,7 @@ class Q_NETWORK_EXPORT QNetworkConfigurationManagerPrivate : public QObject
 
    NET_CS_SIGNAL_1(Public, void configurationUpdateComplete())
    NET_CS_SIGNAL_2(configurationUpdateComplete)
+
 
    NET_CS_SIGNAL_1(Public, void onlineStateChanged(bool isOnline))
    NET_CS_SIGNAL_2(onlineStateChanged, isOnline)
@@ -120,7 +116,6 @@ class Q_NETWORK_EXPORT QNetworkConfigurationManagerPrivate : public QObject
 
 Q_NETWORK_EXPORT QNetworkConfigurationManagerPrivate *qNetworkConfigurationManagerPrivate();
 
-QT_END_NAMESPACE
 
 #endif // QT_NO_BEARERMANAGEMENT
 

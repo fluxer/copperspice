@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -45,8 +42,6 @@
 #include <qwsmanager_p.h>
 #endif
 
-QT_BEGIN_NAMESPACE
-
 extern QRegion qt_dirtyRegion(QWidget *);
 
 /*
@@ -71,16 +66,8 @@ static inline void qt_flush(QWidget *widget, const QRegion &region, QWindowSurfa
    Q_ASSERT(windowSurface);
    Q_ASSERT(tlw);
 
-#if !defined(QT_NO_PAINT_DEBUG) && !defined(Q_WS_QWS)
-   // QWS does flush update in QWindowSurface::flush (because it needs to lock the surface etc).
-   static int flushUpdate = qgetenv("QT_FLUSH_UPDATE").toInt();
-   if (flushUpdate > 0) {
-      QWidgetBackingStore::showYellowThing(widget, region, flushUpdate * 10, false);
-   }
-#endif
-
-   //The performance hit by doing this should be negligible. However, be aware that
-   //using this FPS when you have > 1 windowsurface can give you inaccurate FPS
+   // the performance hit by doing this should be negligible. However, be aware that
+   // using this FPS when you have > 1 windowsurface can give you inaccurate FPS
    static bool fpsDebug = qgetenv("QT_DEBUG_FPS").toInt();
    if (fpsDebug) {
       static QTime time = QTime::currentTime();
@@ -100,167 +87,6 @@ static inline void qt_flush(QWidget *widget, const QRegion &region, QWindowSurfa
       windowSurface->flush(widget, region, tlwOffset);
    }
 }
-
-#ifndef QT_NO_PAINT_DEBUG
-#ifdef Q_OS_WIN
-static void showYellowThing_win(QWidget *widget, const QRegion &region, int msec)
-{
-   HBRUSH brush;
-   static int i = 0;
-   switch (i) {
-      case 0:
-         brush = CreateSolidBrush(RGB(255, 255, 0));
-         break;
-      case 1:
-         brush = CreateSolidBrush(RGB(255, 200, 55));
-         break;
-      case 2:
-         brush = CreateSolidBrush(RGB(200, 255, 55));
-         break;
-      case 3:
-         brush = CreateSolidBrush(RGB(200, 200, 0));
-         break;
-   }
-   i = (i + 1) & 3;
-
-   HDC hdc = widget->getDC();
-
-   const QVector<QRect> &rects = region.rects();
-   foreach (QRect rect, rects) {
-      RECT winRect;
-      SetRect(&winRect, rect.left(), rect.top(), rect.right(), rect.bottom());
-      FillRect(hdc, &winRect, brush);
-   }
-
-   widget->releaseDC(hdc);
-   ::Sleep(msec);
-}
-#endif
-
-void QWidgetBackingStore::showYellowThing(QWidget *widget, const QRegion &toBePainted, int msec, bool unclipped)
-{
-#ifdef Q_WS_QWS
-   Q_UNUSED(widget);
-   Q_UNUSED(unclipped);
-   static QWSYellowSurface surface(true);
-   surface.setDelay(msec);
-   surface.flush(widget, toBePainted, QPoint());
-#else
-   QRegion paintRegion = toBePainted;
-   QRect widgetRect = widget->rect();
-
-   if (!widget->internalWinId()) {
-      QWidget *nativeParent = widget->nativeParentWidget();
-      const QPoint offset = widget->mapTo(nativeParent, QPoint(0, 0));
-      paintRegion.translate(offset);
-      widgetRect.translate(offset);
-      widget = nativeParent;
-   }
-
-#ifdef Q_OS_WIN
-   Q_UNUSED(unclipped);
-   showYellowThing_win(widget, paintRegion, msec);
-#else
-   //flags to fool painter
-   bool paintUnclipped = widget->testAttribute(Qt::WA_PaintUnclipped);
-   if (unclipped && !widget->d_func()->paintOnScreen()) {
-      widget->setAttribute(Qt::WA_PaintUnclipped);
-   }
-
-   const bool setFlag = !widget->testAttribute(Qt::WA_WState_InPaintEvent);
-   if (setFlag) {
-      widget->setAttribute(Qt::WA_WState_InPaintEvent);
-   }
-
-   //setup the engine
-   QPaintEngine *pe = widget->paintEngine();
-   if (pe) {
-      pe->setSystemClip(paintRegion);
-      {
-         QPainter p(widget);
-         p.setClipRegion(paintRegion);
-         static int i = 0;
-         switch (i) {
-            case 0:
-               p.fillRect(widgetRect, QColor(255, 255, 0));
-               break;
-            case 1:
-               p.fillRect(widgetRect, QColor(255, 200, 55));
-               break;
-            case 2:
-               p.fillRect(widgetRect, QColor(200, 255, 55));
-               break;
-            case 3:
-               p.fillRect(widgetRect, QColor(200, 200, 0));
-               break;
-         }
-         i = (i + 1) & 3;
-         p.end();
-      }
-   }
-
-   if (setFlag) {
-      widget->setAttribute(Qt::WA_WState_InPaintEvent, false);
-   }
-
-   //restore
-   widget->setAttribute(Qt::WA_PaintUnclipped, paintUnclipped);
-
-   if (pe) {
-      pe->setSystemClip(QRegion());
-   }
-
-   QApplication::syncX();
-
-#if defined(Q_OS_UNIX)
-   ::usleep(1000 * msec);
-#endif
-#endif
-
-#endif
-}
-
-bool QWidgetBackingStore::flushPaint(QWidget *widget, const QRegion &rgn)
-{
-   if (!widget) {
-      return false;
-   }
-
-   int delay = 0;
-   if (widget->testAttribute(Qt::WA_WState_InPaintEvent)) {
-      static int flushPaintEvent = qgetenv("QT_FLUSH_PAINT_EVENT").toInt();
-      if (!flushPaintEvent) {
-         return false;
-      }
-      delay = flushPaintEvent;
-   } else {
-      static int flushPaint = qgetenv("QT_FLUSH_PAINT").toInt();
-      if (!flushPaint) {
-         return false;
-      }
-      delay = flushPaint;
-   }
-
-   QWidgetBackingStore::showYellowThing(widget, rgn, delay * 10, true);
-   return true;
-}
-
-void QWidgetBackingStore::unflushPaint(QWidget *widget, const QRegion &rgn)
-{
-   if (widget->d_func()->paintOnScreen() || rgn.isEmpty()) {
-      return;
-   }
-
-   QWidget *tlw = widget->window();
-   QTLWExtra *tlwExtra = tlw->d_func()->maybeTopData();
-   if (!tlwExtra) {
-      return;
-   }
-
-   const QPoint offset = widget->mapTo(tlw, QPoint());
-   qt_flush(widget, rgn, tlwExtra->backingStore->windowSurface, tlw, offset);
-}
-#endif // QT_NO_PAINT_DEBUG
 
 /*
     Moves the whole rect by (dx, dy) in widget's coordinate system.
@@ -373,18 +199,7 @@ void QWidgetBackingStore::beginPaint(QRegion &toClean, QWidget *widget, QWindowS
    toClean.translate(tlwOffset);
 #endif
 
-#ifdef QT_NO_PAINT_DEBUG
    windowSurface->beginPaint(toClean);
-#else
-   returnInfo->wasFlushed = QWidgetBackingStore::flushPaint(tlw, toClean);
-   // Avoid deadlock with QT_FLUSH_PAINT: the server will wait for
-   // the BackingStore lock, so if we hold that, the server will
-   // never release the Communication lock that we are waiting for in
-   // sendSynchronousCommand
-   if (!returnInfo->wasFlushed) {
-      windowSurface->beginPaint(toClean);
-   }
-#endif
 
    Q_UNUSED(returnInfo);
 }
@@ -392,16 +207,8 @@ void QWidgetBackingStore::beginPaint(QRegion &toClean, QWidget *widget, QWindowS
 void QWidgetBackingStore::endPaint(const QRegion &cleaned, QWindowSurface *windowSurface,
                                    BeginPaintInfo *beginPaintInfo)
 {
-#ifndef QT_NO_PAINT_DEBUG
-   if (!beginPaintInfo->wasFlushed) {
-      windowSurface->endPaint(cleaned);
-   } else {
-      QWidgetBackingStore::unflushPaint(tlw, cleaned);
-   }
-#else
    Q_UNUSED(beginPaintInfo);
    windowSurface->endPaint(cleaned);
-#endif
 
 #ifdef Q_BACKINGSTORE_SUBSURFACES
    flush(static_cast<QWSWindowSurface *>(windowSurface)->window(), windowSurface);
@@ -1218,6 +1025,7 @@ void QWidgetBackingStore::sync(QWidget *exposedWidget, const QRegion &exposedReg
    } else {
       markDirtyOnScreen(exposedRegion, exposedWidget, QPoint());
    }
+
    sync();
 }
 
@@ -1227,13 +1035,15 @@ void QWidgetBackingStore::sync(QWidget *exposedWidget, const QRegion &exposedReg
 void QWidgetBackingStore::sync()
 {
    QTLWExtra *tlwExtra = tlw->d_func()->maybeTopData();
+
    if (discardSyncRequest(tlw, tlwExtra)) {
       // If the top-level is minimized, it's not visible on the screen so we can delay the
       // update until it's shown again. In order to do that we must keep the dirty states.
       // These will be cleared when we receive the first expose after showNormal().
       // However, if the widget is not visible (isVisible() returns false), everything will
       // be invalidated once the widget is shown again, so clear all dirty states.
-      if (!tlw->isVisible()) {
+
+      if (! tlw->isVisible()) {
          dirty = QRegion();
          for (int i = 0; i < dirtyWidgets.size(); ++i) {
             resetWidget(dirtyWidgets.at(i));
@@ -1244,31 +1054,38 @@ void QWidgetBackingStore::sync()
       return;
    }
 
-   const bool updatesDisabled = !tlw->updatesEnabled();
+   const bool updatesDisabled = ! tlw->updatesEnabled();
    bool repaintAllWidgets = false;
 
    const bool inTopLevelResize = tlwExtra->inTopLevelResize;
    const QRect tlwRect(topLevelRect());
+
 #ifdef  Q_WS_QPA
    const QRect surfaceGeometry(tlwRect.topLeft(), windowSurface->size());
 #else
    const QRect surfaceGeometry(windowSurface->geometry());
 #endif
-   if ((fullUpdatePending || inTopLevelResize || surfaceGeometry.size() != tlwRect.size()) && !updatesDisabled) {
+
+   if ((fullUpdatePending || inTopLevelResize || surfaceGeometry.size() != tlwRect.size()) && ! updatesDisabled) {
       if (hasStaticContents()) {
          // Repaint existing dirty area and newly visible area.
          const QRect clipRect(0, 0, surfaceGeometry.width(), surfaceGeometry.height());
          const QRegion staticRegion(staticContents(0, clipRect));
+
          QRegion newVisible(0, 0, tlwRect.width(), tlwRect.height());
          newVisible -= staticRegion;
-         dirty += newVisible;
+         dirty      += newVisible;
+
          windowSurface->setStaticContents(staticRegion);
+
       } else {
-         // Repaint everything.
+         // Repaint everything
          dirty = QRegion(0, 0, tlwRect.width(), tlwRect.height());
+
          for (int i = 0; i < dirtyWidgets.size(); ++i) {
             resetWidget(dirtyWidgets.at(i));
          }
+
          dirtyWidgets.clear();
          repaintAllWidgets = true;
       }
@@ -1292,17 +1109,20 @@ void QWidgetBackingStore::sync()
       dirty += dirtyFromPreviousSync;
    }
 
-   // Contains everything that needs repaint.
+   // Contains everything that needs repaint
    QRegion toClean(dirty);
 
    // Loop through all update() widgets and remove them from the list before they are
    // painted (in case someone calls update() in paintEvent). If the widget is opaque
    // and does not have transparent overlapping siblings, append it to the
    // opaqueNonOverlappedWidgets list and paint it directly without composition.
+
    QVarLengthArray<QWidget *, 32> opaqueNonOverlappedWidgets;
+
    for (int i = 0; i < dirtyWidgets.size(); ++i) {
       QWidget *w = dirtyWidgets.at(i);
       QWidgetPrivate *wd = w->d_func();
+
       if (wd->data.in_destructor) {
          continue;
       }
@@ -1313,12 +1133,14 @@ void QWidgetBackingStore::sync()
 
       // Subtract opaque siblings and children.
       bool hasDirtySiblingsAbove = false;
-      // We know for sure that the widget isn't overlapped if 'isMoved' is true.
-      if (!wd->isMoved) {
+
+      // We know for sure that the widget is not overlapped if 'isMoved' is true.
+      if (! wd->isMoved) {
          wd->subtractOpaqueSiblings(wd->dirty, &hasDirtySiblingsAbove);
       }
+
       // Scrolled and moved widgets must draw all children.
-      if (!wd->isScrolled && !wd->isMoved) {
+      if (! wd->isScrolled && !wd->isMoved) {
          wd->subtractOpaqueChildren(wd->dirty, w->rect());
       }
 
@@ -1327,8 +1149,7 @@ void QWidgetBackingStore::sync()
          continue;
       }
 
-      const QRegion widgetDirty(w != tlw ? wd->dirty.translated(w->mapTo(tlw, QPoint()))
-                                : wd->dirty);
+      const QRegion widgetDirty(w != tlw ? wd->dirty.translated(w->mapTo(tlw, QPoint())) : wd->dirty);
       toClean += widgetDirty;
 
 #ifndef QT_NO_GRAPHICSVIEW
@@ -1338,7 +1159,7 @@ void QWidgetBackingStore::sync()
       }
 #endif
 
-      if (!hasDirtySiblingsAbove && wd->isOpaque && !dirty.intersects(widgetDirty.boundingRect())) {
+      if (! hasDirtySiblingsAbove && wd->isOpaque && ! dirty.intersects(widgetDirty.boundingRect())) {
          opaqueNonOverlappedWidgets.append(w);
       } else {
          resetWidget(w);
@@ -1361,7 +1182,9 @@ void QWidgetBackingStore::sync()
    if (tlw->d_func()->extra->proxyWidget) {
       updateStaticContentsSize();
       dirty = QRegion();
+
       const QVector<QRect> rects(toClean.rects());
+
       for (int i = 0; i < rects.size(); ++i) {
          tlw->d_func()->extra->proxyWidget->update(rects.at(i));
       }
@@ -1372,6 +1195,7 @@ void QWidgetBackingStore::sync()
 #ifndef Q_BACKINGSTORE_SUBSURFACES
    BeginPaintInfo beginPaintInfo;
    beginPaint(toClean, tlw, windowSurface, &beginPaintInfo);
+
    if (beginPaintInfo.nothingToPaint) {
       for (int i = 0; i < opaqueNonOverlappedWidgets.size(); ++i) {
          resetWidget(opaqueNonOverlappedWidgets[i]);
@@ -1381,9 +1205,9 @@ void QWidgetBackingStore::sync()
    }
 #endif
 
-   // Must do this before sending any paint events because
-   // the size may change in the paint event.
+   // Must do this before sending any paint events because the size may change in the paint event.
    updateStaticContentsSize();
+
    const QRegion dirtyCopy(dirty);
    dirty = QRegion();
 
@@ -1393,10 +1217,12 @@ void QWidgetBackingStore::sync()
       QWidgetPrivate *wd = w->d_func();
 
       int flags = QWidgetPrivate::DrawRecursive;
+
       // Scrolled and moved widgets must draw all children.
       if (!wd->isScrolled && !wd->isMoved) {
          flags |= QWidgetPrivate::DontDrawOpaqueChildren;
       }
+
       if (w == tlw) {
          flags |= QWidgetPrivate::DrawAsRoot;
       }
@@ -1444,7 +1270,7 @@ void QWidgetBackingStore::sync()
 
    // Paint the rest with composition.
 #ifndef Q_BACKINGSTORE_SUBSURFACES
-   if (repaintAllWidgets || !dirtyCopy.isEmpty()) {
+   if (repaintAllWidgets || ! dirtyCopy.isEmpty()) {
       const int flags = QWidgetPrivate::DrawAsRoot | QWidgetPrivate::DrawRecursive;
       tlw->d_func()->drawWidget(windowSurface->paintDevice(), dirtyCopy, tlwOffset, flags, 0, this);
    }
@@ -1722,7 +1548,7 @@ void QWidgetPrivate::repaint_sys(const QRegion &rgn)
    }
 
 #ifdef Q_WS_QPA //Don't even call q->p
-   QPaintEngine *engine = 0;
+   QPaintEngine *engine = nullptr;
 #else
    QPaintEngine *engine = q->paintEngine();
 #endif
@@ -1731,8 +1557,8 @@ void QWidgetPrivate::repaint_sys(const QRegion &rgn)
    // 1) The context is double buffered
    // 2) The context is single buffered and auto-fill background is enabled.
    const bool noPartialUpdateSupport = (engine &&
-                                        (engine->type() == QPaintEngine::OpenGL || engine->type() == QPaintEngine::OpenGL2)) &&
-                                       (usesDoubleBufferedGLContext || q->autoFillBackground());
+                  (engine->type() == QPaintEngine::OpenGL || engine->type() == QPaintEngine::OpenGL2)) &&
+                  (usesDoubleBufferedGLContext || q->autoFillBackground());
 
    QRegion toBePainted(noPartialUpdateSupport ? q->rect() : rgn);
 
@@ -1744,26 +1570,15 @@ void QWidgetPrivate::repaint_sys(const QRegion &rgn)
 
    toBePainted &= clipRect();
    clipToEffectiveMask(toBePainted);
+
    if (toBePainted.isEmpty()) {
       return;   // Nothing to repaint.
    }
 
-#ifndef QT_NO_PAINT_DEBUG
-   bool flushed = QWidgetBackingStore::flushPaint(q, toBePainted);
-#endif
-
    drawWidget(q, toBePainted, QPoint(), QWidgetPrivate::DrawAsRoot | QWidgetPrivate::DrawPaintOnScreen, 0);
 
-#ifndef QT_NO_PAINT_DEBUG
-   if (flushed) {
-      QWidgetBackingStore::unflushPaint(q, toBePainted);
-   }
-#endif
-
-   if (!q->testAttribute(Qt::WA_PaintOutsidePaintEvent) && q->paintingActive()) {
+   if (! q->testAttribute(Qt::WA_PaintOutsidePaintEvent) && q->paintingActive()) {
       qWarning("QWidget::repaint: It is dangerous to leave painters active on a widget outside of the PaintEvent");
    }
 }
 
-
-QT_END_NAMESPACE

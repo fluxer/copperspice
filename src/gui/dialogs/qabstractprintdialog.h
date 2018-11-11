@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,16 +23,13 @@
 #ifndef QABSTRACTPRINTDIALOG_H
 #define QABSTRACTPRINTDIALOG_H
 
-#include <QtGui/qdialog.h>
-
-QT_BEGIN_NAMESPACE
+#include <qdialog.h>
 
 #ifndef QT_NO_PRINTER
 
 class QAbstractPrintDialogPrivate;
 class QPrinter;
 
-// ### Qt5/remove this class
 class Q_GUI_EXPORT QAbstractPrintDialog : public QDialog
 {
    GUI_CS_OBJECT(QAbstractPrintDialog)
@@ -64,7 +58,7 @@ class Q_GUI_EXPORT QAbstractPrintDialog : public QDialog
    using PrintDialogOptions = QFlags<PrintDialogOption>;
 
 #ifndef QT_NO_PRINTDIALOG
-   explicit QAbstractPrintDialog(QPrinter *printer, QWidget *parent = 0);
+   explicit QAbstractPrintDialog(QPrinter *printer, QWidget *parent = nullptr);
    ~QAbstractPrintDialog();
 
    virtual int exec() = 0;
@@ -91,7 +85,7 @@ class Q_GUI_EXPORT QAbstractPrintDialog : public QDialog
    QPrinter *printer() const;
 
  protected:
-   QAbstractPrintDialog(QAbstractPrintDialogPrivate &ptr, QPrinter *printer, QWidget *parent = 0);
+   QAbstractPrintDialog(QAbstractPrintDialogPrivate &ptr, QPrinter *printer, QWidget *parent = nullptr);
 
  private:
    Q_DISABLE_COPY(QAbstractPrintDialog)
@@ -102,7 +96,5 @@ class Q_GUI_EXPORT QAbstractPrintDialog : public QDialog
 Q_DECLARE_OPERATORS_FOR_FLAGS(QAbstractPrintDialog::PrintDialogOptions)
 
 #endif // QT_NO_PRINTER
-
-QT_END_NAMESPACE
 
 #endif // QABSTRACTPRINTDIALOG_H

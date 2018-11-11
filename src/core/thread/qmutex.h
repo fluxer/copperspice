@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,11 +23,11 @@
 #ifndef QMUTEX_H
 #define QMUTEX_H
 
-#include <QtCore/qglobal.h>
-#include <QtCore/qatomic.h>
-#include <new>
+#include <qglobal.h>
+#include <qassert.h>
+#include <qatomic.h>
 
-QT_BEGIN_NAMESPACE
+#include <new>
 
 class QMutexData;
 
@@ -38,7 +35,7 @@ class Q_CORE_EXPORT QBasicMutex
 {
  public:
    inline void lock() {
-      if (!fastTryLock()) {
+      if (! fastTryLock()) {
          lockInternal();
       }
    }
@@ -86,16 +83,18 @@ class Q_CORE_EXPORT QMutex : public QBasicMutex
 class Q_CORE_EXPORT QMutexLocker
 {
  public:
-   inline explicit QMutexLocker(QBasicMutex *m) {
-      Q_ASSERT_X((reinterpret_cast<quintptr>(m) & quintptr(1u)) == quintptr(0),
+   inline explicit QMutexLocker(QBasicMutex *mutex) {
+      Q_ASSERT_X((reinterpret_cast<quintptr>(mutex) & quintptr(1u)) == quintptr(0),
                  "QMutexLocker", "QMutex pointer is misaligned");
-      if (m) {
-         m->lock();
-         val = reinterpret_cast<quintptr>(m) | quintptr(1u);
+
+      if (mutex) {
+         mutex->lock();
+         val = reinterpret_cast<quintptr>(mutex) | quintptr(1u);
       } else {
          val = 0;
       }
    }
+
    inline ~QMutexLocker() {
       unlock();
    }
@@ -125,8 +124,5 @@ class Q_CORE_EXPORT QMutexLocker
 
    quintptr val;
 };
-
-
-QT_END_NAMESPACE
 
 #endif // QMUTEX_H

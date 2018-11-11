@@ -1,11 +1,12 @@
-add_definitions(-DQT_BUILD_GUI_LIB
+add_definitions(
+    -DQT_BUILD_GUI_LIB
     -DQT_BUILTIN_GIF_READER
     -DMNG_BUILD_SO
     -DMNG_NO_INCLUDE_JNG
     -DPNG_NO_CONFIG_H
     -DMNG_BUILD_SO
 )
-set(EXTRA_GUI_LIBS CsCore${BUILD_MAJOR})
+set(EXTRA_GUI_LIBS CsCore${BUILD_ABI})
 set(EXTRA_GUI_CXXFLAGS)
 set(EXTRA_GUI_LDFLAGS)
 
@@ -34,6 +35,8 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/text
     ${CMAKE_CURRENT_SOURCE_DIR}/util
     ${CMAKE_CURRENT_SOURCE_DIR}/widgets
+    ${GLIB2_INCLUDES}
+    ${GOBJECT2_INCLUDES}
     ${CMAKE_SOURCE_DIR}/src/3rdparty/harfbuzz/src
     ${CMAKE_SOURCE_DIR}/src/3rdparty/wintab
     ${CMAKE_SOURCE_DIR}/src/3rdparty/zlib
@@ -47,7 +50,10 @@ include(accessible/accessible.cmake)
 include(animation/animation.cmake)
 include(dialogs/dialogs.cmake)
 include(effects/effects.cmake)
-# include(embedded/embedded.cmake) # currently unused
+
+# unused
+# include(embedded/embedded.cmake)
+
 include(graphicsview/graphicsview.cmake)
 include(image/image.cmake)
 include(inputmethod/inputmethod.cmake)
@@ -65,12 +71,11 @@ macro_generate_public("${GUI_PUBLIC_INCLUDES}" QtGui)
 macro_generate_private("${GUI_PRIVATE_INCLUDES}" QtGui)
 macro_generate_misc("${GUI_INCLUDES}" QtGui)
 
-if(${CMAKE_SYSTEM_NAME} MATCHES "(Linux|OpenBSD|FreeBSD|NetBSD)")
+if(${CMAKE_SYSTEM_NAME} MATCHES "(Linux|OpenBSD|FreeBSD|NetBSD|DragonFly)")
     set(EXTRA_GUI_LIBS
         ${EXTRA_GUI_LIBS}
         ${FONTCONFIG_LIBRARIES}
         ${FREETYPE_LIBRARIES}
-        # ${X11_LIBRARIES} should contain all of them but it does not sadly
         ${X11_X11_LIB}
         ${X11_Xrender_LIB}
         ${X11_Xrandr_LIB}
@@ -94,7 +99,6 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "(Linux|OpenBSD|FreeBSD|NetBSD)")
     include_directories(
         ${FONTCONFIG_INCLUDES}
         ${FREETYPE_INCLUDE_DIRS}
-        # ${X11_INCLUDE_DIR} should contain all of them but it does not sadly
         ${X11_X11_INCLUDE_PATH}
         ${X11_Xrender_INCLUDE_PATH}
         ${X11_Xrandr_INCLUDE_PATH}
@@ -128,7 +132,6 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
         -DQT_NO_STYLE_MAC
         -DQT_NO_LPR
         -DQT_NO_DIRECTWRITE
-        -DQT_MAKEDLL
    )
 endif()
 
@@ -151,33 +154,44 @@ endif()
 function_variable_fixup("${EXTRA_GUI_CXXFLAGS}" EXTRA_GUI_CXXFLAGS)
 function_variable_fixup("${EXTRA_GUI_LDFLAGS}" EXTRA_GUI_LDFLAGS)
 
-add_library(CsGui${BUILD_MAJOR} SHARED ${GUI_SOURCES} ${GUI_INCLUDES})
-target_link_libraries(CsGui${BUILD_MAJOR} ${EXTRA_GUI_LIBS})
-set_target_properties(CsGui${BUILD_MAJOR} PROPERTIES
+add_library(CsGui${BUILD_ABI} SHARED ${GUI_SOURCES} ${GUI_INCLUDES})
+target_link_libraries(CsGui${BUILD_ABI} ${EXTRA_GUI_LIBS})
+
+target_include_directories(CsGui${BUILD_ABI}
+   PUBLIC
+   $<INSTALL_INTERFACE:include/QtGui>
+)
+
+set_target_properties(CsGui${BUILD_ABI} PROPERTIES
     VERSION "0" # for compat
     SOVERSION "0.0.0" # for compat
     COMPILE_FLAGS ${EXTRA_GUI_CXXFLAGS}
     LINK_FLAGS ${EXTRA_GUI_LDFLAGS}
-    # FIXME: need to put those in resource prefix $(prefix)/mac/qt_menu.nib
-    RESOURCE
-    ${CMAKE_SOURCE_DIR}/src/gui/mac/qt_menu.nib/classes.nib
-    ${CMAKE_SOURCE_DIR}/src/gui/mac/qt_menu.nib/info.nib
-    ${CMAKE_SOURCE_DIR}/src/gui/mac/qt_menu.nib/keyedobjects.nib
 )
+
+if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+   set_target_properties(CsGui${BUILD_ABI} PROPERTIES
+       RESOURCE
+       ${CMAKE_SOURCE_DIR}/src/gui/mac/qt_menu.nib/classes.nib
+       ${CMAKE_SOURCE_DIR}/src/gui/mac/qt_menu.nib/info.nib
+       ${CMAKE_SOURCE_DIR}/src/gui/mac/qt_menu.nib/keyedobjects.nib
+   )
+endif()
 
 macro_generate_resources("${GUI_SOURCES}")
 macro_generate_package(
-    CsGui${BUILD_MAJOR}
+    CsGui${BUILD_ABI}
     QtGui
     "${EXTRA_GUI_CXXFLAGS}"
-    "${EXTRA_GUI_LIBS}"
-    "CsCore${BUILD_MAJOR}"
+    "CsCore${BUILD_ABI}"
 )
 
 install(
-    TARGETS CsGui${BUILD_MAJOR}
+    TARGETS CsGui${BUILD_ABI}
     EXPORT CopperSpiceLibraryTargets ${INSTALL_TARGETS_DEFAULT_ARGS}
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
 install(

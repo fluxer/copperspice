@@ -1,27 +1,26 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
+
+#include <algorithm>
 
 #include <qstandarditemmodel.h>
 
@@ -47,8 +46,7 @@ class QStandardItemModelLessThan
    inline QStandardItemModelLessThan() {
    }
 
-   inline bool operator()(const QPair<QStandardItem *, int> &l,
-                          const QPair<QStandardItem *, int> &r) const {
+   inline bool operator()(const QPair<QStandardItem *, int> &l, const QPair<QStandardItem *, int> &r) const {
       return *(l.first) < *(r.first);
    }
 };
@@ -179,14 +177,17 @@ void QStandardItemPrivate::setItemData(const QMap<int, QVariant> &roles)
 {
    Q_Q(QStandardItem);
 
-   //let's build the vector of new values
+   // build the vector of new values
    QVector<QWidgetItemData> newValues;
    QMap<int, QVariant>::const_iterator it;
+
    for (it = roles.begin(); it != roles.end(); ++it) {
       QVariant value = it.value();
+
       if (value.isValid()) {
          int role = it.key();
          role = (role == Qt::EditRole) ? Qt::DisplayRole : role;
+
          QWidgetItemData wid(role, it.value());
          newValues.append(wid);
       }
@@ -194,6 +195,7 @@ void QStandardItemPrivate::setItemData(const QMap<int, QVariant> &roles)
 
    if (values != newValues) {
       values = newValues;
+
       if (model) {
          model->d_func()->itemChanged(q);
       }
@@ -240,24 +242,25 @@ void QStandardItemPrivate::sortChildren(int column, Qt::SortOrder order)
 
    if (order == Qt::AscendingOrder) {
       QStandardItemModelLessThan lt;
-      qStableSort(sortable.begin(), sortable.end(), lt);
+      std::stable_sort(sortable.begin(), sortable.end(), lt);
    } else {
       QStandardItemModelGreaterThan gt;
-      qStableSort(sortable.begin(), sortable.end(), gt);
+      std::stable_sort(sortable.begin(), sortable.end(), gt);
    }
 
    QModelIndexList changedPersistentIndexesFrom, changedPersistentIndexesTo;
    QVector<QStandardItem *> sorted_children(children.count());
    for (int i = 0; i < rowCount(); ++i) {
-      int r = (i < sortable.count()
-               ? sortable.at(i).second
-               : unsortable.at(i - sortable.count()));
+      int r = (i < sortable.count() ? sortable.at(i).second : unsortable.at(i - sortable.count()));
+
       for (int c = 0; c < columnCount(); ++c) {
          QStandardItem *itm = q->child(r, c);
          sorted_children[childIndex(i, c)] = itm;
+
          if (model) {
             QModelIndex from = model->createIndex(r, c, q);
-            if (model->d_func()->persistent.indexes.contains(from)) {
+
+            if (model->d_func()->persistent.m_indexes.contains(from)) {
                QModelIndex to = model->createIndex(i, c, q);
                changedPersistentIndexesFrom.append(from);
                changedPersistentIndexesTo.append(to);
@@ -2106,10 +2109,11 @@ QStandardItemModel::QStandardItemModel(int rows, int columns, QObject *parent)
 {
    Q_D(QStandardItemModel);
    d->init();
+
    d->root->insertColumns(0, columns);
-   d->columnHeaderItems.insert(0, columns, 0);
+   d->columnHeaderItems.insert(0, columns, nullptr);
    d->root->insertRows(0, rows);
-   d->rowHeaderItems.insert(0, rows, 0);
+   d->rowHeaderItems.insert(0, rows, nullptr);
    d->root->d_func()->setModel(this);
 }
 
@@ -3027,7 +3031,7 @@ QMimeData *QStandardItemModel::mimeData(const QModelIndexList &indexes) const
    }
 
    stack.reserve(itemsSet.count());
-   foreach (QStandardItem * item, itemsSet) {
+   for (QStandardItem * item : itemsSet) {
       stack.push(item);
    }
 

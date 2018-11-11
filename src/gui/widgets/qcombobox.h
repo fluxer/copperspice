@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -93,7 +90,7 @@ class Q_GUI_EXPORT QComboBox : public QWidget
    GUI_CS_PROPERTY_WRITE(modelColumn, setModelColumn)
 
  public:
-   explicit QComboBox(QWidget *parent = 0);
+   explicit QComboBox(QWidget *parent = nullptr);
    ~QComboBox();
 
    int maxVisibleItems() const;
@@ -210,13 +207,13 @@ class Q_GUI_EXPORT QComboBox : public QWidget
    QAbstractItemView *view() const;
    void setView(QAbstractItemView *itemView);
 
-   QSize sizeHint() const;
-   QSize minimumSizeHint() const;
+   QSize sizeHint() const override;
+   QSize minimumSizeHint() const override;
 
    virtual void showPopup();
    virtual void hidePopup();
 
-   bool event(QEvent *event);
+   bool event(QEvent *event) override;
  
    GUI_CS_SLOT_1(Public, void clear())
    GUI_CS_SLOT_2(clear)
@@ -252,25 +249,25 @@ class Q_GUI_EXPORT QComboBox : public QWidget
    GUI_CS_SIGNAL_2(cs_currentIndexChanged, index)
 
  protected:
-   void focusInEvent(QFocusEvent *e);
-   void focusOutEvent(QFocusEvent *e);
-   void changeEvent(QEvent *e);
-   void resizeEvent(QResizeEvent *e);
-   void paintEvent(QPaintEvent *e);
-   void showEvent(QShowEvent *e);
-   void hideEvent(QHideEvent *e);
-   void mousePressEvent(QMouseEvent *e);
-   void mouseReleaseEvent(QMouseEvent *e);
-   void keyPressEvent(QKeyEvent *e);
-   void keyReleaseEvent(QKeyEvent *e);
+   void focusInEvent(QFocusEvent *e) override;
+   void focusOutEvent(QFocusEvent *e) override;
+   void changeEvent(QEvent *e) override;
+   void resizeEvent(QResizeEvent *e) override;
+   void paintEvent(QPaintEvent *e) override;
+   void showEvent(QShowEvent *e) override;
+   void hideEvent(QHideEvent *e) override;
+   void mousePressEvent(QMouseEvent *e) override;
+   void mouseReleaseEvent(QMouseEvent *e) override;
+   void keyPressEvent(QKeyEvent *e) override;
+   void keyReleaseEvent(QKeyEvent *e) override;
 
 #ifndef QT_NO_WHEELEVENT
-   void wheelEvent(QWheelEvent *e);
+   void wheelEvent(QWheelEvent *e) override;
 #endif
 
-   void contextMenuEvent(QContextMenuEvent *e);
-   void inputMethodEvent(QInputMethodEvent *);
-   QVariant inputMethodQuery(Qt::InputMethodQuery) const;
+   void contextMenuEvent(QContextMenuEvent *e) override;
+   void inputMethodEvent(QInputMethodEvent *) override;
+   QVariant inputMethodQuery(Qt::InputMethodQuery) const override;
    void initStyleOption(QStyleOptionComboBox *option) const;
  
    QComboBox(QComboBoxPrivate &, QWidget *);

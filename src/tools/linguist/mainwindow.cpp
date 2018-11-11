@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -582,8 +579,9 @@ bool MainWindow::openFiles(const QStringList &names, bool globalReadWrite)
 
    QList<OpenedFile> opened;
    bool closeOld = false;
-   foreach (QString name, names) {
-      if (!waitCursor) {
+
+   for (QString name : names) {
+      if (! waitCursor) {
          QApplication::setOverrideCursor(Qt::WaitCursor);
          waitCursor = true;
       }
@@ -632,22 +630,25 @@ bool MainWindow::openFiles(const QStringList &names, bool globalReadWrite)
          if (!opened.first().dataModel->isWellMergeable(dm)) {
             QApplication::restoreOverrideCursor();
             waitCursor = false;
-            switch (QMessageBox::information(this, tr("Loading File - Qt Linguist"),
-                                             tr("The file '%1' does not seem to be related to the file '%2'"
-                                                " which is being loaded as well.\n\n"
-                                                "Skip loading the first named file?")
-                                             .arg(DataModel::prettifyPlainFileName(name), opened.first().dataModel->srcFileName(true)),
-                                             QMessageBox::Yes | QMessageBox::Default,
-                                             QMessageBox::No,
-                                             QMessageBox::Cancel | QMessageBox::Escape)) {
+
+            switch (QMessageBox::information(this, tr("Loading File Linguist"),
+                  tr("The file '%1' does not seem to be related to the file '%2' which is being loaded.\n\n"
+                  "Skip loading the first named file?")
+                  .arg(DataModel::prettifyPlainFileName(name), opened.first().dataModel->srcFileName(true)),
+                  QMessageBox::Yes | QMessageBox::Default, QMessageBox::No, QMessageBox::Cancel | QMessageBox::Escape)) {
+
                case QMessageBox::Cancel:
                   delete dm;
-                  foreach (const OpenedFile & op, opened)
-                  delete op.dataModel;
+
+                  for (const OpenedFile & op : opened) {
+                     delete op.dataModel;
+                  }
                   return false;
+
                case QMessageBox::Yes:
                   delete dm;
                   continue;
+
                case QMessageBox::No:
                   break;
             }
@@ -661,14 +662,17 @@ bool MainWindow::openFiles(const QStringList &names, bool globalReadWrite)
          QApplication::restoreOverrideCursor();
          waitCursor = false;
       }
+
       if (!closeAll()) {
-         foreach (const OpenedFile & op, opened)
-         delete op.dataModel;
+         for (const OpenedFile & op : opened) {
+            delete op.dataModel;
+         }
+
          return false;
       }
    }
 
-   foreach (const OpenedFile & op, opened) {
+   for (const OpenedFile & op : opened) {
       if (op.langGuessed) {
          if (waitCursor) {
             QApplication::restoreOverrideCursor();
@@ -685,17 +689,21 @@ bool MainWindow::openFiles(const QStringList &names, bool globalReadWrite)
    if (!waitCursor) {
       QApplication::setOverrideCursor(Qt::WaitCursor);
    }
+
    m_contextView->setUpdatesEnabled(false);
    m_messageView->setUpdatesEnabled(false);
    int totalCount = 0;
-   foreach (const OpenedFile & op, opened) {
+
+   for (const OpenedFile & op : opened) {
       m_phraseDict.append(QHash<QString, QList<Phrase *> >());
       m_dataModel->append(op.dataModel, op.readWrite);
+
       if (op.readWrite) {
          updatePhraseDictInternal(m_phraseDict.size() - 1);
       }
       totalCount += op.dataModel->messageCount();
    }
+
    statusBar()->showMessage(tr("%n translation unit(s) loaded.", 0, totalCount), MessageMS);
    modelCountChanged();
    recentFiles().addFiles(m_dataModel->srcFileNames());
@@ -763,18 +771,22 @@ static QString fileFilters(bool allFirst)
    static const QString pattern(QLatin1String("%1 (*.%2);;"));
    QStringList allExtensions;
    QString filter;
-   foreach (const Translator::FileFormat & format, Translator::registeredFileFormats()) {
+
+   for (const Translator::FileFormat & format : Translator::registeredFileFormats()) {
       if (format.fileType == Translator::FileFormat::TranslationSource && format.priority >= 0) {
          filter.append(pattern.arg(format.description).arg(format.extension));
          allExtensions.append(QLatin1String("*.") + format.extension);
       }
    }
+
    QString allFilter = QObject::tr("Translation files (%1);;").arg(allExtensions.join(QLatin1String(" ")));
+
    if (allFirst) {
       filter.prepend(allFilter);
    } else {
       filter.append(allFilter);
    }
+
    filter.append(QObject::tr("All files (*)"));
    return filter;
 }
@@ -1225,7 +1237,7 @@ void MainWindow::newPhraseBook()
 
 bool MainWindow::isPhraseBookOpen(const QString &name)
 {
-   foreach(const PhraseBook * pb, m_phraseBooks) {
+   for (const PhraseBook * pb : m_phraseBooks) {
       if (pb->fileName() == name) {
          return true;
       }
@@ -1295,7 +1307,8 @@ void MainWindow::printPhraseBook(QAction *action)
       statusBar()->showMessage(tr("Printing..."));
       PrintOut pout(printer());
       pout.setRule(PrintOut::ThinRule);
-      foreach (const Phrase * p, phraseBook->phrases()) {
+
+      for (const Phrase * p, :phraseBook->phrases()) {
          pout.setGuide(p->source());
          pout.addBox(29, p->source());
          pout.addBox(4);
@@ -1305,14 +1318,15 @@ void MainWindow::printPhraseBook(QAction *action)
 
          if (pout.pageNum() != pageNum) {
             pageNum = pout.pageNum();
-            statusBar()->showMessage(tr("Printing... (page %1)")
-                                     .arg(pageNum));
+            statusBar()->showMessage(tr("Printing... (page %1)").arg(pageNum));
          }
          pout.setRule(PrintOut::NoRule);
          pout.flushLine(true);
       }
+
       pout.flushLine(true);
       statusBar()->showMessage(tr("Printing completed"), MessageMS);
+
    } else {
       statusBar()->showMessage(tr("Printing aborted"), MessageMS);
    }
@@ -1324,11 +1338,13 @@ void MainWindow::addToPhraseBook()
    Phrase *phrase = new Phrase(currentMessage->text(), currentMessage->translation(), QString());
    QStringList phraseBookList;
    QHash<QString, PhraseBook *> phraseBookHash;
-   foreach (PhraseBook * pb, m_phraseBooks) {
+
+   for (PhraseBook * pb : m_phraseBooks) {
       if (pb->language() != QLocale::C && m_dataModel->language(m_currentIndex.model()) != QLocale::C) {
          if (pb->language() != m_dataModel->language(m_currentIndex.model())) {
             continue;
          }
+
          if (pb->country() == m_dataModel->model(m_currentIndex.model())->country()) {
             phraseBookList.prepend(pb->friendlyPhraseBookName());
          } else {
@@ -1337,8 +1353,10 @@ void MainWindow::addToPhraseBook()
       } else {
          phraseBookList.append(pb->friendlyPhraseBookName());
       }
+
       phraseBookHash.insert(pb->friendlyPhraseBookName(), pb);
    }
+
    if (phraseBookList.isEmpty()) {
       QMessageBox::warning(this, tr("Add to phrase book"),
                            tr("No appropriate phrasebook found."));
@@ -1382,17 +1400,16 @@ void MainWindow::manual()
 
       m_assistantProcess->start(app, QStringList() << QLatin1String("-enableRemoteControl"));
       if (!m_assistantProcess->waitForStarted()) {
-         QMessageBox::critical(this, tr("Qt Linguist"),
-                               tr("Unable to launch Qt Assistant (%1)").arg(app));
+         QMessageBox::critical(this, tr("Linguist"), tr("Unable to launch Assistant (%1)").arg(app));
          return;
       }
    }
 
    QTextStream str(m_assistantProcess);
-   str << QLatin1String("SetSource qthelp://com.trolltech.linguist.")
-       << (QT_VERSION >> 16) << ((QT_VERSION >> 8) & 0xFF)
-       << (QT_VERSION & 0xFF)
-       << QLatin1String("/qdoc/linguist-manual.html")
+   str << QLatin1String("SetSource help://com.copperspice.linguist.")
+       << (CS_VERSION >> 16) << ((CS_VERSION >> 8) & 0xFF)
+       << (CS_VERSION & 0xFF)
+       << QLatin1String("/docs/linguist-manual.html")
        << QLatin1Char('\n') << endl;
 }
 
@@ -1404,12 +1421,11 @@ void MainWindow::about()
    version = version.arg(QLatin1String(QT_VERSION_STR));
 
    box.setText(tr("<center><img src=\":/images/splash.png\"/></img><p>%1</p></center>"
-                  "<p>Qt Linguist is a tool for adding translations to Qt "
-                  "applications.</p>"
+                  "<p>Linguist is a tool for adding translations to CopperSpice applications.</p>"
                   "<p>Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies)."
                  ).arg(version));
 
-   box.setWindowTitle(QApplication::translate("AboutDialog", "Qt Linguist"));
+   box.setWindowTitle(QApplication::translate("AboutDialog", "Linguist"));
    box.setIcon(QMessageBox::NoIcon);
    box.exec();
 }
@@ -2387,9 +2403,10 @@ bool MainWindow::maybeSavePhraseBook(PhraseBook *pb)
 
 bool MainWindow::maybeSavePhraseBooks()
 {
-   foreach(PhraseBook * phraseBook, m_phraseBooks)
-   if (!maybeSavePhraseBook(phraseBook)) {
-      return false;
+   for PhraseBook * phraseBook : m_phraseBooks) {
+      if (! maybeSavePhraseBook(phraseBook)) {
+         return false;
+      }
    }
    return true;
 }
@@ -2425,23 +2442,28 @@ void MainWindow::updatePhraseDictInternal(int model)
    QHash<QString, QList<Phrase *> > &pd = m_phraseDict[model];
 
    pd.clear();
-   foreach (PhraseBook * pb, m_phraseBooks) {
+   for (PhraseBook * pb : m_phraseBooks) {
       bool before;
+
       if (pb->language() != QLocale::C && m_dataModel->language(model) != QLocale::C) {
          if (pb->language() != m_dataModel->language(model)) {
             continue;
          }
          before = (pb->country() == m_dataModel->model(model)->country());
+
       } else {
          before = false;
       }
-      foreach (Phrase * p, pb->phrases()) {
+
+      for (Phrase * p : pb->phrases()) {
          QString f = friendlyString(p->source());
+
          if (f.length() > 0) {
             f = f.split(QLatin1Char(' ')).first();
             if (!pd.contains(f)) {
                pd.insert(f, QList<Phrase *>());
             }
+
             if (before) {
                pd[f].prepend(p);
             } else {
@@ -2572,10 +2594,11 @@ void MainWindow::updateDanger(const MultiDataIndex &index, bool verbose)
             QStringList lookupWords = fsource.split(QLatin1Char(' '));
 
             bool phraseFound;
-            foreach (const QString & s, lookupWords) {
+            for (const QString & s : lookupWords) {
                if (m_phraseDict[mi].contains(s)) {
                   phraseFound = true;
-                  foreach (const Phrase * p, m_phraseDict[mi].value(s)) {
+
+                  for (const Phrase * p : m_phraseDict[mi].value(s)) {
                      if (fsource == friendlyString(p->source())) {
                         if (ftranslation.indexOf(friendlyString(p->target())) >= 0) {
                            phraseFound = true;
@@ -2634,11 +2657,12 @@ void MainWindow::updateDanger(const MultiDataIndex &index, bool verbose)
                }
             }
 
-            foreach (int i, placeMarkerIndexes) {
+            for (int i : placeMarkerIndexes) {
                if (i != 0) {
                   if (verbose) {
                      m_errorsView->addError(mi, ErrorsView::PlaceMarkersDiffer);
                   }
+
                   danger = true;
                   break;
                }
@@ -2729,18 +2753,21 @@ void MainWindow::writeConfig()
 void MainWindow::setupRecentFilesMenu()
 {
    m_ui.menuRecentlyOpenedFiles->clear();
-   foreach (const QStringList & strList, recentFiles().filesLists())
-   if (strList.size() == 1) {
-      const QString &str = strList.first();
-      m_ui.menuRecentlyOpenedFiles->addAction(
-         DataModel::prettifyFileName(str))->setData(str);
-   } else {
-      QMenu *menu = m_ui.menuRecentlyOpenedFiles->addMenu(
-                       MultiDataModel::condenseFileNames(
-                          MultiDataModel::prettifyFileNames(strList)));
-      menu->addAction(tr("All"))->setData(strList);
-      foreach (const QString & str, strList)
-      menu->addAction(DataModel::prettifyFileName(str))->setData(str);
+   for (const QStringList & strList : recentFiles().filesLists()) {
+
+      if (strList.size() == 1) {
+         const QString &str = strList.first();
+         m_ui.menuRecentlyOpenedFiles->addAction(DataModel::prettifyFileName(str))->setData(str);
+
+      } else {
+         QMenu *menu = m_ui.menuRecentlyOpenedFiles->addMenu(MultiDataModel::condenseFileNames(
+                             MultiDataModel::prettifyFileNames(strList)));
+
+         menu->addAction(tr("All"))->setData(strList);
+         for (const QString & str : strList) {
+            menu->addAction(DataModel::prettifyFileName(str))->setData(str);
+         }
+      }
    }
 }
 
@@ -2804,21 +2831,27 @@ bool MainWindow::eventFilter(QObject *object, QEvent *event)
          e->acceptProposedAction();
          return true;
       }
+
    } else if (event->type() == QEvent::Drop) {
       QDropEvent *e = static_cast<QDropEvent *>(event);
       if (!e->mimeData()->hasFormat(QLatin1String("text/uri-list"))) {
          return false;
       }
+
       QStringList urls;
-      foreach (QUrl url, e->mimeData()->urls())
-      if (!url.toLocalFile().isEmpty()) {
-         urls << url.toLocalFile();
+      for (QUrl url : e->mimeData()->urls()) {
+         if (! url.toLocalFile().isEmpty()) {
+            urls << url.toLocalFile();
+         }
       }
+
       if (!urls.isEmpty()) {
          openFiles(urls);
       }
+
       e->acceptProposedAction();
       return true;
+
    } else if (event->type() == QEvent::KeyPress) {
       if (static_cast<QKeyEvent *>(event)->key() == Qt::Key_Escape) {
          if (object == m_messageEditor) {

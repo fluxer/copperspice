@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -96,7 +93,7 @@ QT_BEGIN_NAMESPACE
 
 Q_GLOBAL_STATIC_WITH_ARGS(QFactoryLoader, loader, (QSqlDriverFactoryInterface_iid, "/sqldrivers"))
 
-const char *QSqlDatabase::defaultConnection = "qt_sql_default_connection";
+QString QSqlDatabase::defaultConnection = "qt_sql_default_connection";
 
 typedef QHash<QString, QSqlDriverCreatorBase *> DriverDict;
 
@@ -107,6 +104,7 @@ class QConnectionDict: public QHash<QString, QSqlDatabase>
       QReadLocker locker(&lock);
       return contains(key);
    }
+
    inline QStringList keys_ts() const {
       QReadLocker locker(&lock);
       return keys();
@@ -114,6 +112,7 @@ class QConnectionDict: public QHash<QString, QSqlDatabase>
 
    mutable QReadWriteLock lock;
 };
+
 Q_GLOBAL_STATIC(QConnectionDict, dbDict)
 
 class QSqlDatabasePrivate
@@ -180,13 +179,15 @@ void QSqlDatabasePrivate::cleanConnections()
 {
    QConnectionDict *dict = dbDict();
    Q_ASSERT(dict);
-   QWriteLocker locker(&dict->lock);
 
+   QWriteLocker locker(&dict->lock);
    QConnectionDict::iterator it = dict->begin();
+
    while (it != dict->end()) {
       invalidateDb(it.value(), it.key(), false);
       ++it;
    }
+
    dict->clear();
 }
 
@@ -220,8 +221,7 @@ QSqlDatabasePrivate *QSqlDatabasePrivate::shared_null()
 void QSqlDatabasePrivate::invalidateDb(const QSqlDatabase &db, const QString &name, bool doWarn)
 {
    if (db.d->ref.load() != 1 && doWarn) {
-      qWarning("QSqlDatabasePrivate::removeDatabase: connection '%s' is still in use, "
-               "all queries will cease to work.", name.toLocal8Bit().constData());
+      qWarning("QSqlDatabasePrivate::removeDatabase: connection '%s' is still in use, all queries will cease to work.", csPrintable(name));
       db.d->disable();
       db.d->connName.clear();
    }
@@ -231,6 +231,7 @@ void QSqlDatabasePrivate::removeDatabase(const QString &name)
 {
    QConnectionDict *dict = dbDict();
    Q_ASSERT(dict);
+
    QWriteLocker locker(&dict->lock);
 
    if (!dict->contains(name)) {
@@ -244,13 +245,15 @@ void QSqlDatabasePrivate::addDatabase(const QSqlDatabase &db, const QString &nam
 {
    QConnectionDict *dict = dbDict();
    Q_ASSERT(dict);
+
    QWriteLocker locker(&dict->lock);
 
    if (dict->contains(name)) {
       invalidateDb(dict->take(name), name);
-      qWarning("QSqlDatabasePrivate::addDatabase: duplicate connection name '%s', old "
-               "connection removed.", name.toLocal8Bit().data());
+
+      qWarning("QSqlDatabasePrivate::addDatabase: duplicate connection name '%s', old connection removed.", csPrintable(name));
    }
+
    dict->insert(name, db);
    db.d->connName = name;
 }

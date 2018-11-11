@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -40,10 +37,6 @@
 
 #include <qdialog_p.h>
 #include <limits.h>
-
-#if defined(QT_SOFTKEYS_ENABLED)
-#include <qaction.h>
-#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -82,10 +75,6 @@ void QProgressDialog::init(const QString &labelText, const QString &cancelButton
 
 #ifndef QT_NO_SHORTCUT
    escapeShortcut = 0;
-#endif
-
-#ifdef QT_SOFTKEYS_ENABLED
-   cancelAction  = 0;
 #endif
 
    shown_once   = false;
@@ -233,18 +222,7 @@ void QProgressDialog::setCancelButton(QPushButton *newButton)
    }
 
    if (m_cancelButton) {
-
-#if !defined(QT_SOFTKEYS_ENABLED)
       m_cancelButton->show();
-#else
-
-      cancelAction = new QAction(cancelButton->text(), cancelButton);
-      cancelAction->setSoftKeyRole(QAction::NegativeSoftKey);
-
-      connect(cancelAction, SIGNAL(triggered()), this, SIGNAL(canceled()));
-      addAction(cancelAction);
-#endif
-
    }
 }
 
@@ -289,10 +267,6 @@ void QProgressDialog::setCancelButtonText(const QString &cancelButtonText)
 
       if (m_cancelButton) {
          m_cancelButton->setText(cancelButtonText);
-
-#ifdef QT_SOFTKEYS_ENABLED
-         cancelAction->setText(cancelButtonText);
-#endif
 
       } else {
          setCancelButton(new QPushButton(cancelButtonText, this));
@@ -508,12 +482,12 @@ void QProgressDialog::forceShow()
    shown_once = true;
 }
 
-void QProgressDialog::open(QObject *receiver, const char *member)
+void QProgressDialog::open(QObject *receiver, const QString &member)
 {
    connect(this, SIGNAL(canceled()), receiver, member);
 
    receiverToDisconnectOnClose = receiver;
-   memberToDisconnectOnClose = member;
+   memberToDisconnectOnClose   = member;
 
    QDialog::open();
 }

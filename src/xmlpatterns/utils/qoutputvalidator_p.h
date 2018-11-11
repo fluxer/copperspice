@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -38,31 +35,26 @@ namespace QPatternist {
 class OutputValidator : public QAbstractXmlReceiver, public DelegatingSourceLocationReflection
 {
  public:
-   OutputValidator(QAbstractXmlReceiver *const receiver,
-                   const DynamicContext::Ptr &context,
-                   const SourceLocationReflection *const r,
-                   const bool isXSLT);
+   OutputValidator(QAbstractXmlReceiver *const receiver, const DynamicContext::Ptr &context,
+                  const SourceLocationReflection *const r, const bool isXSLT);
 
-   virtual void namespaceBinding(const QXmlName &nb);
+   void namespaceBinding(const QXmlName &nb) override;
 
-   virtual void characters(const QStringRef &value);
-   virtual void comment(const QString &value);
+   void characters(QStringView value) override;
+   void comment(const QString &value) override;
 
-   virtual void startElement(const QXmlName &name);
+   void startElement(const QXmlName &name) override;
+   void endElement() override;
 
-   virtual void endElement();
+   void attribute(const QXmlName &name, QStringView value) override;
+   void processingInstruction(const QXmlName &name, const QString &value) override;
+   void item(const Item &item) override;
 
-   virtual void attribute(const QXmlName &name, const QStringRef &value);
-
-   virtual void processingInstruction(const QXmlName &name, const QString &value);
-
-   virtual void item(const Item &item);
-
-   virtual void startDocument();
-   virtual void endDocument();
-   virtual void atomicValue(const QVariant &value);
-   virtual void endOfSequence();
-   virtual void startOfSequence();
+   void startDocument() override;
+   void endDocument() override;
+   void atomicValue(const QVariant &value) override;
+   void endOfSequence() override;
+   void startOfSequence() override;
 
  private:
    bool m_hasReceivedChildren;

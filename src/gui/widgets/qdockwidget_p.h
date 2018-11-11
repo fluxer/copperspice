@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -105,20 +102,21 @@ class Q_GUI_EXPORT QDockWidgetLayout : public QLayout
    GUI_CS_OBJECT(QDockWidgetLayout)
 
  public:
-   QDockWidgetLayout(QWidget *parent = 0);
+   QDockWidgetLayout(QWidget *parent = nullptr);
    ~QDockWidgetLayout();
-   void addItem(QLayoutItem *item);
-   QLayoutItem *itemAt(int index) const;
-   QLayoutItem *takeAt(int index);
-   int count() const;
 
-   QSize maximumSize() const;
-   QSize minimumSize() const;
-   QSize sizeHint() const;
+   void addItem(QLayoutItem *item)override;
+   QLayoutItem *itemAt(int index) const override;
+   QLayoutItem *takeAt(int index) override;
+   int count() const override;
+
+   QSize maximumSize() const override;
+   QSize minimumSize() const override;
+   QSize sizeHint() const override;
 
    QSize sizeFromContent(const QSize &content, bool floating) const;
 
-   void setGeometry(const QRect &r);
+   void setGeometry(const QRect &r) override;
 
    enum Role { Content, CloseButton, FloatButton, TitleBar, RoleCount };
    QWidget *widgetForRole(Role r) const;
@@ -151,9 +149,10 @@ class QDockWidgetItem : public QWidgetItem
 {
  public:
    QDockWidgetItem(QDockWidget *dockWidget);
-   QSize minimumSize() const;
-   QSize maximumSize() const;
-   QSize sizeHint() const;
+
+   QSize minimumSize() const override;
+   QSize maximumSize() const override;
+   QSize sizeHint() const override;
 
  private:
    inline QLayoutItem *dockWidgetChildItem() const;

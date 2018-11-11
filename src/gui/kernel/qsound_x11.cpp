@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -32,14 +29,10 @@
 #include <qapplication.h>
 #include <qsound_p.h>
 
-QT_BEGIN_NAMESPACE
-
 #ifndef QT_NO_NAS
 
-QT_BEGIN_INCLUDE_NAMESPACE
 #include <audio/audiolib.h>
 #include <audio/soundlib.h>
-QT_END_INCLUDE_NAMESPACE
 
 static AuServer *nas = 0;
 
@@ -84,11 +77,11 @@ class QAuServerNAS : public QAuServer
    QAuServerNAS(QObject *parent);
    ~QAuServerNAS();
 
-   void init(QSound *);
-   void play(const QString &filename);
-   void play(QSound *);
-   void stop(QSound *);
-   bool okay();
+   void init(QSound *) override;
+   void play(const QString &filename) override;
+   void play(QSound *) override;
+   void stop(QSound *) override;
+   bool okay() override;
    void setDone(QSound *);
 
    GUI_CS_SLOT_1(Public, void dataReceived())
@@ -146,8 +139,8 @@ void QAuServerNAS::play(const QString &filename)
    if (nas) {
       int iv = 100;
       AuFixedPoint volume = AuFixedPointFromFraction(iv, 100);
-      AuSoundPlayFromFile(nas, filename.toLocal8Bit().constData(), AuNone, volume,
-                          NULL, NULL, NULL, NULL, NULL, NULL);
+      AuSoundPlayFromFile(nas, filename.toUtf8().constData(), AuNone, volume, NULL, NULL, NULL, NULL, NULL, NULL);
+
       AuFlush(nas);
       dataReceived();
       AuFlush(nas);
@@ -161,7 +154,7 @@ static void callback(AuServer *, AuEventHandlerRec *, AuEvent *e, AuPointer p)
       if (e->type == AuEventTypeElementNotify &&
             e->auelementnotify.kind == AuElementNotifyKindState) {
          if (e->auelementnotify.cur_state == AuStateStop) {
-            AuServerHash::Iterator it = inprogress->find(p);
+            AuServerHash::iterator it = inprogress->find(p);
             if (it != inprogress->end()) {
                (*it)->setDone((QSound *)p);
             }
@@ -228,9 +221,7 @@ void QAuServerNAS::init(QSound *s)
    connect(s, SIGNAL(destroyed(QObject *)), this, SLOT(soundDestroyed(QObject *)));
 
    if (nas) {
-      AuBucketID b_id = AuSoundCreateBucketFromFile(
-                           nas, s->fileName().toLocal8Bit().constData(), 0 /*AuAccessAllMasks*/, NULL, NULL);
-
+      AuBucketID b_id = AuSoundCreateBucketFromFile(nas, s->fileName().toUtf8().constData(), 0, NULL, NULL);
       setBucket(s, new QAuBucketNAS(b_id));
    }
 }
@@ -253,12 +244,15 @@ class QAuServerNull : public QAuServer
  public:
    QAuServerNull(QObject *parent);
 
-   void play(const QString &) { }
-   void play(QSound *s) {
+   void play(const QString &) override { }
+
+   void play(QSound *s) override {
       while (decLoop(s) > 0) /* nothing */ ;
    }
-   void stop(QSound *) { }
-   bool okay() {
+
+   void stop(QSound *) override { }
+
+   bool okay() override {
       return false;
    }
 };
@@ -267,7 +261,6 @@ QAuServerNull::QAuServerNull(QObject *parent)
    : QAuServer(parent)
 {
 }
-
 
 QAuServer *qt_new_audio_server()
 {
@@ -281,7 +274,5 @@ QAuServer *qt_new_audio_server()
 #endif
    return new QAuServerNull(qApp);
 }
-
-QT_END_NAMESPACE
 
 #endif // QT_NO_SOUND

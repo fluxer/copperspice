@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,8 +23,6 @@
 #include <windows.h>
 #include <mmsystem.h>
 #include <qaudiodeviceinfo_win32_p.h>
-
-QT_BEGIN_NAMESPACE
 
 // For mingw toolchain mmsystem.h only defines half the defines, so add if needed.
 #ifndef WAVE_FORMAT_44M08
@@ -45,10 +40,9 @@ QT_BEGIN_NAMESPACE
 #define WAVE_FORMAT_96S16 0x00080000
 #endif
 
-
-QAudioDeviceInfoInternal::QAudioDeviceInfoInternal(QByteArray dev, QAudio::Mode mode)
+QAudioDeviceInfoInternal::QAudioDeviceInfoInternal(QString dev, QAudio::Mode mode)
 {
-   device = QString::fromUtf8(dev);
+   device = dev;
    this->mode = mode;
 
    updateLists();
@@ -73,14 +67,14 @@ QAudioFormat QAudioDeviceInfoInternal::preferredFormat() const
       nearest.setByteOrder(QAudioFormat::LittleEndian);
       nearest.setSampleType(QAudioFormat::SignedInt);
       nearest.setSampleSize(16);
-      nearest.setCodec(QLatin1String("audio/pcm"));
+      nearest.setCodec("audio/pcm");
    } else {
       nearest.setFrequency(11025);
       nearest.setChannelCount(1);
       nearest.setByteOrder(QAudioFormat::LittleEndian);
       nearest.setSampleType(QAudioFormat::SignedInt);
       nearest.setSampleSize(8);
-      nearest.setCodec(QLatin1String("audio/pcm"));
+      nearest.setCodec("audio/pcm");
    }
    return nearest;
 }
@@ -248,7 +242,7 @@ void QAudioDeviceInfoInternal::updateLists()
    DWORD fmt = 0;
    QString tmp;
 
-   if (device.compare(QLatin1String("default")) == 0) {
+   if (device == "default") {
       base = true;
    }
 
@@ -256,11 +250,12 @@ void QAudioDeviceInfoInternal::updateLists()
       WAVEOUTCAPS woc;
       unsigned long iNumDevs, i;
       iNumDevs = waveOutGetNumDevs();
+
       for (i = 0; i < iNumDevs; i++) {
-         if (waveOutGetDevCaps(i, &woc, sizeof(WAVEOUTCAPS))
-               == MMSYSERR_NOERROR) {
-            tmp = QString((const QChar *)woc.szPname);
-            if (tmp.compare(device) == 0) {
+         if (waveOutGetDevCaps(i, &woc, sizeof(WAVEOUTCAPS)) == MMSYSERR_NOERROR) {
+            tmp = QString::fromStdWString(std::wstring(woc.szPname));
+
+            if (device == "default") {
                match = true;
                fmt = woc.dwFormats;
                break;
@@ -276,15 +271,17 @@ void QAudioDeviceInfoInternal::updateLists()
       WAVEINCAPS woc;
       unsigned long iNumDevs, i;
       iNumDevs = waveInGetNumDevs();
+
       for (i = 0; i < iNumDevs; i++) {
-         if (waveInGetDevCaps(i, &woc, sizeof(WAVEINCAPS))
-               == MMSYSERR_NOERROR) {
-            tmp = QString((const QChar *)woc.szPname);
-            if (tmp.compare(device) == 0) {
+         if (waveInGetDevCaps(i, &woc, sizeof(WAVEINCAPS)) == MMSYSERR_NOERROR) {
+            tmp = QString::fromStdWString(std::wstring(woc.szPname));
+
+            if (device == "default") {
                match = true;
                fmt = woc.dwFormats;
                break;
             }
+
             if (base) {
                match = true;
                fmt = woc.dwFormats;
@@ -363,6 +360,7 @@ void QAudioDeviceInfoInternal::updateLists()
 
       channelz.append(1);
       channelz.append(2);
+
       if (mode == QAudio::AudioOutput) {
          channelz.append(4);
          channelz.append(6);
@@ -374,41 +372,44 @@ void QAudioDeviceInfoInternal::updateLists()
       typez.append(QAudioFormat::SignedInt);
       typez.append(QAudioFormat::UnSignedInt);
 
-      codecz.append(QLatin1String("audio/pcm"));
+      codecz.append("audio/pcm");
    }
+
    if (freqz.count() > 0) {
       freqz.prepend(8000);
    }
 }
 
-QList<QByteArray> QAudioDeviceInfoInternal::availableDevices(QAudio::Mode mode)
+QList<QString> QAudioDeviceInfoInternal::availableDevices(QAudio::Mode mode)
 {
    Q_UNUSED(mode)
 
-   QList<QByteArray> devices;
+   QList<QString> devices;
 
    if (mode == QAudio::AudioOutput) {
       WAVEOUTCAPS woc;
       unsigned long iNumDevs, i;
       iNumDevs = waveOutGetNumDevs();
+
       for (i = 0; i < iNumDevs; i++) {
-         if (waveOutGetDevCaps(i, &woc, sizeof(WAVEOUTCAPS))
-               == MMSYSERR_NOERROR) {
-            devices.append(QString((const QChar *)woc.szPname).toUtf8().constData());
+         if (waveOutGetDevCaps(i, &woc, sizeof(WAVEOUTCAPS)) == MMSYSERR_NOERROR) {
+            devices.append(QString::fromStdWString(std::wstring(woc.szPname)));
          }
       }
+
    } else {
       WAVEINCAPS woc;
       unsigned long iNumDevs, i;
       iNumDevs = waveInGetNumDevs();
+
       for (i = 0; i < iNumDevs; i++) {
-         if (waveInGetDevCaps(i, &woc, sizeof(WAVEINCAPS))
-               == MMSYSERR_NOERROR) {
-            devices.append(QString((const QChar *)woc.szPname).toUtf8().constData());
+         if (waveInGetDevCaps(i, &woc, sizeof(WAVEINCAPS)) == MMSYSERR_NOERROR) {
+            devices.append(QString::fromStdWString(std::wstring(woc.szPname)));
          }
       }
 
    }
+
    if (devices.count() > 0) {
       devices.append("default");
    }
@@ -416,14 +417,13 @@ QList<QByteArray> QAudioDeviceInfoInternal::availableDevices(QAudio::Mode mode)
    return devices;
 }
 
-QByteArray QAudioDeviceInfoInternal::defaultOutputDevice()
+QString QAudioDeviceInfoInternal::defaultOutputDevice()
 {
-   return QByteArray("default");
+   return QString("default");
 }
 
-QByteArray QAudioDeviceInfoInternal::defaultInputDevice()
+QString QAudioDeviceInfoInternal::defaultInputDevice()
 {
-   return QByteArray("default");
+   return QString("default");
 }
 
-QT_END_NAMESPACE

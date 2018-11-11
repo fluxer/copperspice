@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -40,6 +37,8 @@
 #include <qt_x11_p.h>
 #endif
 
+#include <stdlib.h>
+
 QT_BEGIN_NAMESPACE
 
 
@@ -54,18 +53,19 @@ QT_BEGIN_NAMESPACE
 QGuiPlatformPlugin *qt_guiPlatformPlugin()
 {
    static QGuiPlatformPlugin *plugin;
-   if (!plugin) {
 
+   if (! plugin) {
+      QString key = QString::fromUtf8(qgetenv("QT_PLATFORM_PLUGIN"));
 
-      QString key = QString::fromLocal8Bit(qgetenv("QT_PLATFORM_PLUGIN"));
 #ifdef Q_WS_X11
       if (key.isEmpty()) {
          switch (X11->desktopEnvironment) {
             case DE_KDE:
                key = QString::fromLatin1("kde");
                break;
+
             default:
-               key = QString::fromLocal8Bit(qgetenv("DESKTOP_SESSION"));
+               key = QString::fromUtf8(qgetenv("DESKTOP_SESSION"));
                break;
          }
       }
@@ -178,14 +178,17 @@ QPalette QGuiPlatformPlugin::palette()
 QString QGuiPlatformPlugin::systemIconThemeName()
 {
    QString result;
+
 #ifdef Q_WS_X11
    if (X11->desktopEnvironment == DE_GNOME) {
+
 #ifndef QT_NO_STYLE_GTK
       result = QGtkStylePrivate::getIconThemeName();
 #endif
       if (result.isEmpty()) {
          result = QString::fromLatin1("gnome");
       }
+
    } else if (X11->desktopEnvironment == DE_KDE) {
       result =  X11->desktopVersion >= 4 ? QString::fromLatin1("oxygen") : QString::fromLatin1("crystalsvg");
       QSettings settings(QKde::kdeHome() + QLatin1String("/share/config/kdeglobals"), QSettings::IniFormat);
@@ -196,29 +199,34 @@ QString QGuiPlatformPlugin::systemIconThemeName()
    return result;
 }
 
-
 QStringList QGuiPlatformPlugin::iconThemeSearchPaths()
 {
    QStringList paths;
+
 #if defined(Q_WS_X11)
    QString xdgDirString = QFile::decodeName(getenv("XDG_DATA_DIRS"));
+
    if (xdgDirString.isEmpty()) {
-      xdgDirString = QLatin1String("/usr/local/share/:/usr/share/");
+      xdgDirString = "/usr/local/share/:/usr/share/";
    }
 
-   QStringList xdgDirs = xdgDirString.split(QLatin1Char(':'));
+   QStringList xdgDirs = xdgDirString.split(':');
 
    for (int i = 0 ; i < xdgDirs.size() ; ++i) {
       QDir dir(xdgDirs[i]);
+
       if (dir.exists()) {
-         paths.append(dir.path() + QLatin1String("/icons"));
+         paths.append(dir.path() + "/icons");
       }
    }
+
    if (X11->desktopEnvironment == DE_KDE) {
       paths << QLatin1Char(':') + QKde::kdeHome() + QLatin1String("/share/icons");
       QStringList kdeDirs = QFile::decodeName(getenv("KDEDIRS")).split(QLatin1Char(':'));
+
       for (int i = 0 ; i < kdeDirs.count() ; ++i) {
-         QDir dir(QLatin1Char(':') + kdeDirs.at(i) + QLatin1String("/share/icons"));
+         QDir dir(':' + kdeDirs.at(i) + "/share/icons");
+
          if (dir.exists()) {
             paths.append(dir.path());
          }
@@ -226,17 +234,21 @@ QStringList QGuiPlatformPlugin::iconThemeSearchPaths()
    }
 
    // Add home directory first in search path
-   QDir homeDir(QDir::homePath() + QLatin1String("/.icons"));
+   QDir homeDir(QDir::homePath() + "/.icons");
+
    if (homeDir.exists()) {
       paths.prepend(homeDir.path());
    }
 #endif
 
 #if defined(Q_OS_WIN)
-   paths.append(qApp->applicationDirPath() + QLatin1String("/icons"));
+   paths.append(qApp->applicationDirPath() + "/icons");
+
 #elif defined(Q_OS_MAC)
-   paths.append(qApp->applicationDirPath() + QLatin1String("/../Resources/icons"));
+   paths.append(qApp->applicationDirPath() + "/../Resources/icons");
+
 #endif
+
    return paths;
 }
 

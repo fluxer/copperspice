@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,14 +23,15 @@
 #ifndef GSTREAMER_X11RENDERER_H
 #define GSTREAMER_X11RENDERER_H
 
-#include "videowidget.h"
-#include "common.h"
-#include <QtGui/QWidget>
+// located in gstreamer
+#include <videowidget.h>
+#include <common.h>
+
+#include <qwidget.h>
 #include <gst/gst.h>
+#include <qstringfwd.h>
 
 QT_BEGIN_NAMESPACE
-
-class QString;
 
 namespace Phonon
 {
@@ -46,17 +44,20 @@ class X11Renderer : public AbstractRenderer
 public:
     X11Renderer(VideoWidget *videoWidget);
     ~X11Renderer();
-    void handlePaint(QPaintEvent *event);
-    void aspectRatioChanged(Phonon::VideoWidget::AspectRatio aspectRatio);
-    void scaleModeChanged(Phonon::VideoWidget::ScaleMode scaleMode);
-    void movieSizeChanged(const QSize &movieSize);
-    void handleMediaNodeEvent(const MediaNodeEvent *event);
-    bool eventFilter(QEvent *);
-    bool paintsOnWidget() { return false; }
+
+    void handlePaint(QPaintEvent *event) override;
+    void aspectRatioChanged(Phonon::VideoWidget::AspectRatio aspectRatio) override;
+    void scaleModeChanged(Phonon::VideoWidget::ScaleMode scaleMode) override;
+    void movieSizeChanged(const QSize &movieSize) override;
+    void handleMediaNodeEvent(const MediaNodeEvent *event) override;
+    bool eventFilter(QEvent *) override;
+    bool paintsOnWidget() override { return false; }
+
     bool overlaySet() const { return m_overlaySet; }
     void setOverlay();
     void windowExposed();
     GstElement *createVideoSink();
+
 private:
     OverlayWidget *m_renderWidget;
     bool m_overlaySet;

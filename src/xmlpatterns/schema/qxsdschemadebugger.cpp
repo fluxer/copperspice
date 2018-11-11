@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -127,11 +124,13 @@ void XsdSchemaDebugger::dumpType(const SchemaType::Ptr &type)
       }
 
       const XsdAttributeUse::List uses = complexType->attributeUses();
-      qDebug("   %d attributes", uses.count());
+      qDebug("   %ld attributes", uses.count());
+
       for (int i = 0; i < uses.count(); ++i) {
          qDebug("      attr: %s", qPrintable(uses.at(i)->attribute()->displayName(m_namePool)));
       }
       qDebug("   has attribute wildcard: %s", complexType->attributeWildcard() ? "yes" : "no");
+
       if (complexType->attributeWildcard()) {
          dumpWildcard(complexType->attributeWildcard());
       }
@@ -139,6 +138,7 @@ void XsdSchemaDebugger::dumpType(const SchemaType::Ptr &type)
       if (complexType->contentType()->particle()) {
          dumpParticle(complexType->contentType()->particle(), 5);
       }
+
    } else {
       qDebug("\n+++ Simple Type +++");
       qDebug("Name: %s", qPrintable(type->displayName(m_namePool)));

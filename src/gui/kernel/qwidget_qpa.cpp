@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -422,7 +419,6 @@ void QWidgetPrivate::show_sys()
    }
 }
 
-
 void QWidgetPrivate::hide_sys()
 {
    Q_Q(QWidget);
@@ -717,15 +713,6 @@ int QWidget::metric(PaintDeviceMetric m) const
    return val;
 }
 
-/*!
-    \preliminary
-    \since 4.8
-
-    Sets the window to be the platform \a window specified.
-
-    The widget takes ownership of the \a window. Any platform window
-    previously set on the widget will be destroyed.
-*/
 void QWidget::setPlatformWindow(QPlatformWindow *window)
 {
    Q_D(QWidget);
@@ -739,12 +726,6 @@ void QWidget::setPlatformWindow(QPlatformWindow *window)
    topData->platformWindow = window;
 }
 
-/*!
-    \preliminary
-    \since 4.8
-
-    Returns the QPlatformWindow this widget will be drawn into.
-*/
 QPlatformWindow *QWidget::platformWindow() const
 {
    Q_D(const QWidget);
@@ -756,11 +737,6 @@ QPlatformWindow *QWidget::platformWindow() const
    return 0;
 }
 
-/*!
-    \since 4.8
-
-    Sets the platform window format for the widget to the \a format specified.
-*/
 void QWidget::setPlatformWindowFormat(const QPlatformWindowFormat &format)
 {
    if (isWindow() || testAttribute(Qt::WA_NativeWindow)) {
@@ -778,11 +754,6 @@ void QWidget::setPlatformWindowFormat(const QPlatformWindowFormat &format)
    }
 }
 
-/*!
-    \since 4.8
-
-    Returns the platform window format for the widget.
-*/
 QPlatformWindowFormat QWidget::platformWindowFormat() const
 {
    Q_D(const QWidget);
@@ -935,11 +906,13 @@ void qt_qpa_set_cursor(QWidget *w, bool force)
       cursorCursor = w->cursor();
       cursorWidget = w;
    } while (0);
-   foreach (QWeakPointer<QPlatformCursor> cursor, QPlatformCursorPrivate::getInstances())
-   if (cursor) {
-      cursor.data()->changeCursor(&cursorCursor, cursorWidget);
+
+   for (QWeakPointer<QPlatformCursor> cursor : QPlatformCursorPrivate::getInstances())  {
+      if (cursor) {
+         cursor.data()->changeCursor(&cursorCursor, cursorWidget);
+      }
    }
 }
-#endif //QT_NO_CURSOR 
+#endif //QT_NO_CURSOR
 
 QT_END_NAMESPACE

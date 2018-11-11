@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,11 +23,10 @@
 #ifndef QBITARRAY_H
 #define QBITARRAY_H
 
-#include <QtCore/qbytearray.h>
-
-QT_BEGIN_NAMESPACE
+#include <qbytearray.h>
 
 class QBitRef;
+
 class Q_CORE_EXPORT QBitArray
 {
    friend Q_CORE_EXPORT QDataStream &operator<<(QDataStream &, const QBitArray &);
@@ -42,6 +38,7 @@ class Q_CORE_EXPORT QBitArray
    inline QBitArray() {}
    explicit QBitArray(int size, bool val = false);
    QBitArray(const QBitArray &other) : d(other.d) {}
+
    inline QBitArray &operator=(const QBitArray &other) {
       d = other.d;
       return *this;
@@ -227,15 +224,10 @@ inline QBitRef QBitArray::operator[](uint i)
    return QBitRef(*this, i);
 }
 
-
-#ifndef QT_NO_DATASTREAM
 Q_CORE_EXPORT QDataStream &operator<<(QDataStream &, const QBitArray &);
 Q_CORE_EXPORT QDataStream &operator>>(QDataStream &, QBitArray &);
-#endif
 
 Q_DECLARE_TYPEINFO(QBitArray, Q_MOVABLE_TYPE);
 Q_DECLARE_SHARED(QBitArray)
 
-QT_END_NAMESPACE
-
-#endif // QBITARRAY_H
+#endif

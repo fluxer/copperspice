@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,6 +23,8 @@
 /***********************************************************************
 ** Copyright (C) 2007-2008, Apple, Inc.
 ***********************************************************************/
+
+#include <algorithm>
 
 #include <cs_carbon_wrapper_p.h>
 #include <qt_mac_p.h>
@@ -257,9 +256,13 @@ OSStatus qt_mac_drawCGImage(CGContextRef inContext, const CGRect *inBounds, CGIm
    // Verbatim copy if HIViewDrawCGImage (as shown on Carbon-Dev)
    OSStatus err = noErr;
 
+#if __clang_major__ < 9
+   // test xcode version
+
    require_action(inContext != NULL, InvalidContext, err = paramErr);
    require_action(inBounds != NULL, InvalidBounds, err = paramErr);
    require_action(inImage != NULL, InvalidImage, err = paramErr);
+#endif
 
    CGContextSaveGState( inContext );
    CGContextTranslateCTM (inContext, 0, inBounds->origin.y + CGRectGetMaxY(*inBounds));
@@ -269,9 +272,13 @@ OSStatus qt_mac_drawCGImage(CGContextRef inContext, const CGRect *inBounds, CGIm
 
    CGContextRestoreGState(inContext);
 
-InvalidImage:
-InvalidBounds:
-InvalidContext:
+#if __clang_major__ < 9
+   // test xcode version
+
+   InvalidImage:
+   InvalidBounds:
+   InvalidContext:
+#endif
 
    return err;
 }
@@ -295,7 +302,7 @@ struct qt_mac_enum_mapper {
 static qt_mac_enum_mapper qt_mac_mouse_symbols[] = {
    { kEventMouseButtonPrimary, QT_MAC_MAP_ENUM(Qt::LeftButton) },
    { kEventMouseButtonSecondary, QT_MAC_MAP_ENUM(Qt::RightButton) },
-   { kEventMouseButtonTertiary, QT_MAC_MAP_ENUM(Qt::MidButton) },
+   { kEventMouseButtonTertiary, QT_MAC_MAP_ENUM(Qt::MiddleButton) },
    { 4, QT_MAC_MAP_ENUM(Qt::XButton1) },
    { 5, QT_MAC_MAP_ENUM(Qt::XButton2) },
    { 0, QT_MAC_MAP_ENUM(0) }
@@ -541,30 +548,38 @@ static const KeyPair *const end = entries + NumEntries;
 QChar qtKey2CocoaKey(Qt::Key key)
 {
    // The first time this function is called, create a reverse
-   // looup table sorted on Qt Key rather than Cocoa key:
+   // lookup table sorted on Qt Key rather than Cocoa key:
+
    static QVector<KeyPair> rev_entries(NumEntries);
    static bool mustInit = true;
+
    if (mustInit) {
       mustInit = false;
+
       for (int i = 0; i < NumEntries; ++i) {
          rev_entries[i] = entries[i];
       }
-      qSort(rev_entries.begin(), rev_entries.end(), qtKey2CocoaKeySortLessThan);
+
+      std::sort(rev_entries.begin(), rev_entries.end(), qtKey2CocoaKeySortLessThan);
    }
-   const QVector<KeyPair>::iterator i
-      = qBinaryFind(rev_entries.begin(), rev_entries.end(), key);
-   if (i == rev_entries.end()) {
+
+   const QVector<KeyPair>::iterator i = std::lower_bound(rev_entries.begin(), rev_entries.end(), key);
+
+   if ((i == rev_entries.end()) || (key < *i)) {
       return QChar();
    }
+
    return i->cocoaKey;
 }
 
 static Qt::Key cocoaKey2QtKey(QChar keyCode)
 {
-   const KeyPair *i = qBinaryFind(entries, end, keyCode);
-   if (i == end) {
+   const KeyPair *i = std::lower_bound(entries, end, keyCode);
+
+   if ((i == end) || (keyCode < *i)) {
       return Qt::Key(keyCode.unicode());
    }
+
    return i->qtKey;
 }
 
@@ -666,7 +681,7 @@ bool qt_dispatchKeyEventWithCocoa(void * /*NSEvent * */ keyEvent, QWidget *widge
    int keyLength = [keyChars length];
 
    if (keyLength == 0) {
-      return false;   // Dead Key, nothing to do!
+      return false;   // Dead Key, nothing to do
    }
 
    bool ignoreText = false;
@@ -675,10 +690,13 @@ bool qt_dispatchKeyEventWithCocoa(void * /*NSEvent * */ keyEvent, QWidget *widge
 
    if (keyLength == 1) {
       QChar ch([keyChars characterAtIndex: 0]);
+
       if (ch.isLower()) {
-         ch = ch.toUpper();
+         ch = ch.toUpper()[0];
       }
-      qtKey = cocoaKey2QtKey(ch);
+
+      qtKey = cocoaKey2QtKey(ch)
+;
       // Do not set the text for Function-Key Unicodes characters (0xF700–0xF8FF).
       ignoreText = (ch.unicode() >= 0xF700 && ch.unicode() <= 0xF8FF);
    }
@@ -709,7 +727,7 @@ Qt::MouseButton cocoaButton2QtButton(NSInteger buttonNum)
       return Qt::RightButton;
    }
    if (buttonNum == 2) {
-      return Qt::MidButton;
+      return Qt::MiddleButton;
    }
    if (buttonNum == 3) {
       return Qt::XButton1;

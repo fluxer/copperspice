@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -32,7 +29,7 @@
 #include <qt_windows.h>
 #include <qapplication_p.h>
 #include <qtextcodec.h>
-#include <qregexp.h>
+#include <qregularexpression.h>
 #include <qalgorithms.h>
 #include <qmap.h>
 #include <qdnd_p.h>
@@ -238,113 +235,44 @@ Q_GLOBAL_STATIC(QWindowsMimeList, theMimeList);
     can perform conversions with convertToMime() and convertFromMime().
 */
 
-/*!
-Constructs a new conversion object, adding it to the globally accessed
-list of available converters.
-*/
 QWindowsMime::QWindowsMime()
 {
    theMimeList()->addWindowsMime(this);
 }
 
-/*!
-Destroys a conversion object, removing it from the global
-list of available converters.
-*/
 QWindowsMime::~QWindowsMime()
 {
    theMimeList()->removeWindowsMime(this);
 }
 
-
-/*!
-    Registers the MIME type \a mime, and returns an ID number
-    identifying the format on Windows.
-*/
 int QWindowsMime::registerMimeType(const QString &mime)
 {
-   int f = RegisterClipboardFormat(reinterpret_cast<const wchar_t *> (mime.utf16()));
-   if (!f) {
+   int f = RegisterClipboardFormat(mime.toStdWString().c_str());
+
+   if (! f) {
       qErrnoWarning("QWindowsMime::registerMimeType: Failed to register clipboard format");
    }
 
    return f;
 }
 
-
-/*!
-\fn bool QWindowsMime::canConvertFromMime(const FORMATETC &formatetc, const QMimeData *mimeData) const
-
-  Returns true if the converter can convert from the \a mimeData to
-  the format specified in \a formatetc.
-
-  All subclasses must reimplement this pure virtual function.
-*/
-
-/*!
-  \fn bool QWindowsMime::canConvertToMime(const QString &mimeType, IDataObject *pDataObj) const
-
-  Returns true if the converter can convert to the \a mimeType from
-  the available formats in \a pDataObj.
-
-  All subclasses must reimplement this pure virtual function.
-*/
-
-/*!
-\fn QString QWindowsMime::mimeForFormat(const FORMATETC &formatetc) const
-
-  Returns the mime type that will be created form the format specified
-  in \a formatetc, or an empty string if this converter does not support
-  \a formatetc.
-
-  All subclasses must reimplement this pure virtual function.
-*/
-
-/*!
-\fn QVector<FORMATETC> QWindowsMime::formatsForMime(const QString &mimeType, const QMimeData *mimeData) const
-
-  Returns a QVector of FORMATETC structures representing the different windows clipboard
-  formats that can be provided for the \a mimeType from the \a mimeData.
-
-  All subclasses must reimplement this pure virtual function.
-*/
-
-/*!
-    \fn QVariant QWindowsMime::convertToMime(const QString &mimeType, IDataObject *pDataObj,
-                                             QVariant::Type preferredType) const
-
-    Returns a QVariant containing the converted data for \a mimeType from \a pDataObj.
-    If possible the QVariant should be of the \a preferredType to avoid needless conversions.
-
-    All subclasses must reimplement this pure virtual function.
-*/
-
-/*!
-\fn bool QWindowsMime::convertFromMime(const FORMATETC &formatetc, const QMimeData *mimeData, STGMEDIUM * pmedium) const
-
-  Convert the \a mimeData to the format specified in \a formatetc.
-  The converted data should then be placed in \a pmedium structure.
-
-  Return true if the conversion was successful.
-
-  All subclasses must reimplement this pure virtual function.
-*/
-
-
 QWindowsMime *QWindowsMime::converterFromMime(const FORMATETC &formatetc, const QMimeData *mimeData)
 {
    QList<QWindowsMime *> mimes = theMimeList()->windowsMimes();
+
    for (int i = mimes.size() - 1; i >= 0; --i) {
       if (mimes.at(i)->canConvertFromMime(formatetc, mimeData)) {
          return mimes.at(i);
       }
    }
+
    return 0;
 }
 
 QWindowsMime *QWindowsMime::converterToMime(const QString &mimeType, IDataObject *pDataObj)
 {
    QList<QWindowsMime *> mimes = theMimeList()->windowsMimes();
+
    for (int i = mimes.size() - 1; i >= 0; --i) {
       if (mimes.at(i)->canConvertToMime(mimeType, pDataObj)) {
          return mimes.at(i);
@@ -357,17 +285,19 @@ QVector<FORMATETC> QWindowsMime::allFormatsForMime(const QMimeData *mimeData)
 {
    QList<QWindowsMime *> mimes = theMimeList()->windowsMimes();
    QVector<FORMATETC> formatics;
+
    formatics.reserve(20);
+
 #ifndef QT_NO_DRAGANDDROP
    QStringList formats = QInternalMimeData::formatsHelper(mimeData);
+
    for (int f = 0; f < formats.size(); ++f) {
       for (int i = mimes.size() - 1; i >= 0; --i) {
          formatics += mimes.at(i)->formatsForMime(formats.at(f), mimeData);
       }
    }
-#else
-   Q_UNUSED(mimeData);
-#endif //QT_NO_DRAGANDDROP
+#endif
+
    return formatics;
 }
 
@@ -375,6 +305,7 @@ QStringList QWindowsMime::allMimesForFormats(IDataObject *pDataObj)
 {
    QList<QWindowsMime *> mimes = theMimeList()->windowsMimes();
    QStringList formats;
+
    LPENUMFORMATETC FAR fmtenum;
    HRESULT hr = pDataObj->EnumFormatEtc(DATADIR_GET, &fmtenum);
 
@@ -408,12 +339,12 @@ QStringList QWindowsMime::allMimesForFormats(IDataObject *pDataObj)
 class QWindowsMimeText : public QWindowsMime
 {
  public:
-   bool canConvertToMime(const QString &mimeType, IDataObject *pDataObj) const;
-   QVariant convertToMime(const QString &mime, LPDATAOBJECT pDataObj, QVariant::Type preferredType) const;
-   QString mimeForFormat(const FORMATETC &formatetc) const;
-   bool canConvertFromMime(const FORMATETC &formatetc, const QMimeData *mimeData) const;
-   bool convertFromMime(const FORMATETC &formatetc, const QMimeData *mimeData, STGMEDIUM *pmedium) const;
-   QVector<FORMATETC> formatsForMime(const QString &mimeType, const QMimeData *mimeData) const;
+   bool canConvertToMime(const QString &mimeType, IDataObject *pDataObj) const override;
+   QVariant convertToMime(const QString &mime, LPDATAOBJECT pDataObj, QVariant::Type preferredType) const override;
+   QString mimeForFormat(const FORMATETC &formatetc) const override;
+   bool canConvertFromMime(const FORMATETC &formatetc, const QMimeData *mimeData) const override;
+   bool convertFromMime(const FORMATETC &formatetc, const QMimeData *mimeData, STGMEDIUM *pmedium) const override;
+   QVector<FORMATETC> formatsForMime(const QString &mimeType, const QMimeData *mimeData) const override;
 };
 
 bool QWindowsMimeText::canConvertFromMime(const FORMATETC &formatetc, const QMimeData *mimeData) const
@@ -432,71 +363,81 @@ bool QWindowsMimeText::convertFromMime(const FORMATETC &formatetc, const QMimeDa
    if (canConvertFromMime(formatetc, mimeData)) {
       QByteArray data;
       int cf = getCf(formatetc);
+
       if (cf == CF_TEXT) {
-         data = mimeData->text().toLocal8Bit();
+         data = mimeData->text().toLatin1();
+
          // Anticipate required space for CRLFs at 1/40
          int maxsize = data.size() + data.size() / 40 + 3;
          QByteArray r(maxsize, '\0');
          char *o = r.data();
+
          const char *d = data.data();
-         const int s = data.size();
+         const int s   = data.size();
          bool cr = false;
-         int j = 0;
+         int j   = 0;
+
          for (int i = 0; i < s; i++) {
             char c = d[i];
+
             if (c == '\r') {
                cr = true;
+
             } else {
                if (c == '\n') {
-                  if (!cr) {
+                  if (! cr) {
                      o[j++] = '\r';
                   }
                }
+
                cr = false;
             }
+
             o[j++] = c;
+
             if (j + 3 >= maxsize) {
                maxsize += maxsize / 4;
                r.resize(maxsize);
                o = r.data();
             }
          }
+
          o[j] = 0;
          return setData(r, pmedium);
+
       } else if (cf == CF_UNICODETEXT) {
          QString str = mimeData->text();
-         const QChar *u = str.unicode();
-         QString res;
-         const int s = str.length();
-         int maxsize = s + s / 40 + 3;
-         res.resize(maxsize);
-         int ri = 0;
+
+         QString16 tmp;
          bool cr = false;
-         for (int i = 0; i < s; ++i) {
-            if (*u == QLatin1Char('\r')) {
+
+         for (QChar c : str) {
+            if (c == '\r') {
                cr = true;
+
             } else {
-               if (*u == QLatin1Char('\n') && !cr) {
-                  res[ri++] = QLatin1Char('\r');
+               if (c == '\n' && ! cr) {
+                  tmp.append('\r');
                }
+
                cr = false;
             }
-            res[ri++] = *u;
-            if (ri + 3 >= maxsize) {
-               maxsize += maxsize / 4;
-               res.resize(maxsize);
-            }
-            ++u;
+
+            tmp.append(c);
          }
-         res.truncate(ri);
-         const int byteLength = res.length() * sizeof(ushort);
-         QByteArray r(byteLength + 2, '\0');
-         memcpy(r.data(), res.unicode(), byteLength);
-         r[byteLength] = 0;
-         r[byteLength + 1] = 0;
-         return setData(r, pmedium);
+
+         const int byteLength = tmp.size_storage() * sizeof(char16_t);
+
+         QByteArray retval(byteLength + 2, '\0');
+         memcpy(retval.data(), tmp.constData(), byteLength);
+
+         retval[byteLength]     = 0;
+         retval[byteLength + 1] = 0;
+
+         return setData(retval, pmedium);
       }
    }
+
    return false;
 }
 
@@ -520,10 +461,12 @@ QString QWindowsMimeText::mimeForFormat(const FORMATETC &formatetc) const
 QVector<FORMATETC> QWindowsMimeText::formatsForMime(const QString &mimeType, const QMimeData *mimeData) const
 {
    QVector<FORMATETC> formatics;
-   if (mimeType.startsWith(QLatin1String("text/plain")) && mimeData->hasText()) {
+
+   if (mimeType.startsWith("text/plain") && mimeData->hasText()) {
       formatics += setCf(CF_UNICODETEXT);
       formatics += setCf(CF_TEXT);
    }
+
    return formatics;
 }
 
@@ -534,27 +477,36 @@ QVariant QWindowsMimeText::convertToMime(const QString &mime, LPDATAOBJECT pData
    if (canConvertToMime(mime, pDataObj)) {
       QString str;
       QByteArray data = getData(CF_UNICODETEXT, pDataObj);
-      if (!data.isEmpty()) {
-         str = QString::fromWCharArray((const wchar_t *)data.data());
-         str.replace(QLatin1String("\r\n"), QLatin1String("\n"));
+
+      if (! data.isEmpty()) {
+         std::wstring tmp((const wchar_t *)data.constData());
+
+         str = QString::fromStdWString(tmp);
+         str.replace("\r\n", "\n");
+
       } else {
          data = getData(CF_TEXT, pDataObj);
+
          if (!data.isEmpty()) {
             const char *d = data.data();
-            const int s = qstrlen(d);
+            const int s   = qstrlen(d);
+
             QByteArray r(data.size() + 1, '\0');
             char *o = r.data();
             int j = 0;
+
             for (int i = 0; i < s; i++) {
                char c = d[i];
                if (c != '\r') {
                   o[j++] = c;
                }
             }
+
             o[j] = 0;
-            str = QString::fromLocal8Bit(r);
+            str = QString::fromLatin1(r);
          }
       }
+
       if (preferredType == QVariant::String) {
          ret = str;
       } else {
@@ -569,12 +521,13 @@ class QWindowsMimeURI : public QWindowsMime
 {
  public:
    QWindowsMimeURI();
-   bool canConvertToMime(const QString &mimeType, IDataObject *pDataObj) const;
-   QVariant convertToMime(const QString &mime, LPDATAOBJECT pDataObj, QVariant::Type preferredType) const;
-   QString mimeForFormat(const FORMATETC &formatetc) const;
-   bool canConvertFromMime(const FORMATETC &formatetc, const QMimeData *mimeData) const;
-   bool convertFromMime(const FORMATETC &formatetc, const QMimeData *mimeData, STGMEDIUM *pmedium) const;
-   QVector<FORMATETC> formatsForMime(const QString &mimeType, const QMimeData *mimeData) const;
+   bool canConvertToMime(const QString &mimeType, IDataObject *pDataObj) const override;
+   QVariant convertToMime(const QString &mime, LPDATAOBJECT pDataObj, QVariant::Type preferredType) const override;
+   QString mimeForFormat(const FORMATETC &formatetc) const override;
+   bool canConvertFromMime(const FORMATETC &formatetc, const QMimeData *mimeData) const override;
+   bool convertFromMime(const FORMATETC &formatetc, const QMimeData *mimeData, STGMEDIUM *pmedium) const override;
+   QVector<FORMATETC> formatsForMime(const QString &mimeType, const QMimeData *mimeData) const override;
+
  private:
    int CF_INETURL_W; // wide char version
    int CF_INETURL;
@@ -607,8 +560,10 @@ bool QWindowsMimeURI::convertFromMime(const FORMATETC &formatetc, const QMimeDat
          QList<QUrl> urls = mimeData->urls();
          QStringList fileNames;
          int size = sizeof(DROPFILES) + 2;
+
          for (int i = 0; i < urls.size(); i++) {
             QString fn = QDir::toNativeSeparators(urls.at(i).toLocalFile());
+
             if (!fn.isEmpty()) {
                size += sizeof(ushort) * (fn.length() + 1);
                fileNames.append(fn);
@@ -618,37 +573,50 @@ bool QWindowsMimeURI::convertFromMime(const FORMATETC &formatetc, const QMimeDat
          QByteArray result(size, '\0');
          DROPFILES *d = (DROPFILES *)result.data();
          d->pFiles = sizeof(DROPFILES);
+
          GetCursorPos(&d->pt); // try
+
          d->fNC = true;
          char *files = ((char *)d) + d->pFiles;
-
          d->fWide = true;
+
          wchar_t *f = (wchar_t *)files;
+
          for (int i = 0; i < fileNames.size(); i++) {
-            int l = fileNames.at(i).length();
-            memcpy(f, fileNames.at(i).utf16(), l * sizeof(ushort));
-            f += l;
-            *f++ = 0;
+            QString16 tmp = fileNames.at(i).toUtf16();
+            memcpy(f, tmp.constData(), tmp.size_storage() * sizeof(ushort));
+
+            f += tmp.size_storage();
+            *f++ = '\0';
          }
-         *f = 0;
+
+         *f = '\0';
 
          return setData(result, pmedium);
+
       } else if (getCf(formatetc) == CF_INETURL_W) {
          QList<QUrl> urls = mimeData->urls();
          QByteArray result;
-         if (!urls.isEmpty()) {
+
+         if (! urls.isEmpty()) {
             QString url = urls.at(0).toString();
-            result = QByteArray((const char *)url.utf16(), url.length() * sizeof(ushort));
+
+            QString16 tmp = url.toUtf16();
+            result = QByteArray((const char *)tmp.constData(), tmp.size_storage() * sizeof(ushort));
          }
+
          result.append('\0');
          result.append('\0');
          return setData(result, pmedium);
+
       } else if (getCf(formatetc) == CF_INETURL) {
          QList<QUrl> urls = mimeData->urls();
          QByteArray result;
-         if (!urls.isEmpty()) {
-            result = urls.at(0).toString().toLocal8Bit();
+
+         if (! urls.isEmpty()) {
+            result = urls.at(0).toString().toLatin1();
          }
+
          return setData(result, pmedium);
       }
    }
@@ -658,7 +626,7 @@ bool QWindowsMimeURI::convertFromMime(const FORMATETC &formatetc, const QMimeDat
 
 bool QWindowsMimeURI::canConvertToMime(const QString &mimeType, IDataObject *pDataObj) const
 {
-   return mimeType == QLatin1String("text/uri-list")
+   return mimeType == "text/uri-list"
           && (canGetData(CF_HDROP, pDataObj) || canGetData(CF_INETURL_W, pDataObj) || canGetData(CF_INETURL, pDataObj));
 }
 
@@ -688,8 +656,7 @@ QVector<FORMATETC> QWindowsMimeURI::formatsForMime(const QString &mimeType, cons
    return formatics;
 }
 
-QVariant QWindowsMimeURI::convertToMime(const QString &mimeType, LPDATAOBJECT pDataObj,
-                                        QVariant::Type preferredType) const
+QVariant QWindowsMimeURI::convertToMime(const QString &mimeType, LPDATAOBJECT pDataObj, QVariant::Type preferredType) const
 {
    if (mimeType == QLatin1String("text/uri-list")) {
       if (canGetData(CF_HDROP, pDataObj)) {
@@ -705,16 +672,24 @@ QVariant QWindowsMimeURI::convertToMime(const QString &mimeType, LPDATAOBJECT pD
          if (hdrop->fWide) {
             const wchar_t *filesw = (const wchar_t *)(data.data() + hdrop->pFiles);
             int i = 0;
+
+            std::wstring tmp;
+
             while (filesw[i]) {
-               QString fileurl = QString::fromWCharArray(filesw + i);
+
+               tmp = filesw + i;
+               QString fileurl = QString::fromStdWString(tmp);
+
                urls += QUrl::fromLocalFile(fileurl);
                i += fileurl.length() + 1;
             }
+
          } else {
             const char *files = (const char *)data.data() + hdrop->pFiles;
             int i = 0;
+
             while (files[i]) {
-               urls += QUrl::fromLocalFile(QString::fromLocal8Bit(files + i));
+               urls += QUrl::fromLocalFile(QString::fromLatin1(files + i));
                i += int(strlen(files + i)) + 1;
             }
          }
@@ -724,20 +699,26 @@ QVariant QWindowsMimeURI::convertToMime(const QString &mimeType, LPDATAOBJECT pD
          } else if (!urls.isEmpty()) {
             return urls;
          }
+
       } else if (canGetData(CF_INETURL_W, pDataObj)) {
          QByteArray data = getData(CF_INETURL_W, pDataObj);
          if (data.isEmpty()) {
             return QVariant();
          }
-         return QUrl(QString::fromWCharArray((const wchar_t *)data.constData()));
+
+         std::wstring tmp((const wchar_t *)data.constData());
+         return QUrl(QString::fromStdWString(tmp));
+
       } else if (canGetData(CF_INETURL, pDataObj)) {
          QByteArray data = getData(CF_INETURL, pDataObj);
+
          if (data.isEmpty()) {
             return QVariant();
          }
-         return QUrl(QString::fromLocal8Bit(data.constData()));
+         return QUrl(QString::fromLatin1(data.constData()));
       }
    }
+
    return QVariant();
 }
 
@@ -747,14 +728,14 @@ class QWindowsMimeHtml : public QWindowsMime
    QWindowsMimeHtml();
 
    // for converting from Qt
-   bool canConvertFromMime(const FORMATETC &formatetc, const QMimeData *mimeData) const;
-   bool convertFromMime(const FORMATETC &formatetc, const QMimeData *mimeData, STGMEDIUM *pmedium) const;
-   QVector<FORMATETC> formatsForMime(const QString &mimeType, const QMimeData *mimeData) const;
+   bool canConvertFromMime(const FORMATETC &formatetc, const QMimeData *mimeData) const override;
+   bool convertFromMime(const FORMATETC &formatetc, const QMimeData *mimeData, STGMEDIUM *pmedium) const override;
+   QVector<FORMATETC> formatsForMime(const QString &mimeType, const QMimeData *mimeData) const override;
 
    // for converting to Qt
-   bool canConvertToMime(const QString &mimeType, IDataObject *pDataObj) const;
-   QVariant convertToMime(const QString &mime, IDataObject *pDataObj, QVariant::Type preferredType) const;
-   QString mimeForFormat(const FORMATETC &formatetc) const;
+   bool canConvertToMime(const QString &mimeType, IDataObject *pDataObj) const override;
+   QVariant convertToMime(const QString &mime, IDataObject *pDataObj, QVariant::Type preferredType) const override;
+   QString mimeForFormat(const FORMATETC &formatetc) const override;
 
  private:
    int CF_HTML;
@@ -890,14 +871,15 @@ class QWindowsMimeImage : public QWindowsMime
  public:
    QWindowsMimeImage();
    // for converting from Qt
-   bool canConvertFromMime(const FORMATETC &formatetc, const QMimeData *mimeData) const;
-   bool convertFromMime(const FORMATETC &formatetc, const QMimeData *mimeData, STGMEDIUM *pmedium) const;
-   QVector<FORMATETC> formatsForMime(const QString &mimeType, const QMimeData *mimeData) const;
+   bool canConvertFromMime(const FORMATETC &formatetc, const QMimeData *mimeData) const override;
+   bool convertFromMime(const FORMATETC &formatetc, const QMimeData *mimeData, STGMEDIUM *pmedium) const override;
+   QVector<FORMATETC> formatsForMime(const QString &mimeType, const QMimeData *mimeData) const override;
 
    // for converting to Qt
-   bool canConvertToMime(const QString &mimeType, IDataObject *pDataObj) const;
-   QVariant convertToMime(const QString &mime, IDataObject *pDataObj, QVariant::Type preferredType) const;
-   QString mimeForFormat(const FORMATETC &formatetc) const;
+   bool canConvertToMime(const QString &mimeType, IDataObject *pDataObj) const override;
+   QVariant convertToMime(const QString &mime, IDataObject *pDataObj, QVariant::Type preferredType) const override;
+   QString mimeForFormat(const FORMATETC &formatetc) const override;
+
  private:
    bool hasOriginalDIBV5(IDataObject *pDataObj) const;
    UINT CF_PNG;
@@ -1055,14 +1037,14 @@ class QBuiltInMimes : public QWindowsMime
    QBuiltInMimes();
 
    // for converting from Qt
-   bool canConvertFromMime(const FORMATETC &formatetc, const QMimeData *mimeData) const;
-   bool convertFromMime(const FORMATETC &formatetc, const QMimeData *mimeData, STGMEDIUM *pmedium) const;
-   QVector<FORMATETC> formatsForMime(const QString &mimeType, const QMimeData *mimeData) const;
+   bool canConvertFromMime(const FORMATETC &formatetc, const QMimeData *mimeData) const override;
+   bool convertFromMime(const FORMATETC &formatetc, const QMimeData *mimeData, STGMEDIUM *pmedium) const override;
+   QVector<FORMATETC> formatsForMime(const QString &mimeType, const QMimeData *mimeData) const override;
 
    // for converting to Qt
-   bool canConvertToMime(const QString &mimeType, IDataObject *pDataObj) const;
-   QVariant convertToMime(const QString &mime, IDataObject *pDataObj, QVariant::Type preferredType) const;
-   QString mimeForFormat(const FORMATETC &formatetc) const;
+   bool canConvertToMime(const QString &mimeType, IDataObject *pDataObj) const override;
+   QVariant convertToMime(const QString &mime, IDataObject *pDataObj, QVariant::Type preferredType) const override;
+   QString mimeForFormat(const FORMATETC &formatetc) const override;
 
  private:
    QMap<int, QString> outFormats;
@@ -1090,44 +1072,44 @@ bool QBuiltInMimes::convertFromMime(const FORMATETC &formatetc, const QMimeData 
 {
    if (canConvertFromMime(formatetc, mimeData)) {
       QByteArray data;
-      if (outFormats.value(getCf(formatetc)) == QLatin1String("text/html")) {
+
+      if (outFormats.value(getCf(formatetc)) == "text/html") {
          // text/html is in wide chars on windows (compatible with mozillia)
          QString html = mimeData->html();
-         // same code as in the text converter up above
-         const QChar *u = html.unicode();
-         QString res;
-         const int s = html.length();
-         int maxsize = s + s / 40 + 3;
-         res.resize(maxsize);
-         int ri = 0;
+
+         QString16 tmp;
          bool cr = false;
-         for (int i = 0; i < s; ++i) {
-            if (*u == QLatin1Char('\r')) {
+
+         for (QChar c : html) {
+            if (c == '\r') {
                cr = true;
+
             } else {
-               if (*u == QLatin1Char('\n') && !cr) {
-                  res[ri++] = QLatin1Char('\r');
+               if (c == '\n' && ! cr) {
+                  tmp.append('\r');
                }
+
                cr = false;
             }
-            res[ri++] = *u;
-            if (ri + 3 >= maxsize) {
-               maxsize += maxsize / 4;
-               res.resize(maxsize);
-            }
-            ++u;
+
+            tmp.append(c);
          }
-         res.truncate(ri);
-         const int byteLength = res.length() * sizeof(ushort);
-         QByteArray r(byteLength + 2, '\0');
-         memcpy(r.data(), res.unicode(), byteLength);
-         r[byteLength] = 0;
-         r[byteLength + 1] = 0;
-         data = r;
+
+         const int byteLength = tmp.size_storage() * sizeof(char16_t);
+
+         QByteArray retval(byteLength + 2, '\0');
+         memcpy(retval.data(), tmp.constData(), byteLength);
+
+         retval[byteLength]     = 0;
+         retval[byteLength + 1] = 0;
+
+         data = retval;
+
       } else {
+
 #ifndef QT_NO_DRAGANDDROP
          data = QInternalMimeData::renderDataHelper(outFormats.value(getCf(formatetc)), mimeData);
-#endif //QT_NO_DRAGANDDROP
+#endif
       }
       return setData(data, pmedium);
    }
@@ -1137,31 +1119,35 @@ bool QBuiltInMimes::convertFromMime(const FORMATETC &formatetc, const QMimeData 
 QVector<FORMATETC> QBuiltInMimes::formatsForMime(const QString &mimeType, const QMimeData *mimeData) const
 {
    QVector<FORMATETC> formatetcs;
+
    if (!outFormats.keys(mimeType).isEmpty() && mimeData->formats().contains(mimeType)) {
       formatetcs += setCf(outFormats.key(mimeType));
    }
+
    return formatetcs;
 }
 
 bool QBuiltInMimes::canConvertToMime(const QString &mimeType, IDataObject *pDataObj) const
 {
-   return (!inFormats.keys(mimeType).isEmpty())
+   return (! inFormats.keys(mimeType).isEmpty())
           && canGetData(inFormats.key(mimeType), pDataObj);
 }
 
-QVariant QBuiltInMimes::convertToMime(const QString &mimeType, IDataObject *pDataObj,
-                                      QVariant::Type preferredType) const
+QVariant QBuiltInMimes::convertToMime(const QString &mimeType, IDataObject *pDataObj, QVariant::Type preferredType) const
 {
    QVariant val;
    if (canConvertToMime(mimeType, pDataObj)) {
       QByteArray data = getData(inFormats.key(mimeType), pDataObj);
-      if (!data.isEmpty()) {
+
+      if (! data.isEmpty()) {
+
 #ifdef QMIME_DEBUG
          qDebug("QBuiltInMimes::convertToMime()");
 #endif
          if (mimeType == QLatin1String("text/html") && preferredType == QVariant::String) {
             // text/html is in wide chars on windows (compatible with Mozilla)
-            val = QString::fromWCharArray((const wchar_t *)data.data());
+            val = QString::fromStdWString(std::wstring((const wchar_t *)data.constData()));
+
          } else {
             val = data; // it should be enough to return the data and let QMimeData do the rest.
          }
@@ -1182,14 +1168,14 @@ class QLastResortMimes : public QWindowsMime
 
    QLastResortMimes();
    // for converting from Qt
-   bool canConvertFromMime(const FORMATETC &formatetc, const QMimeData *mimeData) const;
-   bool convertFromMime(const FORMATETC &formatetc, const QMimeData *mimeData, STGMEDIUM *pmedium) const;
-   QVector<FORMATETC> formatsForMime(const QString &mimeType, const QMimeData *mimeData) const;
+   bool canConvertFromMime(const FORMATETC &formatetc, const QMimeData *mimeData) const override;
+   bool convertFromMime(const FORMATETC &formatetc, const QMimeData *mimeData, STGMEDIUM *pmedium) const override;
+   QVector<FORMATETC> formatsForMime(const QString &mimeType, const QMimeData *mimeData) const override;
 
    // for converting to Qt
-   bool canConvertToMime(const QString &mimeType, IDataObject *pDataObj) const;
-   QVariant convertToMime(const QString &mime, IDataObject *pDataObj, QVariant::Type preferredType) const;
-   QString mimeForFormat(const FORMATETC &formatetc) const;
+   bool canConvertToMime(const QString &mimeType, IDataObject *pDataObj) const override;
+   QVariant convertToMime(const QString &mime, IDataObject *pDataObj, QVariant::Type preferredType) const override;
+   QString mimeForFormat(const FORMATETC &formatetc) const override;
 
  private:
    QMap<int, QString> formats;
@@ -1214,6 +1200,7 @@ QLastResortMimes::QLastResortMimes()
       ianaTypes.append(QLatin1String("text/"));
       ianaTypes.append(QLatin1String("video/"));
    }
+
    //Types handled by other classes
    if (!excludeList.size()) {
       excludeList.append(QLatin1String("HTML Format"));
@@ -1286,15 +1273,19 @@ bool QLastResortMimes::canConvertToMime(const QString &mimeType, IDataObject *pD
 {
    if (isCustomMimeType(mimeType)) {
       QString clipFormat = customMimeType(mimeType);
-      int cf = RegisterClipboardFormat(reinterpret_cast<const wchar_t *> (clipFormat.utf16()));
+      int cf = RegisterClipboardFormat(clipFormat.toStdWString().c_str());
       return canGetData(cf, pDataObj);
+
    } else if (formats.keys(mimeType).isEmpty()) {
       // if it is not in there then register it an see if we can get it
       int cf = QWindowsMime::registerMimeType(mimeType);
       return canGetData(cf, pDataObj);
+
    } else {
       return canGetData(formats.key(mimeType), pDataObj);
+
    }
+
    return false;
 }
 
@@ -1303,18 +1294,24 @@ QVariant QLastResortMimes::convertToMime(const QString &mimeType, IDataObject *p
 {
    Q_UNUSED(preferredType);
    QVariant val;
+
    if (canConvertToMime(mimeType, pDataObj)) {
       QByteArray data;
+
       if (isCustomMimeType(mimeType)) {
          QString clipFormat = customMimeType(mimeType);
-         int cf = RegisterClipboardFormat(reinterpret_cast<const wchar_t *> (clipFormat.utf16()));
+         int cf = RegisterClipboardFormat(clipFormat.toStdWString().c_str());
          data = getData(cf, pDataObj);
+
       } else if (formats.keys(mimeType).isEmpty()) {
          int cf = QWindowsMime::registerMimeType(mimeType);
          data = getData(cf, pDataObj);
+
       } else {
          data = getData(formats.key(mimeType), pDataObj);
+
       }
+
       if (!data.isEmpty()) {
          val = data;   // it should be enough to return the data and let QMimeData do the rest.
       }
@@ -1325,38 +1322,43 @@ QVariant QLastResortMimes::convertToMime(const QString &mimeType, IDataObject *p
 QString QLastResortMimes::mimeForFormat(const FORMATETC &formatetc) const
 {
    QString format = formats.value(getCf(formatetc));
-   if (!format.isEmpty()) {
+   if (! format.isEmpty()) {
       return format;
    }
 
-   wchar_t buffer[256];
-   int len = GetClipboardFormatName(getCf(formatetc), buffer, 256);
+   std::wstring buffer(256, L'\0');
+   int len = GetClipboardFormatName(getCf(formatetc), &buffer[0], 256);
 
    if (len) {
-      QString clipFormat = QString::fromWCharArray(buffer, len);
+      QString clipFormat = QString::fromStdWString(buffer);
+
 #ifndef QT_NO_DRAGANDDROP
       if (QInternalMimeData::canReadData(clipFormat)) {
          format = clipFormat;
+
       } else if ((formatetc.cfFormat >= 0xC000)) {
          //create the mime as custom. not registered.
-         if (!excludeList.contains(clipFormat, Qt::CaseInsensitive)) {
+         if (! excludeList.contains(clipFormat, Qt::CaseInsensitive)) {
             //check if this is a mime type
             bool ianaType = false;
             int sz = ianaTypes.size();
+
             for (int i = 0; i < sz; i++) {
                if (clipFormat.startsWith(ianaTypes[i], Qt::CaseInsensitive)) {
                   ianaType =  true;
                   break;
                }
             }
+
             if (!ianaType) {
-               format = QLatin1String(x_qt_windows_mime) + clipFormat + QLatin1Char('\"');
+               format = QLatin1String(x_qt_windows_mime) + clipFormat + '\"';
             } else {
                format = clipFormat;
             }
          }
       }
-#endif //QT_NO_DRAGANDDROP
+#endif
+
    }
 
    return format;

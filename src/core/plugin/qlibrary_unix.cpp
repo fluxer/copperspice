@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -29,7 +26,7 @@
 #include <qcoreapplication.h>
 #include <qfilesystementry_p.h>
 
-#ifdef Q_OS_MAC
+#ifdef Q_OS_DARWIN
 #include <qcore_mac_p.h>
 #endif
 
@@ -37,13 +34,8 @@
 #define QT_NO_DYNAMIC_LIBRARY
 #endif
 
-QT_BEGIN_NAMESPACE
-
 #if !defined(QT_HPUX_LD) && !defined(QT_NO_DYNAMIC_LIBRARY)
-
-QT_BEGIN_INCLUDE_NAMESPACE
 #include <dlfcn.h>
-QT_END_INCLUDE_NAMESPACE
 #endif
 
 static QString qdlerror()
@@ -55,7 +47,7 @@ static QString qdlerror()
 #else
    const char *err = strerror(errno);
 #endif
-   return err ? QLatin1Char('(') + QString::fromLocal8Bit(err) + QLatin1Char(')') : QString();
+   return err ? QString('(' + QString::fromUtf8(err) + ')') : QString();
 }
 
 bool QLibraryPrivate::load_sys()
@@ -94,21 +86,21 @@ bool QLibraryPrivate::load_sys()
       // .so is preferred.
 # if defined(__ia64)
       if (!fullVersion.isEmpty()) {
-         suffixes << QString::fromLatin1(".so.%1").arg(fullVersion);
+         suffixes << QString::fromLatin1(".so.%1").formatArg(fullVersion);
       } else {
          suffixes << QLatin1String(".so");
       }
 # endif
       if (!fullVersion.isEmpty()) {
-         suffixes << QString::fromLatin1(".sl.%1").arg(fullVersion);
-         suffixes << QString::fromLatin1(".%1").arg(fullVersion);
+         suffixes << QString::fromLatin1(".sl.%1").formatArg(fullVersion);
+         suffixes << QString::fromLatin1(".%1").formatArg(fullVersion);
       } else {
          suffixes << QLatin1String(".sl");
       }
 #else
 
       if (!fullVersion.isEmpty()) {
-         suffixes << QString::fromLatin1(".so.%1").arg(fullVersion);
+         suffixes << QString::fromLatin1(".so.%1").formatArg(fullVersion);
       } else {
          suffixes << QLatin1String(".so");
       }
@@ -116,8 +108,8 @@ bool QLibraryPrivate::load_sys()
 
 # ifdef Q_OS_MAC
       if (!fullVersion.isEmpty()) {
-         suffixes << QString::fromLatin1(".%1.bundle").arg(fullVersion);
-         suffixes << QString::fromLatin1(".%1.dylib").arg(fullVersion);
+         suffixes << QString::fromLatin1(".%1.bundle").formatArg(fullVersion);
+         suffixes << QString::fromLatin1(".%1.dylib").formatArg(fullVersion);
       } else {
          suffixes << QLatin1String(".bundle") << QLatin1String(".dylib");
       }
@@ -194,7 +186,7 @@ bool QLibraryPrivate::load_sys()
 #if defined(QT_HPUX_LD)
          pHnd = (void *)shl_load(QFile::encodeName(attempt), dlFlags, 0);
 #else
-         pHnd = dlopen(QFile::encodeName(attempt), dlFlags);
+         pHnd = dlopen(QFile::encodeName(attempt).constData(), dlFlags);
 #endif
 
          if (!pHnd && fileName.startsWith(QLatin1Char('/')) && QFile::exists(attempt)) {
@@ -213,13 +205,17 @@ bool QLibraryPrivate::load_sys()
       QByteArray utf8Bundle = fileName.toUtf8();
       QCFType<CFURLRef> bundleUrl = CFURLCreateFromFileSystemRepresentation(NULL,
                                     reinterpret_cast<const UInt8 *>(utf8Bundle.data()), utf8Bundle.length(), true);
+
       QCFType<CFBundleRef> bundle = CFBundleCreate(NULL, bundleUrl);
+
       if (bundle) {
          QCFType<CFURLRef> url = CFBundleCopyExecutableURL(bundle);
          char executableFile[FILENAME_MAX];
+
          CFURLGetFileSystemRepresentation(url, true, reinterpret_cast<UInt8 *>(executableFile), FILENAME_MAX);
+
          attempt = QString::fromUtf8(executableFile);
-         pHnd = dlopen(QFile::encodeName(attempt), dlFlags);
+         pHnd = dlopen(QFile::encodeName(attempt).constData(), dlFlags);
       }
    }
 #endif
@@ -229,7 +225,7 @@ bool QLibraryPrivate::load_sys()
       qualifiedFileName = attempt;
       errorString.clear();
    } else {
-      errorString = QLibrary::tr("Cannot load library %1: %2").arg(fileName).arg(qdlerror());
+      errorString = QLibrary::tr("Can not load library %1: %2").formatArg(fileName).formatArg(qdlerror());
    }
    return (pHnd != 0);
 }
@@ -242,7 +238,7 @@ bool QLibraryPrivate::unload_sys()
 #  else
    if (dlclose(pHnd)) {
 #  endif
-      errorString = QLibrary::tr("Cannot unload library %1: %2").arg(fileName).arg(qdlerror());
+      errorString = QLibrary::tr("Cannot unload library %1: %2").formatArg(fileName).formatArg(qdlerror());
       return false;
    }
 #endif
@@ -257,12 +253,12 @@ Q_CORE_EXPORT void *qt_mac_resolve_sys(void *handle, const char *symbol)
 }
 #endif
 
-void *QLibraryPrivate::resolve_sys(const char *symbol)
+void *QLibraryPrivate::resolve_sys(const QString &symbol)
 {
 
 #if defined(QT_HPUX_LD)
    void *address = 0;
-   if (shl_findsym((shl_t *)&pHnd, symbol, TYPE_UNDEFINED, &address) < 0) {
+   if (shl_findsym((shl_t *)&pHnd, symbol.constData(), TYPE_UNDEFINED, &address) < 0) {
       address = 0;
    }
 
@@ -270,19 +266,16 @@ void *QLibraryPrivate::resolve_sys(const char *symbol)
    void *address = 0;
 
 #else
-   void *address = dlsym(pHnd, symbol);
+   void *address = dlsym(pHnd, symbol.constData());
 
 #endif
 
-   if (!address) {
-      errorString = QLibrary::tr("Can not resolve symbol \"%1\" in %2: %3").arg(
-                       QString::fromAscii(symbol)).arg(fileName).arg(qdlerror());
+   if (! address) {
+      errorString = QLibrary::tr("Can not resolve symbol \"%1\" in %2: %3").formatArg(symbol).formatArg(fileName).formatArg(qdlerror());
    } else {
       errorString.clear();
    }
 
    return address;
 }
-
-QT_END_NAMESPACE
 

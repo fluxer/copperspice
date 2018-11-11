@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,7 +23,7 @@
 #ifndef XML_QDOM_H
 #define XML_QDOM_H
 
-#include <QtCore/qstring.h>
+#include <qstring.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -241,19 +238,22 @@ class Q_XML_EXPORT QDomNodeList
    // DOM functions
    QDomNode item(int index) const;
    inline QDomNode at(int index) const {
-      return item(index);   // Qt API consistency
+      return item(index);
    }
 
    // DOM read only attributes
-   uint length() const;
+   int length() const;
+
    inline int count() const {
-      return length();   // Qt API consitancy
+      return length();
    }
+
    inline int size() const {
-      return length();   // Qt API consistency
+      return length();
    }
+
    inline bool isEmpty() const {
-      return length() == 0;   // Qt API consistency
+      return length() == 0;
    }
 
  private:
@@ -374,18 +374,20 @@ class Q_XML_EXPORT QDomNamedNodeMap
    QDomNode removeNamedItemNS(const QString &nsURI, const QString &localName);
 
    // DOM read only attributes
-   uint length() const;
+   int length() const;
+
    int count() const {
-      return length();   // Qt API consitancy
+      return length();         // Qt API consitancy
    }
-   inline int size() const {
-      return length();   // Qt API consistency
+
+   int size() const {
+      return length();         // Qt API consistency
    }
-   inline bool isEmpty() const {
+
+   bool isEmpty() const {
       return length() == 0;   // Qt API consistency
    }
 
-   // Qt extension
    bool contains(const QString &name) const;
 
  private:
@@ -431,7 +433,7 @@ class Q_XML_EXPORT QDomCharacterData : public QDomNode
    void replaceData(unsigned long offset, unsigned long count, const QString &arg);
 
    // DOM read only attributes
-   uint length() const;
+   int length() const;
 
    // DOM attributes
    QString data() const;
@@ -488,14 +490,17 @@ class Q_XML_EXPORT QDomElement : public QDomNode
    // DOM functions
    QString attribute(const QString &name, const QString &defValue = QString() ) const;
    void setAttribute(const QString &name, const QString &value);
-   void setAttribute(const QString &name, qlonglong value);
-   void setAttribute(const QString &name, qulonglong value);
+   void setAttribute(const QString &name, qint64 value);
+   void setAttribute(const QString &name, quint64 value);
+
    inline void setAttribute(const QString &name, int value) {
-      setAttribute(name, qlonglong(value));
+      setAttribute(name, qint64(value));
    }
+
    inline void setAttribute(const QString &name, uint value) {
-      setAttribute(name, qulonglong(value));
+      setAttribute(name, quint64(value));
    }
+
    void setAttribute(const QString &name, float value);
    void setAttribute(const QString &name, double value);
    void removeAttribute(const QString &name);
@@ -507,16 +512,20 @@ class Q_XML_EXPORT QDomElement : public QDomNode
 
    QString attributeNS(const QString nsURI, const QString &localName, const QString &defValue = QString()) const;
    void setAttributeNS(const QString nsURI, const QString &qName, const QString &value);
+
    inline void setAttributeNS(const QString nsURI, const QString &qName, int value) {
-      setAttributeNS(nsURI, qName, qlonglong(value));
+      setAttributeNS(nsURI, qName, qint64(value));
    }
+
    inline void setAttributeNS(const QString nsURI, const QString &qName, uint value) {
-      setAttributeNS(nsURI, qName, qulonglong(value));
+      setAttributeNS(nsURI, qName, quint64(value));
    }
-   void setAttributeNS(const QString nsURI, const QString &qName, qlonglong value);
-   void setAttributeNS(const QString nsURI, const QString &qName, qulonglong value);
+
+   void setAttributeNS(const QString nsURI, const QString &qName, qint64 value);
+   void setAttributeNS(const QString nsURI, const QString &qName, quint64 value);
    void setAttributeNS(const QString nsURI, const QString &qName, double value);
    void removeAttributeNS(const QString &nsURI, const QString &localName);
+
    QDomAttr attributeNodeNS(const QString &nsURI, const QString &localName);
    QDomAttr setAttributeNodeNS(const QDomAttr &newAttr);
    QDomNodeList elementsByTagNameNS(const QString &nsURI, const QString &localName) const;

@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -171,7 +168,7 @@ class Q_CORE_EXPORT QAbstractItemModel : public QObject
    friend class QIdentityProxyModel;
 
  public:
-   explicit QAbstractItemModel(QObject *parent = 0);
+   explicit QAbstractItemModel(QObject *parent = nullptr);
    virtual ~QAbstractItemModel();
 
    bool hasIndex(int row, int column, const QModelIndex &parent = QModelIndex()) const;
@@ -300,7 +297,7 @@ class Q_CORE_EXPORT QAbstractItemModel : public QObject
    CORE_CS_SLOT_2(revert)
 
  protected:
-   QAbstractItemModel(QAbstractItemModelPrivate &dd, QObject *parent = 0);
+   QAbstractItemModel(QAbstractItemModelPrivate &dd, QObject *parent = nullptr);
 
    inline QModelIndex createIndex(int row, int column, void *data = 0) const;
    inline QModelIndex createIndex(int row, int column, int id) const;
@@ -392,19 +389,19 @@ class Q_CORE_EXPORT QAbstractTableModel : public QAbstractItemModel
    CORE_CS_OBJECT(QAbstractTableModel)
 
  public:
-   explicit QAbstractTableModel(QObject *parent = 0);
+   explicit QAbstractTableModel(QObject *parent = nullptr);
    ~QAbstractTableModel();
 
-   QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const;
-   bool dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent);
+   QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const override;
+   bool dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent) override;
 
  protected:
    QAbstractTableModel(QAbstractItemModelPrivate &dd, QObject *parent);
 
  private:
    Q_DISABLE_COPY(QAbstractTableModel)
-   QModelIndex parent(const QModelIndex &child) const;
-   bool hasChildren(const QModelIndex &parent) const;
+   QModelIndex parent(const QModelIndex &child) const override;
+   bool hasChildren(const QModelIndex &parent) const override;
 };
 
 class Q_CORE_EXPORT QAbstractListModel : public QAbstractItemModel
@@ -412,20 +409,20 @@ class Q_CORE_EXPORT QAbstractListModel : public QAbstractItemModel
    CORE_CS_OBJECT(QAbstractListModel)
 
  public:
-   explicit QAbstractListModel(QObject *parent = 0);
+   explicit QAbstractListModel(QObject *parent = nullptr);
    ~QAbstractListModel();
 
-   QModelIndex index(int row, int column = 0, const QModelIndex &parent = QModelIndex()) const;
-   bool dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent);
+   QModelIndex index(int row, int column = 0, const QModelIndex &parent = QModelIndex()) const override;
+   bool dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent) override;
 
  protected:
    QAbstractListModel(QAbstractItemModelPrivate &dd, QObject *parent);
 
  private:
    Q_DISABLE_COPY(QAbstractListModel)
-   QModelIndex parent(const QModelIndex &child) const;
-   int columnCount(const QModelIndex &parent) const;
-   bool hasChildren(const QModelIndex &parent) const;
+   QModelIndex parent(const QModelIndex &child) const override;
+   int columnCount(const QModelIndex &parent) const override;
+   bool hasChildren(const QModelIndex &parent) const override;
 };
 
 // inline implementations

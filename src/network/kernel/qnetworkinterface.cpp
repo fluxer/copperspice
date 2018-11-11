@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -42,11 +39,13 @@ static QList<QNetworkInterfacePrivate *> postProcess(QList<QNetworkInterfacePriv
    // The math is:
    //    broadcast = IP | ~netmask
 
-   QList<QNetworkInterfacePrivate *>::Iterator it = list.begin();
-   const QList<QNetworkInterfacePrivate *>::Iterator end = list.end();
+   QList<QNetworkInterfacePrivate *>::iterator it        = list.begin();
+   const QList<QNetworkInterfacePrivate *>::iterator end = list.end();
+
    for ( ; it != end; ++it) {
-      QList<QNetworkAddressEntry>::Iterator addr_it = (*it)->addressEntries.begin();
-      const QList<QNetworkAddressEntry>::Iterator addr_end = (*it)->addressEntries.end();
+      QList<QNetworkAddressEntry>::iterator addr_it        = (*it)->addressEntries.begin();
+      const QList<QNetworkAddressEntry>::iterator addr_end = (*it)->addressEntries.end();
+
       for ( ; addr_it != addr_end; ++addr_it) {
          if (addr_it->ip().protocol() != QAbstractSocket::IPv4Protocol) {
             continue;
@@ -76,19 +75,28 @@ QNetworkInterfaceManager::~QNetworkInterfaceManager()
 QSharedDataPointer<QNetworkInterfacePrivate> QNetworkInterfaceManager::interfaceFromName(const QString &name)
 {
    QList<QSharedDataPointer<QNetworkInterfacePrivate> > interfaceList = allInterfaces();
-   QList<QSharedDataPointer<QNetworkInterfacePrivate> >::ConstIterator it = interfaceList.constBegin();
-   for ( ; it != interfaceList.constEnd(); ++it)
-      if ((*it)->name == name) {
+   QList<QSharedDataPointer<QNetworkInterfacePrivate> >::const_iterator it = interfaceList.constBegin();
+
+   bool ok;
+   uint index = name.toInteger<uint>(&ok);
+
+   for ( ; it != interfaceList.constEnd(); ++it) {
+      if (ok && (*it)->index == int(index)) {
+         return *it;
+
+      } else if ((*it)->name == name)  {
          return *it;
       }
+   }
 
    return empty;
 }
 
 QSharedDataPointer<QNetworkInterfacePrivate> QNetworkInterfaceManager::interfaceFromIndex(int index)
 {
-   QList<QSharedDataPointer<QNetworkInterfacePrivate> > interfaceList = allInterfaces();
-   QList<QSharedDataPointer<QNetworkInterfacePrivate> >::ConstIterator it = interfaceList.constBegin();
+   QList<QSharedDataPointer<QNetworkInterfacePrivate> > interfaceList      = allInterfaces();
+   QList<QSharedDataPointer<QNetworkInterfacePrivate> >::const_iterator it = interfaceList.constBegin();
+
    for ( ; it != interfaceList.constEnd(); ++it)
       if ((*it)->index == index) {
          return *it;
@@ -102,8 +110,9 @@ QList<QSharedDataPointer<QNetworkInterfacePrivate> > QNetworkInterfaceManager::a
    QList<QNetworkInterfacePrivate *> list = postProcess(scan());
    QList<QSharedDataPointer<QNetworkInterfacePrivate> > result;
 
-   foreach (QNetworkInterfacePrivate * ptr, list)
-   result << QSharedDataPointer<QNetworkInterfacePrivate>(ptr);
+   for (QNetworkInterfacePrivate *ptr : list) {
+      result << QSharedDataPointer<QNetworkInterfacePrivate>(ptr);
+   }
 
    return result;
 }
@@ -111,6 +120,7 @@ QList<QSharedDataPointer<QNetworkInterfacePrivate> > QNetworkInterfaceManager::a
 QString QNetworkInterfacePrivate::makeHwAddress(int len, uchar *data)
 {
    QString result;
+
    for (int i = 0; i < len; ++i) {
       if (i) {
          result += QLatin1Char(':');
@@ -124,26 +134,9 @@ QString QNetworkInterfacePrivate::makeHwAddress(int len, uchar *data)
    return result;
 }
 
-/*!
-    \class QNetworkAddressEntry
-    \brief The QNetworkAddressEntry class stores one IP address
-    supported by a network interface, along with its associated
-    netmask and broadcast address.
 
-    \since 4.2
-    \reentrant
-    \ingroup network
 
-    Each network interface can contain zero or more IP addresses, which
-    in turn can be associated with a netmask and/or a broadcast
-    address (depending on support from the operating system).
 
-    This class represents one such group.
-*/
-
-/*!
-    Constructs an empty QNetworkAddressEntry object.
-*/
 QNetworkAddressEntry::QNetworkAddressEntry()
    : d(new QNetworkAddressEntryPrivate)
 {
@@ -183,6 +176,7 @@ bool QNetworkAddressEntry::operator==(const QNetworkAddressEntry &other) const
    if (d == other.d) {
       return true;
    }
+
    if (!d || !other.d) {
       return false;
    }
@@ -529,7 +523,8 @@ QList<QNetworkInterface> QNetworkInterface::allInterfaces()
 {
    QList<QSharedDataPointer<QNetworkInterfacePrivate> > privs = manager()->allInterfaces();
    QList<QNetworkInterface> result;
-   foreach (const QSharedDataPointer<QNetworkInterfacePrivate> &p, privs) {
+
+   for (const QSharedDataPointer<QNetworkInterfacePrivate> &p : privs) {
       QNetworkInterface item;
       item.d = p;
       result << item;
@@ -548,9 +543,11 @@ QList<QHostAddress> QNetworkInterface::allAddresses()
 {
    QList<QSharedDataPointer<QNetworkInterfacePrivate> > privs = manager()->allInterfaces();
    QList<QHostAddress> result;
-   foreach (const QSharedDataPointer<QNetworkInterfacePrivate> &p, privs) {
-      foreach (const QNetworkAddressEntry & entry, p->addressEntries)
-      result += entry.ip();
+
+   for (const QSharedDataPointer<QNetworkInterfacePrivate> &p : privs) {
+      for  (const QNetworkAddressEntry &entry : p->addressEntries) {
+         result += entry.ip();
+      }
    }
 
    return result;
@@ -559,50 +556,56 @@ QList<QHostAddress> QNetworkInterface::allAddresses()
 static inline QDebug flagsDebug(QDebug debug, QNetworkInterface::InterfaceFlags flags)
 {
    if (flags & QNetworkInterface::IsUp) {
-      debug.nospace() << "IsUp ";
+      debug << "IsUp ";
    }
    if (flags & QNetworkInterface::IsRunning) {
-      debug.nospace() << "IsRunning ";
+      debug << "IsRunning ";
    }
    if (flags & QNetworkInterface::CanBroadcast) {
-      debug.nospace() << "CanBroadcast ";
+      debug << "CanBroadcast ";
    }
    if (flags & QNetworkInterface::IsLoopBack) {
-      debug.nospace() << "IsLoopBack ";
+      debug << "IsLoopBack ";
    }
    if (flags & QNetworkInterface::IsPointToPoint) {
-      debug.nospace() << "IsPointToPoint ";
+      debug << "IsPointToPoint ";
    }
    if (flags & QNetworkInterface::CanMulticast) {
-      debug.nospace() << "CanMulticast ";
+      debug << "CanMulticast ";
    }
-   return debug.nospace();
+   return debug;
 }
 
 static inline QDebug operator<<(QDebug debug, const QNetworkAddressEntry &entry)
 {
-   debug.nospace() << "(address = " << entry.ip();
+   debug << "(address = " << entry.ip();
+
    if (!entry.netmask().isNull()) {
-      debug.nospace() << ", netmask = " << entry.netmask();
+      debug << ", netmask = " << entry.netmask();
    }
+
    if (!entry.broadcast().isNull()) {
-      debug.nospace() << ", broadcast = " << entry.broadcast();
+      debug << ", broadcast = " << entry.broadcast();
    }
-   debug.nospace() << ')';
-   return debug.space();
+
+   debug << ')';
+   return debug;
 }
 
 QDebug operator<<(QDebug debug, const QNetworkInterface &networkInterface)
 {
-   debug.nospace() << "QNetworkInterface(name = " << networkInterface.name()
-                   << ", hardware address = " << networkInterface.hardwareAddress()
-                   << ", flags = ";
+   // QDebugStateSaver saver(debug);
+   // debug.resetFormat().nospace();
+
+   debug << "QNetworkInterface(name = " << networkInterface.name()
+         << ", hardware address = " << networkInterface.hardwareAddress()
+         << ", flags = ";
    flagsDebug(debug, networkInterface.flags());
 
-   debug.nospace() << ", entries = " << networkInterface.addressEntries()
-                   << ")\n";
+   debug << ", entries = " << networkInterface.addressEntries()
+         << ")\n";
 
-   return debug.space();
+   return debug;
 }
 
 QT_END_NAMESPACE

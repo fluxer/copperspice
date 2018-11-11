@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -431,7 +428,7 @@ static const unsigned int KeyTbl[] = {
     XF86XK_AudioNext,           Qt::Key_MediaNext,
     XF86XK_AudioRecord,         Qt::Key_MediaRecord,
     XF86XK_Mail,                Qt::Key_LaunchMail,
-    XF86XK_MyComputer,          Qt::Key_Launch0,  // ### Qt 5: remap properly
+    XF86XK_MyComputer,          Qt::Key_Launch0,  // ### Qt5: remap properly
     XF86XK_Calculator,          Qt::Key_Launch1,
     XF86XK_Memo,                Qt::Key_Memo,
     XF86XK_ToDoList,            Qt::Key_ToDoList,
@@ -530,7 +527,7 @@ static const unsigned int KeyTbl[] = {
     XF86XK_Bluetooth,           Qt::Key_Bluetooth,
     XF86XK_Suspend,             Qt::Key_Suspend,
     XF86XK_Hibernate,           Qt::Key_Hibernate,
-    XF86XK_Launch0,             Qt::Key_Launch2, // ### Qt 5: remap properly
+    XF86XK_Launch0,             Qt::Key_Launch2, // ### Qt5: remap properly
     XF86XK_Launch1,             Qt::Key_Launch3,
     XF86XK_Launch2,             Qt::Key_Launch4,
     XF86XK_Launch3,             Qt::Key_Launch5,

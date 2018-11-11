@@ -13,8 +13,8 @@ CORE_PUBLIC_INCLUDES += \
 	QXmlStreamNotationDeclaration \
 	QXmlStreamNotationDeclarations \
 	QXmlStreamReader \
-	QXmlStreamStringRef \
-	QXmlStreamWriter
+	QXmlStreamWriter \
+	QXmlStream
 
 CORE_XML_INCLUDES = \
 	qxmlstreamattribute.h \
@@ -27,7 +27,6 @@ CORE_XML_INCLUDES = \
 	qxmlstreamnotationdeclaration.h \
 	qxmlstreamnotationdeclarations.h \
 	qxmlstreamreader.h \
-	qxmlstreamstringref.h \
 	qxmlstreamwriter.h \
 	qxmlstream.h
 
@@ -42,6 +41,6 @@ CORE_PRIVATE_INCLUDES += $(CORE_XML_PRIVATE_INCLUDES)
 noinst_HEADERS+=$(patsubst %,src/core/xml/%,$(CORE_XML_INCLUDES)) \
 		$(patsubst %,src/core/xml/%,$(CORE_XML_PRIVATE_INCLUDES))
 
-lib_libCsCore1_la_SOURCES += \
+lib_libCsCore@BUILD_ABI@_la_SOURCES += \
 	src/core/xml/qxmlstream.cpp \
 	src/core/xml/qxmlutils.cpp

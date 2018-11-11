@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -36,46 +33,43 @@ namespace QPatternist {
 class DelegatingDynamicContext : public DynamicContext
 {
  public:
-   virtual xsInteger contextPosition() const;
-   virtual Item contextItem() const;
-   virtual xsInteger contextSize();
+   xsInteger contextPosition() const override;
+   Item contextItem() const override;
+   xsInteger contextSize() override;
 
-   virtual ItemCacheCell &itemCacheCell(const VariableSlotID slot);
-   virtual ItemSequenceCacheCell::Vector &itemSequenceCacheCells(const VariableSlotID slot);
+   ItemCacheCell &itemCacheCell(const VariableSlotID slot) override;
+   ItemSequenceCacheCell::Vector &itemSequenceCacheCells(const VariableSlotID slot) override;
 
-   virtual void setRangeVariable(const VariableSlotID slotNumber,
-                                 const Item &newValue);
-   virtual Item rangeVariable(const VariableSlotID slotNumber) const;
+   void setRangeVariable(const VariableSlotID slotNumber, const Item &newValue) override;
+   Item rangeVariable(const VariableSlotID slotNumber) const override;
 
-   virtual void setExpressionVariable(const VariableSlotID slotNumber,
-                                      const Expression::Ptr &newValue);
-   virtual Expression::Ptr expressionVariable(const VariableSlotID slotNumber) const;
+   void setExpressionVariable(const VariableSlotID slotNumber, const Expression::Ptr &newValue) override;
+   Expression::Ptr expressionVariable(const VariableSlotID slotNumber) const override;
 
-   virtual void setFocusIterator(const Item::Iterator::Ptr &it);
-   virtual Item::Iterator::Ptr focusIterator() const;
+   void setFocusIterator(const Item::Iterator::Ptr &it) override;
+   Item::Iterator::Ptr focusIterator() const override;
 
-   virtual Item::Iterator::Ptr positionIterator(const VariableSlotID slot) const;
-   virtual void setPositionIterator(const VariableSlotID slot,
-                                    const Item::Iterator::Ptr &newValue);
+   Item::Iterator::Ptr positionIterator(const VariableSlotID slot) const override;
+   void setPositionIterator(const VariableSlotID slot, const Item::Iterator::Ptr &newValue) override;
 
-   virtual QAbstractMessageHandler *messageHandler() const;
-   virtual QExplicitlySharedDataPointer<DayTimeDuration> implicitTimezone() const;
-   virtual QDateTime currentDateTime() const;
-   virtual QAbstractXmlReceiver *outputReceiver() const;
-   virtual NodeBuilder::Ptr nodeBuilder(const QUrl &baseURI) const;
-   virtual ResourceLoader::Ptr resourceLoader() const;
-   virtual ExternalVariableLoader::Ptr externalVariableLoader() const;
-   virtual NamePool::Ptr namePool() const;
-   virtual QSourceLocation locationFor(const SourceLocationReflection *const reflection) const;
-   virtual void addNodeModel(const QAbstractXmlNodeModel::Ptr &nm);
-   virtual const QAbstractUriResolver *uriResolver() const;
-   virtual ItemCacheCell &globalItemCacheCell(const VariableSlotID slot);
-   virtual ItemSequenceCacheCell::Vector &globalItemSequenceCacheCells(const VariableSlotID slot);
-   virtual Item currentItem() const;
-   virtual TemplateParameterHash &templateParameterStore();
+   QAbstractMessageHandler *messageHandler() const override;
+   QExplicitlySharedDataPointer<DayTimeDuration> implicitTimezone() const override;
+   QDateTime currentDateTime() const override;
+   QAbstractXmlReceiver *outputReceiver() const override;
+   NodeBuilder::Ptr nodeBuilder(const QUrl &baseURI) const override;
+   ResourceLoader::Ptr resourceLoader() const override;
+   ExternalVariableLoader::Ptr externalVariableLoader() const override;
+   NamePool::Ptr namePool() const override;
+   QSourceLocation locationFor(const SourceLocationReflection *const reflection) const override;
+   void addNodeModel(const QAbstractXmlNodeModel::Ptr &nm) override;
+   const QAbstractUriResolver *uriResolver() const override;
+   ItemCacheCell &globalItemCacheCell(const VariableSlotID slot) override;
+   ItemSequenceCacheCell::Vector &globalItemSequenceCacheCells(const VariableSlotID slot) override;
+   Item currentItem() const override;
+   TemplateParameterHash &templateParameterStore() override;
 
-   virtual DynamicContext::Ptr previousContext() const;
-   virtual QExplicitlySharedDataPointer<TemplateMode> currentTemplateMode() const;
+   DynamicContext::Ptr previousContext() const override;
+   QExplicitlySharedDataPointer<TemplateMode> currentTemplateMode() const override;
 
  protected:
    DelegatingDynamicContext(const DynamicContext::Ptr &prevContext);

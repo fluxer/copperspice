@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -46,10 +43,10 @@ bool qt_initializing_gl_share_widget();
 class QGLWindowSurfaceGLPaintDevice : public QGLPaintDevice
 {
  public:
-   QPaintEngine *paintEngine() const;
-   QSize size() const;
-   int metric(PaintDeviceMetric m) const;
-   QGLContext *context() const;
+   QPaintEngine *paintEngine() const override;
+   QSize size() const override;
+   int metric(PaintDeviceMetric m) const override;
+   QGLContext *context() const override;
    QGLWindowSurfacePrivate *d;
 };
 
@@ -60,24 +57,24 @@ class Q_OPENGL_EXPORT QGLWindowSurface : public QObject, public QWindowSurface /
    QGLWindowSurface(QWidget *window);
    ~QGLWindowSurface();
 
-   QPaintDevice *paintDevice();
-   void flush(QWidget *widget, const QRegion &region, const QPoint &offset);
+   QPaintDevice *paintDevice() override;
+   void flush(QWidget *widget, const QRegion &region, const QPoint &offset) override;
 
 #if !defined(Q_WS_QPA)
-   void setGeometry(const QRect &rect);
+   void setGeometry(const QRect &rect) override;
 #else
    virtual void resize(const QSize &size);
 #endif
 
    void updateGeometry();
-   bool scroll(const QRegion &area, int dx, int dy);
+   bool scroll(const QRegion &area, int dx, int dy) override;
 
-   void beginPaint(const QRegion &region);
-   void endPaint(const QRegion &region);
+   void beginPaint(const QRegion &region) override;
+   void endPaint(const QRegion &region) override;
 
-   QImage *buffer(const QWidget *widget);
+   QImage *buffer(const QWidget *widget) override;
 
-   WindowSurfaceFeatures features() const;
+   WindowSurfaceFeatures features() const override;
 
    QGLContext *context() const;
 

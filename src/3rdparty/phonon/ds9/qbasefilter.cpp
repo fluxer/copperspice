@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -30,7 +27,8 @@
 #include "qbasefilter.h"
 #include "qpin.h"
 
-#include <QtCore/QMutex>
+#include <qmutex.h>
+#include <qstring16.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -53,8 +51,7 @@ namespace Phonon
                 m_filter->Release();
             }
 
-            STDMETHODIMP QueryInterface(const IID &iid,void **out)
-            {
+            STDMETHODIMP QueryInterface(const IID &iid,void **out) override {
                 if (!out) {
                     return E_POINTER;
                 }
@@ -74,13 +71,11 @@ namespace Phonon
                 return hr;
             }
 
-            STDMETHODIMP_(ULONG) AddRef()
-            {
+            STDMETHODIMP_(ULONG) AddRef() override {
                 return InterlockedIncrement(&m_refCount);
             }
 
-            STDMETHODIMP_(ULONG) Release()
-            {
+            STDMETHODIMP_(ULONG) Release() override {
                 ULONG refCount = InterlockedDecrement(&m_refCount);
                 if (refCount == 0) {
                     delete this;
@@ -89,8 +84,7 @@ namespace Phonon
                 return refCount;
             }
 
-            STDMETHODIMP Next(ULONG count,IPin **ret,ULONG *fetched)
-            {
+            STDMETHODIMP Next(ULONG count,IPin **ret,ULONG *fetched) override {
                 QMutexLocker locker(&m_mutex);
                 if (m_filter->pins() != m_pins) {
                     return VFW_E_ENUM_OUT_OF_SYNC;
@@ -120,8 +114,7 @@ namespace Phonon
                 return nbfetched == count ? S_OK : S_FALSE;
             }
 
-            STDMETHODIMP Skip(ULONG count)
-            {
+            STDMETHODIMP Skip(ULONG count) override {
                 QMutexLocker locker(&m_mutex);
                 if (m_filter->pins() != m_pins) {
                     return VFW_E_ENUM_OUT_OF_SYNC;
@@ -131,15 +124,13 @@ namespace Phonon
                 return m_index == m_pins.count() ? S_FALSE : S_OK;
             }
 
-            STDMETHODIMP Reset()
-            {
+            STDMETHODIMP Reset() override             {
                 QMutexLocker locker(&m_mutex);
                 m_index = 0;
                 return S_OK;
             }
 
-            STDMETHODIMP Clone(IEnumPins **out)
-            {
+            STDMETHODIMP Clone(IEnumPins **out) override             {
                 QMutexLocker locker(&m_mutex);
                 if (m_filter->pins() != m_pins) {
                     return VFW_E_ENUM_OUT_OF_SYNC;
@@ -198,7 +189,7 @@ namespace Phonon
         {
             return m_state;
         }
-        
+
         IFilterGraph *QBaseFilter::graph() const
         {
             return m_graph;
@@ -233,7 +224,7 @@ namespace Phonon
                     *out = static_cast<IMediaSeeking*>(this);
                 } else if (iid == IID_IMediaPosition ||iid == IID_IDispatch) {
                     *out = static_cast<IMediaPosition*>(this);
-                } 
+                }
             } else {
                 *out = 0;
                 hr = E_NOINTERFACE;
@@ -355,28 +346,41 @@ namespace Phonon
         STDMETHODIMP QBaseFilter::QueryFilterInfo(FILTER_INFO *info )
         {
             QMutexLocker locker(&m_mutex);
-            if (!info) {
+
+            if (! info) {
                 return E_POINTER;
             }
+
             info->pGraph = m_graph;
+
             if (m_graph) {
                 m_graph->AddRef();
             }
-            memcpy(info->achName, m_name.utf16(), qMin(MAX_FILTER_NAME, m_name.length()+1) *2);
+
+            QString16 tmp = m_name.toUtf16();
+            memcpy(info->achName,tmp.constData(), qMin(MAX_FILTER_NAME, m_name.size_storage() + 1) * 2);
+
             return S_OK;
         }
 
         STDMETHODIMP QBaseFilter::JoinFilterGraph(IFilterGraph *graph, LPCWSTR name)
         {
             QMutexLocker locker(&m_mutex);
+
             m_graph = graph;
-            m_name = QString::fromWCharArray(name);
+
+            if (name == nullptr) {
+               m_name = "";
+            } else {
+               m_name  = QString::fromStdWString(std::wstring(name));
+            }
+
             return S_OK;
         }
 
-        STDMETHODIMP QBaseFilter::EnumPins( IEnumPins **ep)
+        STDMETHODIMP QBaseFilter::EnumPins(IEnumPins **ep)
         {
-            if (!ep) {
+            if (! ep) {
                 return E_POINTER;
             }
 
@@ -512,7 +516,7 @@ namespace Phonon
             return hr;
         }
 
-        STDMETHODIMP QBaseFilter::ConvertTimeFormat(LONGLONG *pTarget, 
+        STDMETHODIMP QBaseFilter::ConvertTimeFormat(LONGLONG *pTarget,
             const GUID *pTargetFormat, LONGLONG Source, const GUID *pSourceFormat)
         {
             IMediaSeeking *ms = getUpstreamMediaSeeking();
@@ -766,7 +770,7 @@ namespace Phonon
             return hr;
         }
 
-        STDMETHODIMP QBaseFilter::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, 
+        STDMETHODIMP QBaseFilter::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams,
             VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
         {
             IMediaPosition *mp = getUpstreamMediaPosition();

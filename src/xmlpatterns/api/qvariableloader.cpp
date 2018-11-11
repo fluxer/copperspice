@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -78,13 +75,12 @@ class StringListIterator : public ListIteratorPlatform<QString, Item, StringList
 class TemporaryTreesRedirectingContext : public DelegatingDynamicContext
 {
  public:
-   TemporaryTreesRedirectingContext(const DynamicContext::Ptr &other,
-                                    const DynamicContext::Ptr &modelStorage) : DelegatingDynamicContext(other)
-      , m_modelStorage(modelStorage) {
+   TemporaryTreesRedirectingContext(const DynamicContext::Ptr &other, const DynamicContext::Ptr &modelStorage)
+                  : DelegatingDynamicContext(other), m_modelStorage(modelStorage) {
       Q_ASSERT(m_modelStorage);
    }
 
-   virtual void addNodeModel(const QAbstractXmlNodeModel::Ptr &nodeModel) {
+   void addNodeModel(const QAbstractXmlNodeModel::Ptr &nodeModel) override {
       m_modelStorage->addNodeModel(nodeModel);
    }
 
@@ -150,21 +146,25 @@ Item VariableLoader::itemForName(const QXmlName &name) const
    const QVariant &variant = m_bindingHash.value(name);
 
    if (variant.userType() == qMetaTypeId<QIODevice *>()) {
-      return Item(AnyURI::fromValue(QLatin1String("tag:trolltech.com,2007:QtXmlPatterns:QIODeviceVariable:") +
-                                    m_namePool->stringForLocalName(name.localName())));
+
+      return Item(AnyURI::fromValue("tag:copperspice.com,2007:QtXmlPatterns:QIODeviceVariable:" +
+                  m_namePool->stringForLocalName(name.localName()) ));
    }
 
    const QXmlItem item(qvariant_cast<QXmlItem>(variant));
 
    if (item.isNode()) {
       return Item::fromPublic(item);
+
    } else {
       const QVariant atomicValue(item.toAtomicValue());
+
       /* If the atomicValue is null it means it doesn't exist in m_bindingHash, and therefore it must
        * be a QIODevice, since Patternist guarantees to only ask for variables that announceExternalVariable()
        * has accepted. */
+
       if (atomicValue.isNull()) {
-         return Item(AnyURI::fromValue(QLatin1String("tag:trolltech.com,2007:QtXmlPatterns:QIODeviceVariable:") +
+         return Item(AnyURI::fromValue("tag:copperspice.com,2007:QtXmlPatterns:QIODeviceVariable:" +
                                        m_namePool->stringForLocalName(name.localName())));
       } else {
          return AtomicValue::toXDM(atomicValue);
@@ -172,14 +172,12 @@ Item VariableLoader::itemForName(const QXmlName &name) const
    }
 }
 
-Item VariableLoader::evaluateSingleton(const QXmlName name,
-                                       const DynamicContext::Ptr &)
+Item VariableLoader::evaluateSingleton(const QXmlName name, const DynamicContext::Ptr &)
 {
    return itemForName(name);
 }
 
-bool VariableLoader::isSameType(const QVariant &v1,
-                                const QVariant &v2) const
+bool VariableLoader::isSameType(const QVariant &v1, const QVariant &v2) const
 {
    /* Are both of type QIODevice *? */
    if (v1.userType() == qMetaTypeId<QIODevice *>() && v1.userType() == v2.userType()) {
@@ -208,8 +206,7 @@ void VariableLoader::removeBinding(const QXmlName &name)
 
 bool VariableLoader::hasBinding(const QXmlName &name) const
 {
-   return m_bindingHash.contains(name)
-          || (m_previousLoader && m_previousLoader->hasBinding(name));
+   return m_bindingHash.contains(name) || (m_previousLoader && m_previousLoader->hasBinding(name));
 }
 
 QVariant VariableLoader::valueFor(const QXmlName &name) const
@@ -223,8 +220,7 @@ QVariant VariableLoader::valueFor(const QXmlName &name) const
    }
 }
 
-void VariableLoader::addBinding(const QXmlName &name,
-                                const QVariant &value)
+void VariableLoader::addBinding(const QXmlName &name, const QVariant &value)
 {
    m_bindingHash.insert(name, value);
 }

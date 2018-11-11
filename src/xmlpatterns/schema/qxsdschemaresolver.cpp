@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -352,10 +349,10 @@ void XsdSchemaResolver::resolveKeyReferences()
       const XsdIdentityConstraint::Ptr constraint = m_schema->identityConstraint(ref.reference);
       if (!constraint) {
          m_context->error(QtXmlPatterns::tr("%1 references unknown %2 or %3 element %4.")
-                          .arg(formatKeyword(ref.keyRef->displayName(m_namePool)))
-                          .arg(formatElement("key"))
-                          .arg(formatElement("unique"))
-                          .arg(formatKeyword(m_namePool, ref.reference)),
+                          .formatArg(formatKeyword(ref.keyRef->displayName(m_namePool)))
+                          .formatArg(formatElement("key"))
+                          .formatArg(formatElement("unique"))
+                          .formatArg(formatKeyword(m_namePool, ref.reference)),
                           XsdSchemaContext::XSDError, ref.location);
          return;
       }
@@ -363,10 +360,10 @@ void XsdSchemaResolver::resolveKeyReferences()
       if (constraint->category() != XsdIdentityConstraint::Key &&
             constraint->category() != XsdIdentityConstraint::Unique) { // only key and unique can be referenced
          m_context->error(QtXmlPatterns::tr("%1 references identity constraint %2 that is no %3 or %4 element.")
-                          .arg(formatKeyword(ref.keyRef->displayName(m_namePool)))
-                          .arg(formatKeyword(m_namePool, ref.reference))
-                          .arg(formatElement("key"))
-                          .arg(formatElement("unique")),
+                          .formatArg(formatKeyword(ref.keyRef->displayName(m_namePool)))
+                          .formatArg(formatKeyword(m_namePool, ref.reference))
+                          .formatArg(formatElement("key"))
+                          .formatArg(formatElement("unique")),
                           XsdSchemaContext::XSDError, ref.location);
          return;
       }
@@ -374,8 +371,8 @@ void XsdSchemaResolver::resolveKeyReferences()
       if (constraint->fields().count() != ref.keyRef->fields().count()) {
          m_context->error(
             QtXmlPatterns::tr("%1 has a different number of fields from the identity constraint %2 that it references.")
-            .arg(formatKeyword(ref.keyRef->displayName(m_namePool)))
-            .arg(formatKeyword(m_namePool, ref.reference)),
+            .formatArg(formatKeyword(ref.keyRef->displayName(m_namePool)))
+            .formatArg(formatKeyword(m_namePool, ref.reference)),
             XsdSchemaContext::XSDError, ref.location);
          return;
       }
@@ -397,8 +394,8 @@ void XsdSchemaResolver::resolveSimpleRestrictionBaseTypes()
          type = m_context->schemaTypeFactory()->createSchemaType(item.baseName);
          if (!type) {
             m_context->error(QtXmlPatterns::tr("Base type %1 of %2 element cannot be resolved.")
-                             .arg(formatType(m_namePool, item.baseName))
-                             .arg(formatElement("restriction")),
+                             .formatArg(formatType(m_namePool, item.baseName))
+                             .formatArg(formatElement("restriction")),
                              XsdSchemaContext::XSDError, item.location);
             return;
          }
@@ -489,8 +486,8 @@ void XsdSchemaResolver::resolveSimpleListType()
          type = m_context->schemaTypeFactory()->createSchemaType(item.typeName);
          if (!type) {
             m_context->error(QtXmlPatterns::tr("Item type %1 of %2 element cannot be resolved.")
-                             .arg(formatType(m_namePool, item.typeName))
-                             .arg(formatElement("list")),
+                             .formatArg(formatType(m_namePool, item.typeName))
+                             .formatArg(formatElement("list")),
                              XsdSchemaContext::XSDError, item.location);
             return;
          }
@@ -520,8 +517,8 @@ void XsdSchemaResolver::resolveSimpleUnionTypes()
             type = m_context->schemaTypeFactory()->createSchemaType(typeName);
             if (!type) {
                m_context->error(QtXmlPatterns::tr("Member type %1 of %2 element cannot be resolved.")
-                                .arg(formatType(m_namePool, typeName))
-                                .arg(formatElement("union")),
+                                .formatArg(formatType(m_namePool, typeName))
+                                .formatArg(formatElement("union")),
                                 XsdSchemaContext::XSDError, item.location);
                return;
             }
@@ -548,8 +545,8 @@ void XsdSchemaResolver::resolveElementTypes()
          type = m_context->schemaTypeFactory()->createSchemaType(item.typeName);
          if (!type) {
             m_context->error(QtXmlPatterns::tr("Type %1 of %2 element cannot be resolved.")
-                             .arg(formatType(m_namePool, item.typeName))
-                             .arg(formatElement("element")),
+                             .formatArg(formatType(m_namePool, item.typeName))
+                             .formatArg(formatElement("element")),
                              XsdSchemaContext::XSDError, item.location);
             return;
          }
@@ -569,7 +566,7 @@ void XsdSchemaResolver::resolveComplexBaseTypes()
          // maybe it's a basic type...
          type = m_context->schemaTypeFactory()->createSchemaType(item.baseName);
          if (!type) {
-            m_context->error(QtXmlPatterns::tr("Base type %1 of complex type cannot be resolved.").arg(formatType(m_namePool,
+            m_context->error(QtXmlPatterns::tr("Base type %1 of complex type cannot be resolved.").formatArg(formatType(m_namePool,
                              item.baseName)), XsdSchemaContext::XSDError, item.location);
             return;
          }
@@ -580,8 +577,8 @@ void XsdSchemaResolver::resolveComplexBaseTypes()
             const XsdComplexType::Ptr baseType = type;
             if (baseType->contentType()->variety() != XsdComplexType::ContentType::Simple) {
                m_context->error(QtXmlPatterns::tr("%1 cannot have complex base type that has a %2.")
-                                .arg(formatElement("simpleContent"))
-                                .arg(formatElement("complexContent")),
+                                .formatArg(formatElement("simpleContent"))
+                                .formatArg(formatElement("complexContent")),
                                 XsdSchemaContext::XSDError, item.location);
                return;
             }
@@ -889,7 +886,7 @@ void XsdSchemaResolver::resolveComplexContentComplexTypes(const XsdComplexType::
                   XsdModelGroup::Ptr(effectiveContent->term())->compositor() == XsdModelGroup::AllCompositor) {
                m_context->error(
                   QtXmlPatterns::tr("Content model of complex type %1 contains %2 element, so it cannot be derived by extension from a non-empty type.")
-                  .arg(formatType(m_namePool, complexType)).arg(formatKeyword("all")), XsdSchemaContext::XSDError,
+                  .formatArg(formatType(m_namePool, complexType)).formatArg(formatKeyword("all")), XsdSchemaContext::XSDError,
                   sourceLocation(complexType));
                return;
             }
@@ -898,9 +895,9 @@ void XsdSchemaResolver::resolveComplexContentComplexTypes(const XsdComplexType::
                   XsdModelGroup::Ptr(baseParticle->term())->compositor() == XsdModelGroup::AllCompositor) {
                m_context->error(
                   QtXmlPatterns::tr("Complex type %1 cannot be derived by extension from %2 as the latter contains %3 element in its content model.")
-                  .arg(formatType(m_namePool, complexType))
-                  .arg(formatType(m_namePool, baseType))
-                  .arg(formatKeyword("all")), XsdSchemaContext::XSDError, sourceLocation(complexType));
+                  .formatArg(formatType(m_namePool, complexType))
+                  .formatArg(formatType(m_namePool, baseType))
+                  .formatArg(formatKeyword("all")), XsdSchemaContext::XSDError, sourceLocation(complexType));
                return;
             }
 
@@ -995,8 +992,8 @@ void XsdSchemaResolver::resolveAttributeTypes()
          type = m_context->schemaTypeFactory()->createSchemaType(item.typeName);
          if (!type) {
             m_context->error(QtXmlPatterns::tr("Type %1 of %2 element cannot be resolved.")
-                             .arg(formatType(m_namePool, item.typeName))
-                             .arg(formatElement("attribute")),
+                             .formatArg(formatType(m_namePool, item.typeName))
+                             .formatArg(formatElement("attribute")),
                              XsdSchemaContext::XSDError, item.location);
             return;
          }
@@ -1004,8 +1001,8 @@ void XsdSchemaResolver::resolveAttributeTypes()
 
       if (!type->isSimpleType() && type->category() != SchemaType::None) {
          m_context->error(QtXmlPatterns::tr("Type of %1 element must be a simple type, %2 is not.")
-                          .arg(formatElement("attribute"))
-                          .arg(formatType(m_namePool, item.typeName)),
+                          .formatArg(formatElement("attribute"))
+                          .formatArg(formatType(m_namePool, item.typeName)),
                           XsdSchemaContext::XSDError, item.location);
          return;
       }
@@ -1025,8 +1022,8 @@ void XsdSchemaResolver::resolveAlternativeTypes()
          type = m_context->schemaTypeFactory()->createSchemaType(item.typeName);
          if (!type) {
             m_context->error(QtXmlPatterns::tr("Type %1 of %2 element cannot be resolved.")
-                             .arg(formatType(m_namePool, item.typeName))
-                             .arg(formatElement("alternative")),
+                             .formatArg(formatType(m_namePool, item.typeName))
+                             .formatArg(formatElement("alternative")),
                              XsdSchemaContext::XSDError, item.location);
             return;
          }
@@ -1068,15 +1065,15 @@ void XsdSchemaResolver::resolveSubstitutionGroupAffiliations()
          const XsdElement::Ptr element = m_schema->element(item.elementNames.at(j));
          if (!element) {
             m_context->error(QtXmlPatterns::tr("Substitution group %1 of %2 element cannot be resolved.")
-                             .arg(formatKeyword(m_namePool, item.elementNames.at(j)))
-                             .arg(formatElement("element")),
+                             .formatArg(formatKeyword(m_namePool, item.elementNames.at(j)))
+                             .formatArg(formatElement("element")),
                              XsdSchemaContext::XSDError, item.location);
             return;
          }
 
          // @see http://www.w3.org/TR/xmlschema11-1/#e-props-correct 5)
          if (hasCircularSubstitutionGroup(element, item.element, m_namePool)) {
-            m_context->error(QtXmlPatterns::tr("Substitution group %1 has circular definition.").arg(formatKeyword(m_namePool,
+            m_context->error(QtXmlPatterns::tr("Substitution group %1 has circular definition.").formatArg(formatKeyword(m_namePool,
                              item.elementNames.at(j))), XsdSchemaContext::XSDError, item.location);
             return;
          }
@@ -1210,15 +1207,15 @@ void XsdSchemaResolver::resolveTermReference(const XsdParticle::Ptr &particle, Q
                   if (element->name(m_namePool) == otherElement->name(m_namePool)) {
                      if (modelGroup->compositor() == XsdModelGroup::AllCompositor) {
                         m_context->error(QtXmlPatterns::tr("Duplicated element names %1 in %2 element.")
-                                         .arg(formatKeyword(element->displayName(m_namePool)))
-                                         .arg(formatElement("all")),
+                                         .formatArg(formatKeyword(element->displayName(m_namePool)))
+                                         .formatArg(formatElement("all")),
                                          XsdSchemaContext::XSDError, sourceLocation(modelGroup));
                         return;
                      } else if (modelGroup->compositor() == XsdModelGroup::SequenceCompositor) {
                         if (element->type() != otherElement->type()) {  // not same variety
                            m_context->error(QtXmlPatterns::tr("Duplicated element names %1 in %2 element.")
-                                            .arg(formatKeyword(element->displayName(m_namePool)))
-                                            .arg(formatElement("sequence")),
+                                            .formatArg(formatKeyword(element->displayName(m_namePool)))
+                                            .formatArg(formatElement("sequence")),
                                             XsdSchemaContext::XSDError, sourceLocation(modelGroup));
                            return;
                         }
@@ -1246,8 +1243,8 @@ void XsdSchemaResolver::resolveTermReference(const XsdParticle::Ptr &particle, Q
             particle->setTerm(element);
          } else {
             m_context->error(QtXmlPatterns::tr("Reference %1 of %2 element cannot be resolved.")
-                             .arg(formatKeyword(m_namePool, reference->referenceName()))
-                             .arg(formatElement("element")),
+                             .formatArg(formatKeyword(m_namePool, reference->referenceName()))
+                             .formatArg(formatElement("element")),
                              XsdSchemaContext::XSDError, reference->sourceLocation());
             return;
          }
@@ -1257,7 +1254,7 @@ void XsdSchemaResolver::resolveTermReference(const XsdParticle::Ptr &particle, Q
          const XsdModelGroup::Ptr modelGroup = m_schema->elementGroup(reference->referenceName());
          if (modelGroup) {
             if (visitedGroups.contains(modelGroup->name(m_namePool))) {
-               m_context->error(QtXmlPatterns::tr("Circular group reference for %1.").arg(formatKeyword(modelGroup->displayName(
+               m_context->error(QtXmlPatterns::tr("Circular group reference for %1.").formatArg(formatKeyword(modelGroup->displayName(
                                    m_namePool))),
                                 XsdSchemaContext::XSDError, reference->sourceLocation());
             } else {
@@ -1274,32 +1271,32 @@ void XsdSchemaResolver::resolveTermReference(const XsdParticle::Ptr &particle, Q
 
             if (modelGroup->compositor() == XsdModelGroup::AllCompositor) {
                if (m_allGroups.contains(reference)) {
-                  m_context->error(QtXmlPatterns::tr("%1 element is not allowed in this scope").arg(formatElement("all.")),
+                  m_context->error(QtXmlPatterns::tr("%1 element is not allowed in this scope").formatArg(formatElement("all.")),
                                    XsdSchemaContext::XSDError, reference->sourceLocation());
                   return;
                }
                if (particle->maximumOccursUnbounded() || particle->maximumOccurs() != 1) {
                   m_context->error(QtXmlPatterns::tr("%1 element cannot have %2 attribute with value other than %3.")
-                                   .arg(formatElement("all"))
-                                   .arg(formatAttribute("maxOccurs"))
-                                   .arg(formatData("1")),
+                                   .formatArg(formatElement("all"))
+                                   .formatArg(formatAttribute("maxOccurs"))
+                                   .formatArg(formatData("1")),
                                    XsdSchemaContext::XSDError, reference->sourceLocation());
                   return;
                }
                if (particle->minimumOccurs() != 0 && particle->minimumOccurs() != 1) {
                   m_context->error(QtXmlPatterns::tr("%1 element cannot have %2 attribute with value other than %3 or %4.")
-                                   .arg(formatElement("all"))
-                                   .arg(formatAttribute("minOccurs"))
-                                   .arg(formatData("0"))
-                                   .arg(formatData("1")),
+                                   .formatArg(formatElement("all"))
+                                   .formatArg(formatAttribute("minOccurs"))
+                                   .formatArg(formatData("0"))
+                                   .formatArg(formatData("1")),
                                    XsdSchemaContext::XSDError, reference->sourceLocation());
                   return;
                }
             }
          } else {
             m_context->error(QtXmlPatterns::tr("Reference %1 of %2 element cannot be resolved.")
-                             .arg(formatKeyword(m_namePool, reference->referenceName()))
-                             .arg(formatElement("group")),
+                             .formatArg(formatKeyword(m_namePool, reference->referenceName()))
+                             .formatArg(formatElement("group")),
                              XsdSchemaContext::XSDError, reference->sourceLocation());
             return;
          }
@@ -1373,8 +1370,8 @@ XsdAttributeUse::List XsdSchemaResolver::resolveAttributeTermReferences(const Xs
             const XsdAttribute::Ptr attribute = m_schema->attribute(reference->referenceName());
             if (!attribute) {
                m_context->error(QtXmlPatterns::tr("Reference %1 of %2 element cannot be resolved.")
-                                .arg(formatKeyword(m_namePool, reference->referenceName()))
-                                .arg(formatElement("attribute")),
+                                .formatArg(formatKeyword(m_namePool, reference->referenceName()))
+                                .formatArg(formatElement("attribute")),
                                 XsdSchemaContext::XSDError, reference->sourceLocation());
                return XsdAttributeUse::List();
             }
@@ -1384,10 +1381,10 @@ XsdAttributeUse::List XsdSchemaResolver::resolveAttributeTermReferences(const Xs
                if (attribute->valueConstraint()->value() != attributeUse->valueConstraint()->value()) {
                   m_context->error(
                      QtXmlPatterns::tr("%1 or %2 attribute of reference %3 does not match with the attribute declaration %4.")
-                     .arg(formatAttribute("fixed"))
-                     .arg(formatAttribute("default"))
-                     .arg(formatKeyword(m_namePool, reference->referenceName()))
-                     .arg(formatKeyword(attribute->displayName(m_namePool))),
+                     .formatArg(formatAttribute("fixed"))
+                     .formatArg(formatAttribute("default"))
+                     .formatArg(formatKeyword(m_namePool, reference->referenceName()))
+                     .formatArg(formatKeyword(attribute->displayName(m_namePool))),
                      XsdSchemaContext::XSDError, reference->sourceLocation());
                   return XsdAttributeUse::List();
                }
@@ -1404,13 +1401,13 @@ XsdAttributeUse::List XsdSchemaResolver::resolveAttributeTermReferences(const Xs
             const XsdAttributeGroup::Ptr attributeGroup = m_schema->attributeGroup(reference->referenceName());
             if (!attributeGroup) {
                m_context->error(QtXmlPatterns::tr("Reference %1 of %2 element cannot be resolved.")
-                                .arg(formatKeyword(m_namePool, reference->referenceName()))
-                                .arg(formatElement("attributeGroup")),
+                                .formatArg(formatKeyword(m_namePool, reference->referenceName()))
+                                .formatArg(formatElement("attributeGroup")),
                                 XsdSchemaContext::XSDError, reference->sourceLocation());
                return XsdAttributeUse::List();
             }
             if (visitedAttributeGroups.contains(attributeGroup->name(m_namePool))) {
-               m_context->error(QtXmlPatterns::tr("Attribute group %1 has circular reference.").arg(formatKeyword(m_namePool,
+               m_context->error(QtXmlPatterns::tr("Attribute group %1 has circular reference.").formatArg(formatKeyword(m_namePool,
                                 reference->referenceName())),
                                 XsdSchemaContext::XSDError, reference->sourceLocation());
                return XsdAttributeUse::List();
@@ -1554,10 +1551,10 @@ void XsdSchemaResolver::resolveAttributeInheritance(const XsdComplexType::Ptr &c
                if ((use->useType() == XsdAttributeUse::ProhibitedUse) &&
                      (currentUses.at(k)->useType() != XsdAttributeUse::ProhibitedUse)) {
                   m_context->error(QtXmlPatterns::tr("%1 attribute in %2 must have %3 use like in base type %4.")
-                                   .arg(formatAttribute(use->attribute()->displayName(m_namePool)))
-                                   .arg(formatType(m_namePool, complexType))
-                                   .arg(formatData("prohibited"))
-                                   .arg(formatType(m_namePool, complexBaseType)),
+                                   .formatArg(formatAttribute(use->attribute()->displayName(m_namePool)))
+                                   .formatArg(formatType(m_namePool, complexType))
+                                   .formatArg(formatData("prohibited"))
+                                   .formatArg(formatType(m_namePool, complexBaseType)),
                                    XsdSchemaContext::XSDError, sourceLocation(complexType));
                   return;
                }
@@ -1609,15 +1606,15 @@ void XsdSchemaResolver::resolveAttributeInheritance(const XsdComplexType::Ptr &c
                if (!isValidWildcardRestriction(complexType->attributeWildcard(), complexBaseType->attributeWildcard())) {
                   m_context->error(
                      QtXmlPatterns::tr("Attribute wildcard of %1 is not a valid restriction of attribute wildcard of base type %2.")
-                     .arg(formatType(m_namePool, complexType))
-                     .arg(formatType(m_namePool, complexBaseType)),
+                     .formatArg(formatType(m_namePool, complexType))
+                     .formatArg(formatType(m_namePool, complexBaseType)),
                      XsdSchemaContext::XSDError, sourceLocation(complexType));
                   return;
                }
             } else {
                m_context->error(QtXmlPatterns::tr("%1 has attribute wildcard but its base type %2 has not.")
-                                .arg(formatType(m_namePool, complexType))
-                                .arg(formatType(m_namePool, complexBaseType)),
+                                .formatArg(formatType(m_namePool, complexType))
+                                .formatArg(formatType(m_namePool, complexBaseType)),
                                 XsdSchemaContext::XSDError, sourceLocation(complexType));
                return;
             }
@@ -1644,8 +1641,8 @@ void XsdSchemaResolver::resolveAttributeInheritance(const XsdComplexType::Ptr &c
          } else {
             m_context->error(
                QtXmlPatterns::tr("Union of attribute wildcard of type %1 and attribute wildcard of its base type %2 is not expressible.")
-               .arg(formatType(m_namePool, complexType))
-               .arg(formatType(m_namePool, complexBaseType)),
+               .formatArg(formatType(m_namePool, complexType))
+               .formatArg(formatType(m_namePool, complexBaseType)),
                XsdSchemaContext::XSDError, sourceLocation(complexType));
             return;
          }
@@ -1694,8 +1691,8 @@ void XsdSchemaResolver::resolveEnumerationFacetValues()
                const QString qualifiedName = value->as<DerivedString<TypeString> >()->stringValue();
                if (!XPathHelper::isQName(qualifiedName)) {
                   m_context->error(QtXmlPatterns::tr("Enumeration facet contains invalid content: {%1} is not a value of type %2.")
-                                   .arg(formatData(qualifiedName))
-                                   .arg(formatType(m_namePool, BuiltinTypes::xsQName)),
+                                   .formatArg(formatData(qualifiedName))
+                                   .formatArg(formatType(m_namePool, BuiltinTypes::xsQName)),
                                    XsdSchemaContext::XSDError, sourceLocation(simpleType));
                   return;
                }
@@ -1703,7 +1700,7 @@ void XsdSchemaResolver::resolveEnumerationFacetValues()
                QXmlName qNameValue;
                bool result = support.processName(qualifiedName, NamespaceSupport::ElementName, qNameValue);
                if (!result) {
-                  m_context->error(QtXmlPatterns::tr("Namespace prefix of qualified name %1 is not defined.").arg(formatData(
+                  m_context->error(QtXmlPatterns::tr("Namespace prefix of qualified name %1 is not defined.").formatArg(formatData(
                                       qualifiedName)),
                                    XsdSchemaContext::XSDError, sourceLocation(simpleType));
                   return;
@@ -1725,7 +1722,7 @@ QSourceLocation XsdSchemaResolver::sourceLocation(const NamedSchemaComponent::Pt
       QSourceLocation location;
       location.setLine(1);
       location.setColumn(1);
-      location.setUri(QString::fromLatin1("dummyUri"));
+      location.setUri( QUrl("dummyUri"));
 
       return location;
    }
@@ -1757,10 +1754,10 @@ void XsdSchemaResolver::checkRedefinedGroups()
       QString errorMsg;
       if (!XsdParticleChecker::subsumes(particle, redefinedParticle, m_context, errorMsg)) {
          m_context->error(QtXmlPatterns::tr("%1 element %2 is not a valid restriction of the %3 element it redefines: %4.")
-                          .arg(formatElement("group"))
-                          .arg(formatData(item.redefinedGroup->displayName(m_namePool)))
-                          .arg(formatElement("group"))
-                          .arg(errorMsg),
+                          .formatArg(formatElement("group"))
+                          .formatArg(formatData(item.redefinedGroup->displayName(m_namePool)))
+                          .formatArg(formatElement("group"))
+                          .formatArg(errorMsg),
                           XsdSchemaContext::XSDError, sourceLocation(item.redefinedGroup));
          return;
       }
@@ -1775,10 +1772,10 @@ void XsdSchemaResolver::checkRedefinedAttributeGroups()
       QString errorMsg;
       if (!XsdSchemaHelper::isValidAttributeGroupRestriction(item.redefinedGroup, item.group, m_context, errorMsg)) {
          m_context->error(QtXmlPatterns::tr("%1 element %2 is not a valid restriction of the %3 element it redefines: %4.")
-                          .arg(formatElement("attributeGroup"))
-                          .arg(formatData(item.redefinedGroup->displayName(m_namePool)))
-                          .arg(formatElement("attributeGroup"))
-                          .arg(errorMsg),
+                          .formatArg(formatElement("attributeGroup"))
+                          .formatArg(formatData(item.redefinedGroup->displayName(m_namePool)))
+                          .formatArg(formatElement("attributeGroup"))
+                          .formatArg(errorMsg),
                           XsdSchemaContext::XSDError, sourceLocation(item.redefinedGroup));
          return;
       }

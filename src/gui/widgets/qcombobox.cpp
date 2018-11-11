@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -50,7 +47,6 @@
 #include <qcombobox_p.h>
 #include <qabstractitemmodel_p.h>
 #include <qabstractscrollarea_p.h>
-#include <qsoftkeymanager_p.h>
 #include <qdebug.h>
 
 #ifdef Q_WS_X11
@@ -579,15 +575,7 @@ void QComboBoxPrivateContainer::setItemView(QAbstractItemView *itemView)
    connect(view->verticalScrollBar(), SIGNAL(rangeChanged(int, int)), this, SLOT(updateScrollers()));
 #endif
 
-   connect(view, SIGNAL(destroyed()), this, SLOT(viewDestroyed()));
-
-#ifdef QT_SOFTKEYS_ENABLED
-   selectAction = QSoftKeyManager::createKeyedAction(QSoftKeyManager::SelectSoftKey, Qt::Key_Select, itemView);
-   cancelAction = QSoftKeyManager::createKeyedAction(QSoftKeyManager::CancelSoftKey, Qt::Key_Escape, itemView);
-   addAction(selectAction);
-   addAction(cancelAction);
-#endif
-}
+   connect(view, SIGNAL(destroyed()), this, SLOT(viewDestroyed()));}
 
 /*!
     Returns the spacing between the items in the view.
@@ -639,14 +627,10 @@ void QComboBoxPrivateContainer::changeEvent(QEvent *e)
 {
    if (e->type() == QEvent::StyleChange) {
       QStyleOptionComboBox opt = comboStyleOption();
+
       view->setMouseTracking(combo->style()->styleHint(QStyle::SH_ComboBox_ListMouseTracking, &opt, combo) ||
                              combo->style()->styleHint(QStyle::SH_ComboBox_Popup, &opt, combo));
       setFrameStyle(combo->style()->styleHint(QStyle::SH_ComboBox_PopupFrameStyle, &opt, combo));
-#ifdef QT_SOFTKEYS_ENABLED
-   } else if (e->type() == QEvent::LanguageChange) {
-      selectAction->setText(QSoftKeyManager::standardSoftKeyText(QSoftKeyManager::SelectSoftKey));
-      cancelAction->setText(QSoftKeyManager::standardSoftKeyText(QSoftKeyManager::CancelSoftKey));
-#endif
    }
 
    QWidget::changeEvent(e);
@@ -2193,15 +2177,19 @@ void QComboBox::insertItem(int index, const QIcon &icon, const QString &text, co
       }
       m->insertRow(index, item);
       ++itemCount;
+
    } else {
       d->inserting = true;
       if (d->model->insertRows(index, 1, d->root)) {
          QModelIndex item = d->model->index(index, d->modelColumn, d->root);
+
          if (icon.isNull() && !userData.isValid()) {
             d->model->setData(item, text, Qt::EditRole);
+
          } else {
             QMap<int, QVariant> values;
-            if (!text.isNull()) {
+
+            if (!text.isEmpty()) {
                values.insert(Qt::EditRole, text);
             }
             if (!icon.isNull()) {

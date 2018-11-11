@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -31,7 +28,7 @@
 #define PHONON_PHONONDEFS_P_H
 
 #include <QtCore/QMetaType>
-#include "medianode_p.h"
+#include <medianode_p.h>
 
 #define K_D(Class) Class##Private *const d = k_func()
 
@@ -40,39 +37,13 @@
 
 #define PHONON_PRIVATECLASS \
 protected: \
-    virtual bool aboutToDeleteBackendObject(); \
-    virtual void createBackendObject(); \
-    /**
-     * \internal
-     * After construction of the Iface object this method is called
-     * throughout the complete class hierarchy in order to set up the
-     * properties that were already set on the public interface.
-     *
-     * An example implementation could look like this:
-     * \code
-     * ParentClassPrivate::setupBackendObject();
-     * m_iface->setPropertyA(d->propertyA);
-     * m_iface->setPropertyB(d->propertyB);
-     * \endcode
-     */ \
+    bool aboutToDeleteBackendObject() override; \
+    void createBackendObject() override; \
     void setupBackendObject();
 
 #define PHONON_PRIVATEABSTRACTCLASS \
 protected: \
-    virtual bool aboutToDeleteBackendObject(); \
-    /**
-     * \internal
-     * After construction of the Iface object this method is called
-     * throughout the complete class hierarchy in order to set up the
-     * properties that were already set on the public interface.
-     *
-     * An example implementation could look like this:
-     * \code
-     * ParentClassPrivate::setupBackendObject();
-     * m_iface->setPropertyA(d->propertyA);
-     * m_iface->setPropertyB(d->propertyB);
-     * \endcode
-     */ \
+    bool aboutToDeleteBackendObject() override; \
     void setupBackendObject();
 
 #define PHONON_ABSTRACTBASE_IMPL \
@@ -160,7 +131,7 @@ namespace Phonon
 
         template<> inline NoIface *my_cast<NoIface *>(QObject *) { return 0; }
         template<> inline NoIface *my_cast<NoIface *>(const QObject *) { return 0; }
-    } 
+    }
 
     template<class T0, class T1 = NoIface, class T2 = NoIface>
     class Iface

@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -65,11 +62,11 @@ class Q_GUI_EXPORT QToolButton : public QAbstractButton
       InstantPopup
    };
 
-   explicit QToolButton(QWidget *parent = 0);
+   explicit QToolButton(QWidget *parent = nullptr);
    ~QToolButton();
 
-   QSize sizeHint() const;
-   QSize minimumSizeHint() const;
+   QSize sizeHint() const override;
+   QSize minimumSizeHint() const override;
 
    Qt::ToolButtonStyle toolButtonStyle() const;
 
@@ -105,19 +102,20 @@ class Q_GUI_EXPORT QToolButton : public QAbstractButton
 
  protected:
    QToolButton(QToolButtonPrivate &, QWidget *parent);
-   bool event(QEvent *e);
-   void mousePressEvent(QMouseEvent *);
-   void mouseReleaseEvent(QMouseEvent *);
-   void paintEvent(QPaintEvent *);
-   void actionEvent(QActionEvent *);
 
-   void enterEvent(QEvent *);
-   void leaveEvent(QEvent *);
-   void timerEvent(QTimerEvent *);
-   void changeEvent(QEvent *);
+   bool event(QEvent *e) override;
+   void mousePressEvent(QMouseEvent *) override;
+   void mouseReleaseEvent(QMouseEvent *) override;
+   void paintEvent(QPaintEvent *) override;
+   void actionEvent(QActionEvent *) override;
 
-   bool hitButton(const QPoint &pos) const;
-   void nextCheckState();
+   void enterEvent(QEvent *) override;
+   void leaveEvent(QEvent *) override;
+   void timerEvent(QTimerEvent *) override;
+   void changeEvent(QEvent *) override;
+
+   bool hitButton(const QPoint &pos) const override;
+   void nextCheckState() override;
    void initStyleOption(QStyleOptionToolButton *option) const;
 
  private:

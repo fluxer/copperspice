@@ -1,27 +1,26 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
+
+#include <algorithm>
 
 #include <qtexthtmlparser_p.h>
 #include <qbytearray.h>
@@ -308,24 +307,26 @@ static const struct QTextHtmlEntity {
    { "zwnj", 0x200c }
 };
 
-Q_STATIC_GLOBAL_OPERATOR bool operator<(const QString &entityStr, const QTextHtmlEntity &entity)
+static bool operator<(const QString &entityStr, const QTextHtmlEntity &entity)
 {
-   return entityStr < QLatin1String(entity.name);
+   return entityStr < QString::fromLatin1(entity.name);
 }
 
-Q_STATIC_GLOBAL_OPERATOR bool operator<(const QTextHtmlEntity &entity, const QString &entityStr)
+static bool operator<(const QTextHtmlEntity &entity, const QString &entityStr)
 {
-   return QLatin1String(entity.name) < entityStr;
+   return QString::fromLatin1(entity.name) < entityStr;
 }
 
 static QChar resolveEntity(const QString &entity)
 {
    const QTextHtmlEntity *start = &entities[0];
-   const QTextHtmlEntity *end = &entities[MAX_ENTITY];
-   const QTextHtmlEntity *e = qBinaryFind(start, end, entity);
-   if (e == end) {
+   const QTextHtmlEntity *end   = &entities[MAX_ENTITY];
+   const QTextHtmlEntity *e     = std::lower_bound(start, end, entity);
+
+   if (e == end || (entity < *e)) {
       return QChar();
    }
+
    return e->code;
 }
 
@@ -429,33 +430,37 @@ static const QTextHtmlElement elements[Html_NumElements] = {
 };
 
 
-Q_STATIC_GLOBAL_OPERATOR bool operator<(const QString &str, const QTextHtmlElement &e)
+static bool operator<(const QString &str, const QTextHtmlElement &e)
 {
-   return str < QLatin1String(e.name);
+   return str < QString::fromLatin1(e.name);
 }
 
-Q_STATIC_GLOBAL_OPERATOR bool operator<(const QTextHtmlElement &e, const QString &str)
+static bool operator<(const QTextHtmlElement &e, const QString &str)
 {
-   return QLatin1String(e.name) < str;
+   return QString::fromLatin1(e.name) < str;
 }
 
 static const QTextHtmlElement *lookupElementHelper(const QString &element)
 {
    const QTextHtmlElement *start = &elements[0];
-   const QTextHtmlElement *end = &elements[Html_NumElements];
-   const QTextHtmlElement *e = qBinaryFind(start, end, element);
-   if (e == end) {
+   const QTextHtmlElement *end   = &elements[Html_NumElements];
+   const QTextHtmlElement *e     = std::lower_bound(start, end, element);
+
+   if (e == end || (element < *e)) {
       return 0;
    }
+
    return e;
 }
 
 int QTextHtmlParser::lookupElement(const QString &element)
 {
    const QTextHtmlElement *e = lookupElementHelper(element);
-   if (!e) {
+
+   if (! e) {
       return -1;
    }
+
    return e->id;
 }
 
@@ -496,24 +501,27 @@ void QTextHtmlParser::dumpHtml()
 QTextHtmlParserNode *QTextHtmlParser::newNode(int parent)
 {
    QTextHtmlParserNode *lastNode = &nodes.last();
-   QTextHtmlParserNode *newNode = 0;
+   QTextHtmlParserNode *newNode  = 0;
 
    bool reuseLastNode = true;
 
    if (nodes.count() == 1) {
       reuseLastNode = false;
+
    } else if (lastNode->tag.isEmpty()) {
 
       if (lastNode->text.isEmpty()) {
          reuseLastNode = true;
+
       } else { // last node is a text node (empty tag) with some text
 
-         if (lastNode->text.length() == 1 && lastNode->text.at(0).isSpace()) {
+         if (lastNode->text.length() == 1 && lastNode->text.first().isSpace()) {
 
             int lastSibling = count() - 2;
-            while (lastSibling
-                   && at(lastSibling).parent != lastNode->parent
+
+            while (lastSibling && at(lastSibling).parent != lastNode->parent
                    && at(lastSibling).displayMode == QTextHtmlElement::DisplayInline) {
+
                lastSibling = at(lastSibling).parent;
             }
 
@@ -522,6 +530,7 @@ QTextHtmlParserNode *QTextHtmlParser::newNode(int parent)
             } else {
                reuseLastNode = true;
             }
+
          } else {
             // text node with real (non-whitespace) text -> nothing to re-use
             reuseLastNode = false;
@@ -796,59 +805,66 @@ QString QTextHtmlParser::parseEntity()
 {
    int recover = pos;
    QString entity;
+
    while (pos < len) {
       QChar c = txt.at(pos++);
+
       if (c.isSpace() || pos - recover > 9) {
          goto error;
       }
-      if (c == QLatin1Char(';')) {
+      if (c == ';') {
          break;
       }
       entity += c;
    }
+
    {
       QChar resolved = resolveEntity(entity);
-      if (!resolved.isNull()) {
+
+      if (! resolved.isNull()) {
          return QString(resolved);
       }
    }
-   if (entity.length() > 1 && entity.at(0) == QLatin1Char('#')) {
+
+   if (entity.length() > 1 && entity.at(0) == '#') {
       entity.remove(0, 1); // removing leading #
 
       int base = 10;
       bool ok = false;
 
-      if (entity.at(0).toLower() == QLatin1Char('x')) { // hex entity?
+      if (entity.at(0).toLower() == "x") {
+         // hex entity?
          entity.remove(0, 1);
          base = 16;
       }
 
-      uint uc = entity.toUInt(&ok, base);
+      uint uc = entity.toInteger<uint>(&ok, base);
+
       if (ok) {
          if (uc >= 0x80 && uc < 0x80 + (sizeof(windowsLatin1ExtendedCharacters) / sizeof(windowsLatin1ExtendedCharacters[0]))) {
             uc = windowsLatin1ExtendedCharacters[uc - 0x80];
          }
-         QString str;
-         if (QChar::requiresSurrogates(uc)) {
-            str += QChar(QChar::highSurrogate(uc));
-            str += QChar(QChar::lowSurrogate(uc));
-         } else {
-            str = QChar(uc);
-         }
+
+         QString str = QChar(char32_t(uc));
          return str;
       }
    }
+
 error:
    pos = recover;
-   return QLatin1String("&");
+
+   return QString("&");
 }
 
 // parses one word, possibly quoted, and returns it
 QString QTextHtmlParser::parseWord()
 {
    QString word;
-   if (hasPrefix(QLatin1Char('\"'))) { // double quotes
+
+   if (hasPrefix('\"')) {
+      // double quotes
       ++pos;
+
       while (pos < len) {
          QChar c = txt.at(pos++);
          if (c == QLatin1Char('\"')) {
@@ -859,8 +875,11 @@ QString QTextHtmlParser::parseWord()
             word += c;
          }
       }
-   } else if (hasPrefix(QLatin1Char('\''))) { // single quotes
+
+   } else if (hasPrefix(QLatin1Char('\''))) {
+      // single quotes
       ++pos;
+
       while (pos < len) {
          QChar c = txt.at(pos++);
          if (c == QLatin1Char('\'')) {
@@ -869,17 +888,18 @@ QString QTextHtmlParser::parseWord()
             word += c;
          }
       }
-   } else { // normal text
+
+   } else {
+      // normal text
+
       while (pos < len) {
          QChar c = txt.at(pos++);
-         if (c == QLatin1Char('>')
-               || (c == QLatin1Char('/') && hasPrefix(QLatin1Char('>'), 1))
-               || c == QLatin1Char('<')
-               || c == QLatin1Char('=')
-               || c.isSpace()) {
+         if (c == QLatin1Char('>') || (c == QLatin1Char('/') && hasPrefix(QLatin1Char('>'), 1))
+               || c == QLatin1Char('<') || c == QLatin1Char('=') || c.isSpace()) {
             --pos;
             break;
          }
+
          if (c == QLatin1Char('&')) {
             word += parseEntity();
          } else {
@@ -1524,20 +1544,23 @@ void QTextHtmlParserNode::applyCssDeclarations(const QVector<QCss::Declaration> 
 
 void QTextHtmlParserNode::applyBackgroundImage(const QString &url, const QTextDocument *resourceProvider)
 {
-   if (!url.isEmpty() && resourceProvider) {
-      QVariant val = resourceProvider->resource(QTextDocument::ImageResource, url);
+   if (! url.isEmpty() && resourceProvider) {
+      QVariant val = resourceProvider->resource(QTextDocument::ImageResource, QUrl(url) );
 
       if (qApp->thread() != QThread::currentThread()) {
          // must use images in non-GUI threads
+
          if (val.type() == QVariant::Image) {
             QImage image = qvariant_cast<QImage>(val);
             charFormat.setBackground(image);
+
          } else if (val.type() == QVariant::ByteArray) {
             QImage image;
             if (image.loadFromData(val.toByteArray())) {
                charFormat.setBackground(image);
             }
          }
+
       } else {
          if (val.type() == QVariant::Image || val.type() == QVariant::Pixmap) {
             charFormat.setBackground(qvariant_cast<QPixmap>(val));
@@ -1556,17 +1579,20 @@ void QTextHtmlParserNode::applyBackgroundImage(const QString &url, const QTextDo
 
 bool QTextHtmlParserNode::hasOnlyWhitespace() const
 {
-   for (int i = 0; i < text.count(); ++i)
-      if (!text.at(i).isSpace() || text.at(i) == QChar::LineSeparator) {
+   for (int i = 0; i < text.count(); ++i) {
+      if (! text.at(i).isSpace() || text.at(i) == QChar::LineSeparator) {
          return false;
       }
+   }
+
    return true;
 }
 
 static bool setIntAttribute(int *destination, const QString &value)
 {
    bool ok = false;
-   int val = value.toInt(&ok);
+   int val = value.toInteger<int>(&ok);
+
    if (ok) {
       *destination = val;
    }
@@ -1578,6 +1604,7 @@ static bool setFloatAttribute(qreal *destination, const QString &value)
 {
    bool ok = false;
    qreal val = value.toDouble(&ok);
+
    if (ok) {
       *destination = val;
    }
@@ -1652,6 +1679,7 @@ void QTextHtmlParser::applyAttributes(const QStringList &attributes)
 {
    // local state variable for qt3 textedit mode
    bool seenQt3Richtext = false;
+
    QString linkHref;
    QString linkType;
 
@@ -1662,20 +1690,24 @@ void QTextHtmlParser::applyAttributes(const QStringList &attributes)
    QTextHtmlParserNode *node = &nodes.last();
 
    for (int i = 0; i < attributes.count(); i += 2) {
-      QString key = attributes.at(i);
+      QString key   = attributes.at(i);
       QString value = attributes.at(i + 1);
 
       switch (node->id) {
          case Html_font:
             // the infamous font tag
             if (key == QLatin1String("size") && value.size()) {
-               int n = value.toInt();
-               if (value.at(0) != QLatin1Char('+') && value.at(0) != QLatin1Char('-')) {
+               int n = value.toInteger<int>();
+
+               if (value.at(0) != QLatin1Char('+') && value.at(0) != '-') {
                   n -= 3;
                }
+
                node->charFormat.setProperty(QTextFormat::FontSizeAdjustment, n);
+
             } else if (key == QLatin1String("face")) {
                node->charFormat.setFontFamily(value);
+
             } else if (key == QLatin1String("color")) {
                QColor c;
                c.setNamedColor(value);
@@ -1685,6 +1717,7 @@ void QTextHtmlParser::applyAttributes(const QStringList &attributes)
                node->charFormat.setForeground(c);
             }
             break;
+
          case Html_ol:
          case Html_ul:
             if (key == QLatin1String("type")) {
@@ -1891,14 +1924,14 @@ class QTextHtmlStyleSelector : public QCss::StyleSelector
       nameCaseSensitivity = Qt::CaseInsensitive;
    }
 
-   virtual QStringList nodeNames(NodePtr node) const;
-   virtual QString attribute(NodePtr node, const QString &name) const;
-   virtual bool hasAttributes(NodePtr node) const;
-   virtual bool isNullNode(NodePtr node) const;
-   virtual NodePtr parentNode(NodePtr node) const;
-   virtual NodePtr previousSiblingNode(NodePtr node) const;
-   virtual NodePtr duplicateNode(NodePtr node) const;
-   virtual void freeNode(NodePtr node) const;
+   QStringList nodeNames(NodePtr node) const override;
+   QString attribute(NodePtr node, const QString &name) const override;
+   bool hasAttributes(NodePtr node) const override;
+   bool isNullNode(NodePtr node) const override;
+   NodePtr parentNode(NodePtr node) const override;
+   NodePtr previousSiblingNode(NodePtr node) const override;
+   NodePtr duplicateNode(NodePtr node) const override;
+   void freeNode(NodePtr node) const override;
 
  private:
    const QTextHtmlParser *parser;
@@ -1985,8 +2018,8 @@ void QTextHtmlParser::resolveStyleSheetImports(const QCss::StyleSheet &sheet)
 {
    for (int i = 0; i < sheet.importRules.count(); ++i) {
       const QCss::ImportRule &rule = sheet.importRules.at(i);
-      if (rule.media.isEmpty()
-            || rule.media.contains(QLatin1String("screen"), Qt::CaseInsensitive)) {
+
+      if (rule.media.isEmpty() || rule.media.contains(QLatin1String("screen"), Qt::CaseInsensitive)) {
          importStyleSheet(rule.href);
       }
    }
@@ -1994,22 +2027,26 @@ void QTextHtmlParser::resolveStyleSheetImports(const QCss::StyleSheet &sheet)
 
 void QTextHtmlParser::importStyleSheet(const QString &href)
 {
-   if (!resourceProvider) {
+   if (! resourceProvider) {
       return;
    }
-   for (int i = 0; i < externalStyleSheets.count(); ++i)
+
+   for (int i = 0; i < externalStyleSheets.count(); ++i)  {
       if (externalStyleSheets.at(i).url == href) {
          return;
       }
+   }
 
-   QVariant res = resourceProvider->resource(QTextDocument::StyleSheetResource, href);
+   QVariant res = resourceProvider->resource(QTextDocument::StyleSheetResource, QUrl(href));
    QString css;
+
    if (res.type() == QVariant::String) {
       css = res.toString();
    } else if (res.type() == QVariant::ByteArray) {
       // #### detect @charset
       css = QString::fromUtf8(res.toByteArray());
    }
+
    if (!css.isEmpty()) {
       QCss::Parser parser(css);
       QCss::StyleSheet sheet;

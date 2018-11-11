@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -28,16 +25,17 @@
 #ifndef QT_NO_FILEDIALOG
 
 #include <qfiledialog_p.h>
+#include <qfiledialog_win_p.h>
+
 #include <qapplication.h>
 #include <qapplication_p.h>
 #include <qt_windows.h>
 #include <qglobal.h>
-#include <qregexp.h>
+#include <qregularexpression.h>
 #include <qbuffer.h>
 #include <qdir.h>
 #include <qstringlist.h>
 #include <qsystemlibrary_p.h>
-#include <qfiledialog_win_p.h>
 
 // declare them here because they are not present for all SDK/compilers
 static const IID   QT_IID_IFileOpenDialog  = {0xd57c7288, 0xd4ad, 0x4768, {0xbe, 0x02, 0x9d, 0x96, 0x95, 0x32, 0xd9, 0x60} };
@@ -65,10 +63,27 @@ static QString qt_win_CID_get_save_file_name(const QFileDialogArgs &args, QStrin
 
 QString qt_win_CID_get_existing_directory(const QFileDialogArgs &args);
 
-static int __stdcall winGetExistDirCallbackProc(HWND hwnd,
-      UINT uMsg, LPARAM lParam, LPARAM lpData);
+static int __stdcall winGetExistDirCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData);
 
-QT_BEGIN_NAMESPACE
+static QString tCaption;
+
+static const QString qt_file_dialog_filter_reg_exp = "^(.*)\\(([a-zA-Z0-9_.*? +;#\\-\\[\\]@\\{\\}/!<>\\$%&=^~:\\|]*)\\)$";
+
+QStringList qt_make_filter_list(const QString &filter);
+
+const int maxNameLen  = 1023;
+const int maxMultiLen = 65535;
+
+struct CS_OpenFile : public OPENFILENAME
+{
+   CS_OpenFile() = default;
+   CS_OpenFile(const CS_OpenFile & data) = delete;
+
+   std::wstring m_init_selection;
+   std::wstring m_Filters;
+   std::wstring m_InitDir;
+   std::wstring m_Title;
+};
 
 static void qt_win_resolve_libs()
 {
@@ -84,32 +99,28 @@ static void qt_win_resolve_libs()
    }
 }
 
-extern const char *qt_file_dialog_filter_reg_exp; // defined in qfiledialog.cpp
-extern QStringList qt_make_filter_list(const QString &filter);
-
-const int maxNameLen = 1023;
-const int maxMultiLen = 65535;
-
 // Returns the wildcard part of a filter.
 static QString qt_win_extract_filter(const QString &rawFilter)
 {
    QString result = rawFilter;
-   QRegExp r(QString::fromLatin1(qt_file_dialog_filter_reg_exp));
-   int index = r.indexIn(result);
 
-   if (index >= 0) {
-      result = r.cap(2);
+   static QRegularExpression regExp(qt_file_dialog_filter_reg_exp);
+   QRegularExpressionMatch match = regExp.match(result);
+
+   if (match.hasMatch()) {
+      result = match.captured(2);
    }
 
-   QStringList list = result.split(QLatin1Char(' '));
-   for (QStringList::iterator it = list.begin(); it < list.end(); ++it) {
-      if (*it == QLatin1String("*")) {
-         *it = QLatin1String("*.*");
+   QStringList list = result.split(' ');
+
+   for (auto &it : list) {
+      if (it == "*") {
+         it = "*.*";
          break;
       }
    }
 
-   return list.join(QLatin1String(";"));
+   return list.join(";");
 }
 
 static QStringList qt_win_make_filters_list(const QString &filter)
@@ -126,27 +137,34 @@ static QStringList qt_win_make_filters_list(const QString &filter)
 // Makes a NUL-oriented Windows filter from a Qt filter.
 static QString qt_win_filter(const QString &filter, bool hideFiltersDetails)
 {
-   QStringList filterLst = qt_win_make_filters_list(filter);
-   QStringList::Iterator it = filterLst.begin();
-   QString winfilters;
-   QRegExp r(QString::fromLatin1(qt_file_dialog_filter_reg_exp));
+   QStringList filterLst    = qt_win_make_filters_list(filter);
 
-   for (; it != filterLst.end(); ++it) {
-      QString subfilter = *it;
-      if (!subfilter.isEmpty()) {
+   QString winfilters;
+
+   static QRegularExpression regExp(qt_file_dialog_filter_reg_exp);
+   QRegularExpressionMatch match;
+
+   for (const auto &subfilter : filterLst) {
+
+      if (! subfilter.isEmpty()) {
+
          if (hideFiltersDetails) {
-            int index = r.indexIn(subfilter);
-            if (index >= 0) {
-               winfilters += r.cap(1);
+            match = regExp.match(subfilter);
+
+            if (match.hasMatch()) {
+               winfilters += match.captured(1);
             }
+
          } else {
             winfilters += subfilter;
          }
+
          winfilters += QChar();
          winfilters += qt_win_extract_filter(subfilter);
          winfilters += QChar();
       }
    }
+
    winfilters += QChar();
    return winfilters;
 }
@@ -156,60 +174,52 @@ static QString qt_win_selected_filter(const QString &filter, DWORD idx)
    return qt_win_make_filters_list(filter).at((int)idx - 1);
 }
 
-static QString tFilters, tCaption, tTitle, tInitDir;
-
-static OPENFILENAME *qt_win_make_OFN(QWidget *parent,
-                                     const QString &initialSelection,
-                                     const QString &initialDirectory,
-                                     const QString &title,
-                                     const QString &filters,
-                                     QFileDialog::FileMode mode,
-                                     QFileDialog::Options options)
+static std::unique_ptr<CS_OpenFile> qt_win_make_OFN(QWidget *parent, const QString &initialSelection,
+                  const QString &initialDirectory, const QString &title, const QString &filters,
+                  QFileDialog::FileMode mode, QFileDialog::Options options)
 {
    if (parent) {
       parent = parent->window();
+
    } else {
       parent = QApplication::activeWindow();
    }
 
-   tInitDir = QDir::toNativeSeparators(initialDirectory);
-   tFilters = filters;
-   tTitle   = title;
-
    QString initSel = QDir::toNativeSeparators(initialSelection);
 
    if (! initSel.isEmpty()) {
-      initSel.remove(QLatin1Char('<'));
-      initSel.remove(QLatin1Char('>'));
-      initSel.remove(QLatin1Char('\"'));
-      initSel.remove(QLatin1Char('|'));
+      initSel.remove('<');
+      initSel.remove('>');
+      initSel.remove('\"');
+      initSel.remove('|');
    }
 
    int maxLen = mode == QFileDialog::ExistingFiles ? maxMultiLen : maxNameLen;
-   wchar_t *tInitSel = new wchar_t[maxLen + 1];
-   if (initSel.length() > 0 && initSel.length() <= maxLen) {
-      memcpy(tInitSel, initSel.utf16(), (initSel.length() + 1)*sizeof(QChar));
-   } else {
-      tInitSel[0] = 0;
-   }
 
-   OPENFILENAME *ofn = new OPENFILENAME;
-   memset(ofn, 0, sizeof(OPENFILENAME));
+   std::unique_ptr<CS_OpenFile> ofn = std::make_unique<CS_OpenFile>();
+   memset(ofn.get(), 0, sizeof(OPENFILENAME));
 
-   ofn->lStructSize = sizeof(OPENFILENAME);
-   ofn->hwndOwner   = parent ? parent->winId() : 0;
-   ofn->lpstrFilter = (wchar_t *)tFilters.utf16();
+   ofn->lStructSize      = sizeof(OPENFILENAME);
+   ofn->hwndOwner        = parent ? parent->winId() : 0;
+   ofn->nMaxFile         = maxLen;
 
-   ofn->lpstrFile   = tInitSel;
-   ofn->nMaxFile    = maxLen;
+   ofn->m_Filters        = filters.toStdWString();
+   ofn->lpstrFilter      = ofn->m_Filters.c_str();
 
-   ofn->lpstrInitialDir = (wchar_t *)tInitDir.utf16();
+   ofn->m_init_selection = initSel.toStdWString();
+   ofn->m_init_selection.resize(maxLen);
 
-   ofn->lpstrTitle = (wchar_t *)tTitle.utf16();
+   ofn->lpstrFile        = &ofn->m_init_selection[0];
+
+   ofn->m_InitDir        = QDir::toNativeSeparators(initialDirectory).toStdWString();
+   ofn->lpstrInitialDir  = ofn->m_InitDir.c_str();
+
+   ofn->m_Title          = title.toStdWString();;
+   ofn->lpstrTitle       = ofn->m_Title.c_str();
+
    ofn->Flags = (OFN_NOCHANGEDIR | OFN_HIDEREADONLY | OFN_EXPLORER | OFN_PATHMUSTEXIST);
 
-   if (mode == QFileDialog::ExistingFile ||
-         mode == QFileDialog::ExistingFiles) {
+   if (mode == QFileDialog::ExistingFile || mode == QFileDialog::ExistingFiles) {
       ofn->Flags |= (OFN_FILEMUSTEXIST);
    }
 
@@ -217,25 +227,16 @@ static OPENFILENAME *qt_win_make_OFN(QWidget *parent,
       ofn->Flags |= (OFN_ALLOWMULTISELECT);
    }
 
-   if (!(options & QFileDialog::DontConfirmOverwrite)) {
+   if (! (options & QFileDialog::DontConfirmOverwrite)) {
       ofn->Flags |= OFN_OVERWRITEPROMPT;
    }
 
    return ofn;
 }
 
-static void qt_win_clean_up_OFN(OPENFILENAME **ofn)
-{
-   delete [] (*ofn)->lpstrFile;
-   delete *ofn;
-   *ofn = 0;
-}
-
 extern void qt_win_eatMouseMove();
 
-QString qt_win_get_open_file_name(const QFileDialogArgs &args,
-                                  QString *initialDirectory,
-                                  QString *selectedFilter)
+QString qt_win_get_open_file_name(const QFileDialogArgs &args, QString *initialDirectory, QString *selectedFilter)
 {
    QString result;
 
@@ -246,7 +247,7 @@ QString qt_win_get_open_file_name(const QFileDialogArgs &args,
 
    QFileInfo fi(*initialDirectory);
 
-   if (initialDirectory && !fi.isDir()) {
+   if (initialDirectory && ! fi.isDir()) {
       *initialDirectory = fi.absolutePath();
 
       if (isel.isEmpty()) {
@@ -272,21 +273,19 @@ QString qt_win_get_open_file_name(const QFileDialogArgs &args,
    QApplicationPrivate::enterModal(&modal_widget);
 
    bool hideFiltersDetails = args.options & QFileDialog::HideNameFilterDetails;
-   OPENFILENAME *ofn = qt_win_make_OFN(args.parent, args.selection,
-                                       args.directory, args.caption,
-                                       qt_win_filter(args.filter, hideFiltersDetails),
-                                       QFileDialog::ExistingFile,
-                                       args.options);
+   std::unique_ptr<CS_OpenFile> ofn = qt_win_make_OFN(args.parent, args.selection, args.directory, args.caption,
+                  qt_win_filter(args.filter, hideFiltersDetails), QFileDialog::ExistingFile, args.options);
+
    if (idx) {
       ofn->nFilterIndex = idx + 1;
    }
 
-   if (GetOpenFileName(ofn)) {
-      result = QString::fromWCharArray(ofn->lpstrFile);
+   if (GetOpenFileName(ofn.get())) {
+      std::wstring tmp(ofn->lpstrFile);
+      result = QString::fromStdWString(tmp);
+
       selFilIdx = ofn->nFilterIndex;
    }
-
-   qt_win_clean_up_OFN(&ofn);
 
    QApplicationPrivate::leaveModal(&modal_widget);
 
@@ -306,9 +305,7 @@ QString qt_win_get_open_file_name(const QFileDialogArgs &args,
    return fi.absoluteFilePath();
 }
 
-QStringList qt_win_get_open_file_names(const QFileDialogArgs &args,
-                                       QString *initialDirectory,
-                                       QString *selectedFilter)
+QStringList qt_win_get_open_file_names(const QFileDialogArgs &args, QString *initialDirectory, QString *selectedFilter)
 {
    QDir dir;
 
@@ -335,7 +332,7 @@ QStringList qt_win_get_open_file_names(const QFileDialogArgs &args,
       idx = filterLst.indexOf(*selectedFilter);
    }
 
-   // Windows Vista (& above) allows users to search from file dialogs. If user selects
+   // Windows Vista & above allows users to search from file dialogs. If user selects
    // multiple files belonging to different folders from these search results, the
    // GetOpenFileName() will return only one folder name for all the files. To retrieve
    // the correct path for all selected files, we have to use Common Item Dialog interfaces.
@@ -345,47 +342,61 @@ QStringList qt_win_get_open_file_names(const QFileDialogArgs &args,
    }
 
    QStringList result;
+
    QDialog modal_widget;
    modal_widget.setAttribute(Qt::WA_NoChildEventsForParent, true);
    modal_widget.setParent(args.parent, Qt::Window);
    QApplicationPrivate::enterModal(&modal_widget);
 
    bool hideFiltersDetails = args.options & QFileDialog::HideNameFilterDetails;
-   OPENFILENAME *ofn = qt_win_make_OFN(args.parent, args.selection,
-                                       args.directory, args.caption,
-                                       qt_win_filter(args.filter, hideFiltersDetails),
-                                       QFileDialog::ExistingFiles,
-                                       args.options);
+   std::unique_ptr<CS_OpenFile> ofn = qt_win_make_OFN(args.parent, args.selection, args.directory, args.caption,
+                  qt_win_filter(args.filter, hideFiltersDetails), QFileDialog::ExistingFiles, args.options);
+
    if (idx) {
       ofn->nFilterIndex = idx + 1;
    }
 
-   if (GetOpenFileName(ofn)) {
-      QString fileOrDir = QString::fromWCharArray(ofn->lpstrFile);
-      selFilIdx = ofn->nFilterIndex;
+   if (GetOpenFileName(ofn.get())) {
+      std::wstring tmp(ofn->lpstrFile);
+      QString fileOrDir = QString::fromStdWString(tmp);
+
+      selFilIdx  = ofn->nFilterIndex;
       int offset = fileOrDir.length() + 1;
+
       if (ofn->lpstrFile[offset] == 0) {
          // Only one file selected; has full path
          fi.setFile(fileOrDir);
          QString res = fi.absoluteFilePath();
-         if (!res.isEmpty()) {
+
+         if (! res.isEmpty()) {
             result.append(res);
          }
+
       } else {
          // Several files selected; first string is path
          dir.setPath(fileOrDir);
+
          QString f;
-         while (!(f = QString::fromWCharArray(ofn->lpstrFile + offset)).isEmpty()) {
+         std::wstring tmp;
+
+         while (true) {
+            tmp = ofn->lpstrFile + offset;
+            f   = QString::fromStdWString(tmp);
+
+            if (f.isEmpty())  {
+               break;
+            }
+
             fi.setFile(dir, f);
             QString res = fi.absoluteFilePath();
-            if (!res.isEmpty()) {
+
+            if (! res.isEmpty()) {
                result.append(res);
             }
             offset += f.length() + 1;
          }
       }
    }
-   qt_win_clean_up_OFN(&ofn);
 
    QApplicationPrivate::leaveModal(&modal_widget);
 
@@ -393,6 +404,7 @@ QStringList qt_win_get_open_file_names(const QFileDialogArgs &args,
 
    if (!result.isEmpty()) {
       *initialDirectory = fi.path();    // only save the path if there is a result
+
       if (selectedFilter) {
          *selectedFilter = qt_win_selected_filter(args.filter, selFilIdx);
       }
@@ -400,20 +412,18 @@ QStringList qt_win_get_open_file_names(const QFileDialogArgs &args,
    return result;
 }
 
-QString qt_win_get_save_file_name(const QFileDialogArgs &args,
-                                  QString *initialDirectory,
-                                  QString *selectedFilter)
+QString qt_win_get_save_file_name(const QFileDialogArgs &args, QString *initialDirectory, QString *selectedFilter)
 {
    QString result;
 
    QString isel = args.selection;
-   if (initialDirectory && initialDirectory->left(5) == QLatin1String("file:")) {
+   if (initialDirectory && initialDirectory->left(5) == "file:") {
       initialDirectory->remove(0, 5);
    }
 
    QFileInfo fi(*initialDirectory);
 
-   if (initialDirectory && !fi.isDir()) {
+   if (initialDirectory && ! fi.isDir()) {
       *initialDirectory = fi.absolutePath();
 
       if (isel.isEmpty()) {
@@ -455,10 +465,13 @@ QString qt_win_get_save_file_name(const QFileDialogArgs &args,
    // the extension of the current filter"
 
    QString defaultSaveExt;
+
    if (selectedFilter && !selectedFilter->isEmpty()) {
       defaultSaveExt = qt_win_extract_filter(*selectedFilter);
+
       // make sure we only have the extension
-      int firstDot = defaultSaveExt.indexOf(QLatin1Char('.'));
+      int firstDot = defaultSaveExt.indexOf('.');
+
       if (firstDot != -1) {
          defaultSaveExt.remove(0, firstDot + 1);
       } else {
@@ -466,25 +479,22 @@ QString qt_win_get_save_file_name(const QFileDialogArgs &args,
       }
    }
 
-   OPENFILENAME *ofn = qt_win_make_OFN(args.parent, args.selection,
-                                       args.directory, args.caption,
-                                       qt_win_filter(args.filter, hideFiltersDetails),
-                                       QFileDialog::AnyFile,
-                                       args.options);
+   std::unique_ptr<CS_OpenFile> ofn = qt_win_make_OFN(args.parent, args.selection, args.directory, args.caption,
+                  qt_win_filter(args.filter, hideFiltersDetails), QFileDialog::AnyFile, args.options);
 
-   ofn->lpstrDefExt = (wchar_t *)defaultSaveExt.utf16();
+   std::wstring tmp(defaultSaveExt.toStdWString());
+   ofn->lpstrDefExt = &tmp[0];
 
    if (idx) {
       ofn->nFilterIndex = idx + 1;
    }
 
+   if (GetSaveFileName(ofn.get())) {
+      std::wstring tmp(ofn->lpstrFile);
+      result = QString::fromStdWString(tmp);
 
-   if (GetSaveFileName(ofn)) {
-      result = QString::fromWCharArray(ofn->lpstrFile);
       selFilIdx = ofn->nFilterIndex;
    }
-
-   qt_win_clean_up_OFN(&ofn);
 
    QApplicationPrivate::leaveModal(&modal_widget);
 
@@ -536,7 +546,6 @@ QString qt_win_get_existing_directory(const QFileDialogArgs &args)
    path[0]     = 0;
 
    tCaption = args.caption;
-   tTitle   = "";
 
    qt_BROWSEINFO bi;
 
@@ -544,8 +553,9 @@ QString qt_win_get_existing_directory(const QFileDialogArgs &args)
    bi.hwndOwner = (parent ? parent->winId() : 0);
    bi.pidlRoot  = NULL;
 
-   // area above the tree view, hard set to empty
-   bi.lpszTitle = (wchar_t *)tTitle.utf16();
+   // area above the tree view is hard set to empty
+   std::wstring title;
+   bi.lpszTitle = title.c_str();
 
    bi.pszDisplayName = initPath;
    bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_STATUSTEXT | BIF_NEWDIALOGSTYLE;
@@ -565,11 +575,12 @@ QString qt_win_get_existing_directory(const QFileDialogArgs &args)
          if (ptrSHGetMalloc(&pMalloc) == NOERROR) {
             pMalloc->Free(pItemIDList);
             pMalloc->Release();
-            result = QString::fromWCharArray(path);
+
+            std::wstring tmp(path);
+            result = QString::fromStdWString(tmp);
          }
       }
    }
-   tTitle = QString();
 
    QApplicationPrivate::leaveModal(&modal_widget);
 
@@ -587,13 +598,14 @@ static int __stdcall winGetExistDirCallbackProc(HWND hwnd, UINT uMsg, LPARAM lPa
    if (uMsg == BFFM_INITIALIZED && lpData != 0) {
 
       // set window caption
-      SetWindowTextW(hwnd, (const wchar_t *)tCaption.utf16());
+      SetWindowTextW(hwnd, tCaption.toStdWString().c_str());
 
       // set starting folder
       QString *initDir = (QString *)(lpData);
 
       if (! initDir->isEmpty()) {
-         SendMessage(hwnd, BFFM_SETSELECTION, TRUE, LPARAM(initDir->utf16()));
+         std::wstring tmp(initDir->toStdWString());
+         SendMessage(hwnd, BFFM_SETSELECTION, TRUE, LPARAM(tmp.c_str()));
       }
 
    } else if (uMsg == BFFM_SELCHANGED) {
@@ -602,7 +614,9 @@ static int __stdcall winGetExistDirCallbackProc(HWND hwnd, UINT uMsg, LPARAM lPa
       if (ptrSHGetPathFromIDList) {
          wchar_t path[MAX_PATH];
          ptrSHGetPathFromIDList(qt_LPITEMIDLIST(lParam), path);
-         QString tmpStr = QString::fromWCharArray(path);
+
+         std::wstring tmp(path);
+         QString tmpStr = QString::fromStdWString(tmp);
 
          if (! tmpStr.isEmpty()) {
             SendMessage(hwnd, BFFM_ENABLEOK, 1, 1);
@@ -621,40 +635,42 @@ static int __stdcall winGetExistDirCallbackProc(HWND hwnd, UINT uMsg, LPARAM lPa
 typedef HRESULT (WINAPI *PtrSHCreateItemFromParsingName)(PCWSTR pszPath, IBindCtx *pbc, REFIID riid, void **ppv);
 static PtrSHCreateItemFromParsingName pSHCreateItemFromParsingName = 0;
 
-static bool qt_win_set_IFileDialogOptions(IFileDialog *pfd,
-      const QString &initialSelection,
-      const QString &initialDirectory,
-      const QString &title,
-      const QStringList &filterLst,
-      QFileDialog::FileMode mode,
-      QFileDialog::Options options)
+static bool qt_win_set_IFileDialogOptions(IFileDialog *pfd, const QString &initialSelection,
+      const QString &initialDirectory, const QString &title, const QStringList &filterLst,
+      QFileDialog::FileMode mode, QFileDialog::Options options)
 {
-   if (!pSHCreateItemFromParsingName) {
+   if (! pSHCreateItemFromParsingName) {
       // This function is available only in Vista & above.
-      QSystemLibrary shellLib(QLatin1String("Shell32"));
-      pSHCreateItemFromParsingName = (PtrSHCreateItemFromParsingName)
-                                     shellLib.resolve("SHCreateItemFromParsingName");
+      QSystemLibrary shellLib("Shell32");
+
+      pSHCreateItemFromParsingName = (PtrSHCreateItemFromParsingName) shellLib.resolve("SHCreateItemFromParsingName");
+
       if (!pSHCreateItemFromParsingName) {
          return false;
       }
    }
+
    HRESULT hr;
    QString winfilters;
    int numFilters = 0;
    quint32 currentOffset = 0;
+
    QList<quint32> offsets;
-   QStringList::ConstIterator it = filterLst.begin();
+
    // Create the native filter string and save offset to each entry.
-   for (; it != filterLst.end(); ++it) {
-      QString subfilter = *it;
-      if (!subfilter.isEmpty()) {
+   for (auto subfilter : filterLst) {
+
+      if (! subfilter.isEmpty()) {
          offsets << currentOffset;
-         //Here the COMMON_ITEM_DIALOG API always add the details for the filter (e.g. *.txt)
-         //so we don't need to handle the flag HideNameFilterDetails.
+
+         // Here the COMMON_ITEM_DIALOG API always add the details for the filter (e.g. *.txt)
+         // so we don't need to handle the flag HideNameFilterDetails.
+
          winfilters += subfilter; // The name of the filter.
          winfilters += QChar();
          currentOffset += subfilter.size() + 1;
          offsets << currentOffset;
+
          QString spec = qt_win_extract_filter(subfilter);
          winfilters += spec; // The actual filter spec.
          winfilters += QChar();
@@ -662,71 +678,86 @@ static bool qt_win_set_IFileDialogOptions(IFileDialog *pfd,
          numFilters++;
       }
    }
-   // Add the filters to the file dialog.
+
+   // Add the filters to the file dialog
    if (numFilters) {
-      wchar_t *szData = (wchar_t *)winfilters.utf16();
+      std::wstring szData(winfilters.toStdWString());
       qt_COMDLG_FILTERSPEC *filterSpec = new qt_COMDLG_FILTERSPEC[numFilters];
+
       for (int i = 0; i < numFilters; i++) {
-         filterSpec[i].pszName = szData + offsets[i * 2];
-         filterSpec[i].pszSpec = szData + offsets[(i * 2) + 1];
+         filterSpec[i].pszName = szData.c_str() + offsets[i * 2];
+         filterSpec[i].pszSpec = szData.c_str() + offsets[(i * 2) + 1];
       }
+
       hr = pfd->SetFileTypes(numFilters, filterSpec);
       delete []filterSpec;
    }
+
    // Set the starting folder.
-   tInitDir = QDir::toNativeSeparators(initialDirectory);
-   if (!tInitDir.isEmpty()) {
+   std::wstring initDir = QDir::toNativeSeparators(initialDirectory).toStdWString();
+
+   if (! initDir.empty()) {
       IShellItem *psiDefaultFolder;
-      hr = pSHCreateItemFromParsingName((wchar_t *)tInitDir.utf16(), NULL, QT_IID_IShellItem,
-                                        reinterpret_cast<void **>(&psiDefaultFolder));
+      hr = pSHCreateItemFromParsingName(initDir.c_str(), NULL, QT_IID_IShellItem, reinterpret_cast<void **>(&psiDefaultFolder));
 
       if (SUCCEEDED(hr)) {
          hr = pfd->SetFolder(psiDefaultFolder);
          psiDefaultFolder->Release();
       }
    }
+
    // Set the currently selected file.
    QString initSel = QDir::toNativeSeparators(initialSelection);
-   if (!initSel.isEmpty()) {
+
+   if (! initSel.isEmpty()) {
       initSel.remove(QLatin1Char('<'));
       initSel.remove(QLatin1Char('>'));
       initSel.remove(QLatin1Char('\"'));
       initSel.remove(QLatin1Char('|'));
    }
-   if (!initSel.isEmpty()) {
-      hr = pfd->SetFileName((wchar_t *)initSel.utf16());
+
+   if (! initSel.isEmpty()) {
+      std::wstring tmp(initSel.toStdWString());
+      hr = pfd->SetFileName(tmp.c_str());
    }
+
    // Set the title for the file dialog.
-   if (!title.isEmpty()) {
-      hr = pfd->SetTitle((wchar_t *)title.utf16());
+   if (! title.isEmpty()) {
+      std::wstring tmp(title.toStdWString());
+      hr = pfd->SetTitle(tmp.c_str());
    }
+
    // Set other flags for the dialog.
    DWORD newOptions;
    hr = pfd->GetOptions(&newOptions);
+
    if (SUCCEEDED(hr)) {
       newOptions |= FOS_NOCHANGEDIR;
-      if (mode == QFileDialog::ExistingFile ||
-            mode == QFileDialog::ExistingFiles) {
+
+      if (mode == QFileDialog::ExistingFile || mode == QFileDialog::ExistingFiles) {
          newOptions |= (FOS_FILEMUSTEXIST | FOS_PATHMUSTEXIST);
       }
+
       if (mode == QFileDialog::ExistingFiles) {
          newOptions |= FOS_ALLOWMULTISELECT;
       }
-      if (!(options & QFileDialog::DontConfirmOverwrite)) {
+
+      if (! (options & QFileDialog::DontConfirmOverwrite)) {
          newOptions |= FOS_OVERWRITEPROMPT;
       }
+
       hr = pfd->SetOptions(newOptions);
    }
+
    return SUCCEEDED(hr);
 }
 
 static QStringList qt_win_CID_get_open_file_names(const QFileDialogArgs &args,
-      QString *initialDirectory,
-      const QStringList &filterList,
-      QString *selectedFilter,
-      int selectedFilterIndex)
+                  QString *initialDirectory, const QStringList &filterList,
+                  QString *selectedFilter, int selectedFilterIndex)
 {
    QStringList result;
+
    QDialog modal_widget;
    modal_widget.setAttribute(Qt::WA_NoChildEventsForParent, true);
    modal_widget.setParent(args.parent, Qt::Window);
@@ -738,14 +769,13 @@ static QStringList qt_win_CID_get_open_file_names(const QFileDialogArgs &args,
                                  reinterpret_cast<void **>(&pfd));
 
    if (SUCCEEDED(hr)) {
-      qt_win_set_IFileDialogOptions(pfd, args.selection,
-                                    args.directory, args.caption,
-                                    filterList, QFileDialog::ExistingFiles,
-                                    args.options);
+      qt_win_set_IFileDialogOptions(pfd, args.selection, args.directory, args.caption,
+                  filterList, QFileDialog::ExistingFiles, args.options);
 
       // Set the currently selected filter (one-based index).
       hr = pfd->SetFileTypeIndex(selectedFilterIndex + 1);
       QWidget *parentWindow = args.parent;
+
       if (parentWindow) {
          parentWindow = parentWindow->window();
       } else {
@@ -758,21 +788,29 @@ static QStringList qt_win_CID_get_open_file_names(const QFileDialogArgs &args,
          // Retrieve the results.
          IShellItemArray *psiaResults;
          hr = pfd->GetResults(&psiaResults);
+
          if (SUCCEEDED(hr)) {
             DWORD numItems = 0;
             psiaResults->GetCount(&numItems);
+
             for (DWORD i = 0; i < numItems; i++) {
                IShellItem *psi = 0;
                hr = psiaResults->GetItemAt(i, &psi);
+
                if (SUCCEEDED(hr)) {
-                  // Retrieve the file name from shell item.
+                  // Retrieve the file name from shell item
+
                   wchar_t *pszPath;
                   hr = psi->GetDisplayName(SIGDN_FILESYSPATH, &pszPath);
+
                   if (SUCCEEDED(hr)) {
-                     QString fileName = QString::fromWCharArray(pszPath);
+                     std::wstring tmp(pszPath);
+                     QString fileName = QString::fromStdWString(tmp);
+
                      result.append(fileName);
                      CoTaskMemFree(pszPath);
                   }
+
                   psi->Release(); // Free the current item.
                }
             }
@@ -788,38 +826,44 @@ static QStringList qt_win_CID_get_open_file_names(const QFileDialogArgs &args,
       // Retrieve the current folder name.
       IShellItem *psi = 0;
       hr = pfd->GetFolder(&psi);
+
       if (SUCCEEDED(hr)) {
          wchar_t *pszPath;
          hr = psi->GetDisplayName(SIGDN_FILESYSPATH, &pszPath);
+
          if (SUCCEEDED(hr)) {
-            *initialDirectory = QString::fromWCharArray(pszPath);
+            std::wstring tmp(pszPath);
+            *initialDirectory = QString::fromStdWString(tmp);
+
             CoTaskMemFree(pszPath);
          }
          psi->Release();
       }
+
       // Retrieve the currently selected filter.
       if (selectedFilter) {
          quint32 filetype = 0;
          hr = pfd->GetFileTypeIndex(&filetype);
+
          if (SUCCEEDED(hr) && filetype && filetype <= (quint32)filterList.length()) {
             // This is a one-based index, not zero-based.
             *selectedFilter = filterList[filetype - 1];
          }
       }
    }
+
    if (pfd) {
       pfd->Release();
    }
+
    return result;
 }
 
-static QString qt_win_CID_get_save_file_name(const QFileDialogArgs &args,
-      QString *initialDirectory,
-      const QStringList &filterList,
-      QString *selectedFilter,
-      int selectedFilterIndex)
+static QString qt_win_CID_get_save_file_name(const QFileDialogArgs &args, QString *initialDirectory,
+                  const QStringList &filterList, QString *selectedFilter, int selectedFilterIndex)
 {
    QString result;
+
    QDialog modal_widget;
    modal_widget.setAttribute(Qt::WA_NoChildEventsForParent, true);
    modal_widget.setParent(args.parent, Qt::Window);
@@ -830,14 +874,13 @@ static QString qt_win_CID_get_save_file_name(const QFileDialogArgs &args,
                                  reinterpret_cast<void **>(&pfd));
 
    if (SUCCEEDED(hr)) {
-      qt_win_set_IFileDialogOptions(pfd, args.selection,
-                                    args.directory, args.caption,
-                                    filterList, QFileDialog::AnyFile,
-                                    args.options);
+      qt_win_set_IFileDialogOptions(pfd, args.selection, args.directory, args.caption,
+                  filterList, QFileDialog::AnyFile, args.options);
 
       // Set the currently selected filter (one-based index).
       hr = pfd->SetFileTypeIndex(selectedFilterIndex + 1);
       QWidget *parentWindow = args.parent;
+
       if (parentWindow) {
          parentWindow = parentWindow->window();
       } else {
@@ -859,7 +902,9 @@ static QString qt_win_CID_get_save_file_name(const QFileDialogArgs &args,
             hr = psi->GetDisplayName(SIGDN_FILESYSPATH, &pszPath);
 
             if (SUCCEEDED(hr)) {
-               QString fileName = QString::fromWCharArray(pszPath);
+               std::wstring tmp(pszPath);
+               QString fileName = QString::fromStdWString(tmp);
+
                result.append(fileName);
                CoTaskMemFree(pszPath);
             }
@@ -885,7 +930,9 @@ static QString qt_win_CID_get_save_file_name(const QFileDialogArgs &args,
          hr = psi->GetDisplayName(SIGDN_FILESYSPATH, &pszPath);
 
          if (SUCCEEDED(hr)) {
-            *initialDirectory = QString::fromWCharArray(pszPath);
+            std::wstring tmp(pszPath);
+            *initialDirectory = QString::fromStdWString(tmp);
+
             CoTaskMemFree(pszPath);
          }
          psi->Release();
@@ -913,6 +960,7 @@ static QString qt_win_CID_get_save_file_name(const QFileDialogArgs &args,
 QString qt_win_CID_get_existing_directory(const QFileDialogArgs &args)
 {
    QString result;
+
    QDialog modal_widget;
    modal_widget.setAttribute(Qt::WA_NoChildEventsForParent, true);
    modal_widget.setParent(args.parent, Qt::Window);
@@ -923,10 +971,8 @@ QString qt_win_CID_get_existing_directory(const QFileDialogArgs &args)
                                  QT_IID_IFileOpenDialog, reinterpret_cast<void **>(&pfd));
 
    if (SUCCEEDED(hr)) {
-      qt_win_set_IFileDialogOptions(pfd, args.selection,
-                                    args.directory, args.caption,
-                                    QStringList(), QFileDialog::ExistingFile,
-                                    args.options);
+      qt_win_set_IFileDialogOptions(pfd, args.selection, args.directory, args.caption,
+                  QStringList(), QFileDialog::ExistingFile, args.options);
 
       // Set the FOS_PICKFOLDERS flag
       DWORD newOptions;
@@ -943,16 +989,21 @@ QString qt_win_CID_get_existing_directory(const QFileDialogArgs &args)
 
          // Show the file dialog.
          hr = pfd->Show(parentWindow ? parentWindow->winId() : 0);
+
          if (SUCCEEDED(hr)) {
             // Retrieve the result
+
             IShellItem *psi = 0;
             hr = pfd->GetResult(&psi);
             if (SUCCEEDED(hr)) {
                // Retrieve the file name from shell item.
                wchar_t *pszPath;
                hr = psi->GetDisplayName(SIGDN_FILESYSPATH, &pszPath);
+
                if (SUCCEEDED(hr)) {
-                  result = QString::fromWCharArray(pszPath);
+                  std::wstring tmp(pszPath);
+                  result = QString::fromStdWString(tmp);
+
                   CoTaskMemFree(pszPath);
                }
                psi->Release(); // Free the current item.
@@ -960,6 +1011,7 @@ QString qt_win_CID_get_existing_directory(const QFileDialogArgs &args)
          }
       }
    }
+
    QApplicationPrivate::leaveModal(&modal_widget);
 
    qt_win_eatMouseMove();
@@ -969,7 +1021,5 @@ QString qt_win_CID_get_existing_directory(const QFileDialogArgs &args)
    }
    return result;
 }
-
-QT_END_NAMESPACE
 
 #endif

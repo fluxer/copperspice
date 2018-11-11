@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -164,38 +161,17 @@ class NamePool : public QSharedData
    QXmlName fromClarkName(const QString &clarkName);
 
  private:
-   /**
-    * @note This function can not be called concurrently.
-    */
    QXmlName::NamespaceCode unlockedAllocateNamespace(const QString &uri);
-
-   /**
-    * @note This function can not be called concurrently.
-    */
    QXmlName::LocalNameCode unlockedAllocateLocalName(const QString &ln);
-
-   /**
-    * It's assumed that @p prefix is a valid @c NCName.
-    *
-    * @note This function can not be called concurrently.
-    */
    QXmlName::PrefixCode unlockedAllocatePrefix(const QString &prefix);
 
    Q_DISABLE_COPY(NamePool)
 
-   /**
-    * @note This function can not be called concurrently.
-    */
    const QString &displayPrefix(const QXmlName::NamespaceCode nc) const;
 
    mutable QReadWriteLock lock;
 };
 
-/**
- * @short Formats QName.
- *
- * @relates QXmlName
- */
 static inline QString formatKeyword(const NamePool::Ptr &np, const QXmlName name)
 {
    return QLatin1String("<span class='XQuery-keyword'>")   +
@@ -203,19 +179,10 @@ static inline QString formatKeyword(const NamePool::Ptr &np, const QXmlName name
           QLatin1String("</span>");
 }
 
-/**
- * @see NamespaceResolver::Constants
- */
 class StandardNamespaces
 {
  public:
    enum ID {
-      /**
-       * This does not mean empty in the sense of "empty", but
-       * in the sense of an empty string, "".
-       *
-       * Its value, zero, is significant.
-       */
       empty = 0,
       fn,
       local,
@@ -224,26 +191,8 @@ class StandardNamespaces
       xs,
       xsi,
       xslt,
-      /**
-       * @short A special value that when passed as the namespace part
-       * to NamespaceResolver::addBinding(), undeclares the prefix.
-       *
-       * This is used by the namespace prolog declaration.
-       *
-       * A dummy value is added to the name pool.
-       */
       UndeclarePrefix,
-
-      /**
-       * Signals that a node shouldn't inherit namespaces from its parent. Must be used
-       * with StandardPrefixes::StopNamespaceInheritance.
-       */
       StopNamespaceInheritance,
-
-      /**
-       * A namespace used to identify for instance @c \#all template
-       * mode in XSL-T.
-       */
       InternalXSLT
    };
 };
@@ -479,14 +428,13 @@ inline QXmlName::QXmlName(const NamespaceCode uri,
    /* We can't use members like prefix() here because if one of the
     * values are to large, they would overflow into the others. */
    Q_ASSERT_X(p <= MaximumPrefixes, "",
-              qPrintable(QString::fromLatin1("NamePool prefix limits: max is %1, therefore %2 exceeds.").arg(MaximumPrefixes).arg(
-                            p)));
+              qPrintable(QString("NamePool prefix limits: max is %1, therefore %2 exceeds.").formatArg(MaximumPrefixes).formatArg(p)));
+
    Q_ASSERT_X(ln <= MaximumLocalNames, "",
-              qPrintable(QString::fromLatin1("NamePool local name limits: max is %1, therefore %2 exceeds.").arg(
-                            MaximumLocalNames).arg(ln)));
+              qPrintable(QString("NamePool local name limits: max is %1, therefore %2 exceeds.").formatArg(MaximumLocalNames).formatArg(ln)));
+
    Q_ASSERT_X(uri <= MaximumNamespaces, "",
-              qPrintable(QString::fromLatin1("NamePool namespace limits: max is %1, therefore %2 exceeds.").arg(
-                            MaximumNamespaces).arg(uri)));
+              qPrintable(QString("NamePool namespace limits: max is %1, therefore %2 exceeds.").formatArg(MaximumNamespaces).formatArg(uri)));
 }
 
 

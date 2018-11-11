@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -207,12 +204,15 @@ static QList<int> reindexList(const GlobalConfig *config, Phonon::Category categ
 
     /*QString sb;
     sb = QString("(Size %1)").arg(currentList.size());
-    foreach (int i, currentList)
-    sb += QString("%1, ").arg(i);
+    for (int i : currentList) {
+       sb += QString("%1, ").arg(i);
+    }
     fprintf(stderr, "=== Reindex Current: %s\n", sb.toUtf8().constData());
+
     sb = QString("(Size %1)").arg(newOrder.size());
-    foreach (int i, newOrder)
-    sb += QString("%1, ").arg(i);
+    for (int i : newOrder) {
+       sb += QString("%1, ").arg(i);
+    }  
     fprintf(stderr, "=== Reindex Before : %s\n", sb.toUtf8().constData());*/
 
     QList<int> currentList;
@@ -225,7 +225,7 @@ static QList<int> reindexList(const GlobalConfig *config, Phonon::Category categ
 
     QList<int> newList;
 
-    foreach (int i, newOrder) {
+    for (int i : newOrder) {
         int found = currentList.indexOf(i);
         if (found < 0) {
             // It's not in the list, so something is odd (e.g. client error). Ignore it.
@@ -255,8 +255,9 @@ static QList<int> reindexList(const GlobalConfig *config, Phonon::Category categ
         newList += currentList;
 
     /*sb = QString("(Size %1)").arg(newList.size());
-    foreach (int i, newList)
-    sb += QString("%1, ").arg(i);
+    for (int i : newList) {
+       sb += QString("%1, ").arg(i);
+    }  
     fprintf(stderr, "=== Reindex After  : %s\n", sb.toUtf8().constData());*/
     return newList;
 }
@@ -290,20 +291,19 @@ QList<int> GlobalConfig::audioOutputDeviceListFor(Phonon::Category category, int
     K_D(const GlobalConfig);
 
     const bool hide = ((override & AdvancedDevicesFromSettings)
-            ? hideAdvancedDevices()
-            : static_cast<bool>(override & HideAdvancedDevices));
+            ? hideAdvancedDevices() : static_cast<bool>(override & HideAdvancedDevices));
 
     QList<int> defaultList;
 
     PulseSupport *pulse = PulseSupport::getInstance();
     if (pulse->isActive()) {
         defaultList = pulse->objectDescriptionIndexes(Phonon::AudioOutputDeviceType);
+
         if (hide || (override & HideUnavailableDevices)) {
-            filter(AudioOutputDeviceType, NULL, &defaultList,
-                    (hide ? FilterAdvancedDevices : 0)
-                    | ((override & HideUnavailableDevices) ? FilterUnavailableDevices : 0)
-                    );
+            filter(AudioOutputDeviceType, NULL, &defaultList, (hide ? FilterAdvancedDevices : 0)
+                    | ((override & HideUnavailableDevices) ? FilterUnavailableDevices : 0) );
         }
+
     } else {
         BackendInterface *backendIface = qobject_cast<BackendInterface *>(Factory::backend());
 
@@ -311,32 +311,38 @@ QList<int> GlobalConfig::audioOutputDeviceListFor(Phonon::Category category, int
         if (PlatformPlugin *platformPlugin = Factory::platformPlugin()) {
             // the platform plugin lists the audio devices for the platform
             // this list already is in default order (as defined by the platform plugin)
+
             defaultList = platformPlugin->objectDescriptionIndexes(Phonon::AudioOutputDeviceType);
+
             if (hide) {
                 QMutableListIterator<int> it(defaultList);
+
                 while (it.hasNext()) {
                     AudioOutputDevice objDesc = AudioOutputDevice::fromIndex(it.next());
+
                     const QVariant var = objDesc.property("isAdvanced");
+
                     if (var.isValid() && var.toBool()) {
                         it.remove();
                     }
                 }
             }
         }
-#endif //QT_NO_PHONON_PLATFORMPLUGIN
+#endif
 
         // lookup the available devices directly from the backend
         if (backendIface) {
             // this list already is in default order (as defined by the backend)
             QList<int> list = backendIface->objectDescriptionIndexes(Phonon::AudioOutputDeviceType);
+
             if (hide || !defaultList.isEmpty() || (override & HideUnavailableDevices)) {
                 filter(AudioOutputDeviceType, backendIface, &list,
                         (hide ? FilterAdvancedDevices : 0)
                         // the platform plugin maybe already provided the hardware devices?
                         | (defaultList.isEmpty() ? 0 : FilterHardwareDevices)
-                        | ((override & HideUnavailableDevices) ? FilterUnavailableDevices : 0)
-                        );
+                        | ((override & HideUnavailableDevices) ? FilterUnavailableDevices : 0) );
             }
+
             defaultList += list;
         }
     }
@@ -345,14 +351,20 @@ QList<int> GlobalConfig::audioOutputDeviceListFor(Phonon::Category category, int
     return sortDevicesByCategoryPriority(this, &backendConfig, AudioOutputDeviceType, category, defaultList);
 }
 #endif //QT_NO_PHONON_SETTINGSGROUP
+
 int GlobalConfig::audioOutputDeviceFor(Phonon::Category category, int override) const
 {
+
 #ifndef QT_NO_PHONON_SETTINGSGROUP
     QList<int> ret = audioOutputDeviceListFor(category, override);
-    if (!ret.isEmpty())
-        return ret.first();
-#endif //QT_NO_PHONON_SETTINGSGROUP
-    return -1;
+
+    if (! ret.isEmpty()) {
+       return ret.first();
+    }
+
+#endif
+
+   return -1;
 }
 
 #ifndef QT_NO_PHONON_AUDIOCAPTURE

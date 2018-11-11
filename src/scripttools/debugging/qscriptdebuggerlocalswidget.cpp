@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -49,7 +46,7 @@ namespace {
 class CustomProxyModel : public QSortFilterProxyModel
 {
  public:
-   CustomProxyModel(QObject *parent = 0)
+   CustomProxyModel(QObject *parent = nullptr)
       : QSortFilterProxyModel(parent) {}
 
    bool hasChildren(const QModelIndex &parent) const {
@@ -184,7 +181,7 @@ class QScriptDebuggerLocalsItemDelegate : public QStyledItemDelegate
    SCRIPT_T_CS_OBJECT(QScriptDebuggerLocalsItemDelegate)
 
  public:
-   QScriptDebuggerLocalsItemDelegate(QObject *parent = 0);
+   QScriptDebuggerLocalsItemDelegate(QObject *parent = nullptr);
 
    QWidget *createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const;
    void setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const;

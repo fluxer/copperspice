@@ -1,29 +1,28 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
 
 #include "qaudiocdreader.h"
+#include <qlog.h>
+
 #include <dshow.h>
 #include <initguid.h>
 
@@ -41,7 +40,7 @@ namespace Phonon
     namespace DS9
     {
         // {CA46BFE1-D55B-4adf-B803-BC2B9AD57824}
-        DEFINE_GUID(IID_ITitleInterface, 
+        DEFINE_GUID(IID_ITitleInterface,
             0xca46bfe1, 0xd55b, 0x4adf, 0xb8, 0x3, 0xbc, 0x2b, 0x9a, 0xd5, 0x78, 0x24);
 
         struct TRACK_DATA {
@@ -71,7 +70,7 @@ namespace Phonon
             const qint32 chunksize2;
             const quint16 formatTag;
             const quint16 nChannels;
-            const quint32 nSamplesPerSec; 
+            const quint32 nSamplesPerSec;
             const quint32 nAvgBytesPerSec;
             const quint16 nBlockAlign;
             const quint16 bitsPerSample;
@@ -99,15 +98,15 @@ namespace Phonon
             ~QAudioCDReader();
 
             //reimplementation from IUnknown
-            STDMETHODIMP_(ULONG) AddRef();
-            STDMETHODIMP_(ULONG) Release();
+            STDMETHODIMP_(ULONG) AddRef() override;
+            STDMETHODIMP_(ULONG) Release() override;
 
-            STDMETHODIMP Length(LONGLONG *,LONGLONG *);
-            STDMETHODIMP QueryInterface(REFIID iid, void** out);
-            QList<qint64> titles() const;
+            STDMETHODIMP Length(LONGLONG *,LONGLONG *) override;
+            STDMETHODIMP QueryInterface(REFIID iid, void** out) override;
+            QList<qint64> titles() const override;
 
         protected:
-            HRESULT read(LONGLONG pos, LONG length, BYTE *buffer, LONG *actual);
+            HRESULT read(LONGLONG pos, LONG length, BYTE *buffer, LONG *actual) override;
 
         private:
             HANDLE m_cddrive;
@@ -121,13 +120,13 @@ namespace Phonon
 #define NB_SECTORS_READ 20
 
         static const AM_MEDIA_TYPE audioCDMediaType = { MEDIATYPE_Stream, MEDIASUBTYPE_WAVE, TRUE, FALSE, 1, GUID_NULL, 0, 0, 0};
- 
+
         int addressToSectors(UCHAR address[4])
         {
             return ((address[0] * 60 + address[1]) * 60 + address[2]) * 75 + address[3] - 150;
         }
 
-        WaveStructure::WaveStructure() : chunksize(0), chunksize2(16), 
+        WaveStructure::WaveStructure() : chunksize(0), chunksize2(16),
             formatTag(WAVE_FORMAT_PCM), nChannels(2), nSamplesPerSec(44100), nAvgBytesPerSec(176400), nBlockAlign(4), bitsPerSample(16),
             dataLength(0)
         {
@@ -141,27 +140,28 @@ namespace Phonon
         QAudioCDReader::QAudioCDReader(QBaseFilter *parent, QChar drive) : QAsyncReader(parent, QVector<AM_MEDIA_TYPE>() << audioCDMediaType)
         {
             //now open the cd-drive
-            QString path; 
+            QString path;
+
             if (drive.isNull()) {
-                path = QString::fromLatin1("\\\\.\\Cdrom0"); 	 
-            } else { 	 
-                path = QString::fromLatin1("\\\\.\\%1:").arg(drive); 	 
+                path = QString::fromLatin1("\\\\.\\Cdrom0"); 	
+            } else { 	
+                path = QString::fromLatin1("\\\\.\\%1:").formatArg(drive); 	
             }
 
-            m_cddrive = ::CreateFile((const wchar_t *)path.utf16(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
-
+            m_cddrive = ::CreateFile(&path.toStdWString()[0], GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
             memset(&m_toc, 0, sizeof(CDROM_TOC));
+
             //read the TOC
             DWORD bytesRead = 0;
             bool tocRead = ::DeviceIoControl(m_cddrive, IOCTL_CDROM_READ_TOC, 0, 0, &m_toc, sizeof(CDROM_TOC), &bytesRead, 0);
 
-            if (!tocRead) {
+            if (! tocRead) {
                 qWarning("unable to load the TOC from the CD");
                 return;
             }
 
             m_trackAddress = addressToSectors(m_toc.TrackData[0].Address);
-            const qint32 nbSectorsToRead = (addressToSectors(m_toc.TrackData[m_toc.LastTrack + 1 - m_toc.FirstTrack].Address) 
+            const qint32 nbSectorsToRead = (addressToSectors(m_toc.TrackData[m_toc.LastTrack + 1 - m_toc.FirstTrack].Address)
                 - m_trackAddress);
             const qint32 dataLength = nbSectorsToRead * SECTOR_SIZE;
 
@@ -237,7 +237,7 @@ namespace Phonon
                 //we need to read again
 
                 const int surplus = posInTrack % SECTOR_SIZE; //how many bytes too much at the beginning
-                const int firstSector = posInTrack / SECTOR_SIZE, 
+                const int firstSector = posInTrack / SECTOR_SIZE,
                     lastSector = (posInTrack + length - 1) / SECTOR_SIZE;
                 const int sectorsNeeded = lastSector - firstSector + 1;
                 int sectorsRead = 0;

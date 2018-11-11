@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -85,12 +82,12 @@ void Effect::setupEffectParams()
             GParamSpec *param = property_specs[i];
 
             if (param->flags & G_PARAM_WRITABLE) {
-                QString propertyName = g_param_spec_get_name (param);
+                QString propertyName = QString::fromLatin1(g_param_spec_get_name(param));
 
                 // These properties should not be exposed to the front-end
                 if (propertyName == "qos" || propertyName == "name" || propertyName == "async-handling")
                     continue;
- 
+
                 switch(param->value_type) {
                     case G_TYPE_UINT:
                         m_parameterList.append(Phonon::EffectParameter(i, propertyName,
@@ -103,7 +100,7 @@ void Effect::setupEffectParams()
                     case G_TYPE_STRING:
                         m_parameterList.append(Phonon::EffectParameter(i, propertyName,
                             0,   //hints
-                            QString(G_PARAM_SPEC_STRING(param)->default_value),
+                            QString::fromLatin1(G_PARAM_SPEC_STRING(param)->default_value),
                             0,
                             0));
                         break;
@@ -133,7 +130,7 @@ void Effect::setupEffectParams()
                         break;
 
                     case G_TYPE_BOOLEAN:
-                        m_parameterList.append(Phonon::EffectParameter(i, propertyName, 
+                        m_parameterList.append(Phonon::EffectParameter(i, propertyName,
                             Phonon::EffectParameter::ToggledHint,   //hints
                             QVariant(static_cast<bool>(G_PARAM_SPEC_BOOLEAN(param)->default_value)),
                             QVariant(static_cast<bool>(false)), QVariant(static_cast<bool>(true)) ));

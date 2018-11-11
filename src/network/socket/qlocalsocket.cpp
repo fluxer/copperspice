@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -27,8 +24,6 @@
 #include <qlocalsocket_p.h>
 
 #ifndef QT_NO_LOCALSOCKET
-
-QT_BEGIN_NAMESPACE
 
 QLocalSocket::QLocalSocket(QObject *parent)
    : QIODevice(*new QLocalSocketPrivate, parent)
@@ -50,13 +45,27 @@ QLocalSocket::~QLocalSocket()
 #endif
 }
 
-/*!
-    Returns the name of the peer as specified by connectToServer(), or an
-    empty QString if connectToServer() has not been called or it failed.
+bool QLocalSocket::open(OpenMode openMode)
+{
+   connectToServer(openMode);
+   return isOpen();
+}
+void QLocalSocket::connectToServer(const QString &name, OpenMode openMode)
+{
+   setServerName(name);
+   connectToServer(openMode);
+}
 
-    \sa connectToServer(), fullServerName()
+void QLocalSocket::setServerName(const QString &name)
+{
+   Q_D(QLocalSocket);
+   if (d->state != UnconnectedState) {
+      qWarning("QLocalSocket::setServerName() called while not in unconnected state");
+      return;
+   }
+   d->serverName = name;
+}
 
- */
 QString QLocalSocket::serverName() const
 {
    Q_D(const QLocalSocket);
@@ -89,6 +98,9 @@ bool QLocalSocket::isSequential() const
 
 QDebug operator<<(QDebug debug, QLocalSocket::LocalSocketError error)
 {
+   // QDebugStateSaver saver(debug);
+   // debug.resetFormat().nospace();
+
    switch (error) {
       case QLocalSocket::ConnectionRefusedError:
          debug << "QLocalSocket::ConnectionRefusedError";
@@ -129,6 +141,9 @@ QDebug operator<<(QDebug debug, QLocalSocket::LocalSocketError error)
 
 QDebug operator<<(QDebug debug, QLocalSocket::LocalSocketState state)
 {
+   // QDebugStateSaver saver(debug);
+   // debug.resetFormat().nospace();
+
    switch (state) {
       case QLocalSocket::UnconnectedState:
          debug << "QLocalSocket::UnconnectedState";
@@ -165,11 +180,13 @@ void QLocalSocket::_q_error(QAbstractSocket::SocketError un_named_arg1)
 
 #elif defined(Q_OS_WIN)
 
+/* GONE
 void QLocalSocket::_q_notified()
 {
    Q_D(QLocalSocket);
    d->_q_notified();
 }
+*/
 
 void QLocalSocket::_q_canWrite()
 {
@@ -183,11 +200,19 @@ void QLocalSocket::_q_pipeClosed()
    d->_q_pipeClosed();
 }
 
+void QLocalSocket::_q_winError(ulong data1, const QString &data2)
+{
+   Q_D(QLocalSocket);
+   d->_q_winError(data1, data2);
+}
+
+/* GONE
 void QLocalSocket::_q_emitReadyRead()
 {
    Q_D(QLocalSocket);
    d->_q_emitReadyRead();
 }
+*/
 
 #else
 
@@ -216,14 +241,5 @@ void QLocalSocket::_q_abortConnectionAttempt()
 }
 
 #endif
-
-
-
-
-
-
-
-
-QT_END_NAMESPACE
 
 #endif

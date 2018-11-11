@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -866,7 +863,8 @@ void QCommonStylePrivate::viewItemDrawText(QPainter *p, const QStyleOptionViewIt
          elidedIndex = j;
          break;
       }
-      width = qMax<qreal>(width, line.width());
+
+      width = qMax(width, line.width());
       height += line.height();
    }
 
@@ -4815,11 +4813,13 @@ QSize QCommonStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt,
          }
          break;
 #endif // QT_NO_MENU
+
 #ifndef QT_NO_TOOLBUTTON
       case CT_ToolButton:
          sz = QSize(sz.width() + 6, sz.height() + 5);
          break;
-#endif // QT_NO_TOOLBUTTON
+#endif
+
 #ifndef QT_NO_COMBOBOX
       case CT_ComboBox:
          if (const QStyleOptionComboBox *cmb = qstyleoption_cast<const QStyleOptionComboBox *>(opt)) {
@@ -4830,18 +4830,21 @@ QSize QCommonStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt,
             sz = QSize(sz.width() + fw + other, sz.height() + fw);
          }
          break;
-#endif // QT_NO_COMBOBOX
+
+#endif
+
       case CT_HeaderSection:
          if (const QStyleOptionHeader *hdr = qstyleoption_cast<const QStyleOptionHeader *>(opt)) {
             bool nullIcon = hdr->icon.isNull();
             int margin = proxy()->pixelMetric(QStyle::PM_HeaderMargin, hdr, widget);
             int iconSize = nullIcon ? 0 : proxy()->pixelMetric(QStyle::PM_SmallIconSize, hdr, widget);
+
             QSize txt = hdr->fontMetrics.size(0, hdr->text);
             sz.setHeight(margin + qMax(iconSize, txt.height()) + margin);
-            sz.setWidth((nullIcon ? 0 : margin) + iconSize
-                        + (hdr->text.isNull() ? 0 : margin) + txt.width() + margin);
+            sz.setWidth((nullIcon ? 0 : margin) + iconSize + (hdr->text.isEmpty() ? 0 : margin) + txt.width() + margin);
          }
          break;
+
       case CT_TabWidget:
          sz += QSize(4, 4);
          break;
@@ -4914,7 +4917,7 @@ int QCommonStyle::styleHint(StyleHint sh, const QStyleOption *opt, const QWidget
          break;
 
       case SH_Slider_AbsoluteSetButtons:
-         ret = Qt::MidButton;
+         ret = Qt::MiddleButton;
          break;
 
       case SH_Slider_PageSetButtons:

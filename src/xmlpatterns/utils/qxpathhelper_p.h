@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -30,6 +27,7 @@
 #include <qitem_p.h>
 #include <qpatternistlocale_p.h>
 #include <qreportcontext_p.h>
+#include <qstringfwd.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -69,22 +67,19 @@ class XPathHelper
     * not, error code @p code is raised via @p context.
     */
    template<const ReportContext::ErrorCode code, typename TReportContext>
-   static inline void checkCollationSupport(const QString &collation,
-         const TReportContext &context,
-         const SourceLocationReflection *const r) {
+
+   static inline void checkCollationSupport(const QString &collation, const TReportContext &context, const SourceLocationReflection *const r) {
       Q_ASSERT(context);
       Q_ASSERT(r);
 
-      if (collation != QLatin1String(CommonNamespaces::UNICODE_COLLATION)) {
-         context->error(QtXmlPatterns::tr("Only the Unicode Codepoint "
-                                          "Collation is supported(%1). %2 is unsupported.")
-                        .arg(formatURI(QLatin1String(CommonNamespaces::UNICODE_COLLATION)))
-                        .arg(formatURI(collation)),
-                        code, r);
+      if (collation != QString::fromLatin1(CommonNamespaces::UNICODE_COLLATION)) {
+         context->error(QtXmlPatterns::tr("Only the Unicode Codepoint Collation is supported(%1). %2 is unsupported.")
+                        .formatArg(formatURI(QString::fromLatin1(CommonNamespaces::UNICODE_COLLATION)))
+                        .formatArg(formatURI(collation)), code, r);
       }
    }
 
-   static QPatternist::ItemTypePtr typeFromKind(const QXmlNodeModelIndex::NodeKind nodeKind);
+   static QPatternist::ItemType::Ptr typeFromKind(const QXmlNodeModelIndex::NodeKind nodeKind);
 
    /**
     * Normalizes an @p uri by resolving it to the application directory if empty.
@@ -99,11 +94,12 @@ class XPathHelper
     *
     * @returns @c true if @p string consists only of whitespace, otherwise @c false.
     */
-   static inline bool isWhitespaceOnly(const QStringRef &string) {
+   static inline bool isWhitespaceOnly(QStringView string) {
       const int len = string.length();
 
       for (int i = 0; i < len; ++i) {
-         if (!string.at(i).isSpace()) { // TODO and this is wrong, see sdk/TODO
+         if (! string.at(i).isSpace()) {
+            // TODO and this is wrong, see sdk/TODO
             return false;
          }
       }
@@ -115,7 +111,7 @@ class XPathHelper
     * @overload
     */
    static inline bool isWhitespaceOnly(const QString &string) {
-      return isWhitespaceOnly(QStringRef(&string));
+      return isWhitespaceOnly(QStringView(string));
    }
 
  private:

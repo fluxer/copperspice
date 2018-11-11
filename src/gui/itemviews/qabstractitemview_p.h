@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -41,8 +38,6 @@
 
 #ifndef QT_NO_ITEMVIEWS
 
-QT_BEGIN_NAMESPACE
-
 struct QEditorInfo {
    QEditorInfo(QWidget *e, bool s): widget(QWeakPointer<QWidget>(e)), isStatic(s) {}
    QEditorInfo(): isStatic(false) {}
@@ -61,23 +56,29 @@ typedef QList<QItemViewPaintPair> QItemViewPaintPairs;
 class QEmptyModel : public QAbstractItemModel
 {
  public:
-   explicit QEmptyModel(QObject *parent = 0) : QAbstractItemModel(parent) {}
-   QModelIndex index(int, int, const QModelIndex &) const {
+   explicit QEmptyModel(QObject *parent = nullptr) : QAbstractItemModel(parent) {}
+
+   QModelIndex index(int, int, const QModelIndex &) const override{
       return QModelIndex();
    }
-   QModelIndex parent(const QModelIndex &) const {
+
+   QModelIndex parent(const QModelIndex &) const override{
       return QModelIndex();
    }
-   int rowCount(const QModelIndex &) const {
+
+   int rowCount(const QModelIndex &) const override{
       return 0;
    }
-   int columnCount(const QModelIndex &) const {
+
+   int columnCount(const QModelIndex &) const override{
       return 0;
    }
-   bool hasChildren(const QModelIndex &) const {
+
+   bool hasChildren(const QModelIndex &) const override{
       return false;
    }
-   QVariant data(const QModelIndex &, int) const {
+
+   QVariant data(const QModelIndex &, int) const override {
       return QVariant();
    }
 };
@@ -99,6 +100,7 @@ class QAbstractItemViewPrivate : public QAbstractScrollAreaPrivate
    virtual void _q_columnsInserted(const QModelIndex &parent, int start, int end);
    virtual void _q_modelDestroyed();
    virtual void _q_layoutChanged();
+
    void _q_headerDataChanged() {
       doDelayedItemsLayout();
    }
@@ -259,7 +261,7 @@ class QAbstractItemViewPrivate : public QAbstractScrollAreaPrivate
    }
 
    inline QAbstractItemDelegate *delegateForIndex(const QModelIndex &index) const {
-      QMap<int, QPointer<QAbstractItemDelegate> >::ConstIterator it;
+      QMap<int, QPointer<QAbstractItemDelegate> >::const_iterator it;
 
       it = rowDelegates.find(index.row());
       if (it != rowDelegates.end()) {
@@ -296,7 +298,7 @@ class QAbstractItemViewPrivate : public QAbstractScrollAreaPrivate
    }
 
    // reimplemented from QAbstractScrollAreaPrivate
-   virtual QPoint contentsOffset() const {
+   QPoint contentsOffset() const  override {
       Q_Q(const QAbstractItemView);
       return QPoint(q->horizontalOffset(), q->verticalOffset());
    }
@@ -313,10 +315,11 @@ class QAbstractItemViewPrivate : public QAbstractScrollAreaPrivate
 
       for (int maps = 0; maps < 2; ++maps) {
          const QMap<int, QPointer<QAbstractItemDelegate> > *delegates = maps ? &columnDelegates : &rowDelegates;
-         for (QMap<int, QPointer<QAbstractItemDelegate> >::const_iterator it = delegates->begin();
-               it != delegates->end(); ++it) {
+
+         for (auto it = delegates->begin(); it != delegates->end(); ++it) {
             if (it.value() == delegate) {
                ++ref;
+
                // optimization, we are only interested in the ref count values 0, 1 or >=2
                if (ref >= 2) {
                   return ref;
@@ -331,7 +334,7 @@ class QAbstractItemViewPrivate : public QAbstractScrollAreaPrivate
     * return true if the index is registered as a QPersistentModelIndex
     */
    inline bool isPersistent(const QModelIndex &index) const {
-      return static_cast<QAbstractItemModelPrivate *>(model->d_ptr.data())->persistent.indexes.contains(index);
+      return static_cast<QAbstractItemModelPrivate *>(model->d_ptr.data())->persistent.m_indexes.contains(index);
    }
 
    QModelIndexList selectedDraggableIndexes() const;
@@ -393,10 +396,6 @@ class QAbstractItemViewPrivate : public QAbstractScrollAreaPrivate
    Qt::DropAction defaultDropAction;
 #endif
 
-#ifdef QT_SOFTKEYS_ENABLED
-   QAction *doneSoftKey;
-#endif
-
    QString keyboardInput;
    QElapsedTimer keyboardInputTime;
 
@@ -433,27 +432,6 @@ class QAbstractItemViewPrivate : public QAbstractScrollAreaPrivate
    mutable QBasicTimer delayedLayout;
    mutable QBasicTimer fetchMoreTimer;
 };
-
-QT_BEGIN_INCLUDE_NAMESPACE
-#include <qvector.h>
-QT_END_INCLUDE_NAMESPACE
-
-template <typename T>
-inline int qBinarySearch(const QVector<T> &vec, const T &item, int start, int end)
-{
-   int i = (start + end + 1) >> 1;
-   while (end - start > 0) {
-      if (vec.at(i) > item) {
-         end = i - 1;
-      } else {
-         start = i;
-      }
-      i = (start + end + 1) >> 1;
-   }
-   return i;
-}
-
-QT_END_NAMESPACE
 
 #endif // QT_NO_ITEMVIEWS
 

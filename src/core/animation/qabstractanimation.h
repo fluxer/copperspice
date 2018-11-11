@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -81,7 +78,7 @@ class Q_CORE_EXPORT QAbstractAnimation : public QObject
    CORE_CS_ENUM(State)
    CORE_CS_ENUM(Direction)
 
-   QAbstractAnimation(QObject *parent = 0);
+   QAbstractAnimation(QObject *parent = nullptr);
    virtual ~QAbstractAnimation();
 
    State state() const;
@@ -124,8 +121,8 @@ class Q_CORE_EXPORT QAbstractAnimation : public QObject
    CORE_CS_SLOT_2(setCurrentTime)
 
  protected:
-   QAbstractAnimation(QAbstractAnimationPrivate &dd, QObject *parent = 0);
-   bool event(QEvent *event);
+   QAbstractAnimation(QAbstractAnimationPrivate &dd, QObject *parent = nullptr);
+   bool event(QEvent *event) override;
 
    virtual void updateCurrentTime(int currentTime) = 0;
    virtual void updateState(QAbstractAnimation::State newState, QAbstractAnimation::State oldState);
@@ -144,7 +141,7 @@ class Q_CORE_EXPORT QAnimationDriver : public QObject
    Q_DECLARE_PRIVATE(QAnimationDriver)
 
  public:
-   QAnimationDriver(QObject *parent = 0);
+   QAnimationDriver(QObject *parent = nullptr);
    ~QAnimationDriver();
 
    void advance();
@@ -156,7 +153,7 @@ class Q_CORE_EXPORT QAnimationDriver : public QObject
    virtual void started() {}
    virtual void stopped() {}
 
-   QAnimationDriver(QAnimationDriverPrivate &dd, QObject *parent = 0);
+   QAnimationDriver(QAnimationDriverPrivate &dd, QObject *parent = nullptr);
    QScopedPointer<QAnimationDriverPrivate> d_ptr;
 
  private:

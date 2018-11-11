@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -910,7 +907,7 @@ int QHeaderView::logicalIndex(int visualIndex) const
     \sa isMovable(), sectionMoved()
 */
 
-// ### Qt 5: change to setSectionsMovable()
+// ### Qt5: change to setSectionsMovable()
 void QHeaderView::setMovable(bool movable)
 {
    Q_D(QHeaderView);
@@ -924,7 +921,7 @@ void QHeaderView::setMovable(bool movable)
     \sa setMovable()
 */
 
-// ### Qt 5: change to sectionsMovable()
+// ### Qt5: change to sectionsMovable()
 bool QHeaderView::isMovable() const
 {
    Q_D(const QHeaderView);
@@ -938,7 +935,7 @@ bool QHeaderView::isMovable() const
     setSortIndicatorShown()
 */
 
-// ### Qt 5: change to setSectionsClickable()
+// ### Qt5: change to setSectionsClickable()
 void QHeaderView::setClickable(bool clickable)
 {
    Q_D(QHeaderView);
@@ -953,7 +950,7 @@ void QHeaderView::setClickable(bool clickable)
     \sa setClickable()
 */
 
-// ### Qt 5: change to sectionsClickable()
+// ### Qt5: change to sectionsClickable()
 bool QHeaderView::isClickable() const
 {
    Q_D(const QHeaderView);
@@ -1005,7 +1002,7 @@ void QHeaderView::setResizeMode(ResizeMode mode)
     \sa setStretchLastSection()
 */
 
-// ### Qt 5: change to setSectionResizeMode()
+// ### Qt5: change to setSectionResizeMode()
 void QHeaderView::setResizeMode(int logicalIndex, ResizeMode mode)
 {
    Q_D(QHeaderView);

@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -50,7 +47,7 @@ class CppCastingHelper
     */
    template<typename TCastTarget>
    inline const TCastTarget *as() const {
-#if defined(Patternist_DEBUG) && !defined(Q_CC_XLC)
+#if defined(Patternist_DEBUG)
       /* At least on aix-xlc-64, the compiler cries when it sees dynamic_cast. */
       Q_ASSERT_X(dynamic_cast<const TCastTarget *>(static_cast<const TSubClass *>(this)),
                  Q_FUNC_INFO,
@@ -74,7 +71,7 @@ class CppCastingHelper
    template<typename TCastTarget>
    inline TCastTarget *as() {
 
-#if defined(Patternist_DEBUG) && !defined(Q_CC_XLC)
+#if defined(Patternist_DEBUG)
       /* on aix-xlc-64, the compiler cries when it sees dynamic_cast. */
       Q_ASSERT_X(dynamic_cast<TCastTarget *>(static_cast<TSubClass *>(this)),
                  Q_FUNC_INFO, "The cast is invalid. This class does not inherit the cast target.");

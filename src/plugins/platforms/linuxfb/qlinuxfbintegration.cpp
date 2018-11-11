@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -104,7 +101,7 @@ void QLinuxFbIntegrationPrivate::openTty()
                 break;
         }
     } else {
-        ttyfd = QT_OPEN(ttyDevice.toAscii().constData(), O_RDWR);
+        ttyfd = QT_OPEN(ttyDevice.toLatin1().constData(), O_RDWR);
     }
 
     if (ttyfd == -1)
@@ -637,7 +634,7 @@ void QLinuxFbIntegration::createPalette(fb_cmap &cmap, fb_var_screeninfo &vinfo,
                     screenclut[idx]=qRgb(val, val, val);
                 }
             } else {
-                // Default 16 colour palette               
+                // Default 16 colour palette
                 //                             black  d_gray l_gray white  red  green  blue cyan magenta yellow
 
                 unsigned char reds[16]   = { 0x00, 0x7F, 0xBF, 0xFF, 0xFF, 0xA2, 0x00, 0xFF, 0xFF, 0x00, 0x7F, 0x7F, 0x00, 0x00, 0x00, 0x82 };

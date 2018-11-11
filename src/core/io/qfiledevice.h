@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,8 +23,8 @@
 #ifndef QFILEDEVICE_H
 #define QFILEDEVICE_H
 
-#include <QtCore/qiodevice.h>
-#include <QtCore/qstring.h>
+#include <qiodevice.h>
+#include <qstring.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -76,19 +73,18 @@ class Q_CORE_EXPORT QFileDevice : public QIODevice
    FileError error() const;
    void unsetError();
 
-   virtual void close();
-
-   bool isSequential() const;
+   void close() override;
+   bool isSequential() const override;
 
    int handle() const;
    virtual QString fileName() const;
 
-   qint64 pos() const;
-   bool seek(qint64 offset);
-   bool atEnd() const;
+   qint64 pos() const override;
+   bool seek(qint64 offset) override;
+   bool atEnd() const override;
    bool flush();
 
-   qint64 size() const;
+   qint64 size() const override;
 
    virtual bool resize(qint64 sz);
    virtual Permissions permissions() const;
@@ -105,11 +101,11 @@ class Q_CORE_EXPORT QFileDevice : public QIODevice
    QFileDevice();
 
    explicit QFileDevice(QObject *parent);
-   QFileDevice(QFileDevicePrivate &dd, QObject *parent = 0);
+   QFileDevice(QFileDevicePrivate &dd, QObject *parent = nullptr);
 
-   qint64 readData(char *data, qint64 maxlen);
-   qint64 writeData(const char *data, qint64 len);
-   qint64 readLineData(char *data, qint64 maxlen);
+   qint64 readData(char *data, qint64 maxlen) override;
+   qint64 writeData(const char *data, qint64 len) override;
+   qint64 readLineData(char *data, qint64 maxlen) override;
 
  private:
    Q_DISABLE_COPY(QFileDevice)

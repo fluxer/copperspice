@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,10 +23,10 @@
 #ifndef QTEXTDOCUMENT_H
 #define QTEXTDOCUMENT_H
 
-#include <QtCore/qobject.h>
-#include <QtCore/qsize.h>
-#include <QtCore/qrect.h>
-#include <QtGui/qfont.h>
+#include <qobject.h>
+#include <qsize.h>
+#include <qrect.h>
+#include <qfont.h>
 #include <qtextcursor.h>
 #include <QScopedPointer>
 
@@ -105,11 +102,11 @@ class Q_GUI_EXPORT QTextDocument : public QObject
    GUI_CS_PROPERTY_WRITE(defaultTextOption, setDefaultTextOption)
 
  public:
-   explicit QTextDocument(QObject *parent = 0);
-   explicit QTextDocument(const QString &text, QObject *parent = 0);
+   explicit QTextDocument(QObject *parent = nullptr);
+   explicit QTextDocument(const QString &text, QObject *parent = nullptr);
    ~QTextDocument();
 
-   QTextDocument *clone(QObject *parent = 0) const;
+   QTextDocument *clone(QObject *parent = nullptr) const;
 
    bool isEmpty() const;
    virtual void clear();
@@ -155,8 +152,8 @@ class Q_GUI_EXPORT QTextDocument : public QObject
    QTextCursor find(const QString &subString, int from = 0, FindFlags options = 0) const;
    QTextCursor find(const QString &subString, const QTextCursor &from, FindFlags options = 0) const;
 
-   QTextCursor find(const QRegExp &expr, int from = 0, FindFlags options = 0) const;
-   QTextCursor find(const QRegExp &expr, const QTextCursor &from, FindFlags options = 0) const;
+   QTextCursor find(const QRegularExpression &expr, int from = 0, FindFlags options = 0) const;
+   QTextCursor find(const QRegularExpression &expr, const QTextCursor &from, FindFlags options = 0) const;
 
    QTextFrame *frameAt(int pos) const;
    QTextFrame *rootFrame() const;

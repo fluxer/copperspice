@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -50,20 +47,15 @@ DynamicContext::TemplateParameterHash Template::parametersAsHash() const
    return retval;
 }
 
-void Template::raiseXTSE0680(const ReportContext::Ptr &context,
-                             const QXmlName &name,
-                             const SourceLocationReflection *const reflection)
+void Template::raiseXTSE0680(const ReportContext::Ptr &context, const QXmlName &name, const SourceLocationReflection *const reflection)
 {
    context->error(QtXmlPatterns::tr("The parameter %1 is passed, but no corresponding %2 exists.")
-                  .arg(formatKeyword(context->namePool(), name),
-                       formatKeyword(QLatin1String("xsl:param"))),
-                  ReportContext::XTSE0680,
-                  reflection);
+                  .formatArgs(formatKeyword(context->namePool(), name),
+                  formatKeyword(QLatin1String("xsl:param"))), ReportContext::XTSE0680, reflection);
 }
 
 DynamicContext::Ptr Template::createContext(const TemplateInvoker *const invoker,
-      const DynamicContext::Ptr &context,
-      const bool isCallTemplate) const
+      const DynamicContext::Ptr &context, const bool isCallTemplate) const
 {
    Q_ASSERT(invoker);
    Q_ASSERT(context);
@@ -125,10 +117,8 @@ DynamicContext::Ptr Template::createContext(const TemplateInvoker *const invoker
          /* Ops, no xsl:with-param and no default value to cover up for it.
           */
          context->error(QtXmlPatterns::tr("The parameter %1 is required, but no corresponding %2 is supplied.")
-                        .arg(formatKeyword(context->namePool(), it.key()),
-                             formatKeyword(QLatin1String("xsl:with-param"))),
-                        ReportContext::XTSE0690,
-                        this);
+                        .formatArgs(formatKeyword(context->namePool(), it.key()), formatKeyword(QLatin1String("xsl:with-param"))),
+                        ReportContext::XTSE0690, this);
       }
    }
 

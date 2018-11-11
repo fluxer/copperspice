@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -27,39 +24,36 @@
 #include <qwidget_p.h>
 #include <qprinter_p.h>
 
-#include <QtCore/qmath.h>
-#include <QtGui/qboxlayout.h>
-#include <QtGui/qgraphicsitem.h>
-#include <QtGui/qgraphicsview.h>
-#include <QtGui/qscrollbar.h>
-#include <QtGui/qstyleoption.h>
+#include <qmath.h>
+#include <qboxlayout.h>
+#include <qgraphicsitem.h>
+#include <qgraphicsview.h>
+#include <qscrollbar.h>
+#include <qstyleoption.h>
 
 #ifndef QT_NO_PRINTPREVIEWWIDGET
 
-QT_BEGIN_NAMESPACE
-
-namespace {
 class PageItem : public QGraphicsItem
 {
  public:
    PageItem(int _pageNum, const QPicture *_pagePicture, QSize _paperSize, QRect _pageRect)
-      : pageNum(_pageNum), pagePicture(_pagePicture),
-        paperSize(_paperSize), pageRect(_pageRect) {
+      : pageNum(_pageNum), pagePicture(_pagePicture), paperSize(_paperSize), pageRect(_pageRect) {
+
       qreal border = qMax(paperSize.height(), paperSize.width()) / 25;
-      brect = QRectF(QPointF(-border, -border),
-                     QSizeF(paperSize) + QSizeF(2 * border, 2 * border));
+
+      brect = QRectF(QPointF(-border, -border), QSizeF(paperSize) + QSizeF(2 * border, 2 * border));
       setCacheMode(DeviceCoordinateCache);
    }
 
-   inline QRectF boundingRect() const {
+   QRectF boundingRect() const override {
       return brect;
    }
 
-   inline int pageNumber() const {
+   int pageNumber() const {
       return pageNum;
    }
 
-   void paint(QPainter *painter, const QStyleOptionGraphicsItem *item, QWidget *widget);
+   void paint(QPainter *painter, const QStyleOptionGraphicsItem *item, QWidget *widget) override;
 
  private:
    int pageNum;
@@ -73,15 +67,6 @@ void PageItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
 {
    Q_UNUSED(widget);
 
-#if 0
-   // Draw item bounding rect, for debugging
-   painter->save();
-   painter->setPen(QPen(Qt::red, 0));
-   painter->setBrush(Qt::NoBrush);
-   painter->drawRect(QRectF(-border() + 1.0, -border() + 1.0, boundingRect().width() - 2, boundingRect().height() - 2));
-   painter->restore();
-#endif
-
    QRectF paperRect(0, 0, paperSize.width(), paperSize.height());
 
    // Draw shadow
@@ -89,6 +74,7 @@ void PageItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
    qreal shWidth = paperRect.width() / 100;
    QRectF rshadow(paperRect.topRight() + QPointF(0, shWidth),
                   paperRect.bottomRight() + QPointF(shWidth, 0));
+
    QLinearGradient rgrad(rshadow.topLeft(), rshadow.topRight());
    rgrad.setColorAt(0.0, QColor(0, 0, 0, 255));
    rgrad.setColorAt(1.0, QColor(0, 0, 0, 0));
@@ -108,7 +94,7 @@ void PageItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
 
    painter->setClipRect(paperRect & option->exposedRect);
    painter->fillRect(paperRect, Qt::white);
-   if (!pagePicture) {
+   if (! pagePicture) {
       return;
    }
    painter->drawPicture(pageRect.topLeft(), *pagePicture);
@@ -121,13 +107,6 @@ void PageItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
    painter->setBrush(QColor(255, 255, 255, 180));
    painter->drawPath(path);
 
-#if 0
-   // Draw frame around paper.
-   painter->setPen(QPen(Qt::black, 0));
-   painter->setBrush(Qt::NoBrush);
-   painter->drawRect(paperRect);
-#endif
-
    // todo: drawtext "Page N" below paper
 }
 
@@ -136,33 +115,34 @@ class GraphicsView : public QGraphicsView
    GUI_CS_OBJECT(GraphicsView)
 
  public:
-   GraphicsView(QWidget *parent = 0)
+   GraphicsView(QWidget *parent = nullptr)
       : QGraphicsView(parent) {
+
 #ifdef Q_OS_MAC
       setFrameStyle(QFrame::NoFrame);
 #endif
+
    }
 
    GUI_CS_SIGNAL_1(Public, void resized())
    GUI_CS_SIGNAL_2(resized)
 
  protected:
-   void resizeEvent(QResizeEvent *e) {
+   void resizeEvent(QResizeEvent *e) override {
       QGraphicsView::resizeEvent(e);
       emit resized();
    }
 
-   void showEvent(QShowEvent *e) {
+   void showEvent(QShowEvent *e) override {
       QGraphicsView::showEvent(e);
       emit resized();
    }
 };
 
-} // anonymous namespace
-
 class QPrintPreviewWidgetPrivate : public QWidgetPrivate
 {
    Q_DECLARE_PUBLIC(QPrintPreviewWidget)
+
  public:
    QPrintPreviewWidgetPrivate()
       : scene(0), curPage(1),
@@ -216,7 +196,8 @@ void QPrintPreviewWidgetPrivate::_q_fit(bool doFitting)
       QRect viewRect = graphicsView->viewport()->rect();
       if (zoomMode == QPrintPreviewWidget::FitInView) {
          QList<QGraphicsItem *> containedItems = graphicsView->items(viewRect, Qt::ContainsItemBoundingRect);
-         foreach(QGraphicsItem * item, containedItems) {
+
+         for (QGraphicsItem * item : containedItems) {
             PageItem *pg = static_cast<PageItem *>(item);
             if (pg->pageNumber() == curPage) {
                return;
@@ -442,80 +423,6 @@ void QPrintPreviewWidgetPrivate::setZoomFactor(qreal _zoomFactor)
                        zoomFactor * (dpi_y / float(printer_dpi_y)));
 }
 
-///////////////////////////////////////
-
-/*!
-    \class QPrintPreviewWidget
-    \since 4.4
-
-    \brief The QPrintPreviewWidget class provides a widget for
-    previewing page layouts for printer output.
-
-    \ingroup printing
-
-    QPrintPreviewDialog uses a QPrintPreviewWidget internally, and the
-    purpose of QPrintPreviewWidget is to make it possible to embed the
-    preview into other widgets. It also makes it possible to build a different
-    user interface around it than the default one provided with QPrintPreviewDialog.
-
-    Using QPrintPreviewWidget is straightforward:
-
-    \list 1
-    \o Create the QPrintPreviewWidget
-
-    Construct the QPrintPreviewWidget either by passing in an
-    existing QPrinter object, or have QPrintPreviewWidget create a
-    default constructed QPrinter object for you.
-
-    \o Connect the paintRequested() signal to a slot.
-
-    When the widget needs to generate a set of preview pages, a
-    paintRequested() signal will be emitted from the widget. Connect a
-    slot to this signal, and draw onto the QPrinter passed in as a
-    signal parameter. Call QPrinter::newPage(), to start a new
-    page in the preview.
-
-    \endlist
-
-    \sa QPrinter, QPrintDialog, QPageSetupDialog, QPrintPreviewDialog
-*/
-
-
-/*!
-    \enum QPrintPreviewWidget::ViewMode
-
-    This enum is used to describe the view mode of the preview widget.
-
-    \value SinglePageView   A mode where single pages in the preview
-                            is viewed.
-
-    \value FacingPagesView  A mode where the facing pages in the preview
-                            is viewed.
-
-    \value AllPagesView     A view mode where all the pages in the preview
-                            is viewed.
-*/
-
-/*!
-    \enum QPrintPreviewWidget::ZoomMode
-
-    This enum is used to describe zoom mode of the preview widget.
-
-    \value CustomZoom  The zoom is set to a custom zoom value.
-
-    \value FitToWidth  This mode fits the current page to the width of the view.
-
-    \value FitInView   This mode fits the current page inside the view.
-
-*/
-
-/*!
-    Constructs a QPrintPreviewWidget based on \a printer and with \a
-    parent as the parent widget. The widget flags \a flags are passed on
-    to the QWidget constructor.
-
-    \sa QWidget::setWindowFlags()
-*/
 QPrintPreviewWidget::QPrintPreviewWidget(QPrinter *printer, QWidget *parent, Qt::WindowFlags flags)
    : QWidget(*new QPrintPreviewWidgetPrivate, parent, flags)
 {
@@ -525,13 +432,6 @@ QPrintPreviewWidget::QPrintPreviewWidget(QPrinter *printer, QWidget *parent, Qt:
    d->init();
 }
 
-/*!
-    \overload
-
-    This will cause QPrintPreviewWidget to create an internal, default
-    constructed QPrinter object, which will be used to generate the
-    preview.
-*/
 QPrintPreviewWidget::QPrintPreviewWidget(QWidget *parent, Qt::WindowFlags flags)
    : QWidget(*new QPrintPreviewWidgetPrivate, parent, flags)
 {
@@ -673,10 +573,6 @@ int QPrintPreviewWidget::numPages() const
    return d->pages.size();
 }
 
-/*!
-    \since 4.6
-    Returns the number of pages in the preview.
-*/
 int QPrintPreviewWidget::pageCount() const
 {
    Q_D(const QPrintPreviewWidget);
@@ -720,11 +616,6 @@ void QPrintPreviewWidget::fitInView()
    setZoomMode(FitInView);
 }
 
-/*!
-    Sets the zoom mode to \a zoomMode. The default zoom mode is FitInView.
-
-    \sa zoomMode(), viewMode(), setViewMode()
-*/
 void QPrintPreviewWidget::setZoomMode(QPrintPreviewWidget::ZoomMode zoomMode)
 {
    Q_D(QPrintPreviewWidget);
@@ -737,11 +628,6 @@ void QPrintPreviewWidget::setZoomMode(QPrintPreviewWidget::ZoomMode zoomMode)
    }
 }
 
-/*!
-    Returns the current zoom mode.
-
-    \sa setZoomMode(), viewMode(), setViewMode()
-*/
 QPrintPreviewWidget::ZoomMode QPrintPreviewWidget::zoomMode() const
 {
    Q_D(const QPrintPreviewWidget);
@@ -793,11 +679,6 @@ void QPrintPreviewWidget::setAllPagesViewMode()
    setViewMode(AllPagesView);
 }
 
-
-/*!
-    This function updates the preview, which causes the
-    paintRequested() signal to be emitted.
-*/
 void QPrintPreviewWidget::updatePreview()
 {
    Q_D(QPrintPreviewWidget);
@@ -828,8 +709,5 @@ void QPrintPreviewWidget::_q_updateCurrentPage()
    Q_D(QPrintPreviewWidget);
    d->_q_updateCurrentPage();
 }
-
-
-QT_END_NAMESPACE
 
 #endif // QT_NO_PRINTPREVIEWWIDGET

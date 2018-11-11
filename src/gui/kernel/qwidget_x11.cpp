@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -612,14 +609,8 @@ void QWidgetPrivate::create_sys(WId window, bool initializeWindow, bool destroyO
 #endif
 
       id = (WId)parentw;                        // id = root window
-      //         QWidget *otherDesktop = find(id);        // is there another desktop?
-      //         if (otherDesktop && otherDesktop->testWFlags(Qt::WPaintDesktop)) {
-      //             otherDesktop->d->setWinId(0);        // remove id from widget mapper
-      //             d->setWinId(id);                     // make sure otherDesktop is
-      //             otherDesktop->d->setWinId(id);       // found first
-      //         } else {
       setWinId(id);
-      //         }
+
    } else if (topLevel || q->testAttribute(Qt::WA_NativeWindow) || paintOnScreen()) {
 
 #ifdef QWIDGET_EXTRA_DEBUG
@@ -882,13 +873,11 @@ void QWidgetPrivate::create_sys(WId window, bool initializeWindow, bool destroyO
 
    // set X11 event mask
    if (desktop) {
-      //         QWidget* main_desktop = find(id);
-      //         if (main_desktop->testWFlags(Qt::WPaintDesktop))
-      //             XSelectInput(dpy, id, stdDesktopEventMask | ExposureMask);
-      //         else
       XSelectInput(dpy, id, stdDesktopEventMask);
+
    } else if (q->internalWinId()) {
       XSelectInput(dpy, id, stdWidgetEventMask);
+
 #if !defined (QT_NO_TABLET)
       QTabletDeviceDataList *tablet_list = qt_tablet_devices();
       if (X11->ptrXSelectExtensionEvent) {
@@ -1514,7 +1503,7 @@ qstring_to_xtp(const QString &s)
    }
    if (!mapper || errCode < 0) {
       static QByteArray qcs;
-      qcs = s.toAscii();
+      qcs = s.toLatin1();
       tp.value = (uchar *)qcs.data();
       tp.encoding = XA_STRING;
       tp.format = 8;

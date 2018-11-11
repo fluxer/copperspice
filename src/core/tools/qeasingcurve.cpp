@@ -1,37 +1,31 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
 
 #include <qeasingcurve.h>
-#include <QtCore/qdebug.h>
-#include <QtCore/qstring.h>
+#include <qdebug.h>
+#include <qstring.h>
+#include <qdatastream.h>
 
-#ifndef QT_NO_DATASTREAM
-#include <QtCore/qdatastream.h>
-#endif
-
-QT_BEGIN_NAMESPACE
+#include "../../3rdparty/easing/easing.cpp"
 
 static bool isConfigFunction(QEasingCurve::Type type)
 {
@@ -77,10 +71,6 @@ bool QEasingCurveFunction::operator==(const QEasingCurveFunction &other)
           qFuzzyCompare(_o, other._o);
 }
 
-QT_BEGIN_INCLUDE_NAMESPACE
-#include "../../3rdparty/easing/easing.cpp"
-QT_END_INCLUDE_NAMESPACE
-
 class QEasingCurvePrivate
 {
  public:
@@ -104,14 +94,14 @@ struct ElasticEase : public QEasingCurveFunction {
       : QEasingCurveFunction(type, qreal(0.3), qreal(1.0)) {
    }
 
-   QEasingCurveFunction *copy() const {
+   QEasingCurveFunction *copy() const override {
       ElasticEase *rv = new ElasticEase(_t);
       rv->_p = _p;
       rv->_a = _a;
       return rv;
    }
 
-   qreal value(qreal t) {
+   qreal value(qreal t) override {
       qreal p = (_p < 0) ? qreal(0.3) : _p;
       qreal a = (_a < 0) ? qreal(1.0) : _a;
       switch (_t) {
@@ -134,13 +124,13 @@ struct BounceEase : public QEasingCurveFunction {
       : QEasingCurveFunction(type, qreal(0.3), qreal(1.0)) {
    }
 
-   QEasingCurveFunction *copy() const {
+   QEasingCurveFunction *copy() const override {
       BounceEase *rv = new BounceEase(_t);
       rv->_a = _a;
       return rv;
    }
 
-   qreal value(qreal t) {
+   qreal value(qreal t) override {
       qreal a = (_a < 0) ? qreal(1.0) : _a;
       switch (_t) {
          case In:
@@ -162,13 +152,13 @@ struct BackEase : public QEasingCurveFunction {
       : QEasingCurveFunction(type, qreal(0.3), qreal(1.0), qreal(1.70158)) {
    }
 
-   QEasingCurveFunction *copy() const {
+   QEasingCurveFunction *copy() const override {
       BackEase *rv = new BackEase(_t);
       rv->_o = _o;
       return rv;
    }
 
-   qreal value(qreal t) {
+   qreal value(qreal t) override {
       qreal o = (_o < 0) ? qreal(1.70158) : _o;
       switch (_t) {
          case In:
@@ -561,13 +551,17 @@ QEasingCurve::EasingFunction QEasingCurve::customType() const
  */
 qreal QEasingCurve::valueForProgress(qreal progress) const
 {
-   progress = qBound<qreal>(0, progress, 1);
+   progress = qBound(0, progress, 1);
+
    if (d_ptr->func) {
       return d_ptr->func(progress);
+
    } else if (d_ptr->config) {
       return d_ptr->config->value(progress);
+
    } else {
       return progress;
+
    }
 }
 
@@ -575,24 +569,14 @@ QDebug operator<<(QDebug debug, const QEasingCurve &item)
 {
    debug << "type:" << item.d_ptr->type
          << "func:" << item.d_ptr->func;
+
    if (item.d_ptr->config) {
-      debug << QString::fromAscii("period:%1").arg(item.d_ptr->config->_p, 0, 'f', 20)
-            << QString::fromAscii("amp:%1").arg(item.d_ptr->config->_a, 0, 'f', 20)
-            << QString::fromAscii("overshoot:%1").arg(item.d_ptr->config->_o, 0, 'f', 20);
+      debug << QString::fromLatin1("period:%1").formatArg(item.d_ptr->config->_p, 0, 'f', 20)
+            << QString::fromLatin1("amp:%1").formatArg(item.d_ptr->config->_a, 0, 'f', 20)
+            << QString::fromLatin1("overshoot:%1").formatArg(item.d_ptr->config->_o, 0, 'f', 20);
    }
    return debug;
 }
-
-#ifndef QT_NO_DATASTREAM
-/*!
-    \fn QDataStream &operator<<(QDataStream &stream, const QEasingCurve &easing)
-    \relates QEasingCurve
-
-    Writes the given \a easing curve to the given \a stream and returns a
-    reference to the stream.
-
-    \sa {Serializing Qt Data Types}
-*/
 
 QDataStream &operator<<(QDataStream &stream, const QEasingCurve &easing)
 {
@@ -608,16 +592,6 @@ QDataStream &operator<<(QDataStream &stream, const QEasingCurve &easing)
    }
    return stream;
 }
-
-/*!
-    \fn QDataStream &operator>>(QDataStream &stream, QEasingCurve &easing)
-    \relates QQuaternion
-
-    Reads an easing curve from the given \a stream into the given \a
-    easing curve and returns a reference to the stream.
-
-    \sa {Serializing Qt Data Types}
-*/
 
 QDataStream &operator>>(QDataStream &stream, QEasingCurve &easing)
 {
@@ -642,6 +616,3 @@ QDataStream &operator>>(QDataStream &stream, QEasingCurve &easing)
    }
    return stream;
 }
-#endif // QT_NO_DATASTREAM
-
-QT_END_NAMESPACE

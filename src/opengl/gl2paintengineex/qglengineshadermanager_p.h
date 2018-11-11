@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -301,9 +298,10 @@ class Q_OPENGL_EXPORT QGLEngineSharedShaders
 
       TotalSnippetCount, InvalidSnippetName
    };
+
 #if defined (QT_DEBUG)
    CS_ENUM(SnippetName)
-   static QByteArray snippetNameStr(SnippetName snippetName);
+   static QString snippetNameStr(SnippetName snippetName);
 #endif
 
    /*
@@ -322,19 +320,20 @@ class Q_OPENGL_EXPORT QGLEngineSharedShaders
    QGLShaderProgram *simpleProgram() {
       return simpleShaderProg;
    }
+
    QGLShaderProgram *blitProgram() {
       return blitShaderProg;
    }
+
    // Compile the program if it's not already in the cache, return the item in the cache.
    QGLEngineShaderProg *findProgramInCache(const QGLEngineShaderProg &prog);
-   // Compile the custom shader if it's not already in the cache, return the item in the cache.
 
+   // Compile the custom shader if it's not already in the cache, return the item in the cache.
    static QGLEngineSharedShaders *shadersForContext(const QGLContext *context);
 
    // Ideally, this would be static and cleanup all programs in all contexts which
    // contain the custom code. Currently it is just a hint and we rely on deleted
-   // custom shaders being cleaned up by being kicked out of the cache when it's
-   // full.
+   // custom shaders being cleaned up by being kicked out of the cache when it's full.
    void cleanupCustomStage(QGLCustomShaderStage *stage);
 
  private:
@@ -344,7 +343,7 @@ class Q_OPENGL_EXPORT QGLEngineSharedShaders
    QList<QGLEngineShaderProg *> cachedPrograms;
    QList<QGLShader *> shaders;
 
-   static const char *qShaderSnippets[TotalSnippetCount];
+   static QStringList qShaderSnippets;
 };
 
 
@@ -366,17 +365,17 @@ class QGLEngineShaderProg
    QGLEngineSharedShaders::SnippetName maskFragShader;
    QGLEngineSharedShaders::SnippetName compositionFragShader;
 
-   QByteArray          customStageSource; //TODO: Decent cache key for custom stages
-   QGLShaderProgram   *program;
+   QString customStageSource;          //TODO: Decent cache key for custom stages
+   QGLShaderProgram *program;
 
    QVector<uint> uniformLocations;
 
-   bool                useTextureCoords;
-   bool                useOpacityAttribute;
-   bool                usePmvMatrixAttribute;
+   bool useTextureCoords;
+   bool useOpacityAttribute;
+   bool usePmvMatrixAttribute;
 
    bool operator==(const QGLEngineShaderProg &other) {
-      // We don't care about the program
+      // do not care about the program
       return ( mainVertexShader      == other.mainVertexShader &&
                positionVertexShader  == other.positionVertexShader &&
                mainFragShader        == other.mainFragShader &&

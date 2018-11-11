@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -44,7 +41,7 @@ class Q_GUI_EXPORT QScrollArea : public QAbstractScrollArea
    GUI_CS_PROPERTY_WRITE(alignment, setAlignment)
 
  public:
-   explicit QScrollArea(QWidget *parent = 0);
+   explicit QScrollArea(QWidget *parent = nullptr);
    ~QScrollArea();
 
    QWidget *widget() const;
@@ -54,8 +51,8 @@ class Q_GUI_EXPORT QScrollArea : public QAbstractScrollArea
    bool widgetResizable() const;
    void setWidgetResizable(bool resizable);
 
-   QSize sizeHint() const;
-   bool focusNextPrevChild(bool next);
+   QSize sizeHint() const override;
+   bool focusNextPrevChild(bool next) override;
 
    Qt::Alignment alignment() const;
    void setAlignment(Qt::Alignment);
@@ -64,11 +61,11 @@ class Q_GUI_EXPORT QScrollArea : public QAbstractScrollArea
    void ensureWidgetVisible(QWidget *childWidget, int xmargin = 50, int ymargin = 50);
 
  protected:
-   QScrollArea(QScrollAreaPrivate &dd, QWidget *parent = 0);
-   bool event(QEvent *);
-   bool eventFilter(QObject *, QEvent *);
-   void resizeEvent(QResizeEvent *);
-   void scrollContentsBy(int dx, int dy);
+   QScrollArea(QScrollAreaPrivate &dd, QWidget *parent = nullptr);
+   bool event(QEvent *) override;
+   bool eventFilter(QObject *, QEvent *) override;
+   void resizeEvent(QResizeEvent *) override;
+   void scrollContentsBy(int dx, int dy) override;
 
  private:
    Q_DECLARE_PRIVATE(QScrollArea)

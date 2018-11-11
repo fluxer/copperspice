@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -67,41 +64,41 @@ Item CastAs::evaluateSingleton(const DynamicContext::Ptr &context) const
          return Item();
       } else {
          Q_ASSERT(context);
-         context->error(QtXmlPatterns::tr("Type error in cast, expected %1, "
-                                          "received %2.")
-                        .arg(formatType(Cardinality::exactlyOne()))
-                        .arg(formatType(Cardinality::empty())),
-                        ReportContext::XPTY0004, this);
+         context->error(QtXmlPatterns::tr("Type error in cast, expected %1, received %2.")
+                        .formatArg(formatType(Cardinality::exactlyOne()))
+                        .formatArg(formatType(Cardinality::empty())), ReportContext::XPTY0004, this);
          return Item();
       }
    }
 }
 
-Expression::Ptr CastAs::typeCheck(const StaticContext::Ptr &context,
-                                  const SequenceType::Ptr &reqType)
+Expression::Ptr CastAs::typeCheck(const StaticContext::Ptr &context, const SequenceType::Ptr &reqType)
 {
    checkTargetType(context);
    const SequenceType::Ptr seqt(m_operand->staticType());
    ItemType::Ptr t(seqt->itemType());
 
    /* Special case xs:QName */
+
    if (BuiltinTypes::xsQName->xdtTypeMatches(m_targetType->itemType())) {
       /* Ok, We're casting to xs:QName. */
-      if (m_operand->is(IDStringValue)) { /* A valid combination, let's do the cast. */
+
+      if (m_operand->is(IDStringValue)) {
+         /* A valid combination, let's do the cast. */
          return castToQName(context)->typeCheck(context, reqType);
+
       } else if (BuiltinTypes::xsQName->xdtTypeMatches(t)) {
          return m_operand->typeCheck(context, reqType);
+
       } else if (seqt->cardinality().isEmpty() && m_targetType->cardinality().allowsEmpty()) {
          return EmptySequence::create(this, context);
-      } else if (!(seqt->cardinality().isEmpty() && !m_targetType->cardinality().allowsEmpty())) {
-         context->error(QtXmlPatterns::tr("When casting to %1 or types "
-                                          "derived from it, the source "
-                                          "value must be of the same type, "
-                                          "or it must be a string literal. "
-                                          "Type %2 is not allowed.")
-                        .arg(formatType(context->namePool(), BuiltinTypes::xsQName))
-                        .arg(formatType(context->namePool(), seqt)),
-                        ReportContext::XPTY0004, this);
+
+      } else if (!(seqt->cardinality().isEmpty() && ! m_targetType->cardinality().allowsEmpty())) {
+         context->error(QtXmlPatterns::tr("When casting to %1 or types derived from it, the source value must be of the same type, "
+                  "or it must be a string literal. Type %2 is not allowed.")
+                  .formatArg(formatType(context->namePool(), BuiltinTypes::xsQName))
+                  .formatArg(formatType(context->namePool(), seqt)), ReportContext::XPTY0004, this);
+
          return Expression::Ptr(this);
       }
    }
@@ -111,16 +108,16 @@ Expression::Ptr CastAs::typeCheck(const StaticContext::Ptr &context,
    t = m_operand->staticType()->itemType();
 
    if (m_targetType->itemType()->xdtTypeMatches(t) &&
-         !BuiltinTypes::xsDayTimeDuration->xdtTypeMatches(t) &&
-         !BuiltinTypes::xsYearMonthDuration->xdtTypeMatches(t)) {
+         ! BuiltinTypes::xsDayTimeDuration->xdtTypeMatches(t) &&
+         ! BuiltinTypes::xsYearMonthDuration->xdtTypeMatches(t)) {
+
       /* At least casting is superflorous. */
       if (m_operand->staticType()->cardinality().isMatch(m_targetType->cardinality())) {
          return m_operand;   /* The whole cast expression is redundant. */
+
       } else {
          /* Only cardinality check is needed, rewrite to CardinalityVerifier. */
-         return Expression::Ptr(new CardinalityVerifier(m_operand,
-                                m_targetType->cardinality(),
-                                ReportContext::FORG0001));
+         return Expression::Ptr(new CardinalityVerifier(m_operand, m_targetType->cardinality(), ReportContext::FORG0001));
       }
    }
 

@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -51,8 +48,8 @@ Q_DECLARE_METATYPE(QList<short>)
 Q_DECLARE_METATYPE(QList<ushort>)
 Q_DECLARE_METATYPE(QList<int>)
 Q_DECLARE_METATYPE(QList<uint>)
-Q_DECLARE_METATYPE(QList<qlonglong>)
-Q_DECLARE_METATYPE(QList<qulonglong>)
+Q_DECLARE_METATYPE(QList<qint64>)
+Q_DECLARE_METATYPE(QList<quint64>)
 Q_DECLARE_METATYPE(QList<double>)
 
 QT_BEGIN_NAMESPACE
@@ -126,8 +123,8 @@ void QDBusMetaTypeId::init()
         qDBusRegisterMetaType<QList<ushort> >();
         qDBusRegisterMetaType<QList<int> >();
         qDBusRegisterMetaType<QList<uint> >();
-        qDBusRegisterMetaType<QList<qlonglong> >();
-        qDBusRegisterMetaType<QList<qulonglong> >();
+        qDBusRegisterMetaType<QList<qint64> >();
+        qDBusRegisterMetaType<QList<quint64> >();
         qDBusRegisterMetaType<QList<double> >();
         qDBusRegisterMetaType<QList<QDBusObjectPath> >();
         qDBusRegisterMetaType<QList<QDBusSignature> >();
@@ -311,10 +308,10 @@ int QDBusMetaType::signatureToType(const char *signature)
 
     case DBUS_TYPE_UINT16:
         return QMetaType::UShort;
-        
+
     case DBUS_TYPE_INT32:
         return QVariant::Int;
-        
+
     case DBUS_TYPE_UINT32:
         return QVariant::UInt;
 
@@ -368,7 +365,7 @@ int QDBusMetaType::signatureToType(const char *signature)
 
 /*!
     \fn QDBusMetaType::typeToSignature(int type)
-    \internal 
+    \internal
 
     Returns the D-Bus signature equivalent to the supplied meta type id \a type.
 

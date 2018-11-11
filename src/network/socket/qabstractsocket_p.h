@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,10 +23,10 @@
 #ifndef QABSTRACTSOCKET_P_H
 #define QABSTRACTSOCKET_P_H
 
-#include <QtNetwork/qabstractsocket.h>
-#include <QtCore/qbytearray.h>
-#include <QtCore/qlist.h>
-#include <QtCore/qtimer.h>
+#include <qabstractsocket.h>
+#include <qbytearray.h>
+#include <qlist.h>
+#include <qtimer.h>
 #include <qringbuffer_p.h>
 #include <qiodevice_p.h>
 #include <qabstractsocketengine_p.h>
@@ -48,24 +45,34 @@ class QAbstractSocketPrivate : public QIODevicePrivate, public QAbstractSocketEn
    virtual ~QAbstractSocketPrivate();
 
    // from QAbstractSocketEngineReceiver
-   inline void readNotification() {
+   inline void readNotification() override {
       canReadNotification();
    }
-   inline void writeNotification() {
+
+   inline void writeNotification() override {
       canWriteNotification();
    }
-   inline void exceptionNotification() {}
-   void connectionNotification();
+
+   inline void exceptionNotification() override {}
+
+   inline void closeNotification() override {
+      canCloseNotification();
+   }
+
+   void connectionNotification() override;
 
 #ifndef QT_NO_NETWORKPROXY
-   inline void proxyAuthenticationRequired(const QNetworkProxy &proxy, QAuthenticator *authenticator) {
+   inline void proxyAuthenticationRequired(const QNetworkProxy &proxy, QAuthenticator *authenticator) override {
       Q_Q(QAbstractSocket);
       q->proxyAuthenticationRequired(proxy, authenticator);
    }
 #endif
 
+   virtual bool bind(const QHostAddress &address, quint16 port, QAbstractSocket::BindMode mode);
+
    bool canReadNotification();
    bool canWriteNotification();
+   void canCloseNotification();
 
    // slots
    void _q_connectToNextAddress();
@@ -82,8 +89,9 @@ class QAbstractSocketPrivate : public QIODevicePrivate, public QAbstractSocketEn
    bool emittedBytesWritten;
 
    bool abortCalled;
-   bool closeCalled;
    bool pendingClose;
+
+   QAbstractSocket::PauseModes pauseMode;
 
    QString hostName;
    quint16 port;
@@ -97,7 +105,7 @@ class QAbstractSocketPrivate : public QIODevicePrivate, public QAbstractSocketEn
    QString peerName;
 
    QAbstractSocketEngine *socketEngine;
-   int cachedSocketDescriptor;
+   qintptr cachedSocketDescriptor;
 
 #ifndef QT_NO_NETWORKPROXY
    QNetworkProxy proxy;
@@ -105,6 +113,7 @@ class QAbstractSocketPrivate : public QIODevicePrivate, public QAbstractSocketEn
    void resolveProxy(const QString &hostName, quint16 port);
 #else
    inline void resolveProxy(const QString &, quint16) { }
+
 #endif
 
    inline void resolveProxy(quint16 port) {
@@ -115,17 +124,19 @@ class QAbstractSocketPrivate : public QIODevicePrivate, public QAbstractSocketEn
    bool flush();
 
    bool initSocketLayer(QAbstractSocket::NetworkLayerProtocol protocol);
+   virtual void configureCreatedSocket();
    void startConnectingByName(const QString &host);
    void fetchConnectionParameters();
    void setupSocketNotifiers();
    bool readFromSocket();
 
+   void setError(QAbstractSocket::SocketError errorCode, const QString &errorString);
+   void setErrorAndEmit(QAbstractSocket::SocketError errorCode, const QString &errorString);
+
    qint64 readBufferMaxSize;
-   QRingBuffer readBuffer;
    QRingBuffer writeBuffer;
 
    bool isBuffered;
-   int blockingTimeout;
 
    QTimer *connectTimer;
    QTimer *disconnectTimer;
@@ -137,6 +148,7 @@ class QAbstractSocketPrivate : public QIODevicePrivate, public QAbstractSocketEn
    QAbstractSocket::SocketState state;
 
    QAbstractSocket::SocketError socketError;
+   QAbstractSocket::NetworkLayerProtocol preferredNetworkLayerProtocol;
 
    bool prePauseReadSocketNotifierState;
    bool prePauseWriteSocketNotifierState;

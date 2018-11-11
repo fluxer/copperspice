@@ -1,28 +1,26 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
 
+#include <algorithm>
 #include "qdbusabstractadaptor.h"
 
 #include <QtCore/qcoreapplication.h>
@@ -192,11 +190,12 @@ void QDBusAdaptorConnector::addAdaptor(QDBusAbstractAdaptor *adaptor)
     int ciid = mo->indexOfClassInfo(QCLASSINFO_DBUS_INTERFACE);
     if (ciid != -1) {
         QMetaClassInfo mci = mo->classInfo(ciid);
+
         if (*mci.value()) {
             // find out if this interface exists first
             const char *interface = mci.value();
-            AdaptorMap::Iterator it = qLowerBound(adaptors.begin(), adaptors.end(),
-                                                  QByteArray(interface));
+            AdaptorMap::Iterator it = std::lower_bound(adaptors.begin(), adaptors.end(), QByteArray(interface));
+
             if (it != adaptors.end() && qstrcmp(interface, it->interface) == 0) {
                 // exists. Replace it (though it's probably the same)
                 if (it->adaptor != adaptor) {
@@ -245,7 +244,7 @@ void QDBusAdaptorConnector::polish()
     }
 
     // sort the adaptor list
-    qSort(adaptors);
+    std::sort(adaptors.begin(), adaptors.end());
 }
 
 void QDBusAdaptorConnector::relaySlot(void **argv)

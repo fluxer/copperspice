@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -491,9 +488,11 @@ static void qBrushSetAlphaF(QBrush *brush, qreal alpha)
       // Modify the texture - ridiculously expensive.
       QPixmap texture = brush->texture();
       QPixmap pixmap;
-      QString name = QLatin1Literal("qbrushtexture-alpha")
-                     % HexString<qreal>(alpha)
-                     % HexString<qint64>(texture.cacheKey());
+
+      QString name = "qbrushtexture_alpha"
+                     + HexString<qreal>(alpha)
+                     + HexString<qint64>(texture.cacheKey());
+
       if (!QPixmapCache::find(name, pixmap)) {
          QImage image = texture.toImage();
          QRgb *rgb = reinterpret_cast<QRgb *>(image.bits());
@@ -554,9 +553,10 @@ static QBrush qBrushLight(QBrush brush, int light)
       // Modify the texture - ridiculously expensive.
       QPixmap texture = brush.texture();
       QPixmap pixmap;
-      QString name = QLatin1Literal("qbrushtexture-light")
-                     % HexString<int>(light)
-                     % HexString<qint64>(texture.cacheKey());
+
+      QString name = "qbrushtexture_light"
+                     + HexString<int>(light)
+                     + HexString<qint64>(texture.cacheKey());
 
       if (!QPixmapCache::find(name, pixmap)) {
          QImage image = texture.toImage();
@@ -616,15 +616,16 @@ static QBrush qBrushDark(QBrush brush, int dark)
       // Modify the texture - ridiculously expensive.
       QPixmap texture = brush.texture();
       QPixmap pixmap;
-      QString name = QLatin1Literal("qbrushtexture-dark")
-                     % HexString<int>(dark)
-                     % HexString<qint64>(texture.cacheKey());
+      QString name = "qbrushtexture_dark"
+                     + HexString<int>(dark)
+                     + HexString<qint64>(texture.cacheKey());
 
       if (!QPixmapCache::find(name, pixmap)) {
          QImage image = texture.toImage();
          QRgb *rgb = reinterpret_cast<QRgb *>(image.bits());
          int pixels = image.width() * image.height();
          QColor tmpColor;
+
          while (pixels--) {
             tmpColor.setRgb(*rgb);
             *rgb++ = tmpColor.darker(dark).rgba();
@@ -743,20 +744,21 @@ static QColor mergedColors(const QColor &colorA, const QColor &colorB, int facto
 static void qt_plastique_draw_gradient(QPainter *painter, const QRect &rect, const QColor &gradientStart,
                                        const QColor &gradientStop)
 {
-   QString gradientName = QLatin1Literal("qplastique-g")
-                          % HexString<int>(rect.width())
-                          % HexString<int>(rect.height())
-                          % HexString<QRgb>(gradientStart.rgba())
-                          % HexString<QRgb>(gradientStop.rgba());
+   QString gradientName = "qplastique_g"
+                          + HexString<int>(rect.width())
+                          + HexString<int>(rect.height())
+                          + HexString<QRgb>(gradientStart.rgba())
+                          + HexString<QRgb>(gradientStop.rgba());
 
    QPixmap cache;
    QPainter *p = painter;
    QRect r = rect;
 
-   bool doPixmapCache = painter->deviceTransform().isIdentity()
-                        && painter->worldMatrix().isIdentity();
+   bool doPixmapCache = painter->deviceTransform().isIdentity() && painter->worldMatrix().isIdentity();
+
    if (doPixmapCache && QPixmapCache::find(gradientName, cache)) {
       painter->drawPixmap(rect, cache);
+
    } else {
       if (doPixmapCache) {
          cache = QPixmap(rect.size());
@@ -1549,7 +1551,7 @@ void QPlastiqueStyle::drawPrimitive(PrimitiveElement element, const QStyleOption
             bool defaultButton = (button->features & (QStyleOptionButton::DefaultButton
                                   | QStyleOptionButton::AutoDefaultButton));
 
-            BEGIN_STYLE_PIXMAPCACHE(QString::fromLatin1("pushbutton-%1").arg(defaultButton))
+            BEGIN_STYLE_PIXMAPCACHE(QString::fromLatin1("pushbutton-%1").formatArg(defaultButton))
 
             QPen oldPen = p->pen();
             bool hover = (button->state & State_Enabled) && (button->state & State_MouseOver);
@@ -2631,13 +2633,16 @@ void QPlastiqueStyle::drawControl(ControlElement element, const QStyleOption *op
                painter->setTransform(m, true);
             }
 
-            int maxWidth = rect.width() - 4;
-            int minWidth = 4;
-            qint64 progress = qMax<qint64>(bar->progress, bar->minimum); // workaround for bug in QProgressBar
+            int maxWidth    = rect.width() - 4;
+            int minWidth    = 4;
+            qint64 progress = qMax(bar->progress, bar->minimum); // workaround for bug in QProgressBar
+
             double vc6_workaround = ((progress - qint64(bar->minimum)) / qMax(double(1.0),
                                      double(qint64(bar->maximum) - qint64(bar->minimum))) * maxWidth);
+
             int width = indeterminate ? maxWidth : qMax(int(vc6_workaround), minWidth);
             bool reverse = (!vertical && (bar->direction == Qt::RightToLeft)) || vertical;
+
             if (inverted) {
                reverse = !reverse;
             }
@@ -3828,7 +3833,7 @@ void QPlastiqueStyle::drawComplexControl(ComplexControl control, const QStyleOpt
             QPixmap cache;
 
             if ((option->subControls & SC_SliderGroove) && groove.isValid()) {
-               BEGIN_STYLE_PIXMAPCACHE(QString::fromLatin1("slider_groove-%0-%1").arg(ticksAbove).arg(ticksBelow))
+               BEGIN_STYLE_PIXMAPCACHE(QString::fromLatin1("slider_groove-%0-%1").formatArg(ticksAbove).formatArg(ticksBelow))
                p->fillRect(groove, option->palette.background());
 
                // draw groove
@@ -6079,7 +6084,8 @@ void QPlastiqueStyle::timerEvent(QTimerEvent *event)
    if (event->timerId() == d->progressBarAnimateTimer) {
       Q_ASSERT(ProgressBarFps > 0);
       d->animateStep = d->timer.elapsed() / (1000 / ProgressBarFps);
-      foreach (QProgressBar * bar, d->bars) {
+
+      for (QProgressBar * bar : d->bars) {
          if (AnimateProgressBar || (bar->minimum() == 0 && bar->maximum() == 0)) {
             bar->update();
          }

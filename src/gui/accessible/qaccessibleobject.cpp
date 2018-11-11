@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -40,12 +37,12 @@ class QAccessibleObjectPrivate
  public:
    QPointer<QObject> object;
 
-   QList<QByteArray> actionList() const;
+   QList<QString> actionList() const;
 };
 
-QList<QByteArray> QAccessibleObjectPrivate::actionList() const
+QList<QString> QAccessibleObjectPrivate::actionList() const
 {
-   QList<QByteArray> actionList;
+   QList<QString> actionList;
 
    if (! object) {
       return actionList;
@@ -54,19 +51,20 @@ QList<QByteArray> QAccessibleObjectPrivate::actionList() const
    const QMetaObject *mo = object->metaObject();
    Q_ASSERT(mo);
 
-   QByteArray defaultAction = QMetaObject::normalizedSignature(
-                                 mo->classInfo(mo->indexOfClassInfo("DefaultSlot")).value());
+   QString defaultAction = QMetaObject::normalizedSignature(mo->classInfo(mo->indexOfClassInfo("DefaultSlot")).value());
 
    for (int i = 0; i < mo->methodCount(); ++i) {
       const QMetaMethod member = mo->method(i);
+
       if (member.methodType() != QMetaMethod::Slot && member.access() != QMetaMethod::Public) {
          continue;
       }
 
-      if (! qstrcmp(member.tag(), "QACCESSIBLE_SLOT")) {
+      if (member.tag() == "QACCESSIBLE_SLOT") {
 
          if (member.methodSignature() == defaultAction) {
             actionList.prepend(defaultAction);
+
          } else {
             actionList << member.methodSignature();
          }
@@ -124,32 +122,25 @@ QObject *QAccessibleObject::object() const
    return d->object;
 }
 
-/*!
-    \reimp
-*/
 bool QAccessibleObject::isValid() const
 {
    return !d->object.isNull();
 }
 
-/*! \reimp */
 QRect QAccessibleObject::rect(int) const
 {
    return QRect();
 }
 
-/*! \reimp */
 void QAccessibleObject::setText(Text, int, const QString &)
 {
 }
 
-/*! \reimp */
 int QAccessibleObject::userActionCount(int) const
 {
    return 0;
 }
 
-/*! \reimp */
 bool QAccessibleObject::doAction(int, int, const QVariantList &)
 {
    return false;
@@ -170,7 +161,6 @@ static const char *const action_text[][5] = {
    { "AddToSelection", "", "", "", "" }
 };
 
-/*! \reimp */
 QString QAccessibleObject::actionText(int action, Text t, int child) const
 {
    if (child || action > FirstStandardAction || action < LastStandardAction || t > Accelerator) {
@@ -213,13 +203,11 @@ static QWidgetList topLevelWidgets()
    return list;
 }
 
-/*! \reimp */
 int QAccessibleApplication::childCount() const
 {
    return topLevelWidgets().count();
 }
 
-/*! \reimp */
 int QAccessibleApplication::indexOfChild(const QAccessibleInterface *child) const
 {
    if (!child->object()->isWidgetType()) {
@@ -234,7 +222,6 @@ int QAccessibleApplication::indexOfChild(const QAccessibleInterface *child) cons
    return index;
 }
 
-/*! \reimp */
 int QAccessibleApplication::childAt(int x, int y) const
 {
    const QWidgetList tlw(topLevelWidgets());
@@ -247,7 +234,6 @@ int QAccessibleApplication::childAt(int x, int y) const
    return -1;
 }
 
-/*! \reimp */
 QAccessible::Relation QAccessibleApplication::relationTo(int child, const
       QAccessibleInterface *other, int otherChild) const
 {
@@ -284,7 +270,6 @@ QAccessible::Relation QAccessibleApplication::relationTo(int child, const
    return Unrelated;
 }
 
-/*! \reimp */
 int QAccessibleApplication::navigate(RelationFlag relation, int entry,
                                      QAccessibleInterface **target) const
 {
@@ -319,7 +304,6 @@ int QAccessibleApplication::navigate(RelationFlag relation, int entry,
    return *target ? 0 : -1;
 }
 
-/*! \reimp */
 QString QAccessibleApplication::text(Text t, int) const
 {
    switch (t) {
@@ -333,25 +317,21 @@ QString QAccessibleApplication::text(Text t, int) const
    return QString();
 }
 
-/*! \reimp */
 QAccessible::Role QAccessibleApplication::role(int) const
 {
    return Application;
 }
 
-/*! \reimp */
 QAccessible::State QAccessibleApplication::state(int) const
 {
    return QApplication::activeWindow() ? Focused : Normal;
 }
 
-/*! \reimp */
 int QAccessibleApplication::userActionCount(int) const
 {
    return 1;
 }
 
-/*! \reimp */
 bool QAccessibleApplication::doAction(int action, int child, const QVariantList &param)
 {
    if (action == 0 || action == 1) {
@@ -369,7 +349,6 @@ bool QAccessibleApplication::doAction(int action, int child, const QVariantList 
    return QAccessibleObject::doAction(action, child, param);
 }
 
-/*! \reimp */
 QString QAccessibleApplication::actionText(int action, Text text, int child) const
 {
    QString str;
@@ -384,7 +363,7 @@ QString QAccessibleApplication::actionText(int action, Text text, int child) con
    return QAccessibleObject::actionText(action, text, child);
 }
 
-// ### Qt 5: remove me - binary compatibility hack
+// ### Qt5: remove me - binary compatibility hack
 QAccessibleObjectEx::QAccessibleObjectEx(QObject *object)
 {
    d = new QAccessibleObjectPrivate;

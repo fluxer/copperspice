@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -34,7 +31,7 @@
 #include <qfiledialog_p.h>
 #include <qt_mac_p.h>
 #include <qt_cocoa_helpers_mac_p.h>
-#include <qregexp.h>
+#include <qregularexpression.h>
 #include <qbuffer.h>
 #include <qdebug.h>
 #include <qstringlist.h>
@@ -52,18 +49,17 @@ QT_BEGIN_NAMESPACE
 
 extern QStringList qt_make_filter_list(const QString &filter);   // qfiledialog.cpp
 extern QStringList qt_clean_filter_list(const QString &filter);  // qfiledialog.cpp
-extern const char *qt_file_dialog_filter_reg_exp;                // qfiledialog.cpp
 extern bool qt_mac_is_macsheet(const QWidget *w);                // qwidget_mac.mm
 
-QT_END_NAMESPACE
+static const QString qt_file_dialog_filter_reg_exp = "^(.*)\\(([a-zA-Z0-9_.*? +;#\\-\\[\\]@\\{\\}/!<>\\$%&=^~:\\|]*)\\)$";
 
+#include <qstringfwd.h>
 QT_FORWARD_DECLARE_CLASS(QFileDialogPrivate)
-QT_FORWARD_DECLARE_CLASS(QString)
 QT_FORWARD_DECLARE_CLASS(QStringList)
 QT_FORWARD_DECLARE_CLASS(QWidget)
 QT_FORWARD_DECLARE_CLASS(QAction)
 QT_FORWARD_DECLARE_CLASS(QFileInfo)
-QT_USE_NAMESPACE
+
 
 @class QT_MANGLE_NAMESPACE(QNSOpenSavePanelDelegate);
 
@@ -451,7 +447,8 @@ QT_USE_NAMESPACE
    Q_UNUSED(sender);
    if (mPriv && [mSavePanel isVisible]) {
       QString selection = QT_PREPEND_NAMESPACE(qt_mac_NSStringToQString([mSavePanel filename]));
-      if (selection != mCurrentSelection) {
+
+      if (selection != *mCurrentSelection) {
          *mCurrentSelection = selection;
          mPriv->QNSOpenSavePanelDelegate_selectionChanged(selection);
       }
@@ -462,7 +459,9 @@ QT_USE_NAMESPACE
 {
    Q_UNUSED(panel);
    Q_UNUSED(contextInfo);
+
    mReturnCode = returnCode;
+
    if (mPriv) {
       mPriv->QNSOpenSavePanelDelegate_panelClosed(returnCode == NSOKButton);
    }
@@ -495,12 +494,15 @@ QT_USE_NAMESPACE
 - (QStringList)acceptableExtensionsForSave
 {
    QStringList result;
+
    for (int i = 0; i < mSelectedNameFilter->count(); ++i) {
       const QString &filter = mSelectedNameFilter->at(i);
-      if (filter.startsWith(QLatin1String("*."))
-            && !filter.contains(QLatin1Char('?'))
+
+      if (filter.startsWith(QLatin1String("*.")) && !filter.contains(QLatin1Char('?'))
             && filter.count(QLatin1Char('*')) == 1) {
+
          result += filter.mid(2);
+
       } else {
          return QStringList(); // Accept everything
       }
@@ -510,10 +512,13 @@ QT_USE_NAMESPACE
 
 - (QString)removeExtensions: (const QString &)filter
 {
-   QRegExp regExp(QT_PREPEND_NAMESPACE(QString::fromLatin1)(QT_PREPEND_NAMESPACE(qt_file_dialog_filter_reg_exp)));
-   if (regExp.indexIn(filter) != -1) {
-      return regExp.cap(1).trimmed();
+   QRegularExpression regExp(qt_file_dialog_filter_reg_exp);
+   QRegularExpressionMatch match = regExp.match(filter);
+
+   if (match.hasMatch()) {
+      return match.captured(1).trimmed();
    }
+
    return filter;
 }
 
@@ -521,8 +526,10 @@ QT_USE_NAMESPACE
 {
    NSRect textRect = { { 0.0, 3.0 }, { 100.0, 25.0 } };
    mTextField = [[NSTextField alloc] initWithFrame: textRect];
+
    [[mTextField cell] setFont: [NSFont systemFontOfSize:
-                                [NSFont systemFontSizeForControlSize: NSRegularControlSize]]];
+                               [NSFont systemFontSizeForControlSize: NSRegularControlSize]]];
+
    [mTextField setAlignment: NSRightTextAlignment];
    [mTextField setEditable: false];
    [mTextField setSelectable: false];

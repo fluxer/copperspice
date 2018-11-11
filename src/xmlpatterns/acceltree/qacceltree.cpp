@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -49,8 +46,8 @@ class AccelTreePrivate : public QAbstractXmlNodeModelPrivate
       : m_accelTree(accelTree) {
    }
 
-   virtual QSourceLocation sourceLocation(const QXmlNodeModelIndex &index) const {
-      return m_accelTree->sourceLocation(index);
+   QSourceLocation sourceLocation(const QXmlNodeModelIndex &index) const override {
+      return m_accelTree->sourceLocation(index) ;
    }
 
  private:
@@ -59,9 +56,7 @@ class AccelTreePrivate : public QAbstractXmlNodeModelPrivate
 }
 
 AccelTree::AccelTree(const QUrl &docURI, const QUrl &bURI)
-   : QAbstractXmlNodeModel(new AccelTreePrivate(this))
-   , m_documentURI(docURI)
-   , m_baseURI(bURI)
+   : QAbstractXmlNodeModel(new AccelTreePrivate(this)), m_documentURI(docURI), m_baseURI(bURI)
 {
    /* Pre-allocate at least a little bit. */
    // TODO. Do it according to what an average 4 KB doc contains.
@@ -72,8 +67,10 @@ AccelTree::AccelTree(const QUrl &docURI, const QUrl &bURI)
 void AccelTree::printStats(const NamePool::Ptr &np) const
 {
    Q_ASSERT(np);
+
 #ifdef QT_NO_DEBUG
    Q_UNUSED(np); /* Needed when compiling in release mode. */
+
 #else
    const int len = basicData.count();
 
@@ -83,6 +80,7 @@ void AccelTree::printStats(const NamePool::Ptr &np) const
    pDebug() << "+---------------+-------+-------+---------------+-------+--------------+-------+";
    pDebug() << "| Pre number    | Depth | Size  | Post Number   | Kind  | Name         | Value |";
    pDebug() << "+---------------+-------+-------+---------------+-------+--------------+-------+";
+
    for (int i = 0; i < len; ++i) {
       const BasicNodeData &v = basicData.at(i);
       pDebug() << '|' << i
@@ -95,15 +93,17 @@ void AccelTree::printStats(const NamePool::Ptr &np) const
                                isCompressed(i)) ? CompressedWhitespace::decompress(data.value(i))
                               : data.value(i))
                << "\t|";
+
       /*
-      pDebug() << '|' << QString().arg(i, 14)
-               << '|' << QString().arg(v.depth(), 6)
-               << '|' << QString().arg(v.size(), 6)
-               << '|' << QString().arg(postNumber(i), 14)
-               << '|' << QString().arg(v.kind(), 6)
+      pDebug() << '|' << QString().formatArg(i, 14)
+               << '|' << QString().formatArg(v.depth(), 6)
+               << '|' << QString().formatArg(v.size(), 6)
+               << '|' << QString().formatArg(postNumber(i), 14)
+               << '|' << QString().formatArg(v.kind(), 6)
                << '|';
                */
    }
+
    pDebug() << "+---------------+-------+-------+---------------+-------+--------------+";
    pDebug() << "Namespaces(" << namespaces.count() << "):";
 
@@ -181,6 +181,7 @@ QUrl AccelTree::baseUri(const QXmlNodeModelIndex &ni) const
    }
 
    Q_ASSERT_X(false, Q_FUNC_INFO, "This line is never supposed to be reached.");
+
    return QUrl();
 }
 
@@ -346,13 +347,13 @@ QXmlNodeModelIndex::Iterator::Ptr AccelTree::iterate(const QXmlNodeModelIndex &n
 QXmlNodeModelIndex AccelTree::nextFromSimpleAxis(QAbstractXmlNodeModel::SimpleAxis,
       const QXmlNodeModelIndex &) const
 {
-   Q_ASSERT_X(false, Q_FUNC_INFO, "This function is not supposed to be called.");
+   Q_ASSERT_X(false, Q_FUNC_INFO, "This function should never be called.");
    return QXmlNodeModelIndex();
 }
 
 QVector<QXmlNodeModelIndex> AccelTree::attributes(const QXmlNodeModelIndex &element) const
 {
-   Q_ASSERT_X(false, Q_FUNC_INFO, "This function is not supposed to be called.");
+   Q_ASSERT_X(false, Q_FUNC_INFO, "This function should never be called.");
    Q_UNUSED(element);
    return QVector<QXmlNodeModelIndex>();
 }
@@ -527,9 +528,9 @@ QString AccelTree::stringValue(const QXmlNodeModelIndex &ni) const
 
          return result;
       }
+
       default: {
-         Q_ASSERT_X(false, Q_FUNC_INFO,
-                    "A node type that doesn't exist in the XPath Data Model was encountered.");
+         Q_ASSERT_X(false, Q_FUNC_INFO, "A node type which does not exist in the XPath Data Model was encountered.");
          return QString(); /* Dummy, silence compiler warning. */
       }
    }
@@ -565,30 +566,24 @@ Item::Iterator::Ptr AccelTree::sequencedTypedValue(const QXmlNodeModelIndex &n) 
 
    switch (kind(preNumber)) {
       case QXmlNodeModelIndex::Element:
-      /* Fallthrough. */
       case QXmlNodeModelIndex::Document:
-      /* Fallthrough. */
       case QXmlNodeModelIndex::Attribute:
          return makeSingletonIterator(Item(UntypedAtomic::fromValue(stringValue(n))));
 
       case QXmlNodeModelIndex::Text:
-      /* Fallthrough. */
       case QXmlNodeModelIndex::ProcessingInstruction:
-      /* Fallthrough. */
       case QXmlNodeModelIndex::Comment:
          return makeSingletonIterator(Item(AtomicString::fromValue(stringValue(n))));
+
       default: {
-         Q_ASSERT_X(false, Q_FUNC_INFO,
-                    qPrintable(QString::fromLatin1("A node type that doesn't exist "
-                               "in the XPath Data Model was encountered.").arg(kind(preNumber))));
+         Q_ASSERT_X(false, Q_FUNC_INFO, "A node type which does not exist in the XPath Data Model was encountered.");
          return Item::Iterator::Ptr(); /* Dummy, silence compiler warning. */
       }
    }
 }
 
 void AccelTree::copyNodeTo(const QXmlNodeModelIndex &node,
-                           QAbstractXmlReceiver *const receiver,
-                           const NodeCopySettings &settings) const
+                  QAbstractXmlReceiver *const receiver, const NodeCopySettings &settings) const
 {
    /* This code piece can be seen as a customized version of
     * QAbstractXmlReceiver::item/sendAsNode(). */
@@ -613,6 +608,7 @@ void AccelTree::copyNodeTo(const QXmlNodeModelIndex &node,
 
          if (settings.testFlag(PreserveNamespaces)) {
             node.sendNamespaces(receiver);
+
          } else {
             /* Find the namespaces that we actually use and add them to outputted. These are drawn
              * from the element name, and the node's attributes. */
@@ -621,7 +617,7 @@ void AccelTree::copyNodeTo(const QXmlNodeModelIndex &node,
             const QXmlNodeModelIndex::Iterator::Ptr attributes(iterate(node, QXmlNodeModelIndex::AxisAttribute));
             QXmlNodeModelIndex attr(attributes->next());
 
-            while (!attr.isNull()) {
+            while (! attr.isNull()) {
                const QXmlName &attrName = attr.name();
                outputted.top().insert(attrName.prefix(), attrName.namespaceURI());
                attr = attributes->next();
@@ -640,9 +636,9 @@ void AccelTree::copyNodeTo(const QXmlNodeModelIndex &node,
             QXmlNodeModelIndex::Iterator::Ptr attributes(node.iterate(QXmlNodeModelIndex::AxisAttribute));
             QXmlNodeModelIndex attribute(attributes->next());
 
-            while (!attribute.isNull()) {
+            while (! attribute.isNull()) {
                const QString &v = attribute.stringValue();
-               receiver->attribute(attribute.name(), QStringRef(&v));
+               receiver->attribute(attribute.name(), QStringView(v));
                attribute = attributes->next();
             }
          }
@@ -665,7 +661,6 @@ void AccelTree::copyNodeTo(const QXmlNodeModelIndex &node,
       default:
          receiver->item(node);
    }
-
 }
 
 QSourceLocation AccelTree::sourceLocation(const QXmlNodeModelIndex &index) const

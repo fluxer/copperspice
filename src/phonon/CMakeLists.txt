@@ -2,17 +2,16 @@ add_definitions(
     -DMAKE_PHONON_LIB
     -DQT_NO_DBUS
     -DQT_BUILD_PHONON_LIB
-    -DQT_MAKEDLL
 )
 set(EXTRA_PHONON_LIBS
-    CsCore${BUILD_MAJOR}
-    CsGui${BUILD_MAJOR}
-    CsNetwork${BUILD_MAJOR}
-    CsOpenGL${BUILD_MAJOR}
+    CsCore${BUILD_ABI}
+    CsGui${BUILD_ABI}
+    CsNetwork${BUILD_ABI}
+    CsOpenGL${BUILD_ABI}
 )
 set(EXTRA_PHONON_CXXFLAGS)
 set(EXTRA_PHONON_LDFLAGS)
-set(EXTRA_PHONON2_LIBS ${EXTRA_PHONON_LIBS} CsPhonon${BUILD_MAJOR})
+set(EXTRA_PHONON2_LIBS ${EXTRA_PHONON_LIBS} CsPhonon${BUILD_ABI})
 set(EXTRA_PHONON2_CXXFLAGS)
 set(EXTRA_PHONON2_LDFLAGS)
 set(PHONON2_SUFFIX)
@@ -33,6 +32,8 @@ include_directories(
     ${CMAKE_BINARY_DIR}/privateinclude/phonon
     ${CMAKE_BINARY_DIR}/privateinclude/phonon/private
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${GLIB2_INCLUDES}
+    ${GOBJECT2_INCLUDES}
 )
 
 set(PHONON_PUBLIC_INCLUDES
@@ -270,9 +271,9 @@ set(PHONON_SOURCES
     ${CMAKE_SOURCE_DIR}/src/3rdparty/phonon/qt7/quicktimevideoplayer.h
     ${CMAKE_SOURCE_DIR}/src/3rdparty/phonon/qt7/backendheader.h
     ${CMAKE_SOURCE_DIR}/src/3rdparty/phonon/qt7/medianodevideopart.h
-    ${CMAKE_SOURCE_DIR}/src/3rdparty/phonon/qt7/medianodeevent.h 
+    ${CMAKE_SOURCE_DIR}/src/3rdparty/phonon/qt7/medianodeevent.h
     ${CMAKE_SOURCE_DIR}/src/3rdparty/phonon/qt7/quicktimeaudioplayer.h
-    ${CMAKE_SOURCE_DIR}/src/3rdparty/phonon/qt7/audionode.h 
+    ${CMAKE_SOURCE_DIR}/src/3rdparty/phonon/qt7/audionode.h
     ${CMAKE_SOURCE_DIR}/src/3rdparty/phonon/qt7/audiograph.h
     ${CMAKE_SOURCE_DIR}/src/3rdparty/phonon/qt7/audiooutput.h
     ${CMAKE_SOURCE_DIR}/src/3rdparty/phonon/qt7/quicktimemetadata.h
@@ -320,27 +321,23 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
     set(EXTRA_PHONON2_LIBS
         ${EXTRA_PHONON2_LIBS}
         opengl32
-        lmsdmo
+        strmiids
+        dmoguids
+        uuid
+        msdmo
         ole32
         oleaut32
         gdi32
     )
-    set(EXTRA_PHONON2_LDFLAGS
-        ${EXTRA_PHONON2_LDFLAGS}
-        -Wl,-lstrmiids
-        -Wl,-ldmoguids
-        -Wl,-luuid
-    )
     add_definitions(
         -DQT_BUILD_DS9_LIB
-        -DQT_SHARED
-        -DQT_MAKEDLL
     )
     include_directories(
         ${CMAKE_SOURCE_DIR}/src/3rdparty/phonon/ds9
     )
     set(PHONON2_SUFFIX "ds9")
-elseif(${CMAKE_SYSTEM_NAME} MATCHES "(Linux|OpenBSD|FreeBSD|NetBSD)")
+
+elseif(${CMAKE_SYSTEM_NAME} MATCHES "(Linux|OpenBSD|FreeBSD|NetBSD|DragonFly)")
     set(PHONON2_SOURCES
         ${PHONON2_SOURCES}
         ${CMAKE_SOURCE_DIR}/src/3rdparty/phonon/gstreamer/abstractrenderer.cpp
@@ -378,8 +375,6 @@ elseif(${CMAKE_SYSTEM_NAME} MATCHES "(Linux|OpenBSD|FreeBSD|NetBSD)")
     add_definitions(
         -DQT_NO_OPENGL
         -DQT_BUILD_GSTREAMER_LIB
-        -DQT_SHARED
-        -DQT_MAKEDLL
         ${GSTREAMER_DEFINITIONS}
         ${LIBXML2_DEFINITIONS}
     )
@@ -389,6 +384,7 @@ elseif(${CMAKE_SYSTEM_NAME} MATCHES "(Linux|OpenBSD|FreeBSD|NetBSD)")
         ${LIBXML2_INCLUDE_DIR}
     )
     set(PHONON2_SUFFIX "gstreamer")
+
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     set(PHONON2_SOURCES
         ${PHONON2_SOURCES}
@@ -405,7 +401,7 @@ elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
         ${CMAKE_SOURCE_DIR}/src/3rdparty/phonon/qt7/backend.mm
         ${CMAKE_SOURCE_DIR}/src/3rdparty/phonon/qt7/mediaobject.mm
         ${CMAKE_SOURCE_DIR}/src/3rdparty/phonon/qt7/mediaobjectaudionode.mm
-        ${CMAKE_SOURCE_DIR}/src/3rdparty/phonon/qt7/audiomixer.mm 
+        ${CMAKE_SOURCE_DIR}/src/3rdparty/phonon/qt7/audiomixer.mm
         ${CMAKE_SOURCE_DIR}/src/3rdparty/phonon/qt7/quicktimeaudioplayer.mm
         ${CMAKE_SOURCE_DIR}/src/3rdparty/phonon/qt7/videoframe.mm
         ${CMAKE_SOURCE_DIR}/src/3rdparty/phonon/qt7/quicktimemetadata.mm
@@ -438,8 +434,6 @@ elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     add_definitions(
         -DQT_NO_OPENGL
         -DQT_BUILD_QT7_LIB
-        -DQT_SHARED
-        -DQT_MAKEDLL
     )
     include_directories(
         ${CMAKE_SOURCE_DIR}/src/3rdparty/phonon/qt7
@@ -451,13 +445,19 @@ endif()
 function_variable_fixup("${EXTRA_PHONON_CXXFLAGS}" EXTRA_PHONON_CXXFLAGS)
 function_variable_fixup("${EXTRA_PHONON_LDFLAGS}" EXTRA_PHONON_LDFLAGS)
 
-add_library(CsPhonon${BUILD_MAJOR} SHARED ${PHONON_SOURCES} ${PHONON_INCLUDES})
-target_link_libraries(CsPhonon${BUILD_MAJOR} ${EXTRA_PHONON_LIBS})
-set_target_properties(CsPhonon${BUILD_MAJOR} PROPERTIES
-    VERSION "0" # for compat
-    SOVERSION "0.0.0" # for compat
-    COMPILE_FLAGS ${EXTRA_PHONON_CXXFLAGS}
-    LINK_FLAGS ${EXTRA_PHONON_LDFLAGS}
+add_library(CsPhonon${BUILD_ABI} SHARED ${PHONON_SOURCES} ${PHONON_INCLUDES})
+target_link_libraries(CsPhonon${BUILD_ABI} ${EXTRA_PHONON_LIBS})
+
+target_include_directories(CsPhonon${BUILD_ABI}
+   PUBLIC
+   $<INSTALL_INTERFACE:include/phonon>
+)
+
+set_target_properties(CsPhonon${BUILD_ABI} PROPERTIES
+   VERSION "0" # for compat
+   SOVERSION "0.0.0" # for compat
+   COMPILE_FLAGS ${EXTRA_PHONON_CXXFLAGS}
+   LINK_FLAGS ${EXTRA_PHONON_LDFLAGS}
 )
 
 function_variable_fixup("${EXTRA_PHONON2_CXXFLAGS}" EXTRA_PHONON2_CXXFLAGS)
@@ -465,15 +465,13 @@ function_variable_fixup("${EXTRA_PHONON2_LDFLAGS}" EXTRA_PHONON2_LDFLAGS)
 
 add_library(phonon_${PHONON2_SUFFIX} MODULE ${PHONON2_SOURCES} ${PHONON_INCLUDES})
 target_link_libraries(phonon_${PHONON2_SUFFIX} ${EXTRA_PHONON2_LIBS})
+
 set_target_properties(phonon_${PHONON2_SUFFIX} PROPERTIES
-    COMPILE_FLAGS ${EXTRA_PHONON2_CXXFLAGS}
-    LINK_FLAGS ${EXTRA_PHONON2_LDFLAGS}
+   COMPILE_FLAGS ${EXTRA_PHONON2_CXXFLAGS}
+   LINK_FLAGS ${EXTRA_PHONON2_LDFLAGS}
+   PREFIX ""
 )
-# TODO: this seems required on BSD but only in the private scope, including
-# x11 paths in the global scope breaks the build so here goes a workaround.
-# strange thing is that it does not require to be linked to any X11 librarise
-# which may be because CsGui is linked to X11 but a "bad" linker may bail out,
-# needs testing with lld and older versions of CMake.
+
 if(${PHONON2_SUFFIX} STREQUAL "gstreamer")
     target_include_directories(phonon_${PHONON2_SUFFIX} PRIVATE ${X11_X11_INCLUDE_PATH})
 endif()
@@ -481,31 +479,34 @@ endif()
 macro_generate_resources("${PHONON_SOURCES}")
 macro_generate_resources("${PHONON2_SOURCES}")
 macro_generate_package(
-    CsPhonon${BUILD_MAJOR}
-    phonon
-    "${EXTRA_PHONON_CXXFLAGS}"
-    "${EXTRA_PHONON_LIBS}"
-    "CsCore${BUILD_MAJOR} CsGui${BUILD_MAJOR} CsNetwork${BUILD_MAJOR}"
+   CsPhonon${BUILD_ABI}
+   phonon
+   "${EXTRA_PHONON_CXXFLAGS}"
+   "CsCore${BUILD_ABI} CsGui${BUILD_ABI} CsNetwork${BUILD_ABI}"
 )
 macro_generate_package(
-    phonon_${PHONON2_SUFFIX}
-    phonon
-    "${EXTRA_PHONON2_CXXFLAGS}"
-    "${EXTRA_PHONON2_LIBS}"
-    "CsCore${BUILD_MAJOR} CsGui${BUILD_MAJOR} CsNetwork${BUILD_MAJOR} CsPhonon${BUILD_MAJOR}"
-)
-
-
-install(
-    TARGETS CsPhonon${BUILD_MAJOR}
-    EXPORT CopperSpiceLibraryTargets ${INSTALL_TARGETS_DEFAULT_ARGS}
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}
+   phonon_${PHONON2_SUFFIX}
+   phonon
+   "${EXTRA_PHONON2_CXXFLAGS}"
+   "CsCore${BUILD_ABI} CsGui${BUILD_ABI} CsNetwork${BUILD_ABI} CsPhonon${BUILD_ABI}"
 )
 
 install(
-    DIRECTORY ${CMAKE_BINARY_DIR}/include/phonon
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-    COMPONENT Devel
+   TARGETS CsPhonon${BUILD_ABI}
+   EXPORT CopperSpiceLibraryTargets ${INSTALL_TARGETS_DEFAULT_ARGS}
+   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
-install(TARGETS phonon_${PHONON2_SUFFIX} DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(
+   DIRECTORY ${CMAKE_BINARY_DIR}/include/phonon
+   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+   COMPONENT Devel
+)
+
+install(
+   TARGETS phonon_${PHONON2_SUFFIX}
+   EXPORT CopperSpiceLibraryTargets ${INSTALL_TARGETS_DEFAULT_ARGS}
+   DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)

@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -58,7 +55,7 @@ class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeParentChange : public QDeclarativ
    DECL_CS_PROPERTY_READ(rotation, rotation)
    DECL_CS_PROPERTY_WRITE(rotation, setRotation)
  public:
-   QDeclarativeParentChange(QObject *parent = 0);
+   QDeclarativeParentChange(QObject *parent = nullptr);
    ~QDeclarativeParentChange();
 
    QDeclarativeItem *object() const;
@@ -118,7 +115,7 @@ class QDeclarativeStateChangeScript : public QDeclarativeStateOperation, public 
    DECL_CS_PROPERTY_WRITE(name, setName)
 
  public:
-   QDeclarativeStateChangeScript(QObject *parent = 0);
+   QDeclarativeStateChangeScript(QObject *parent = nullptr);
    ~QDeclarativeStateChangeScript();
 
    virtual ActionList actions();
@@ -174,7 +171,7 @@ class QDeclarativeAnchorSet : public QObject
    Q_PROPERTY(qreal baselineOffset READ baselineOffset WRITE setBaselineOffset NOTIFY baselineOffsetChanged())*/
 
  public:
-   QDeclarativeAnchorSet(QObject *parent = 0);
+   QDeclarativeAnchorSet(QObject *parent = nullptr);
    virtual ~QDeclarativeAnchorSet();
 
    QDeclarativeScriptString left() const;
@@ -268,7 +265,7 @@ class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeAnchorChanges : public QDeclarati
    DECL_CS_PROPERTY_CONSTANT(*anchors)
 
  public:
-   QDeclarativeAnchorChanges(QObject *parent = 0);
+   QDeclarativeAnchorChanges(QObject *parent = nullptr);
    ~QDeclarativeAnchorChanges();
 
    virtual ActionList actions();

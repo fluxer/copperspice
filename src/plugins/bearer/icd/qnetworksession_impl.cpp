@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -619,7 +616,7 @@ static QString get_network_interface()
     if (addr_results.first().ip_info.isEmpty())
         return QString();
 
-    QByteArray data = addr_results.first().ip_info.first().address.toAscii();
+    QByteArray data = addr_results.first().ip_info.first().address.toLatin1();
     struct in_addr addr;
     if (inet_aton(data.constData(), &addr) == 0) {
 #ifdef BEARER_MANAGEMENT_DEBUG
@@ -755,11 +752,11 @@ void QNetworkSessionPrivateImpl::do_open()
 #ifdef BEARER_MANAGEMENT_DEBUG
     qDebug("connecting to %s/%s/0x%x/%s/0x%x/%s",
         icd2.networkId.data(),
-        icd2.networkType.toAscii().constData(),
+        icd2.networkType.toLatin1().constData(),
         icd2.networkAttributes,
-        icd2.serviceType.toAscii().constData(),
+        icd2.serviceType.toLatin1().constData(),
         icd2.serviceAttributes,
-        icd2.setviceId.toAscii().constData());
+        icd2.setviceId.toLatin1().constData());
 #endif
 
         ICd2DetailsList paramArray;

@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -29,23 +26,32 @@
 #include <qhash.h>
 #include <qbytearray.h>
 #include <qcryptographichash.h>
-#include <qhttp.h>
+
 #include <qiodevice.h>
 #include <qdatastream.h>
 #include <qendian.h>
 #include <qstring.h>
+#include <qstring16.h>
 #include <qdatetime.h>
+#include <qtextcodec.h>
 
-//#define NTLMV1_CLIENT
+#ifdef Q_OS_WIN
+#include <qmutex.h>
+#include <qmutexpool_p.h>
+#include <rpc.h>
 
-QT_BEGIN_NAMESPACE
+#define SECURITY_WIN32 1
+#include <security.h>
 
-#ifdef NTLMV1_CLIENT
-#include "../../3rdparty/des/des.cpp"      // do not change to < >
 #endif
 
 static QByteArray qNtlmPhase1();
 static QByteArray qNtlmPhase3(QAuthenticatorPrivate *ctx, const QByteArray &phase2data);
+
+#if defined(Q_OS_WIN)
+static QByteArray qNtlmPhase1_SSPI(QAuthenticatorPrivate *ctx);
+static QByteArray qNtlmPhase3_SSPI(QAuthenticatorPrivate *ctx, const QByteArray &phase2data);
+#endif
 
 QAuthenticator::QAuthenticator()
    : d(0)
@@ -70,9 +76,6 @@ QAuthenticator::QAuthenticator(const QAuthenticator &other)
    }
 }
 
-/*!
-    Assigns the contents of \a other to this authenticator.
-*/
 QAuthenticator &QAuthenticator::operator=(const QAuthenticator &other)
 {
    if (d == other.d) {
@@ -83,6 +86,7 @@ QAuthenticator &QAuthenticator::operator=(const QAuthenticator &other)
    // could corrupt the internal store and different network requests
    // can utilize different types of proxies.
    detach();
+
    if (other.d) {
       d->user = other.d->user;
       d->userDomain = other.d->userDomain;
@@ -92,47 +96,36 @@ QAuthenticator &QAuthenticator::operator=(const QAuthenticator &other)
       d->realm = other.d->realm;
       d->method = other.d->method;
       d->options = other.d->options;
+
    } else if (d->phase == QAuthenticatorPrivate::Start) {
       delete d;
       d = 0;
    }
+
    return *this;
 }
 
-/*!
-    Returns true if this authenticator is identical to \a other; otherwise
-    returns false.
-*/
 bool QAuthenticator::operator==(const QAuthenticator &other) const
 {
    if (d == other.d) {
       return true;
    }
-   return d->user == other.d->user
-          && d->password == other.d->password
-          && d->realm == other.d->realm
-          && d->method == other.d->method
+
+   if (!d || !other.d) {
+      return false;
+   }
+
+   return d->user == other.d->user && d->password == other.d->password
+          && d->realm == other.d->realm && d->method == other.d->method
           && d->options == other.d->options;
 }
 
-/*!
-    \fn bool QAuthenticator::operator!=(const QAuthenticator &other) const
-
-    Returns true if this authenticator is different from \a other; otherwise
-    returns false.
-*/
-
-/*!
-  returns the user used for authentication.
-*/
 QString QAuthenticator::user() const
 {
    return d ? d->user : QString();
 }
 
-/*!
-  Sets the \a user used for authentication.
-*/
+
 void QAuthenticator::setUser(const QString &user)
 {
    detach();
@@ -140,17 +133,11 @@ void QAuthenticator::setUser(const QString &user)
    d->updateCredentials();
 }
 
-/*!
-  returns the password used for authentication.
-*/
 QString QAuthenticator::password() const
 {
    return d ? d->password : QString();
 }
 
-/*!
-  Sets the \a password used for authentication.
-*/
 void QAuthenticator::setPassword(const QString &password)
 {
    detach();
@@ -180,57 +167,48 @@ QString QAuthenticator::realm() const
    return d ? d->realm : QString();
 }
 
-/*!
-    \since 4.7
-    Returns the value related to option \a opt if it was set by the server.
-    See \l{QAuthenticator#Options} for more information on incoming options.
-    If option \a opt isn't found, an invalid QVariant will be returned.
+void QAuthenticator::setRealm(const QString &realm)
+{
+   detach();
+   d->realm = realm;
+}
 
-    \sa options(), QAuthenticator#Options
-*/
 QVariant QAuthenticator::option(const QString &opt) const
 {
    return d ? d->options.value(opt) : QVariant();
 }
 
-/*!
-    \since 4.7
-    Returns all incoming options set in this QAuthenticator object by parsing
-    the server reply. See \l{QAuthenticator#Options} for more information
-    on incoming options.
-
-    \sa option(), QAuthenticator#Options
-*/
 QVariantHash QAuthenticator::options() const
 {
    return d ? d->options : QVariantHash();
 }
 
-/*!
-    \since 4.7
-
-    Sets the outgoing option \a opt to value \a value.
-    See \l{QAuthenticator#Options} for more information on outgoing options.
-
-    \sa options(), option(), QAuthenticator#Options
-*/
 void QAuthenticator::setOption(const QString &opt, const QVariant &value)
 {
    detach();
    d->options.insert(opt, value);
 }
 
-
-/*!
-    Returns true if the authenticator is null.
-*/
 bool QAuthenticator::isNull() const
 {
    return !d;
 }
 
+#if defined(Q_OS_WIN)
+class QNtlmWindowsHandles
+{
+ public:
+   CredHandle credHandle;
+   CtxtHandle ctxHandle;
+};
+#endif
 QAuthenticatorPrivate::QAuthenticatorPrivate()
    : method(None)
+
+#if defined(Q_OS_WIN)
+   , ntlmWindowsHandles(0)
+#endif
+
    , hasFailed(false)
    , phase(Start)
    , nonceCount(0)
@@ -240,24 +218,15 @@ QAuthenticatorPrivate::QAuthenticatorPrivate()
    nonceCount = 0;
 }
 
-#ifndef QT_NO_HTTP
-void QAuthenticatorPrivate::parseHttpResponse(const QHttpResponseHeader &header, bool isProxy)
-{
-   const QList<QPair<QString, QString> > values = header.values();
-   QList<QPair<QByteArray, QByteArray> > rawValues;
-
-   QList<QPair<QString, QString> >::const_iterator it, end;
-   for (it = values.constBegin(), end = values.constEnd(); it != end; ++it) {
-      rawValues.append(qMakePair(it->first.toLatin1(), it->second.toUtf8()));
-   }
-
-   // continue in byte array form
-   parseHttpResponse(rawValues, isProxy);
-}
-#endif
-
 QAuthenticatorPrivate::~QAuthenticatorPrivate()
 {
+
+#if defined(Q_OS_WIN)
+   if (ntlmWindowsHandles) {
+      delete ntlmWindowsHandles;
+   }
+#endif
+
 }
 
 void QAuthenticatorPrivate::updateCredentials()
@@ -271,12 +240,14 @@ void QAuthenticatorPrivate::updateCredentials()
             realm.clear();
             userDomain = user.left(separatorPosn);
             extractedUser = user.mid(separatorPosn + 1);
+
          } else {
             extractedUser = user;
             realm.clear();
             userDomain.clear();
          }
          break;
+
       default:
          userDomain.clear();
          break;
@@ -301,9 +272,11 @@ void QAuthenticatorPrivate::parseHttpResponse(const QList<QPair<QByteArray, QByt
    QByteArray headerVal;
    for (int i = 0; i < values.size(); ++i) {
       const QPair<QByteArray, QByteArray> &current = values.at(i);
+
       if (current.first.toLower() != search) {
          continue;
       }
+
       QByteArray str = current.second.toLower();
       if (method < Basic && str.startsWith("basic")) {
          method = Basic;
@@ -329,17 +302,17 @@ void QAuthenticatorPrivate::parseHttpResponse(const QList<QPair<QByteArray, QByt
             phase = Done;
          }
          break;
+
       case Ntlm:
          // #### extract from header
-         if (user.isEmpty() && password.isEmpty()) {
-            phase = Done;
-         }
          break;
+
       case DigestMd5: {
          this->options[QLatin1String("realm")] = realm = QString::fromLatin1(options.value("realm"));
          if (options.value("stale").toLower() == "true") {
             phase = Start;
          }
+
          if (user.isEmpty() && password.isEmpty()) {
             phase = Done;
          }
@@ -390,19 +363,54 @@ QByteArray QAuthenticatorPrivate::calculateResponse(const QByteArray &requestMet
       case QAuthenticatorPrivate::Ntlm:
          methodString = "NTLM ";
          if (challenge.isEmpty()) {
-            response = qNtlmPhase1().toBase64();
+
+#if defined(Q_OS_WIN)
+            QByteArray phase1Token;
+
             if (user.isEmpty()) {
-               phase = Done;
-            } else {
-               phase = Phase2;
+               // Only pull from system if no user was specified in authenticator
+               phase1Token = qNtlmPhase1_SSPI(this);
             }
+
+            if (! phase1Token.isEmpty()) {
+               response = phase1Token.toBase64();
+               phase = Phase2;
+
+            } else
+#endif
+            {
+               response = qNtlmPhase1().toBase64();
+
+               if (user.isEmpty()) {
+                  phase = Done;
+               } else {
+                  phase = Phase2;
+               }
+            }
+
          } else {
-            response = qNtlmPhase3(this, QByteArray::fromBase64(challenge)).toBase64();
-            phase = Done;
+
+#if defined(Q_OS_WIN)
+            QByteArray phase3Token;
+
+            if (ntlmWindowsHandles) {
+               phase3Token = qNtlmPhase3_SSPI(this, QByteArray::fromBase64(challenge));
+            }
+
+            if (!phase3Token.isEmpty()) {
+               response = phase3Token.toBase64();
+               phase = Done;
+            } else
+#endif
+            {
+               response = qNtlmPhase3(this, QByteArray::fromBase64(challenge)).toBase64();
+               phase = Done;
+            }
          }
 
          break;
    }
+
    return QByteArray(methodString) + response;
 }
 
@@ -415,6 +423,7 @@ QHash<QByteArray, QByteArray> QAuthenticatorPrivate::parseDigestAuthenticationCh
    // parse the challenge
    const char *d = challenge.constData();
    const char *end = d + challenge.length();
+
    while (d < end) {
       while (d < end && (*d == ' ' || *d == '\n' || *d == '\r')) {
          ++d;
@@ -423,20 +432,25 @@ QHash<QByteArray, QByteArray> QAuthenticatorPrivate::parseDigestAuthenticationCh
       while (d < end && *d != '=') {
          ++d;
       }
+
       QByteArray key = QByteArray(start, d - start);
       ++d;
       if (d >= end) {
          break;
       }
+
       bool quote = (*d == '"');
       if (quote) {
          ++d;
       }
+
       if (d >= end) {
          break;
       }
+
       start = d;
       QByteArray value;
+
       while (d < end) {
          bool backslash = false;
          if (*d == '\\' && d < end - 1) {
@@ -467,9 +481,10 @@ QHash<QByteArray, QByteArray> QAuthenticatorPrivate::parseDigestAuthenticationCh
    QByteArray qop = options.value("qop");
    if (!qop.isEmpty()) {
       QList<QByteArray> qopoptions = qop.split(',');
-      if (!qopoptions.contains("auth")) {
+      if (! qopoptions.contains("auth")) {
          return QHash<QByteArray, QByteArray>();
       }
+
       // #### can't do auth-int currently
       //         if (qop.contains("auth-int"))
       //             qop = "auth-int";
@@ -586,17 +601,21 @@ QByteArray QAuthenticatorPrivate::digestMd5Response(const QByteArray &challenge,
    credentials += "realm=\"" + realm.toLatin1() + "\", ";
    credentials += "nonce=\"" + nonce + "\", ";
    credentials += "uri=\"" + path + "\", ";
+
    if (!opaque.isEmpty()) {
       credentials += "opaque=\"" + opaque + "\", ";
    }
-   credentials += "response=\"" + response + '\"';
+
+   credentials += "response=\"" + response + '"';
+
    if (!options.value("algorithm").isEmpty()) {
       credentials += ", algorithm=" + options.value("algorithm");
    }
-   if (!options.value("qop").isEmpty()) {
+
+   if (! options.value("qop").isEmpty()) {
       credentials += ", qop=" + qop + ", ";
       credentials += "nc=" + nonceCountString + ", ";
-      credentials += "cnonce=\"" + cnonce + '\"';
+      credentials += "cnonce=\"" + cnonce + '"';
    }
 
    return credentials;
@@ -749,8 +768,8 @@ QByteArray QAuthenticatorPrivate::digestMd5Response(const QByteArray &challenge,
 
 //************************Global variables***************************
 
-const int blockSize = 64; //As per RFC2104 Block-size is 512 bits
-const int nDigestLen = 16; //Trunctaion Length of the Hmac-Md5 digest
+const int blockSize = 64;        // as per RFC2104 Block-size is 512 bits
+
 const quint8 respversion = 1;
 const quint8 hirespversion = 1;
 
@@ -826,41 +845,43 @@ static void qStreamNtlmBuffer(QDataStream &ds, const QByteArray &s)
    ds.writeRawData(s.constData(), s.size());
 }
 
-
 static void qStreamNtlmString(QDataStream &ds, const QString &s, bool unicode)
 {
-   if (!unicode) {
+   if (! unicode) {
       qStreamNtlmBuffer(ds, s.toLatin1());
       return;
    }
-   const ushort *d = s.utf16();
-   for (int i = 0; i < s.length(); ++i) {
-      ds << d[i];
+
+   const QString16 &tmp = s.toUtf16();
+   auto ptr = tmp.constData();
+
+   for (int i = 0; i < tmp.size_storage(); ++i) {
+      ds << ptr[i];
    }
 }
-
-
 
 static int qEncodeNtlmBuffer(QNtlmBuffer &buf, int offset, const QByteArray &s)
 {
    buf.len = s.size();
    buf.maxLen = buf.len;
    buf.offset = (offset + 1) & ~1;
+
    return buf.offset + buf.len;
 }
 
 
 static int qEncodeNtlmString(QNtlmBuffer &buf, int offset, const QString &s, bool unicode)
 {
-   if (!unicode) {
+   if (! unicode) {
       return qEncodeNtlmBuffer(buf, offset, s.toLatin1());
    }
+
    buf.len = 2 * s.length();
    buf.maxLen = buf.len;
    buf.offset = (offset + 1) & ~1;
+
    return buf.offset + buf.len;
 }
-
 
 static QDataStream &operator<<(QDataStream &s, const QNtlmBuffer &b)
 {
@@ -877,12 +898,13 @@ static QDataStream &operator>>(QDataStream &s, QNtlmBuffer &b)
 
 class QNtlmPhase1Block : public QNtlmPhase1BlockBase
 {
-   // request
  public:
+   // request
+
    QNtlmPhase1Block() {
       qstrncpy(magic, "NTLMSSP", 8);
       type = 1;
-      flags = NTLMSSP_NEGOTIATE_UNICODE | NTLMSSP_NEGOTIATE_NTLM | NTLMSSP_REQUEST_TARGET;
+      flags = NTLMSSP_NEGOTIATE_UNICODE | NTLMSSP_NEGOTIATE_NTLM | NTLMSSP_REQUEST_TARGET | NTLMSSP_NEGOTIATE_ALWAYS_SIGN | NTLMSSP_NEGOTIATE_NTLM2;
    }
 
    // extracted
@@ -892,8 +914,9 @@ class QNtlmPhase1Block : public QNtlmPhase1BlockBase
 
 class QNtlmPhase2Block : public QNtlmPhase2BlockBase
 {
-   // challenge
  public:
+   // challenge
+
    QNtlmPhase2Block() {
       magic[0] = 0;
       type = 0xffffffff;
@@ -903,8 +926,6 @@ class QNtlmPhase2Block : public QNtlmPhase2BlockBase
    QString targetNameStr, targetInfoStr;
    QByteArray targetInfoBuff;
 };
-
-
 
 class QNtlmPhase3Block : public QNtlmPhase3BlockBase    // response
 {
@@ -931,20 +952,23 @@ static QDataStream &operator<<(QDataStream &s, const QNtlmPhase1Block &b)
    s << b.flags;
    s << b.domain;
    s << b.workstation;
+
    if (!b.domainStr.isEmpty()) {
       qStreamNtlmString(s, b.domainStr, unicode);
    }
+
    if (!b.workstationStr.isEmpty()) {
       qStreamNtlmString(s, b.workstationStr, unicode);
    }
+
    return s;
 }
-
 
 static QDataStream &operator<<(QDataStream &s, const QNtlmPhase3Block &b)
 {
    bool unicode = (b.flags & NTLMSSP_NEGOTIATE_UNICODE);
    s.writeRawData(b.magic, sizeof(b.magic));
+
    s << b.type;
    s << b.lmResponse;
    s << b.ntlmResponse;
@@ -954,13 +978,13 @@ static QDataStream &operator<<(QDataStream &s, const QNtlmPhase3Block &b)
    s << b.sessionKey;
    s << b.flags;
 
-   if (!b.domainStr.isEmpty()) {
+   if (! b.domainStr.isEmpty()) {
       qStreamNtlmString(s, b.domainStr, unicode);
    }
 
    qStreamNtlmString(s, b.userStr, unicode);
 
-   if (!b.workstationStr.isEmpty()) {
+   if (! b.workstationStr.isEmpty()) {
       qStreamNtlmString(s, b.workstationStr, unicode);
    }
 
@@ -968,110 +992,35 @@ static QDataStream &operator<<(QDataStream &s, const QNtlmPhase3Block &b)
    qStreamNtlmBuffer(s, b.lmResponseBuf);
    qStreamNtlmBuffer(s, b.ntlmResponseBuf);
 
-
    return s;
 }
-
 
 static QByteArray qNtlmPhase1()
 {
    QByteArray rc;
    QDataStream ds(&rc, QIODevice::WriteOnly);
    ds.setByteOrder(QDataStream::LittleEndian);
+
    QNtlmPhase1Block pb;
    ds << pb;
+
    return rc;
 }
-
 
 static QByteArray qStringAsUcs2Le(const QString &src)
 {
-   QByteArray rc(2 * src.length(), 0);
-   const unsigned short *s = src.utf16();
-   unsigned short *d = (unsigned short *)rc.data();
-   for (int i = 0; i < src.length(); ++i) {
-      d[i] = qToLittleEndian(s[i]);
-   }
-   return rc;
+   static QTextCodec *codec = QTextCodec::codecForName("UTF-16LE");
+   return codec->fromUnicode(src);
 }
 
-
-static QString qStringFromUcs2Le(const QByteArray &src)
+static QString qStringFromUcs2Le(QByteArray src)
 {
    Q_ASSERT(src.size() % 2 == 0);
-   unsigned short *d = (unsigned short *)src.data();
-   for (int i = 0; i < src.length() / 2; ++i) {
-      d[i] = qFromLittleEndian(d[i]);
-   }
-   return QString((const QChar *)src.data(), src.size() / 2);
+
+   static QTextCodec *codec = QTextCodec::codecForName("UTF-16LE");
+   return codec->toUnicode(src);
 }
 
-#ifdef NTLMV1_CLIENT
-static QByteArray qEncodeNtlmResponse(const QAuthenticatorPrivate *ctx, const QNtlmPhase2Block &ch)
-{
-   QCryptographicHash md4(QCryptographicHash::Md4);
-   QByteArray asUcs2Le = qStringAsUcs2Le(ctx->password);
-   md4.addData(asUcs2Le.data(), asUcs2Le.size());
-
-   unsigned char md4hash[22];
-   memset(md4hash, 0, sizeof(md4hash));
-   QByteArray hash = md4.result();
-   Q_ASSERT(hash.size() == 16);
-   memcpy(md4hash, hash.constData(), 16);
-
-   QByteArray rc(24, 0);
-   deshash((unsigned char *)rc.data(), md4hash, (unsigned char *)ch.challenge);
-   deshash((unsigned char *)rc.data() + 8, md4hash + 7, (unsigned char *)ch.challenge);
-   deshash((unsigned char *)rc.data() + 16, md4hash + 14, (unsigned char *)ch.challenge);
-
-   hash.fill(0);
-   return rc;
-}
-
-
-static QByteArray qEncodeLmResponse(const QAuthenticatorPrivate *ctx, const QNtlmPhase2Block &ch)
-{
-   QByteArray hash(21, 0);
-   QByteArray key(14, 0);
-   qstrncpy(key.data(), ctx->password.toUpper().toLatin1(), 14);
-   const char *block = "KGS!@#$%";
-
-   deshash((unsigned char *)hash.data(), (unsigned char *)key.data(), (unsigned char *)block);
-   deshash((unsigned char *)hash.data() + 8, (unsigned char *)key.data() + 7, (unsigned char *)block);
-   key.fill(0);
-
-   QByteArray rc(24, 0);
-   deshash((unsigned char *)rc.data(), (unsigned char *)hash.data(), ch.challenge);
-   deshash((unsigned char *)rc.data() + 8, (unsigned char *)hash.data() + 7, ch.challenge);
-   deshash((unsigned char *)rc.data() + 16, (unsigned char *)hash.data() + 14, ch.challenge);
-
-   hash.fill(0);
-   return rc;
-}
-#endif
-
-/*********************************************************************
-* Function Name: qEncodeHmacMd5
-* Params:
-*    key:   Type - QByteArray
-*         - It is the Authentication key
-*    message:   Type - QByteArray
-*         - This is the actual message which will be encoded
-*           using HMacMd5 hash algorithm
-*
-* Return Value:
-*    hmacDigest:   Type - QByteArray
-*
-* Description:
-*    This function will be used to encode the input message using
-*    HMacMd5 hash algorithm.
-*
-*    As per the RFC2104 the HMacMd5 algorithm can be specified
-*        ---------------------------------------
-*         MD5(K XOR opad, MD5(K XOR ipad, text))
-*        ---------------------------------------
-*
-*********************************************************************/
 QByteArray qEncodeHmacMd5(QByteArray &key, const QByteArray &message)
 {
    Q_ASSERT_X(!(message.isEmpty()), "qEncodeHmacMd5", "Empty message check");
@@ -1129,15 +1078,17 @@ QByteArray qEncodeHmacMd5(QByteArray &key, const QByteArray &message)
 
    /*MD5 hash always returns 16 byte digest only and HMAC-MD5 spec
      (RFC 2104) also says digest length should be 16 bytes*/
+
    return hmacDigest;
 }
 
-static QByteArray qCreatev2Hash(const QAuthenticatorPrivate *ctx,
-                                QNtlmPhase3Block *phase3)
+static QByteArray qCreatev2Hash(const QAuthenticatorPrivate *ctx, QNtlmPhase3Block *phase3)
 {
    Q_ASSERT(phase3 != 0);
+
    // since v2 Hash is need for both NTLMv2 and LMv2 it is calculated
    // only once and stored and reused
+
    if (phase3->v2Hash.size() == 0) {
       QCryptographicHash md4(QCryptographicHash::Md4);
       QByteArray passUnicode = qStringAsUcs2Le(ctx->password);
@@ -1145,13 +1096,13 @@ static QByteArray qCreatev2Hash(const QAuthenticatorPrivate *ctx,
 
       QByteArray hashKey = md4.result();
       Q_ASSERT(hashKey.size() == 16);
+
       // Assuming the user and domain is always unicode in challenge
-      QByteArray message =
-         qStringAsUcs2Le(ctx->extractedUser.toUpper()) +
-         qStringAsUcs2Le(phase3->domainStr);
+      QByteArray message = qStringAsUcs2Le(ctx->extractedUser.toUpper()) + qStringAsUcs2Le(phase3->domainStr);
 
       phase3->v2Hash = qEncodeHmacMd5(hashKey, message);
    }
+
    return phase3->v2Hash;
 }
 
@@ -1217,18 +1168,18 @@ static QByteArray qEncodeNtlmv2Response(const QAuthenticatorPrivate *ctx,
    //if server sends time, use it instead of current time
    if (timeArray.size()) {
       ds.writeRawData(timeArray.constData(), timeArray.size());
+
    } else {
-      QDateTime currentTime(QDate::currentDate(),
-                            QTime::currentTime(), Qt::UTC);
+      QDateTime currentTime(QDate::currentDate(), QTime::currentTime(), Qt::UTC);
 
       // number of seconds between 1601 and epoc(1970)
       // 369 years, 89 leap years
       // ((369 * 365) + 89) * 24 * 3600 = 11644473600
 
-      time = Q_UINT64_C(currentTime.toTime_t() + 11644473600);
+      time = currentTime.toTime_t() + Q_UINT64_C(11644473600);
 
       // represented as 100 nano seconds
-      time = Q_UINT64_C(time * 10000000);
+      time = time * Q_UINT64_C(10000000);
       ds << time;
    }
 
@@ -1339,9 +1290,17 @@ static QByteArray qNtlmPhase3(QAuthenticatorPrivate *ctx, const QByteArray &phas
    ds.setByteOrder(QDataStream::LittleEndian);
    QNtlmPhase3Block pb;
 
+   // set NTLMv2
+   if (ch.flags & NTLMSSP_NEGOTIATE_NTLM2) {
+      pb.flags |= NTLMSSP_NEGOTIATE_NTLM2;
+   }
+   // set Always Sign
+   if (ch.flags & NTLMSSP_NEGOTIATE_ALWAYS_SIGN) {
+      pb.flags |= NTLMSSP_NEGOTIATE_ALWAYS_SIGN;
+   }
    bool unicode = ch.flags & NTLMSSP_NEGOTIATE_UNICODE;
 
-   pb.flags = NTLMSSP_NEGOTIATE_NTLM;
+
    if (unicode) {
       pb.flags |= NTLMSSP_NEGOTIATE_UNICODE;
    } else {
@@ -1368,25 +1327,17 @@ static QByteArray qNtlmPhase3(QAuthenticatorPrivate *ctx, const QByteArray &phas
    pb.workstationStr = ctx->workstation;
 
    // Get LM response
-#ifdef NTLMV1_CLIENT
-   pb.lmResponseBuf = qEncodeLmResponse(ctx, ch);
-#else
    if (ch.targetInfo.len > 0) {
       pb.lmResponseBuf = QByteArray();
    } else {
       pb.lmResponseBuf = qEncodeLmv2Response(ctx, ch, &pb);
    }
-#endif
+
    offset = qEncodeNtlmBuffer(pb.lmResponse, offset, pb.lmResponseBuf);
 
    // Get NTLM response
-#ifdef NTLMV1_CLIENT
-   pb.ntlmResponseBuf = qEncodeNtlmResponse(ctx, ch);
-#else
    pb.ntlmResponseBuf = qEncodeNtlmv2Response(ctx, ch, &pb);
-#endif
    offset = qEncodeNtlmBuffer(pb.ntlmResponse, offset, pb.ntlmResponseBuf);
-
 
    // Encode and send
    ds << pb;
@@ -1394,6 +1345,153 @@ static QByteArray qNtlmPhase3(QAuthenticatorPrivate *ctx, const QByteArray &phas
    return rc;
 }
 
+#if defined(Q_OS_WIN)
 
+static HMODULE securityDLLHandle = NULL;
+static PSecurityFunctionTable pSecurityFunctionTable = NULL;
 
-QT_END_NAMESPACE
+static bool q_NTLM_SSPI_library_load()
+{
+   QMutexLocker locker(QMutexPool::globalInstanceGet((void *)&pSecurityFunctionTable));
+   if (pSecurityFunctionTable == NULL) {
+      securityDLLHandle = LoadLibrary(L"secur32.dll");
+      if (securityDLLHandle != NULL) {
+#if defined(Q_OS_WINCE)
+         INIT_SECURITY_INTERFACE pInitSecurityInterface =
+            (INIT_SECURITY_INTERFACE)GetProcAddress(securityDLLHandle,
+                  L"InitSecurityInterfaceW");
+#else
+         INIT_SECURITY_INTERFACE pInitSecurityInterface =
+            (INIT_SECURITY_INTERFACE)GetProcAddress(securityDLLHandle,
+                  "InitSecurityInterfaceW");
+#endif
+         if (pInitSecurityInterface != NULL) {
+            pSecurityFunctionTable = pInitSecurityInterface();
+         }
+      }
+   }
+   if (pSecurityFunctionTable == NULL) {
+      return false;
+   }
+   return true;
+}
+// Phase 1:
+static QByteArray qNtlmPhase1_SSPI(QAuthenticatorPrivate *ctx)
+{
+   QByteArray result;
+
+   if (!q_NTLM_SSPI_library_load()) {
+      return result;
+   }
+
+   // 1. The client obtains a representation of the credential set
+   // for the user via the SSPI AcquireCredentialsHandle function.
+   if (!ctx->ntlmWindowsHandles) {
+      ctx->ntlmWindowsHandles = new QNtlmWindowsHandles;
+   }
+   memset(&ctx->ntlmWindowsHandles->credHandle, 0, sizeof(CredHandle));
+   TimeStamp tsDummy;
+   SECURITY_STATUS secStatus = pSecurityFunctionTable->AcquireCredentialsHandle(
+                                  NULL, (SEC_WCHAR *)L"NTLM", SECPKG_CRED_OUTBOUND, NULL, NULL,
+                                  NULL, NULL, &ctx->ntlmWindowsHandles->credHandle, &tsDummy);
+   if (secStatus != SEC_E_OK) {
+      delete ctx->ntlmWindowsHandles;
+      ctx->ntlmWindowsHandles = 0;
+      return result;
+   }
+   // 2. The client calls the SSPI InitializeSecurityContext function
+   // to obtain an authentication request token (in our case, a Type 1 message).
+   // The client sends this token to the server.
+   SecBufferDesc desc;
+   SecBuffer buf;
+   desc.ulVersion = SECBUFFER_VERSION;
+   desc.cBuffers  = 1;
+   desc.pBuffers  = &buf;
+   buf.cbBuffer   = 0;
+   buf.BufferType = SECBUFFER_TOKEN;
+   buf.pvBuffer   = NULL;
+   ULONG attrs;
+   secStatus = pSecurityFunctionTable->InitializeSecurityContext(&ctx->ntlmWindowsHandles->credHandle, NULL,
+               const_cast<SEC_WCHAR *>(L"") /* host */,
+               ISC_REQ_ALLOCATE_MEMORY,
+               0, SECURITY_NETWORK_DREP,
+               NULL, 0,
+               &ctx->ntlmWindowsHandles->ctxHandle, &desc,
+               &attrs, &tsDummy);
+   if (secStatus == SEC_I_COMPLETE_AND_CONTINUE ||
+         secStatus == SEC_I_CONTINUE_NEEDED) {
+      pSecurityFunctionTable->CompleteAuthToken(&ctx->ntlmWindowsHandles->ctxHandle, &desc);
+   } else if (secStatus != SEC_E_OK) {
+      if ((const char *)buf.pvBuffer) {
+         pSecurityFunctionTable->FreeContextBuffer(buf.pvBuffer);
+      }
+      pSecurityFunctionTable->FreeCredentialsHandle(&ctx->ntlmWindowsHandles->credHandle);
+      delete ctx->ntlmWindowsHandles;
+      ctx->ntlmWindowsHandles = 0;
+      return result;
+   }
+
+   result = QByteArray((const char *)buf.pvBuffer, buf.cbBuffer);
+   pSecurityFunctionTable->FreeContextBuffer(buf.pvBuffer);
+   return result;
+}
+// Phase 2:
+// 3. The server receives the token from the client, and uses it as input to the
+// AcceptSecurityContext SSPI function. This creates a local security context on
+// the server to represent the client, and yields an authentication response token
+// (the Type 2 message), which is sent to the client.
+
+// Phase 3:
+static QByteArray qNtlmPhase3_SSPI(QAuthenticatorPrivate *ctx, const QByteArray &phase2data)
+{
+   // 4. The client receives the response token from the server and calls
+   // InitializeSecurityContext again, passing the server's token as input.
+   // This provides us with another authentication request token (the Type 3 message).
+   // The return value indicates that the security context was successfully initialized;
+   // the token is sent to the server.
+
+   QByteArray result;
+
+   if (pSecurityFunctionTable == NULL) {
+      return result;
+   }
+
+   SecBuffer type_2, type_3;
+   SecBufferDesc type_2_desc, type_3_desc;
+   ULONG attrs;
+   TimeStamp tsDummy; // For Windows 9x compatibility of SPPI calls
+
+   type_2_desc.ulVersion  = type_3_desc.ulVersion  = SECBUFFER_VERSION;
+   type_2_desc.cBuffers   = type_3_desc.cBuffers   = 1;
+   type_2_desc.pBuffers   = &type_2;
+   type_3_desc.pBuffers   = &type_3;
+
+   type_2.BufferType = SECBUFFER_TOKEN;
+   type_2.pvBuffer   = (PVOID)phase2data.data();
+   type_2.cbBuffer   = phase2data.length();
+   type_3.BufferType = SECBUFFER_TOKEN;
+   type_3.pvBuffer   = 0;
+   type_3.cbBuffer   = 0;
+
+   SECURITY_STATUS secStatus = pSecurityFunctionTable->InitializeSecurityContext(&ctx->ntlmWindowsHandles->credHandle,
+                               &ctx->ntlmWindowsHandles->ctxHandle,
+                               const_cast<SEC_WCHAR *>(L"") /* host */,
+                               ISC_REQ_ALLOCATE_MEMORY,
+                               0, SECURITY_NETWORK_DREP, &type_2_desc,
+                               0, &ctx->ntlmWindowsHandles->ctxHandle, &type_3_desc,
+                               &attrs, &tsDummy);
+
+   if (secStatus == SEC_E_OK && ((const char *)type_3.pvBuffer)) {
+      result = QByteArray((const char *)type_3.pvBuffer, type_3.cbBuffer);
+      pSecurityFunctionTable->FreeContextBuffer(type_3.pvBuffer);
+   }
+
+   pSecurityFunctionTable->FreeCredentialsHandle(&ctx->ntlmWindowsHandles->credHandle);
+   pSecurityFunctionTable->DeleteSecurityContext(&ctx->ntlmWindowsHandles->ctxHandle);
+   delete ctx->ntlmWindowsHandles;
+   ctx->ntlmWindowsHandles = 0;
+
+   return result;
+}
+#endif
+

@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -77,34 +74,34 @@ class QAudioOutputPrivate : public QAbstractAudioOutput
    QAudio::Error    errorCode;
    QAudio::State    stateCode;
 
-   QAudioOutputPrivate(const QByteArray &device, const QAudioFormat &format);
+   QAudioOutputPrivate(const QString &device, const QAudioFormat &format);
    ~QAudioOutputPrivate();
 
    bool open();
    void close();
 
-   QAudioFormat format() const;
+   QAudioFormat format() const override;
 
-   QIODevice *start(QIODevice *device);
-   void stop();
-   void reset();
-   void suspend();
-   void resume();
+   QIODevice *start(QIODevice *device) override;
+   void stop() override;
+   void reset() override;
+   void suspend() override;
+   void resume() override;
 
-   int bytesFree() const;
-   int periodSize() const;
+   int bytesFree() const override;
+   int periodSize() const override;
 
-   void setBufferSize(int value);
-   int bufferSize() const;
+   void setBufferSize(int value) override;
+   int bufferSize() const override;
 
-   void setNotifyInterval(int milliSeconds);
-   int notifyInterval() const;
+   void setNotifyInterval(int milliSeconds) override;
+   int notifyInterval() const override;
 
-   qint64 processedUSecs() const;
-   qint64 elapsedUSecs() const;
+   qint64 processedUSecs() const override;
+   qint64 elapsedUSecs() const override;
 
-   QAudio::Error error() const;
-   QAudio::State state() const;
+   QAudio::Error error() const override;
+   QAudio::State state() const override;
 
    void audioThreadStart();
    void audioThreadStop();

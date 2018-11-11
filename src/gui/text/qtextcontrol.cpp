@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -34,7 +31,6 @@
 #include <qdebug.h>
 #include <qmime.h>
 #include <qdrag.h>
-#include <qconfig.h>
 #include <qclipboard.h>
 #include <qmenu.h>
 #include <qstyle.h>
@@ -71,11 +67,10 @@
 #include <qshortcutmap_p.h>
 #include <qkeysequence.h>
 
-#define ACCEL_KEY(k) (! qApp->d_func()->shortcutMap.hasShortcutForKeySequence(k) ? QLatin1Char('\t') + QString(QKeySequence(k)) : QString())
-
+#define ACCEL_KEY(k)   (! qApp->d_func()->shortcutMap.hasShortcutForKeySequence(k) ?  \
+                        QLatin1Char('\t') + QKeySequence(k).toString(QKeySequence::NativeText) : QString())
 #else
-#define ACCEL_KEY(k) QString()
-
+#define ACCEL_KEY(k)   QString()
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -132,6 +127,7 @@ bool QTextControlPrivate::cursorMoveKeyEvent(QKeyEvent *e)
 #endif
 
    Q_Q(QTextControl);
+
    if (cursor.isNull()) {
       return false;
    }
@@ -142,9 +138,10 @@ bool QTextControlPrivate::cursorMoveKeyEvent(QKeyEvent *e)
    QTextCursor::MoveMode mode = QTextCursor::MoveAnchor;
    QTextCursor::MoveOperation op = QTextCursor::NoMove;
 
-   if (false) {
-   }
-#ifndef QT_NO_SHORTCUT
+#ifdef QT_NO_SHORTCUT
+  return false;
+
+#else
    if (e == QKeySequence::MoveToNextChar) {
       op = QTextCursor::Right;
    } else if (e == QKeySequence::MoveToPreviousChar) {
@@ -214,13 +211,17 @@ bool QTextControlPrivate::cursorMoveKeyEvent(QKeyEvent *e)
       op = QTextCursor::EndOfLine;
    } else if (e == QKeySequence::MoveToStartOfDocument) {
       op = QTextCursor::Start;
+
    } else if (e == QKeySequence::MoveToEndOfDocument) {
       op = QTextCursor::End;
-   }
-#endif // QT_NO_SHORTCUT
-   else {
+
+   } else {
       return false;
+
    }
+
+#endif // QT_NO_SHORTCUT
+
 
    // Except for pageup and pagedown, Mac OS X has very different behavior, we don't do it all, but
    // here's the breakdown:
@@ -260,7 +261,6 @@ bool QTextControlPrivate::cursorMoveKeyEvent(QKeyEvent *e)
    }
 
    selectionChanged(/*forceEmitSelectionChanged =*/(mode == QTextCursor::KeepAnchor));
-
    repaintOldAndNewSelection(oldSelection);
 
    return true;
@@ -1297,18 +1297,22 @@ void QTextControlPrivate::keyPressEvent(QKeyEvent *e)
    else if (e == QKeySequence::Delete) {
       QTextCursor localCursor = cursor;
       localCursor.deleteChar();
+
    } else if (e == QKeySequence::DeleteEndOfWord) {
       if (!cursor.hasSelection()) {
          cursor.movePosition(QTextCursor::NextWord, QTextCursor::KeepAnchor);
       }
       cursor.removeSelectedText();
+
    } else if (e == QKeySequence::DeleteStartOfWord) {
       if (!cursor.hasSelection()) {
          cursor.movePosition(QTextCursor::PreviousWord, QTextCursor::KeepAnchor);
       }
       cursor.removeSelectedText();
+
    } else if (e == QKeySequence::DeleteEndOfLine) {
       QTextBlock block = cursor.block();
+
       if (cursor.position() == block.position() + block.length() - 2) {
          cursor.movePosition(QTextCursor::Right, QTextCursor::KeepAnchor);
       } else {
@@ -1317,6 +1321,7 @@ void QTextControlPrivate::keyPressEvent(QKeyEvent *e)
       cursor.removeSelectedText();
    }
 #endif // QT_NO_SHORTCUT
+
    else {
       goto process;
    }
@@ -1324,17 +1329,19 @@ void QTextControlPrivate::keyPressEvent(QKeyEvent *e)
 
 process: {
       QString text = e->text();
-      if (!text.isEmpty() && (text.at(0).isPrint() || text.at(0) == QLatin1Char('\t'))) {
-         if (overwriteMode
-               // no need to call deleteChar() if we have a selection, insertText
-               // does it already
-               && !cursor.hasSelection()
-               && !cursor.atBlockEnd()) {
+
+      if (! text.isEmpty() && (text.first().isPrint() || text.first() == '\t')) {
+
+         if (overwriteMode && ! cursor.hasSelection() && !cursor.atBlockEnd()) {
+            // no need to call deleteChar() if we have a selection, insertText
+            // does it already
+
             cursor.deleteChar();
          }
 
          cursor.insertText(text);
          selectionChanged();
+
       } else {
          e->ignore();
          return;
@@ -1342,7 +1349,6 @@ process: {
    }
 
 accept:
-
    e->accept();
    cursorOn = true;
 
@@ -1444,11 +1450,13 @@ static QRectF boundingRectOfFloatsInSelection(const QTextCursor &cursor)
    QTextFrame *frame = cursor.currentFrame();
    const QList<QTextFrame *> children = frame->childFrames();
 
-   const QList<QTextFrame *>::ConstIterator firstFrame = qLowerBound(children.constBegin(), children.constEnd(),
+   const QList<QTextFrame *>::const_iterator firstFrame = std::lower_bound(children.constBegin(), children.constEnd(),
          cursor.selectionStart(), firstFramePosLessThanCursorPos);
-   const QList<QTextFrame *>::ConstIterator lastFrame = qUpperBound(children.constBegin(), children.constEnd(),
+
+   const QList<QTextFrame *>::const_iterator lastFrame = std::upper_bound(children.constBegin(), children.constEnd(),
          cursor.selectionEnd(), cursorPosLessThanLastFramePos);
-   for (QList<QTextFrame *>::ConstIterator it = firstFrame; it != lastFrame; ++it) {
+
+   for (QList<QTextFrame *>::const_iterator it = firstFrame; it != lastFrame; ++it) {
       if ((*it)->frameFormat().position() != QTextFrameFormat::InFlow) {
          r |= frame->document()->documentLayout()->frameBoundingRect(*it);
       }
@@ -1765,7 +1773,7 @@ void QTextControlPrivate::mouseReleaseEvent(QEvent *e, Qt::MouseButton button, c
 #ifndef QT_NO_CLIPBOARD
       setClipboardSelection();
       selectionChanged(true);
-   } else if (button == Qt::MidButton
+   } else if (button == Qt::MiddleButton
               && (interactionFlags & Qt::TextEditable)
               && QApplication::clipboard()->supportsSelection()) {
       setCursorPosition(pos);
@@ -2360,7 +2368,8 @@ void QTextControl::setExtraSelections(const QList<QTextEdit::ExtraSelection> &se
 {
    Q_D(QTextControl);
 
-   QHash<int, int> hash;
+   QMultiHash<int, int> hash;
+
    for (int i = 0; i < d->extraSelections.count(); ++i) {
       const QAbstractTextDocumentLayout::Selection &esel = d->extraSelections.at(i);
       hash.insertMulti(esel.cursor.anchor(), i);
@@ -2368,26 +2377,42 @@ void QTextControl::setExtraSelections(const QList<QTextEdit::ExtraSelection> &se
 
    for (int i = 0; i < selections.count(); ++i) {
       const QTextEdit::ExtraSelection &sel = selections.at(i);
-      QHash<int, int>::iterator it = hash.find(sel.cursor.anchor());
-      if (it != hash.end()) {
-         const QAbstractTextDocumentLayout::Selection &esel = d->extraSelections.at(it.value());
-         if (esel.cursor.position() == sel.cursor.position()
-               && esel.format == sel.format) {
-            hash.erase(it);
-            continue;
+
+      int key   = sel.cursor.anchor();
+      auto iter = hash.find(key);
+
+      bool okToAdd = true;
+
+      while (iter != hash.end() && iter.key() == key) {
+         // check each potetial match
+         const QAbstractTextDocumentLayout::Selection &esel = d->extraSelections.at(iter.value());
+
+         if (esel.cursor.position() == sel.cursor.position() && esel.format == sel.format) {
+            iter = hash.erase(iter);
+            okToAdd = false;
+
+         } else {
+            ++iter;
          }
       }
-      QRectF r = selectionRect(sel.cursor);
-      if (sel.format.boolProperty(QTextFormat::FullWidthSelection)) {
-         r.setLeft(0);
-         r.setWidth(qreal(INT_MAX));
+
+      if (okToAdd) {
+         // new selection
+         QRectF r = selectionRect(sel.cursor);
+
+         if (sel.format.boolProperty(QTextFormat::FullWidthSelection)) {
+            r.setLeft(0);
+            r.setWidth(qreal(INT_MAX));
+         }
+
+         emit updateRequest(r);
       }
-      emit updateRequest(r);
    }
 
-   for (QHash<int, int>::iterator it = hash.begin(); it != hash.end(); ++it) {
-      const QAbstractTextDocumentLayout::Selection &esel = d->extraSelections.at(it.value());
+   for (auto &item : hash) {
+      const QAbstractTextDocumentLayout::Selection &esel = d->extraSelections.at(item);
       QRectF r = selectionRect(esel.cursor);
+
       if (esel.format.boolProperty(QTextFormat::FullWidthSelection)) {
          r.setLeft(0);
          r.setWidth(qreal(INT_MAX));
@@ -2396,6 +2421,7 @@ void QTextControl::setExtraSelections(const QList<QTextEdit::ExtraSelection> &se
    }
 
    d->extraSelections.resize(selections.count());
+
    for (int i = 0; i < selections.count(); ++i) {
       d->extraSelections[i].cursor = selections.at(i).cursor;
       d->extraSelections[i].format = selections.at(i).format;
@@ -2599,7 +2625,7 @@ void QTextControl::insertFromMimeData(const QMimeData *source)
    } else {
       QString text = source->text();
 
-      if (! text.isNull()) {
+      if (! text.isEmpty()) {
          fragment = QTextDocumentFragment::fromPlainText(text);
          hasData = true;
       }
@@ -2628,7 +2654,7 @@ bool QTextControl::findNextPrevAnchor(const QTextCursor &startCursor, bool next,
       const int startPos = startCursor.selectionEnd();
 
       QTextBlock block = d->doc->findBlock(startPos);
-      QTextBlock::Iterator it = block.begin();
+      QTextBlock::iterator it = block.begin();
 
       while (!it.atEnd() && it.fragment().position() < startPos) {
          ++it;
@@ -2681,15 +2707,15 @@ bool QTextControl::findNextPrevAnchor(const QTextCursor &startCursor, bool next,
       }
 
       QTextBlock block = d->doc->findBlock(startPos);
-      QTextBlock::Iterator blockStart = block.begin();
-      QTextBlock::Iterator it = block.end();
+      QTextBlock::iterator blockStart = block.begin();
+      QTextBlock::iterator it = block.end();
 
       if (startPos == block.position()) {
          it = block.begin();
       } else {
          do {
             if (it == blockStart) {
-               it = QTextBlock::Iterator();
+               it = QTextBlock::iterator();
                block = QTextBlock();
             } else {
                --it;
@@ -2712,7 +2738,7 @@ bool QTextControl::findNextPrevAnchor(const QTextCursor &startCursor, bool next,
                }
 
                if (it == blockStart) {
-                  it = QTextBlock::Iterator();
+                  it = QTextBlock::iterator();
                } else {
                   --it;
                }
@@ -2732,7 +2758,7 @@ bool QTextControl::findNextPrevAnchor(const QTextCursor &startCursor, bool next,
                }
 
                if (it == blockStart) {
-                  it = QTextBlock::Iterator();
+                  it = QTextBlock::iterator();
                } else {
                   --it;
                }
@@ -2785,8 +2811,8 @@ void QTextControlPrivate::activateLinkUnderCursor(QString href)
       QTextBlock block = cursor.block();
       const int cursorPos = cursor.position();
 
-      QTextBlock::Iterator it = block.begin();
-      QTextBlock::Iterator linkFragment;
+      QTextBlock::iterator it = block.begin();
+      QTextBlock::iterator linkFragment;
 
       for (; !it.atEnd(); ++it) {
          QTextFragment fragment = it.fragment();
@@ -2832,7 +2858,7 @@ void QTextControlPrivate::activateLinkUnderCursor(QString href)
 
 #ifndef QT_NO_DESKTOPSERVICES
    if (openExternalLinks) {
-      QDesktopServices::openUrl(href);
+      QDesktopServices::openUrl(QUrl(href));
    } else
 #endif
       emit q_func()->linkActivated(href);
@@ -2984,7 +3010,7 @@ QPointF QTextControl::anchorPosition(const QString &name) const
          break;
       }
 
-      for (QTextBlock::Iterator it = block.begin(); !it.atEnd(); ++it) {
+      for (QTextBlock::iterator it = block.begin(); !it.atEnd(); ++it) {
          QTextFragment fragment = it.fragment();
          format = fragment.charFormat();
          if (format.isAnchor() && format.anchorNames().contains(name)) {
@@ -3010,6 +3036,7 @@ bool QTextControl::find(const QString &exp, QTextDocument::FindFlags options)
 {
    Q_D(QTextControl);
    QTextCursor search = d->doc->find(exp, d->cursor, options);
+
    if (search.isNull()) {
       return false;
    }
@@ -3017,8 +3044,6 @@ bool QTextControl::find(const QString &exp, QTextDocument::FindFlags options)
    setTextCursor(search);
    return true;
 }
-
-
 
 void QTextControlPrivate::append(const QString &text, Qt::TextFormat format)
 {

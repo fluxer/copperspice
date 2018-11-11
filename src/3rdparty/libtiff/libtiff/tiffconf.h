@@ -1,13 +1,39 @@
+/***********************************************************************
+*
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
+* All rights reserved.
+*
+* This file is part of CopperSpice.
+*
+* CopperSpice is free software. You can redistribute it and/or
+* modify it under the terms of the GNU Lesser General Public License
+* version 2.1 as published by the Free Software Foundation.
+*
+* CopperSpice is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+*
+* <http://www.gnu.org/licenses/>.
+*
+***********************************************************************/
+
 /*
-  Configuration defines for Qt.
-  This file maintained for backward compatibility. Do not use definitions
-  from this file in your programs.
+  Configuration defines for CopperSpice.
+  This file maintained for backward compatibility. Do not use definitions from this file in your programs.
 */
 
 #ifndef _TIFFCONF_
 #define _TIFFCONF_
 
 #include <qglobal.h>
+
+#ifdef _MSC_VER
+#include <basetsd.h>
+typedef SSIZE_T ssize_t;
+#endif
 
 /* Signed 16-bit type */
 #define TIFF_INT16_T qint16
@@ -48,25 +74,17 @@
 /* Define to 1 if the system has the type `int8'. */
 /* #undef HAVE_INT8 */
 
-/* The size of a `int', as computed by sizeof. */
-#define SIZEOF_INT 4
-
-/* The size of a `long', as computed by sizeof. */
-#if LONG_MAX == INT64_MAX
-#define SIZEOF_LONG 8
-#else
-#define SIZEOF_LONG 4
-#endif
-
 /* Compatibility stuff. */
 
-/* Define as 0 or 1 according to the floating point format suported by the  machine */
+/* Define as 0 or 1 according to the floating point format suported by the
+   machine */
 #define HAVE_IEEEFP 1
 
 /* Set the native cpu bit order (FILLORDER_LSB2MSB or FILLORDER_MSB2LSB) */
 #define HOST_FILLORDER FILLORDER_LSB2MSB
 
-/* Native cpu byte order: 1 if big-endian (Motorola) or 0 if little-endian (Intel) */
+/* Native cpu byte order: 1 if big-endian (Motorola) or 0 if little-endian
+   (Intel) */
 #if (Q_BYTE_ORDER == Q_BIG_ENDIAN)
 #define HOST_BIGENDIAN 1
 #else

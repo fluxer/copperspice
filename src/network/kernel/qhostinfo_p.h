@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,19 +23,19 @@
 #ifndef QHOSTINFO_P_H
 #define QHOSTINFO_P_H
 
-#include <QtCore/qcoreapplication.h>
+#include <qcoreapplication.h>
 #include <qcoreapplication_p.h>
-#include <QtNetwork/qhostinfo.h>
-#include <QtCore/qmutex.h>
-#include <QtCore/qwaitcondition.h>
-#include <QtCore/qobject.h>
-#include <QtCore/qpointer.h>
-#include <QtCore/qthread.h>
-#include <QtCore/qthreadpool.h>
-#include <QtCore/qmutex.h>
-#include <QtCore/qrunnable.h>
-#include <QtCore/qlist.h>
-#include <QtCore/qqueue.h>
+#include <qhostinfo.h>
+#include <qmutex.h>
+#include <qwaitcondition.h>
+#include <qobject.h>
+#include <qpointer.h>
+#include <qthread.h>
+#include <qthreadpool.h>
+#include <qmutex.h>
+#include <qrunnable.h>
+#include <qlist.h>
+#include <qqueue.h>
 #include <QElapsedTimer>
 #include <QCache>
 #include <QNetworkSession>
@@ -82,6 +79,7 @@ class QHostInfoPrivate
         errorStr(QLatin1String(QT_TRANSLATE_NOOP("QHostInfo", "Unknown error"))),
         lookupId(0) {
    }
+
 #ifndef QT_NO_BEARERMANAGEMENT
    //not a public API yet
    static QHostInfo fromName(const QString &hostName, QSharedPointer<QNetworkSession> networkSession);
@@ -96,10 +94,11 @@ class QHostInfoPrivate
 
 // These functions are outside of the QHostInfo class and strictly internal.
 // Do NOT use them outside of QAbstractSocket.
-QHostInfo Q_NETWORK_EXPORT qt_qhostinfo_lookup(const QString &name, QObject *receiver, const char *member, bool *valid,
-      int *id);
+
+QHostInfo Q_NETWORK_EXPORT qt_qhostinfo_lookup(const QString &name, QObject *receiver, const QString &member, bool *valid, int *id);
 void qt_qhostinfo_clear_cache();
 void qt_qhostinfo_enable_cache(bool e);
+void qt_qhostinfo_cache_inject(const QString &hostname, const QHostInfo &resolution);
 
 class QHostInfoCache
 {
@@ -129,8 +128,8 @@ class QHostInfoCache
 class QHostInfoRunnable : public QRunnable
 {
  public:
-   QHostInfoRunnable (QString hn, int i);
-   void run();
+   QHostInfoRunnable (const QString &hn, int i);
+   void run() override;
 
    QString toBeLookedUp;
    int id;
@@ -163,7 +162,7 @@ class QHostInfoLookupManager : public QAbstractHostInfoLookupManager
    QHostInfoLookupManager();
    ~QHostInfoLookupManager();
 
-   void clear();
+   void clear() override;
    void work();
 
    // called from QHostInfo
@@ -189,8 +188,8 @@ class QHostInfoLookupManager : public QAbstractHostInfoLookupManager
 
    bool wasDeleted;
 
- private :
-   NET_CS_SLOT_1(Private, void waitForThreadPoolDone())
+ private:
+   NET_CS_SLOT_1(Private, void waitForThreadPoolDone() { threadPool.waitForDone(); }  )
    NET_CS_SLOT_2(waitForThreadPoolDone)
 };
 

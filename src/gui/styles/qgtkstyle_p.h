@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -31,7 +28,6 @@
 #if !defined(QT_NO_STYLE_GTK)
 
 #include <QtCore/qstring.h>
-#include <QtCore/qstringbuilder.h>
 #include <QtCore/qcoreapplication.h>
 #include <QtGui/QFileDialog>
 #include <QtGui/QGtkStyle>
@@ -44,8 +40,6 @@ typedef unsigned long XID;
 #undef GTK_OBJECT_FLAGS
 #define GTK_OBJECT_FLAGS(obj)(((GtkObject*)(obj))->flags)
 #define Q_GTK_IS_WIDGET(widget) widget && GTK_CHECK_TYPE ((widget), QGtkStylePrivate::gtk_widget_get_type())
-
-#define QLS(x) QLatin1String(x)
 
 QT_BEGIN_NAMESPACE
 
@@ -256,7 +250,7 @@ typedef guchar *(*Ptr_gdk_pixbuf_get_pixels) (const GdkPixbuf *pixbuf);
 typedef int (*Ptr_gdk_pixbuf_get_width) (const GdkPixbuf *pixbuf);
 typedef void (*Ptr_gdk_color_free) (const GdkColor *);
 typedef int (*Ptr_gdk_pixbuf_get_height) (const GdkPixbuf *pixbuf);
-typedef GdkPixbuf *(*Ptr_gdk_pixbuf_get_from_drawable) (GdkPixbuf *dest, GdkDrawable *src, GdkColormap *cmap, 
+typedef GdkPixbuf *(*Ptr_gdk_pixbuf_get_from_drawable) (GdkPixbuf *dest, GdkDrawable *src, GdkColormap *cmap,
       int src_x, int src_y, int dest_x, int dest_y, int width, int height);
 
 typedef GdkPixmap *(*Ptr_gdk_pixmap_new) (GdkDrawable *drawable, gint width, gint height, gint depth);
@@ -264,7 +258,7 @@ typedef GdkPixmap *(*Ptr_gdk_pixmap_new) (GdkDrawable *drawable, gint width, gin
 typedef GdkPixbuf *(*Ptr_gdk_pixbuf_new) (GdkColorspace colorspace, gboolean has_alpha,
       int bits_per_sample, int width, int height);
 
-typedef void (*Ptr_gdk_draw_rectangle) (GdkDrawable *drawable, GdkGC *gc, gboolean filled, gint x, gint y, 
+typedef void (*Ptr_gdk_draw_rectangle) (GdkDrawable *drawable, GdkGC *gc, gboolean filled, gint x, gint y,
       gint width, gint height);
 
 typedef void (*Ptr_gdk_pixbuf_unref)(GdkPixbuf *);
@@ -371,7 +365,7 @@ class QGtkStylePrivate : public QCleanlooksStylePrivate
          QString *selectedFilter, QFileDialog::Options options);
 
    static QString openDirectory(QWidget *parent, const QString &caption, const QString &dir, QFileDialog::Options options);
-         
+
    static QStringList openFilenames(QWidget *parent, const QString &caption, const QString &dir, const QString &filter,
          QString *selectedFilter, QFileDialog::Options options);
 

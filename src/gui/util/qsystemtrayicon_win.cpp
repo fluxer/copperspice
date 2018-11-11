@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -38,9 +35,11 @@
 #include <qt_windows.h>
 #include <windowsx.h>
 #include <commctrl.h>
+
 #include <qsystemlibrary_p.h>
-#include <QApplication>
-#include <QSettings>
+#include <qapplication.h>
+#include <qsettings.h>
+#include <qstring16.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -91,15 +90,18 @@ class QSystemTrayIconSys : QWidget
  public:
    QSystemTrayIconSys(QSystemTrayIcon *object);
    ~QSystemTrayIconSys();
-   bool winEvent( MSG *m, long *result );
+
+   bool winEvent( MSG *m, long *result)  override;
    bool trayMessage(DWORD msg);
    void setIconContents(NOTIFYICONDATA &data);
    bool showMessage(const QString &title, const QString &message, QSystemTrayIcon::MessageIcon type, uint uSecs);
    QRect findIconGeometry(UINT a_iButtonID);
    void createIcon();
+
    HICON hIcon;
    QPoint globalPos;
    QSystemTrayIcon *q;
+
  private:
    uint notifyIconSize;
    int maxTipLength;
@@ -167,11 +169,14 @@ void QSystemTrayIconSys::setIconContents(NOTIFYICONDATA &tnd)
    tnd.uFlags |= NIF_MESSAGE | NIF_ICON | NIF_TIP;
    tnd.uCallbackMessage = MYWM_NOTIFYICON;
    tnd.hIcon = hIcon;
+
    QString tip = q->toolTip();
 
-   if (!tip.isNull()) {
+   if (! tip.isEmpty()) {
       tip = tip.left(maxTipLength - 1) + QChar();
-      memcpy(tnd.szTip, tip.utf16(), qMin(tip.length() + 1, maxTipLength) * sizeof(wchar_t));
+      QString16 tmp = tip.toUtf16();
+
+      memcpy(tnd.szTip, tmp.constData(), qMin(tmp.size_storage() + 1, maxTipLength) * sizeof(wchar_t));
    }
 }
 
@@ -198,8 +203,11 @@ bool QSystemTrayIconSys::showMessage(const QString &title, const QString &messag
    NOTIFYICONDATA tnd;
    memset(&tnd, 0, notifyIconSize);
 
-   memcpy(tnd.szInfo, message.utf16(), qMin(message.length() + 1, 256) * sizeof(wchar_t));
-   memcpy(tnd.szInfoTitle, title.utf16(), qMin(title.length() + 1, 64) * sizeof(wchar_t));
+   QString16 tmp = message.toUtf16();
+   memcpy(tnd.szInfo, tmp.constData(), qMin(tmp.size_storage() + 1, 256) * sizeof(wchar_t));
+
+   tmp = title.toUtf16();
+   memcpy(tnd.szInfoTitle, tmp.constData(), qMin(tmp.size_storage() + 1, 64) * sizeof(wchar_t));
 
    tnd.uID = q_uNOTIFYICONID;
    tnd.dwInfoFlags = iconFlag(type);

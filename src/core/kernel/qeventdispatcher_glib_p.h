@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -43,24 +40,24 @@ class Q_CORE_EXPORT QEventDispatcherGlib : public QAbstractEventDispatcher
    Q_DECLARE_PRIVATE(QEventDispatcherGlib)
 
  public:
-   explicit QEventDispatcherGlib(QObject *parent = 0);
-   explicit QEventDispatcherGlib(GMainContext *context, QObject *parent = 0);
+   explicit QEventDispatcherGlib(QObject *parent = nullptr);
+   explicit QEventDispatcherGlib(GMainContext *context, QObject *parent = nullptr);
    ~QEventDispatcherGlib();
 
-   bool processEvents(QEventLoop::ProcessEventsFlags flags);
-   bool hasPendingEvents();
+   bool processEvents(QEventLoop::ProcessEventsFlags flags) override;
+   bool hasPendingEvents() override;
 
-   void registerSocketNotifier(QSocketNotifier *socketNotifier);
-   void unregisterSocketNotifier(QSocketNotifier *socketNotifier);
+   void registerSocketNotifier(QSocketNotifier *socketNotifier) override;
+   void unregisterSocketNotifier(QSocketNotifier *socketNotifier) override;
 
-   void registerTimer(int timerId, int interval, QObject *object);
-   bool unregisterTimer(int timerId);
-   bool unregisterTimers(QObject *object);
-   QList<TimerInfo> registeredTimers(QObject *object) const;
+   void registerTimer(int timerId, int interval, QObject *object) override;
+   bool unregisterTimer(int timerId) override;
+   bool unregisterTimers(QObject *object) override;
+   QList<TimerInfo> registeredTimers(QObject *object) const override;
 
-   void wakeUp();
-   void interrupt();
-   void flush();
+   void wakeUp() override;
+   void interrupt() override;
+   void flush() override;
 
    static bool versionSupported();
 

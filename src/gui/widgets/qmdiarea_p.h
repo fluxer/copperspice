@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -63,8 +60,9 @@ class RegularTiler : public Rearranger
    // Rearranges widgets according to a regular tiling pattern
    // covering the entire domain.
    // Both positions and sizes may change.
-   void rearrange(QList<QWidget *> &widgets, const QRect &domain) const;
-   inline Type type() const {
+   void rearrange(QList<QWidget *> &widgets, const QRect &domain) const override;
+
+   Type type() const override {
       return Rearranger::RegularTiler;
    }
 };
@@ -74,8 +72,10 @@ class SimpleCascader : public Rearranger
    // Rearranges widgets according to a simple, regular cascading pattern.
    // Widgets are resized to minimumSize.
    // Both positions and sizes may change.
-   void rearrange(QList<QWidget *> &widgets, const QRect &domain) const;
-   inline Type type() const {
+
+   void rearrange(QList<QWidget *> &widgets, const QRect &domain) const override;
+
+   Type type() const override {
       return Rearranger::SimpleCascader;
    }
 };
@@ -85,8 +85,10 @@ class IconTiler : public Rearranger
    // Rearranges icons (assumed to be the same size) according to a regular
    // tiling pattern filling up the domain from the bottom.
    // Only positions may change.
-   void rearrange(QList<QWidget *> &widgets, const QRect &domain) const;
-   inline Type type() const {
+
+   void rearrange(QList<QWidget *> &widgets, const QRect &domain) const override;
+
+   Type type() const override {
       return Rearranger::IconTiler;
    }
 };
@@ -102,18 +104,17 @@ class Placer
 
 class MinOverlapPlacer : public Placer
 {
-   QPoint place(const QSize &size, const QList<QRect> &rects, const QRect &domain) const;
+   QPoint place(const QSize &size, const QList<QRect> &rects, const QRect &domain) const override;
    static int accumulatedOverlap(const QRect &source, const QList<QRect> &rects);
    static QRect findMinOverlapRect(const QList<QRect> &source, const QList<QRect> &rects);
-   static void getCandidatePlacements(
-      const QSize &size, const QList<QRect> &rects, const QRect &domain,
-      QList<QRect> &candidates);
-   static QPoint findBestPlacement(
-      const QRect &domain, const QList<QRect> &rects, QList<QRect> &source);
-   static void findNonInsiders(
-      const QRect &domain, QList<QRect> &source, QList<QRect> &result);
-   static void findMaxOverlappers(
-      const QRect &domain, const QList<QRect> &source, QList<QRect> &result);
+
+   static void getCandidatePlacements(const QSize &size, const QList<QRect> &rects, const QRect &domain,
+                  QList<QRect> &candidates);
+
+   static QPoint findBestPlacement(const QRect &domain, const QList<QRect> &rects, QList<QRect> &source);
+
+   static void findNonInsiders(const QRect &domain, QList<QRect> &source, QList<QRect> &result);
+   static void findMaxOverlappers(const QRect &domain, const QList<QRect> &source, QList<QRect> &result);
 };
 } // namespace QMdi
 
@@ -197,9 +198,10 @@ class QMdiAreaPrivate : public QAbstractScrollAreaPrivate
    bool lastWindowAboutToBeDestroyed() const;
    void setChildActivationEnabled(bool enable = true, bool onlyNextActivationEvent = false) const;
    QRect resizeToMinimumTileSize(const QSize &minSubWindowSize, int subWindowCount);
-   void scrollBarPolicyChanged(Qt::Orientation, Qt::ScrollBarPolicy); // reimp
-   QMdiSubWindow *nextVisibleSubWindow(int increaseFactor, QMdiArea::WindowOrder,
-                                       int removed = -1, int fromIndex = -1) const;
+
+   void scrollBarPolicyChanged(Qt::Orientation, Qt::ScrollBarPolicy) override;
+
+   QMdiSubWindow *nextVisibleSubWindow(int increaseFactor, QMdiArea::WindowOrder, int removed = -1, int fromIndex = -1) const;
    void highlightNextSubWindow(int increaseFactor);
    QList<QMdiSubWindow *> subWindowList(QMdiArea::WindowOrder, bool reversed = false) const;
    void disconnectSubWindow(QObject *subWindow);

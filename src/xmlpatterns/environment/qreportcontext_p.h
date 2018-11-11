@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -31,12 +28,12 @@
 #include <QSourceLocation>
 #include <qnamepool_p.h>
 #include <qxmlname.h>
+#include <qstringfwd.h>
 
 QT_BEGIN_NAMESPACE
 
 class QAbstractMessageHandler;
 class QSourceLocation;
-class QString;
 
 namespace QPatternist {
 class SourceLocationReflection;
@@ -929,7 +926,7 @@ class ReportContext : public QSharedData
       /**
        * It is an error to use the HTML output method when characters
        * which are legal in XML but not in HTML, specifically the control
-       * characters \#x7F-#x9F, appear in the instance of the data model.
+       * characters x7F - x9F, appear in the instance of the data model.
        */
       SERE0014,
 

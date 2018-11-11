@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -63,7 +60,7 @@ class Q_GUI_EXPORT QGesture : public QObject
    GUI_CS_PROPERTY_READ(hasHotSpot, hasHotSpot)
 
  public:
-   explicit QGesture(QObject *parent = 0);
+   explicit QGesture(QObject *parent = nullptr);
    ~QGesture();
 
    Qt::GestureType gestureType() const;
@@ -118,7 +115,7 @@ class Q_GUI_EXPORT QPanGesture : public QGesture
    GUI_CS_PROPERTY_WRITE(verticalVelocity, cs_setVerticalVelocity)
 
  public:
-   QPanGesture(QObject *parent = 0);
+   QPanGesture(QObject *parent = nullptr);
 
    QPointF lastOffset() const;
    QPointF offset() const;
@@ -189,7 +186,7 @@ class Q_GUI_EXPORT QPinchGesture : public QGesture
    GUI_CS_PROPERTY_READ(centerPoint, centerPoint)
    GUI_CS_PROPERTY_WRITE(centerPoint, setCenterPoint)
 
-   QPinchGesture(QObject *parent = 0);
+   QPinchGesture(QObject *parent = nullptr);
 
    ChangeFlags totalChangeFlags() const;
    void setTotalChangeFlags(ChangeFlags value);
@@ -249,7 +246,7 @@ class Q_GUI_EXPORT QSwipeGesture : public QGesture
 
  public:
    enum SwipeDirection { NoDirection, Left, Right, Up, Down };
-   QSwipeGesture(QObject *parent = 0);
+   QSwipeGesture(QObject *parent = nullptr);
 
    SwipeDirection horizontalDirection() const;
    SwipeDirection verticalDirection() const;
@@ -277,7 +274,7 @@ class Q_GUI_EXPORT QTapGesture : public QGesture
    GUI_CS_PROPERTY_WRITE(position, setPosition)
 
  public:
-   QTapGesture(QObject *parent = 0);
+   QTapGesture(QObject *parent = nullptr);
 
    QPointF position() const;
    void setPosition(const QPointF &pos);
@@ -294,7 +291,7 @@ class Q_GUI_EXPORT QTapAndHoldGesture : public QGesture
    GUI_CS_PROPERTY_WRITE(position, setPosition)
 
  public:
-   QTapAndHoldGesture(QObject *parent = 0);
+   QTapAndHoldGesture(QObject *parent = nullptr);
 
    QPointF position() const;
    void setPosition(const QPointF &pos);

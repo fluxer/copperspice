@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -30,6 +27,7 @@
 #include <qfileinfo.h>
 #include <qdir.h>
 #include <qfilesystementry_p.h>
+#include <qstringparser.h>
 
 #if defined(QT_NO_LIBRARY) && defined(Q_OS_WIN)
 #undef QT_NO_LIBRARY
@@ -37,8 +35,6 @@
 #endif
 
 #include <qt_windows.h>
-
-QT_BEGIN_NAMESPACE
 
 extern QString qt_error_string(int code);
 
@@ -68,7 +64,7 @@ bool QLibraryPrivate::load_sys()
 
    if (loadHints & QLibrary::ImprovedSearchHeuristics) {
       if (pluginState != IsAPlugin) {
-         attempts.append(fileName + QLatin1String(".dll"));
+         attempts.append(fileName + ".dll");
       }
 
       // If the fileName is an absolute path we try that first, otherwise we
@@ -87,8 +83,8 @@ bool QLibraryPrivate::load_sys()
       }
    }
 
-   Q_FOREACH (const QString & attempt, attempts) {
-      pHnd = LoadLibrary((wchar_t *)QDir::toNativeSeparators(attempt).utf16());
+   for (const QString & attempt : attempts) {
+      pHnd = LoadLibrary(&QDir::toNativeSeparators(attempt).toStdWString()[0]);
 
       // If we have a handle or the last error is something other than "unable
       // to find the module", then bail out
@@ -99,20 +95,21 @@ bool QLibraryPrivate::load_sys()
 
    SetErrorMode(oldmode);
    if (! pHnd) {
-      errorString = QLibrary::tr("Can not load library %1: %2").arg(fileName).arg(qt_error_string());
+      errorString = QLibrary::tr("Can not load library %1: %2").formatArgs(fileName, qt_error_string());
 
    } else {
       // Query the actual name of the library that was loaded
       errorString.clear();
 
-      wchar_t buffer[MAX_PATH];
-      ::GetModuleFileName(pHnd, buffer, MAX_PATH);
+      std::wstring buffer(MAX_PATH, L'\0');
+      ::GetModuleFileName(pHnd, &buffer[0], MAX_PATH);
 
-      QString moduleFileName = QString::fromWCharArray(buffer);
-      moduleFileName.remove(0, 1 + moduleFileName.lastIndexOf(QLatin1Char('\\')));
+      QString moduleFileName = QString::fromStdWString(buffer);
+      moduleFileName.remove(0, 1 + moduleFileName.lastIndexOf('\\'));
+
       const QDir dir(fsEntry.path());
 
-      if (dir.path() == QLatin1String(".")) {
+      if (dir.path() == ".") {
          qualifiedFileName = moduleFileName;
       } else {
          qualifiedFileName = dir.filePath(moduleFileName);
@@ -125,7 +122,7 @@ bool QLibraryPrivate::load_sys()
 bool QLibraryPrivate::unload_sys()
 {
    if (!FreeLibrary(pHnd)) {
-      errorString = QLibrary::tr("Can not unload library %1: %2").arg(fileName).arg(qt_error_string());
+      errorString = QLibrary::tr("Can not unload library %1: %2").formatArg(fileName).formatArg(qt_error_string());
       return false;
    }
 
@@ -133,13 +130,12 @@ bool QLibraryPrivate::unload_sys()
    return true;
 }
 
-void *QLibraryPrivate::resolve_sys(const char *symbol)
+void *QLibraryPrivate::resolve_sys(const QString &symbol)
 {
-   void *address = (void *)GetProcAddress(pHnd, symbol);
+   void *address = (void *)GetProcAddress(pHnd, symbol.constData());
 
    if (! address) {
-      errorString = QLibrary::tr("Can not resolve symbol \"%1\" in %2: %3").arg(
-                       QString::fromAscii(symbol)).arg(fileName).arg(qt_error_string());
+      errorString = QLibrary::tr("Can not resolve symbol \"%1\" in %2: %3").formatArg(symbol).formatArg(fileName).formatArg(qt_error_string());
 
    } else {
       errorString.clear();
@@ -147,4 +143,4 @@ void *QLibraryPrivate::resolve_sys(const char *symbol)
 
    return address;
 }
-QT_END_NAMESPACE
+

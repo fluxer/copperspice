@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -31,7 +28,7 @@
 #include <qsystemlibrary_p.h>
 #include <qapplication.h>
 #include <qbitmap.h>
-#include <qdrawutil.h>   
+#include <qdrawutil.h>
 #include <qevent.h>
 #include <qmenu.h>
 #include <qmenubar.h>
@@ -61,20 +58,15 @@
 
 #include <qstylehelper_p.h>
 
-QT_BEGIN_NAMESPACE
-
 #if defined(Q_OS_WIN)
-
-QT_BEGIN_INCLUDE_NAMESPACE
 #include <qt_windows.h>
-QT_END_INCLUDE_NAMESPACE
+
 #  ifndef COLOR_GRADIENTACTIVECAPTION
 #    define COLOR_GRADIENTACTIVECAPTION     27
 #  endif
 #  ifndef COLOR_GRADIENTINACTIVECAPTION
 #    define COLOR_GRADIENTINACTIVECAPTION   28
 #  endif
-
 
 typedef struct {
    DWORD cbSize;
@@ -94,9 +86,7 @@ static PtrSHGetStockIconInfo pSHGetStockIconInfo = 0;
 
 #endif
 
-QT_BEGIN_INCLUDE_NAMESPACE
 #include <limits.h>
-QT_END_INCLUDE_NAMESPACE
 
 enum QSliderDirection { SlUp, SlDown, SlLeft, SlRight };
 
@@ -150,13 +140,17 @@ void QWindowsStyle::timerEvent(QTimerEvent *event)
 {
 #ifndef QT_NO_PROGRESSBAR
    Q_D(QWindowsStyle);
+
    if (event->timerId() == d->animateTimer) {
       Q_ASSERT(d->animationFps > 0);
       d->animateStep = d->startTime.elapsed() / (1000 / d->animationFps);
-      foreach (QProgressBar * bar, d->animatedProgressBars)
-      bar->update();
+
+      for (QProgressBar * bar : d->animatedProgressBars) {
+         bar->update();
+      }
    }
-#endif // QT_NO_PROGRESSBAR
+#endif
+
    event->ignore();
 }
 
@@ -929,10 +923,11 @@ static const char *const question_xpm[] = {
 #ifdef Q_OS_WIN
 static QPixmap loadIconFromShell32( int resourceId, int size )
 {
-   HMODULE hmod = QSystemLibrary::load(L"shell32");
+   HMODULE hmod = QSystemLibrary::load("shell32", true);
 
    if ( hmod ) {
       HICON iconHandle = (HICON)LoadImage(hmod, MAKEINTRESOURCE(resourceId), IMAGE_ICON, size, size, 0);
+
       if ( iconHandle ) {
          QPixmap iconpixmap = QPixmap::fromWinHICON( iconHandle );
          DestroyIcon(iconHandle);
@@ -951,28 +946,34 @@ QPixmap QWindowsStyle::standardPixmap(StandardPixmap standardPixmap, const QStyl
 {
 #if defined(Q_OS_WIN)
    QPixmap desktopIcon;
+
    switch (standardPixmap) {
       case SP_DriveCDIcon:
       case SP_DriveDVDIcon: {
          desktopIcon = loadIconFromShell32(12, 16);
          break;
       }
+
       case SP_DriveNetIcon: {
          desktopIcon = loadIconFromShell32(10, 16);
          break;
       }
+
       case SP_DriveHDIcon: {
          desktopIcon = loadIconFromShell32(9, 16);
          break;
       }
+
       case SP_DriveFDIcon: {
          desktopIcon = loadIconFromShell32(7, 16);
          break;
       }
+
       case SP_FileIcon: {
          desktopIcon = loadIconFromShell32(1, 16);
          break;
       }
+
       case SP_FileLinkIcon: {
          desktopIcon = loadIconFromShell32(1, 16);
          QPainter painter(&desktopIcon);
@@ -1352,14 +1353,16 @@ void QWindowsStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt, 
                p->setPen(pal.dark().color());
                p->setBrush(fill);
                p->drawRect(r.adjusted(0, 0, -1, -1));
+
             } else if (flags & (State_Raised | State_Sunken | State_On | State_Sunken)) {
-               qDrawWinButton(p, r, pal, flags & (State_Sunken | State_On),
-                              &fill);
+               qDrawWinButton(p, r, pal, flags & (State_Sunken | State_On), &fill);
+
             } else {
                p->fillRect(r, fill);
             }
          }
          break;
+
       case PE_FrameDefaultButton: {
          QPen oldPen = p->pen();
          p->setPen(opt->palette.shadow().color());
@@ -1369,6 +1372,7 @@ void QWindowsStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt, 
          p->setPen(oldPen);
          break;
       }
+
       case PE_IndicatorArrowUp:
       case PE_IndicatorArrowDown:
       case PE_IndicatorArrowRight:
@@ -1376,15 +1380,17 @@ void QWindowsStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt, 
          if (opt->rect.width() <= 1 || opt->rect.height() <= 1) {
             break;
          }
+
          QRect r = opt->rect;
          int size = qMin(r.height(), r.width());
+
          QPixmap pixmap;
-         QString pixmapName = QStyleHelper::uniqueName(QLatin1String("$qt_ia-")
-                              % QLatin1String(metaObject()->className()), opt, QSize(size, size))
-                              % HexString<uint>(pe);
-         if (!QPixmapCache::find(pixmapName, pixmap)) {
+         QString pixmapName = QStyleHelper::uniqueName("$qt_ia-" + metaObject()->className(), opt, QSize(size, size)) + HexString<uint>(pe);
+
+         if (! QPixmapCache::find(pixmapName, pixmap)) {
             int border = size / 5;
             int sqsize = 2 * (size / 2);
+
             QImage image(sqsize, sqsize, QImage::Format_ARGB32_Premultiplied);
             image.fill(0);
             QPainter imagePainter(&image);
@@ -1728,15 +1734,14 @@ void QWindowsStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt, 
       case PE_IndicatorDockWidgetResizeHandle: {
          QPen oldPen = p->pen();
          p->setPen(opt->palette.light().color());
+
          if (opt->state & State_Horizontal) {
-            p->drawLine(opt->rect.left(),          opt->rect.top(),
-                        opt->rect.right(), opt->rect.top());
+            p->drawLine(opt->rect.left(), opt->rect.top(), opt->rect.right(), opt->rect.top());
             p->setPen(opt->palette.dark().color());
-            p->drawLine(opt->rect.left(),          opt->rect.bottom() - 1,
-                        opt->rect.right(), opt->rect.bottom() - 1);
+            p->drawLine(opt->rect.left(), opt->rect.bottom() - 1, opt->rect.right(), opt->rect.bottom() - 1);
             p->setPen(opt->palette.shadow().color());
-            p->drawLine(opt->rect.left(),          opt->rect.bottom(),
-                        opt->rect.right(), opt->rect.bottom());
+            p->drawLine(opt->rect.left(), opt->rect.bottom(), opt->rect.right(), opt->rect.bottom());
+
          } else {
             p->drawLine(opt->rect.left(), opt->rect.top(),
                         opt->rect.left(), opt->rect.bottom());
@@ -1808,8 +1813,7 @@ void QWindowsStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt, 
 }
 
 /*! \reimp */
-void QWindowsStyle::drawControl(ControlElement ce, const QStyleOption *opt, QPainter *p,
-                                const QWidget *widget) const
+void QWindowsStyle::drawControl(ControlElement ce, const QStyleOption *opt, QPainter *p, const QWidget *widget) const
 {
    switch (ce) {
 #ifndef QT_NO_RUBBERBAND
@@ -1861,7 +1865,7 @@ void QWindowsStyle::drawControl(ControlElement ce, const QStyleOption *opt, QPai
             bool act = menuitem->state & State_Selected;
 
             // windows always has a check column, regardless whether we have an icon or not
-            int checkcol = qMax<int>(menuitem->maxIconWidth, QWindowsStylePrivate::windowsCheckMarkWidth);
+            int checkcol = qMax(menuitem->maxIconWidth, QWindowsStylePrivate::windowsCheckMarkWidth);
 
             QBrush fill = menuitem->palette.brush(act ? QPalette::Highlight : QPalette::Button);
             p->fillRect(menuitem->rect.adjusted(0, 0, -1, 0), fill);
@@ -1906,9 +1910,11 @@ void QWindowsStyle::drawControl(ControlElement ce, const QStyleOption *opt, QPai
                }
                int pixw = pixmap.width();
                int pixh = pixmap.height();
-               if (act && !dis && !checked)
-                  qDrawShadePanel(p, vCheckRect,  menuitem->palette, false, 1,
-                                  &menuitem->palette.brush(QPalette::Button));
+
+               if (act && !dis && !checked) {
+                  qDrawShadePanel(p, vCheckRect,  menuitem->palette, false, 1, &menuitem->palette.brush(QPalette::Button));
+               }
+
                QRect pmr(0, 0, pixw, pixh);
                pmr.moveCenter(vCheckRect.center());
                p->setPen(menuitem->palette.text().color());
@@ -3115,7 +3121,7 @@ QSize QWindowsStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt,
                w += fmBold.width(mi->text) - fm.width(mi->text);
             }
 
-            int checkcol = qMax<int>(maxpmw, QWindowsStylePrivate::windowsCheckMarkWidth); // Windows always shows a check column
+            int checkcol = qMax(maxpmw, QWindowsStylePrivate::windowsCheckMarkWidth); // Windows always shows a check column
             w += checkcol;
             w += int(QWindowsStylePrivate::windowsRightBorder) + 10;
             sz.setWidth(w);
@@ -3274,8 +3280,5 @@ QIcon QWindowsStyle::standardIconImplementation(StandardPixmap standardIcon, con
    return icon;
 }
 
-
-
-QT_END_NAMESPACE
 
 #endif // QT_NO_STYLE_WINDOWS

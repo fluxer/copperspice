@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -120,7 +117,7 @@ void QWSSocket::forwardStateChange(QUnixSocket::SocketState st  )
 bool QWSSocket::connectToLocalFile(const QString &file)
 {
 #ifndef QT_NO_SXE
-   bool result = QUnixSocket::connect( file.toLocal8Bit() );
+   bool result = QUnixSocket::connect( file.toUtf8() );
    if ( !result ) {
       perror( "QWSSocketAuth::connectToLocalFile could not connect:" );
       emit error(QAbstractSocket::ConnectionRefusedError);
@@ -135,7 +132,7 @@ bool QWSSocket::connectToLocalFile(const QString &file)
    struct sockaddr_un a;
    memset(&a, 0, sizeof(a));
    a.sun_family = PF_LOCAL;
-   strncpy(a.sun_path, file.toLocal8Bit().constData(), sizeof(a.sun_path) - 1);
+   strncpy(a.sun_path, file.toUtf8().constData(), sizeof(a.sun_path) - 1);
    int r = ::connect(s, (struct sockaddr *)&a, SUN_LEN(&a));
    if (r == 0) {
       setSocketDescriptor(s);
@@ -168,7 +165,7 @@ QWSServerSocket::QWSServerSocket(const QString &file, QObject *parent)
 void QWSServerSocket::init(const QString &file)
 {
 #ifndef QT_NO_SXE
-   QByteArray fn = file.toLocal8Bit();
+   QByteArray fn = file.toUtf8();
    bool result = QUnixSocketServer::listen( fn );
    if ( !result ) {
       QUnixSocketServer::ServerError err = serverError();
@@ -196,15 +193,17 @@ void QWSServerSocket::init(const QString &file)
       return;
    }
 
-   QByteArray fn = file.toLocal8Bit();
+   QByteArray fn = file.toUtf8();
    unlink(fn.constData()); // doesn't have to succeed
 
    // bind socket
    struct sockaddr_un a;
    memset(&a, 0, sizeof(a));
    a.sun_family = PF_LOCAL;
+
    strncpy(a.sun_path, fn.constData(), sizeof(a.sun_path) - 1);
    int r = ::bind(s, (struct sockaddr *)&a, SUN_LEN(&a));
+
    if (r < 0) {
       perror("QWSServerSocket::init");
       qWarning("QWSServerSocket: could not bind to file %s", fn.constData());
@@ -222,8 +221,9 @@ void QWSServerSocket::init(const QString &file)
    // listen
    if (::listen(s, backlog) == 0) {
       if (!setSocketDescriptor(s)) {
-         qWarning( "QWSServerSocket could not set descriptor %d : %s", s, errorString().toLatin1().constData());
+         qWarning("QWSServerSocket could not set descriptor %d : %s", s, csPrintable(errorString()));
       }
+
    } else {
       perror("QWSServerSocket::init");
       qWarning("QWSServerSocket: could not listen to file %s", fn.constData());

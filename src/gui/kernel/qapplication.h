@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -135,6 +132,7 @@ class Q_GUI_EXPORT QApplication : public QCoreApplication
    static QStyle *style();
    static void setStyle(QStyle *);
    static QStyle *setStyle(const QString &);
+
    enum ColorSpec { NormalColor = 0, CustomColor = 1, ManyColor = 2 };
    static int colorSpec();
    static void setColorSpec(int);
@@ -146,14 +144,17 @@ class Q_GUI_EXPORT QApplication : public QCoreApplication
    static void changeOverrideCursor(const QCursor &);
    static void restoreOverrideCursor();
 #endif
+
    static QPalette palette();
    static QPalette palette(const QWidget *);
-   static QPalette palette(const char *className);
-   static void setPalette(const QPalette &, const char *className = 0);
+   static QPalette palette(const QString &className);
+   static void setPalette(const QPalette &, const QString &className = QString());
+
    static QFont font();
    static QFont font(const QWidget *);
-   static QFont font(const char *className);
-   static void setFont(const QFont &, const char *className = 0);
+   static QFont font(const QString &className);
+   static void setFont(const QFont &, const QString &className = QString());
+
    static QFontMetrics fontMetrics();
 
    static void setWindowIcon(const QIcon &icon);
@@ -336,7 +337,7 @@ class Q_GUI_EXPORT QApplication : public QCoreApplication
    static Qt::LayoutDirection keyboardInputDirection();
 
    static int exec();
-   bool notify(QObject *, QEvent *);
+   bool notify(QObject *, QEvent *) override;
 
    static void setQuitOnLastWindowClosed(bool quit);
    static bool quitOnLastWindowClosed();
@@ -397,8 +398,8 @@ class Q_GUI_EXPORT QApplication : public QCoreApplication
    void setArgs(int, char **);
 #endif
 
-   bool event(QEvent *);
-   bool compressEvent(QEvent *, QObject *receiver, QPostEventList *);
+   bool event(QEvent *) override;
+   bool compressEvent(QEvent *, QObject *receiver, QPostEventList *) override;
 
  private:
    Q_DISABLE_COPY(QApplication)

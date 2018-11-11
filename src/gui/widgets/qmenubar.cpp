@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -56,10 +53,6 @@
 #include <qmenubar_x11_p.h>
 #endif
 
-#ifdef QT_SOFTKEYS_ENABLED
-#include <qsoftkeymanager_p.h>
-#endif
-
 QT_BEGIN_NAMESPACE
 
 class QMenuBarExtension : public QToolButton
@@ -67,8 +60,8 @@ class QMenuBarExtension : public QToolButton
  public:
    explicit QMenuBarExtension(QWidget *parent);
 
-   QSize sizeHint() const;
-   void paintEvent(QPaintEvent *);
+   QSize sizeHint() const  override;
+   void paintEvent(QPaintEvent *)  override;
 };
 
 QMenuBarExtension::QMenuBarExtension(QWidget *parent)
@@ -767,10 +760,6 @@ void QMenuBarPrivate::init()
    q->setBackgroundRole(QPalette::Button);
    oldWindow = oldParent = 0;
 
-#ifdef QT_SOFTKEYS_ENABLED
-   menuBarAction = 0;
-#endif
-
 #ifdef Q_WS_X11
    cornerWidgetToolBar = 0;
    cornerWidgetContainer = 0;
@@ -858,7 +847,7 @@ QAction *QMenuBar::addAction(const QString &text)
 
     \sa QWidget::addAction(), QWidget::actions()
 */
-QAction *QMenuBar::addAction(const QString &text, const QObject *receiver, const char *member)
+QAction *QMenuBar::addAction(const QString &text, const QObject *receiver, const QString &member)
 {
    QAction *ret = new QAction(text, this);
    QObject::connect(ret, SIGNAL(triggered(bool)), receiver, member);
@@ -1231,27 +1220,34 @@ void QMenuBar::keyPressEvent(QKeyEvent *e)
          key_consumed = false;
    }
 
-   if (!key_consumed &&
-         (!e->modifiers() ||
+   if (!key_consumed && (!e->modifiers() ||
           (e->modifiers() & (Qt::MetaModifier | Qt::AltModifier))) && e->text().length() == 1 && !d->popupState) {
+
       int clashCount = 0;
       QAction *first = 0, *currentSelected = 0, *firstAfterCurrent = 0;
+
       {
-         QChar c = e->text()[0].toUpper();
+         QChar c = e->text()[0].toUpper()[0];
+
          for (int i = 0; i < d->actions.size(); ++i) {
             if (d->actionRects.at(i).isNull()) {
                continue;
+
             }
+
             QAction *act = d->actions.at(i);
             QString s = act->text();
+
             if (!s.isEmpty()) {
                int ampersand = s.indexOf(QLatin1Char('&'));
+
                if (ampersand >= 0) {
                   if (s[ampersand + 1].toUpper() == c) {
                      clashCount++;
                      if (!first) {
                         first = act;
                      }
+
                      if (act == d->currentAction) {
                         currentSelected = act;
                      } else if (!firstAfterCurrent && currentSelected) {
@@ -1457,12 +1453,6 @@ void QMenuBar::changeEvent(QEvent *e)
               || e->type() == QEvent::ApplicationFontChange) {
       d->itemsDirty = true;
       d->updateGeometries();
-#ifdef QT_SOFTKEYS_ENABLED
-   } else if (e->type() == QEvent::LanguageChange) {
-      if (d->menuBarAction) {
-         d->menuBarAction->setText(QSoftKeyManager::standardSoftKeyText(QSoftKeyManager::MenuSoftKey));
-      }
-#endif
    }
 
    QWidget::changeEvent(e);

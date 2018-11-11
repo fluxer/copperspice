@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -193,8 +190,7 @@ Item NormalizeUnicodeFN::evaluateSingleton(const DynamicContext::Ptr &context) c
       }
    }
 
-   return AtomicString::fromValue(arg.stringValue().normalized(
-                                     static_cast<QString::NormalizationForm>(normForm)));
+   return AtomicString::fromValue(arg.stringValue().normalized(static_cast<QString::NormalizationForm>(normForm)));
 }
 
 Expression::Ptr NormalizeUnicodeFN::compress(const StaticContext::Ptr &context)
@@ -208,13 +204,15 @@ Expression::Ptr NormalizeUnicodeFN::compress(const StaticContext::Ptr &context)
 
    if (m_operands.count() == 1) {
       m_normForm = QString::NormalizationForm_C;
-   } else if (m_operands.last()->is(IDStringValue)) {
-      m_normForm = static_cast<QString::NormalizationForm>(
-                      determineNormalizationForm(context->dynamicContext()));
 
-      if (m_normForm == -1) {
+   } else if (m_operands.last()->is(IDStringValue)) {
+      int tmp = determineNormalizationForm(context->dynamicContext());
+
+      if (tmp == -1) {
          return m_operands.first();
       }
+
+      m_normForm = static_cast<QString::NormalizationForm>(tmp);
 
       /* Remove the operand since we don't need it anymore. */
       m_operands.removeLast();
@@ -228,30 +226,34 @@ int NormalizeUnicodeFN::determineNormalizationForm(const DynamicContext::Ptr &co
    const QString strRepr(m_operands.last()->evaluateSingleton(context).stringValue().trimmed().toUpper());
 
    /* TODO. Put these values in a QHash for faster lookup. Keep thread safety in mind. */
+
    if (strRepr.isEmpty()) {
       return -1;
-   } else if (strRepr == QLatin1String("NFC")) {
+
+   } else if (strRepr == "NFC") {
       return QString::NormalizationForm_C;
-   } else if (strRepr == QLatin1String("NFD")) {
+
+   } else if (strRepr == "NFD") {
       return QString::NormalizationForm_D;
-   } else if (strRepr == QLatin1String("NFKC")) {
+
+   } else if (strRepr == "NFKC") {
       return QString::NormalizationForm_KC;
-   } else if (strRepr == QLatin1String("NFKD")) {
+
+   } else if (strRepr == "NFKD") {
       return QString::NormalizationForm_KD;
+
    } else {
       /* What form is FULLY_NORMALIZED? Is a code path available for that somewhere? */
-      context->error(QtXmlPatterns::tr("The normalization form %1 is "
-                                       "unsupported. The supported forms are "
-                                       "%2, %3, %4, and %5, and none, i.e. "
-                                       "the empty string (no normalization).")
-                     .arg(formatKeyword(strRepr))
-                     .arg(formatKeyword("NFC"))
-                     .arg(formatKeyword("NFD"))
-                     .arg(formatKeyword("NFKC"))
-                     .arg(formatKeyword("NFKD")),
-                     ReportContext::FOCH0003,
-                     this);
-      return QString::NormalizationForm_C; /* Silence compiler warning. */
+      context->error(QtXmlPatterns::tr("The normalization form %1 is unsupported. The supported forms are "
+                  "%2, %3, %4, %5, and no normalization.")
+                  .formatArg(formatKeyword(strRepr))
+                  .formatArg(formatKeyword("NFC"))
+                  .formatArg(formatKeyword("NFD"))
+                  .formatArg(formatKeyword("NFKC"))
+                  .formatArg(formatKeyword("NFKD")),
+                  ReportContext::FOCH0003, this);
+
+      return QString::NormalizationForm_C;
    }
 }
 
@@ -297,7 +299,7 @@ Item TranslateFN::evaluateSingleton(const DynamicContext::Ptr &context) const
    const int argLen = arg.length();
 
    QString result;
-   result.reserve(argLen);
+
    int outI = 0;
 
    for (int i = 0; i < argLen; ++i) {
@@ -340,7 +342,7 @@ Item EncodeString::evaluateSingleton(const DynamicContext::Ptr &context) const
       return CommonValues::EmptyString;
    }
 
-   return AtomicString::fromValue(QString::fromAscii(QUrl::toPercentEncoding(item.stringValue(),
+   return AtomicString::fromValue(QString::fromLatin1(QUrl::toPercentEncoding(item.stringValue(),
                                   m_excludeChars,
                                   m_includeChars).constData()));
 }

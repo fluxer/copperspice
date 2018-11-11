@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,7 +23,7 @@
 #ifndef QSVGSTYLE_P_H
 #define QSVGSTYLE_P_H
 
-#include "QtGui/qpainter.h"
+#include <qpainter.h>
 
 #ifndef QT_NO_SVG
 
@@ -162,17 +159,18 @@ class QSvgFillStyleProperty : public QSvgStyleProperty
 {
  public:
    virtual QBrush brush(QPainter *p, QSvgExtraStates &states) = 0;
-   virtual void apply(QPainter *p, const QSvgNode *node, QSvgExtraStates &states);
-   virtual void revert(QPainter *p, QSvgExtraStates &states);
+   void apply(QPainter *p, const QSvgNode *node, QSvgExtraStates &states) override;
+   void revert(QPainter *p, QSvgExtraStates &states) override;
 };
 
 class QSvgQualityStyle : public QSvgStyleProperty
 {
  public:
    QSvgQualityStyle(int color);
-   virtual void apply(QPainter *p, const QSvgNode *node, QSvgExtraStates &states);
-   virtual void revert(QPainter *p, QSvgExtraStates &states);
-   virtual Type type() const;
+   void apply(QPainter *p, const QSvgNode *node, QSvgExtraStates &states) override;
+   void revert(QPainter *p, QSvgExtraStates &states) override;
+   Type type() const override;
+
  private:
    // color-render ing v 	v 	'auto' | 'optimizeSpeed' |
    //                                  'optimizeQuality' | 'inherit'
@@ -202,9 +200,11 @@ class QSvgOpacityStyle : public QSvgStyleProperty
 {
  public:
    QSvgOpacityStyle(qreal opacity);
-   virtual void apply(QPainter *p, const QSvgNode *node, QSvgExtraStates &states);
-   virtual void revert(QPainter *p, QSvgExtraStates &states);
-   virtual Type type() const;
+
+   void apply(QPainter *p, const QSvgNode *node, QSvgExtraStates &states) override;
+   void revert(QPainter *p, QSvgExtraStates &states) override;
+   Type type() const override;
+
  private:
    qreal m_opacity;
    qreal m_oldOpacity;
@@ -214,9 +214,10 @@ class QSvgFillStyle : public QSvgStyleProperty
 {
  public:
    QSvgFillStyle();
-   virtual void apply(QPainter *p, const QSvgNode *node, QSvgExtraStates &states);
-   virtual void revert(QPainter *p, QSvgExtraStates &states);
-   virtual Type type() const;
+
+   void apply(QPainter *p, const QSvgNode *node, QSvgExtraStates &states) override;
+   void revert(QPainter *p, QSvgExtraStates &states) override;
+   Type type() const override;
 
    void setFillRule(Qt::FillRule f);
    void setFillOpacity(qreal opacity);
@@ -279,13 +280,15 @@ class QSvgViewportFillStyle : public QSvgStyleProperty
 {
  public:
    QSvgViewportFillStyle(const QBrush &brush);
-   virtual void apply(QPainter *p, const QSvgNode *node, QSvgExtraStates &states);
-   virtual void revert(QPainter *p, QSvgExtraStates &states);
-   virtual Type type() const;
+
+   void apply(QPainter *p, const QSvgNode *node, QSvgExtraStates &states) override;
+   void revert(QPainter *p, QSvgExtraStates &states) override;
+   Type type() const override;
 
    const QBrush &qbrush() const {
       return m_viewportFill;
    }
+
  private:
    // viewport-fill         v 	x 	'inherit' | <Paint.datatype>
    // viewport-fill-opacity 	v 	x 	'inherit' | <OpacityValue.datatype>
@@ -302,9 +305,10 @@ class QSvgFontStyle : public QSvgStyleProperty
 
    QSvgFontStyle(QSvgFont *font, QSvgTinyDocument *doc);
    QSvgFontStyle();
-   virtual void apply(QPainter *p, const QSvgNode *node, QSvgExtraStates &states);
-   virtual void revert(QPainter *p, QSvgExtraStates &states);
-   virtual Type type() const;
+
+   void apply(QPainter *p, const QSvgNode *node, QSvgExtraStates &states) override;
+   void revert(QPainter *p, QSvgExtraStates &states) override;
+   Type type() const override;
 
    void setSize(qreal size) {
       // Store the _pixel_ size in the font. Since QFont::setPixelSize() only takes an int, call
@@ -377,9 +381,10 @@ class QSvgStrokeStyle : public QSvgStyleProperty
 {
  public:
    QSvgStrokeStyle();
-   virtual void apply(QPainter *p, const QSvgNode *node, QSvgExtraStates &states);
-   virtual void revert(QPainter *p, QSvgExtraStates &states);
-   virtual Type type() const;
+
+   void apply(QPainter *p, const QSvgNode *node, QSvgExtraStates &states) override;
+   void revert(QPainter *p, QSvgExtraStates &states) override;
+   Type type() const override;
 
    void setStroke(QBrush brush) {
       m_stroke.setBrush(brush);
@@ -500,13 +505,14 @@ class QSvgSolidColorStyle : public QSvgFillStyleProperty
 {
  public:
    QSvgSolidColorStyle(const QColor &color);
-   virtual Type type() const;
+
+   Type type() const override;
 
    const QColor &qcolor() const {
       return m_solidColor;
    }
 
-   QBrush brush(QPainter *, QSvgExtraStates &) {
+   QBrush brush(QPainter *, QSvgExtraStates &) override {
       return m_solidColor;
    }
 
@@ -526,7 +532,8 @@ class QSvgGradientStyle : public QSvgFillStyleProperty
    ~QSvgGradientStyle() {
       delete m_gradient;
    }
-   virtual Type type() const;
+
+   Type type() const override;
 
    void setStopLink(const QString &link, QSvgTinyDocument *doc);
    QString stopLink() const {
@@ -551,27 +558,30 @@ class QSvgGradientStyle : public QSvgFillStyleProperty
       m_gradientStopsSet = set;
    }
 
-   QBrush brush(QPainter *, QSvgExtraStates &);
+   QBrush brush(QPainter *, QSvgExtraStates &) override;
+
  private:
-   QGradient      *m_gradient;
-   QMatrix m_matrix;
+   QGradient        *m_gradient;
+   QMatrix           m_matrix;
 
    QSvgTinyDocument *m_doc;
    QString           m_link;
-   bool m_gradientStopsSet;
+   bool              m_gradientStopsSet;
 };
 
 class QSvgTransformStyle : public QSvgStyleProperty
 {
  public:
    QSvgTransformStyle(const QTransform &transform);
-   virtual void apply(QPainter *p, const QSvgNode *node, QSvgExtraStates &states);
-   virtual void revert(QPainter *p, QSvgExtraStates &states);
-   virtual Type type() const;
+
+   void apply(QPainter *p, const QSvgNode *node, QSvgExtraStates &states) override;
+   void revert(QPainter *p, QSvgExtraStates &states) override;
+   Type type() const override;
 
    const QTransform &qtransform() const {
       return m_transform;
    }
+
  private:
    //7.6 The transform  attribute
    QTransform m_transform;
@@ -596,12 +606,15 @@ class QSvgAnimateTransform : public QSvgStyleProperty
    };
  public:
    QSvgAnimateTransform(int startMs, int endMs, int by = 0);
+
    void setArgs(TransformType type, Additive additive, const QVector<qreal> &args);
    void setFreeze(bool freeze);
    void setRepeatCount(qreal repeatCount);
-   virtual void apply(QPainter *p, const QSvgNode *node, QSvgExtraStates &states);
-   virtual void revert(QPainter *p, QSvgExtraStates &states);
-   virtual Type type() const;
+
+   void apply(QPainter *p, const QSvgNode *node, QSvgExtraStates &states) override;
+   void revert(QPainter *p, QSvgExtraStates &states) override;
+   Type type() const override;
+
    QSvgAnimateTransform::Additive additiveType() const {
       return m_additive;
    }
@@ -634,6 +647,7 @@ class QSvgAnimateTransform : public QSvgStyleProperty
 
  protected:
    void resolveMatrix(const QSvgNode *node);
+
  private:
    qreal m_from, m_to, m_by;
    qreal m_totalRunningTime;
@@ -654,15 +668,21 @@ class QSvgAnimateColor : public QSvgStyleProperty
 {
  public:
    QSvgAnimateColor(int startMs, int endMs, int by = 0);
+
    void setArgs(bool fill, const QList<QColor> &colors);
    void setFreeze(bool freeze);
    void setRepeatCount(qreal repeatCount);
-   virtual void apply(QPainter *p, const QSvgNode *node, QSvgExtraStates &states);
-   virtual void revert(QPainter *p, QSvgExtraStates &states);
-   virtual Type type() const;
+
+   void apply(QPainter *p, const QSvgNode *node, QSvgExtraStates &states) override;
+   void revert(QPainter *p, QSvgExtraStates &states) override;
+   Type type() const override;
+
  private:
-   qreal m_from, m_to, m_by;
+   qreal m_from;
+   qreal m_to;
+   qreal m_by;
    qreal m_totalRunningTime;
+
    QList<QColor> m_colors;
    QBrush m_oldBrush;
    QPen   m_oldPen;
@@ -677,13 +697,15 @@ class QSvgCompOpStyle : public QSvgStyleProperty
 {
  public:
    QSvgCompOpStyle(QPainter::CompositionMode mode);
-   virtual void apply(QPainter *p, const QSvgNode *node, QSvgExtraStates &states);
-   virtual void revert(QPainter *p, QSvgExtraStates &states);
-   virtual Type type() const;
+
+   void apply(QPainter *p, const QSvgNode *node, QSvgExtraStates &states) override;
+   void revert(QPainter *p, QSvgExtraStates &states) override;
+   Type type() const override;
 
    const QPainter::CompositionMode &compOp() const {
       return m_mode;
    }
+
  private:
    //comp-op attribute
    QPainter::CompositionMode m_mode;
@@ -696,22 +718,14 @@ class QSvgStyle
 {
  public:
    QSvgStyle()
-      : quality(0),
-        fill(0),
-        viewportFill(0),
-        font(0),
-        stroke(0),
-        solidColor(0),
-        gradient(0),
-        transform(0),
-        animateColor(0),
-        opacity(0),
-        compop(0) {
+      : quality(0), fill(0), viewportFill(0), font(0), stroke(0), solidColor(0), gradient(0), transform(0),
+        animateColor(0), opacity(0), compop(0) {
    }
    ~QSvgStyle();
 
    void apply(QPainter *p, const QSvgNode *node, QSvgExtraStates &states);
    void revert(QPainter *p, QSvgExtraStates &states);
+
    QSvgRefCounter<QSvgQualityStyle>      quality;
    QSvgRefCounter<QSvgFillStyle>         fill;
    QSvgRefCounter<QSvgViewportFillStyle> viewportFill;

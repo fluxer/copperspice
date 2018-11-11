@@ -172,9 +172,9 @@ bool QWEBKIT_EXPORT qtwebkit_webframe_scrollOverflow(QWebFrame* qFrame, int dx, 
 
 /*
   \internal
-  Scrolls nested frames starting at this frame, \a dx pixels to the right 
+  Scrolls nested frames starting at this frame, \a dx pixels to the right
   and \a dy pixels downward. Both \a dx and \a dy may be negative. First attempts
-  to scroll elements with CSS overflow at position pos, followed by this frame. If this 
+  to scroll elements with CSS overflow at position pos, followed by this frame. If this
   frame doesn't scroll, attempts to scroll the parent
 */
 void QWEBKIT_EXPORT qtwebkit_webframe_scrollRecursively(QWebFrame* qFrame, int dx, int dy, const QPoint& pos)
@@ -300,7 +300,7 @@ void QWebFramePrivate::renderFromTiledBackingStore(GraphicsContext* context, con
     QPainter* painter = context->platformContext();
 
     WebCore::FrameView* view = frame->view();
-    
+
     int scrollX = view->scrollX();
     int scrollY = view->scrollY();
     context->translate(-scrollX, -scrollY);
@@ -309,7 +309,7 @@ void QWebFramePrivate::renderFromTiledBackingStore(GraphicsContext* context, con
         const QRect& clipRect = vector.at(i);
 
         painter->save();
-        
+
         QRect rect = clipRect.translated(scrollX, scrollY);
         painter->setClipRect(rect, Qt::IntersectClip);
 
@@ -707,50 +707,24 @@ QString QWebFrame::title() const
     return QString();
 }
 
-/*
-    \since 4.5
-    \brief Returns the meta data in this frame as a QMultiMap
-
-    The meta data consists of the name and content attributes of the
-    of the \c{<meta>} tags in the HTML document.
-
-    For example:
-
-    \code
-    <html>
-        <head>
-            <meta name="description" content="This document is a tutorial about Qt development">
-            <meta name="keywords" content="Qt, WebKit, Programming">
-        </head>
-        ...
-    </html>
-    \endcode
-
-    Given the above HTML code the metaData() function will return a map with two entries:
-    \table
-    \header \o Key
-            \o Value
-    \row    \o "description"
-            \o "This document is a tutorial about Qt development"
-    \row    \o "keywords"
-            \o "Qt, WebKit, Programming"
-    \endtable
-
-    This function returns a multi map to support multiple meta tags with the same attribute name.
-*/
 QMultiMap<QString, QString> QWebFrame::metaData() const
 {
-    if (!d->frame->document())
-       return QMap<QString, QString>();
+    if (! d->frame->document()) {
+       return QMultiMap<QString, QString>();
+    }
 
     QMultiMap<QString, QString> map;
+
     Document* doc = d->frame->document();
     RefPtr<NodeList> list = doc->getElementsByTagName("meta");
+
     unsigned len = list->length();
+
     for (unsigned i = 0; i < len; i++) {
         HTMLMetaElement* meta = static_cast<HTMLMetaElement*>(list->item(i));
         map.insert(meta->name(), meta->content());
     }
+
     return map;
 }
 
@@ -772,14 +746,14 @@ static inline QUrl ensureAbsoluteUrl(const QUrl &url)
     if (!url.isValid() || !url.isRelative())
         return url;
 
-    // This contains the URL with absolute path but without 
+    // This contains the URL with absolute path but without
     // the query and the fragment part.
-    QUrl baseUrl = QUrl::fromLocalFile(QFileInfo(url.toLocalFile()).absoluteFilePath()); 
+    QUrl baseUrl = QUrl::fromLocalFile(QFileInfo(url.toLocalFile()).absoluteFilePath());
 
     // The path is removed so the query and the fragment parts are there.
     QString pathRemoved = url.toString(QUrl::RemovePath);
     QUrl toResolve(pathRemoved);
-    
+
     return baseUrl.resolved(toResolve);
 }
 
@@ -1840,8 +1814,10 @@ QString QWebHitTestResult::linkText() const
 */
 QUrl QWebHitTestResult::linkUrl() const
 {
-    if (!d)
+    if (! d) {
         return QUrl();
+    }
+
     return d->linkUrl;
 }
 
@@ -1850,9 +1826,11 @@ QUrl QWebHitTestResult::linkUrl() const
 */
 QUrl QWebHitTestResult::linkTitle() const
 {
-    if (!d)
-        return QUrl();
-    return d->linkTitle;
+    if (! d) {
+       return QUrl();
+    }
+
+    return QUrl(d->linkTitle);
 }
 
 /*
@@ -1863,8 +1841,10 @@ QUrl QWebHitTestResult::linkTitle() const
 */
 QWebElement QWebHitTestResult::linkElement() const
 {
-    if (!d)
+    if (! d) {
         return QWebElement();
+    }
+
     return d->linkElement;
 }
 

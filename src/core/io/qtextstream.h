@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,11 +23,11 @@
 #ifndef QTEXTSTREAM_H
 #define QTEXTSTREAM_H
 
-#include <QtCore/qiodevice.h>
-#include <QtCore/qstring.h>
-#include <QtCore/qchar.h>
-#include <QtCore/qlocale.h>
-#include <QtCore/qscopedpointer.h>
+#include <qiodevice.h>
+#include <qstring.h>
+#include <qchar.h>
+#include <qlocale.h>
+#include <qscopedpointer.h>
 
 #include <stdio.h>
 
@@ -44,7 +41,7 @@ class QTextCodec;
 class QTextDecoder;
 class QTextStreamPrivate;
 
-class Q_CORE_EXPORT QTextStream                                
+class Q_CORE_EXPORT QTextStream
 {
    Q_DECLARE_PRIVATE(QTextStream)
 
@@ -147,15 +144,14 @@ class Q_CORE_EXPORT QTextStream
    QTextStream &operator>>(unsigned int &i);
    QTextStream &operator>>(signed long &i);
    QTextStream &operator>>(unsigned long &i);
-   QTextStream &operator>>(qlonglong &i);
-   QTextStream &operator>>(qulonglong &i);
+   QTextStream &operator>>(qint64 &i);
+   QTextStream &operator>>(quint64 &i);
    QTextStream &operator>>(float &f);
    QTextStream &operator>>(double &f);
    QTextStream &operator>>(QString &s);
    QTextStream &operator>>(QByteArray &array);
-   QTextStream &operator>>(char *c);
 
-   QTextStream &operator<<(QBool b);
+   QTextStream &operator<<(bool b);
    QTextStream &operator<<(QChar ch);
    QTextStream &operator<<(char ch);
    QTextStream &operator<<(signed short i);
@@ -164,14 +160,17 @@ class Q_CORE_EXPORT QTextStream
    QTextStream &operator<<(unsigned int i);
    QTextStream &operator<<(signed long i);
    QTextStream &operator<<(unsigned long i);
-   QTextStream &operator<<(qlonglong i);
-   QTextStream &operator<<(qulonglong i);
+   QTextStream &operator<<(qint64 i);
+   QTextStream &operator<<(quint64 i);
    QTextStream &operator<<(float f);
    QTextStream &operator<<(double f);
    QTextStream &operator<<(const QString &s);
    QTextStream &operator<<(const QByteArray &array);
-   QTextStream &operator<<(const char *c);
    QTextStream &operator<<(const void *ptr);
+
+   QTextStream &operator<<(const char *s) {
+      return *this << QString::fromLatin1(s);
+   }
 
  private:
    Q_DISABLE_COPY(QTextStream)
@@ -184,9 +183,9 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(QTextStream::NumberFlags)
   QTextStream manipulators
  *****************************************************************************/
 
-typedef QTextStream &(*QTextStreamFunction)(QTextStream &); // manipulator function
-typedef void (QTextStream::*QTSMFI)(int); // manipulator w/int argument
-typedef void (QTextStream::*QTSMFC)(QChar); // manipulator w/QChar argument
+typedef QTextStream &(*QTextStreamFunction)(QTextStream &);    // manipulator function
+typedef void (QTextStream::*QTSMFI)(int);                      // manipulator w/int argument
+typedef void (QTextStream::*QTSMFC)(QChar);                    // manipulator w/QChar argument
 
 class Q_CORE_EXPORT QTextStreamManipulator
 {

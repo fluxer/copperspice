@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -35,8 +32,8 @@
 #include <qvarlengtharray.h>
 #include <qgraphicswidget_p.h>
 
-#include <QtDebug>
-#include <QtCore/qmath.h>
+#include <QDebug>
+#include <qmath.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -140,8 +137,8 @@ bool operator==(const QGridLayoutBox &box1, const QGridLayoutBox &box2)
          return false;
       }
    }
-   return box1.q_minimumDescent == box2.q_minimumDescent
-          && box1.q_minimumAscent == box2.q_minimumAscent;
+
+   return box1.q_minimumDescent == box2.q_minimumDescent && box1.q_minimumAscent == box2.q_minimumAscent;
 }
 
 void QGridLayoutRowData::reset(int count)
@@ -781,13 +778,13 @@ void QGridLayoutRowInfo::dump(int indent) const
       QString message;
 
       if (stretches.value(i).value() >= 0) {
-         message += QString::fromAscii(" stretch %1").arg(stretches.value(i).value());
+         message += QString::fromLatin1(" stretch %1").formatArg(stretches.value(i).value());
       }
       if (spacings.value(i).value() >= 0.0) {
-         message += QString::fromAscii(" spacing %1").arg(spacings.value(i).value());
+         message += QString::fromLatin1(" spacing %1").formatArg(spacings.value(i).value());
       }
       if (alignments.value(i) != 0) {
-         message += QString::fromAscii(" alignment %1").arg(int(alignments.value(i)), 16);
+         message += QString::fromLatin1(" alignment %1").formatArg(int(alignments.value(i)), 16);
       }
 
       if (!message.isEmpty() || boxes.value(i) != QGridLayoutBox()) {
@@ -1301,9 +1298,9 @@ void QGridLayoutEngine::dump(int indent) const
       qDebug("%*s  %s", indent, "", qPrintable(message));
    }
 
-   if (q_defaultSpacings[Hor].value() >= 0.0 || q_defaultSpacings[Ver].value() >= 0.0)
-      qDebug("%*s Default spacings: %g %g", indent, "", q_defaultSpacings[Hor].value(),
-             q_defaultSpacings[Ver].value());
+   if (q_defaultSpacings[Hor].value() >= 0.0 || q_defaultSpacings[Ver].value() >= 0.0) {
+      qDebug("%*s Default spacings: %g %g", indent, "", q_defaultSpacings[Hor].value(), q_defaultSpacings[Ver].value());
+   }
 
    qDebug("%*s Column and row info", indent, "");
    q_infos[Hor].dump(indent + 2);
@@ -1315,14 +1312,24 @@ void QGridLayoutEngine::dump(int indent) const
 
    qDebug("%*s Geometries output", indent, "");
    QVector<qreal> *cellPos = &q_yy;
+
    for (int pass = 0; pass < 2; ++pass) {
       QString message;
+
       for (i = 0; i < cellPos->count(); ++i) {
-         message += QLatin1String((message.isEmpty() ? "[" : ", "));
+
+         if (message.isEmpty()) {
+            message += "[";
+         } else {
+            message += ", ";
+         }
+
          message += QString::number(cellPos->at(i));
       }
-      message += QLatin1Char(']');
-      qDebug("%*s %s %s", indent, "", (pass == 0 ? "rows:" : "columns:"), qPrintable(message));
+
+      message += ']';
+
+      qDebug("%*s %s %s", indent, "", (pass == 0 ? "rows:" : "columns:"), csPrintable(message));
       cellPos = &q_xx;
    }
 }

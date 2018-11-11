@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -136,7 +133,7 @@ class QMainWindowLayout : public QLayout
    void setDockOptions(QMainWindow::DockOptions opts);
    bool usesHIToolBar(QToolBar *toolbar) const;
 
-   void timerEvent(QTimerEvent *e);
+   void timerEvent(QTimerEvent *e) override;
 
    // status bar
    QLayoutItem *statusbar;
@@ -226,17 +223,18 @@ class QMainWindowLayout : public QLayout
    bool restoreState(QDataStream &stream);
 
    // QLayout interface
-   void addItem(QLayoutItem *item);
-   void setGeometry(const QRect &r);
-   QLayoutItem *itemAt(int index) const;
-   QLayoutItem *takeAt(int index);
-   int count() const;
+   void addItem(QLayoutItem *item) override;
+   void setGeometry(const QRect &r) override;
+   QLayoutItem *itemAt(int index) const override;
+   QLayoutItem *takeAt(int index) override;
+   int count() const override;
 
-   QSize sizeHint() const;
-   QSize minimumSize() const;
+   QSize sizeHint() const override;
+   QSize minimumSize() const override;
+   void invalidate() override;
+
    mutable QSize szHint;
    mutable QSize minSize;
-   void invalidate();
 
    // animations
    QWidgetAnimator widgetAnimator;

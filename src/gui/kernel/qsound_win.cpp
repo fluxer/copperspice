@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -47,10 +44,10 @@ class QAuServerWindows : public QAuServer
 
    void playHelper(const QString &filename, int loop, QSound *snd);
    void play(const QString &filename, int loop);
-   void play(QSound *);
+   void play(QSound *) override;
 
-   void stop(QSound *);
-   bool okay();
+   void stop(QSound *) override;
+   bool okay() override;
 
    int decLoop(QSound *snd) {
       return QAuServer::decLoop(snd);
@@ -114,20 +111,24 @@ DWORD WINAPI SoundPlayProc(LPVOID param)
          flags |= SND_LOOP;
       }
 
-      PlaySound((wchar_t *)filename.utf16(), 0, flags);
+      std::wstring tmp(filename.toStdWString());
+      PlaySound(&tmp[0], 0, flags);
+
       if (sound && loops == 1) {
          server->decLoop(sound);
       }
 
       // GUI thread continues, but we are done as well.
       SetEvent(event);
+
    } else {
       // signal GUI thread to continue - sound might be reset!
       QPointer<QSound> guarded_sound = sound;
       SetEvent(event);
 
       for (int l = 0; l < loops && server->current; ++l) {
-         PlaySound((wchar_t *)filename.utf16(), 0, SND_FILENAME | SND_SYNC);
+         std::wstring tmp(filename.toStdWString());
+         PlaySound(&tmp[0], 0, SND_FILENAME | SND_SYNC);
 
          if (guarded_sound) {
             server->decLoop(guarded_sound);

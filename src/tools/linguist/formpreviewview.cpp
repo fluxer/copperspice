@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -48,11 +45,7 @@
 
 QT_BEGIN_NAMESPACE
 
-#if defined(Q_CC_SUN) || defined(Q_CC_HPACC) || defined(Q_CC_XLC)
-int qHash(const QUiTranslatableStringValue &tsv)
-#else
 static int qHash(const QUiTranslatableStringValue &tsv)
-#endif
 {
    return qHash(tsv.value()) ^ qHash(tsv.comment());
 }
@@ -127,7 +120,7 @@ static void buildTargets(QObject *o, TargetsHash *targets)
 {
    TranslatableEntry target;
 
-   foreach (const QByteArray & prop, o->dynamicPropertyNames()) {
+   for (const QByteArray & prop : o->dynamicPropertyNames()) {
       if (prop.startsWith(PROP_GENERIC_PREFIX)) {
          const QByteArray propName = prop.mid(sizeof(PROP_GENERIC_PREFIX) - 1);
          INSERT_TARGET(o->property(prop),
@@ -202,16 +195,18 @@ static void buildTargets(QObject *o, TargetsHash *targets)
       }
 #endif
    }
-   foreach (QObject * co, o->children())
-   buildTargets(co, targets);
+   for (QObject * co : o->children()) {
+      buildTargets(co, targets);
+   }
 }
 
 static void destroyTargets(TargetsHash *targets)
 {
    for (TargetsHash::Iterator it = targets->begin(), end = targets->end(); it != end; ++it)
-      foreach (const TranslatableEntry & target, *it)
-      if (target.type == TranslatableProperty) {
-         delete target.prop.name;
+      for (const TranslatableEntry & target : *it) {
+         if (target.type == TranslatableProperty) {
+            delete target.prop.name;
+         }
       }
    targets->clear();
 }
@@ -281,11 +276,12 @@ static void retranslateTargets(
       text = msg->translation();
    }
    if (text.isEmpty() && !tsv.value().isEmpty()) {
-      text = QLatin1Char('#') + sourceText;
+      text = '#' + sourceText;
    }
 
-   foreach (const TranslatableEntry & target, targets)
-   retranslateTarget(target, text);
+   for (const TranslatableEntry & target : targets) {
+      retranslateTarget(target, text);
+   }
 }
 
 static void highlightTreeWidgetItem(QTreeWidgetItem *item, int col, bool on)
@@ -356,8 +352,10 @@ static void highlightAction(QAction *a, bool on)
          a->setProperty(FONT_BACKUP_PROP, QVariant());
       }
    }
-   foreach (QWidget * w, a->associatedWidgets())
-   highlightWidget(w, on);
+
+   for (QWidget * w : a->associatedWidgets()) {
+      highlightWidget(w, on);
+   }
 }
 
 static void highlightWidget(QWidget *w, bool on)
@@ -366,10 +364,13 @@ static void highlightWidget(QWidget *w, bool on)
    if (on) {
       if (!bak.isValid()) {
          QPalette pal = qApp->palette();
-         foreach (QObject * co, w->children())
-         if (QWidget *cw = qobject_cast<QWidget *>(co)) {
-            cw->setPalette(cw->palette().resolve(pal));
+
+         for (QObject * co : w->children()) {
+            if (QWidget *cw = qobject_cast<QWidget *>(co)) {
+               cw->setPalette(cw->palette().resolve(pal));
+            }
          }
+
          w->setProperty(PALETTE_BACKUP_PROP, QVariant::fromValue(w->palette().resolve(pal)));
          w->setProperty(AUTOFILL_BACKUP_PROP, QVariant::fromValue(w->autoFillBackground()));
          QColor col1 = pal.color(QPalette::Dark);
@@ -449,8 +450,9 @@ static void highlightTarget(const TranslatableEntry &target, bool on)
 
 static void highlightTargets(const QList<TranslatableEntry> &targets, bool on)
 {
-   foreach (const TranslatableEntry & target, targets)
-   highlightTarget(target, on);
+   for (const TranslatableEntry & target : targets) {
+      highlightTarget(target, on);
+   }
 }
 
 FormPreviewView::FormPreviewView(QWidget *parent, MultiDataModel *dataModel)

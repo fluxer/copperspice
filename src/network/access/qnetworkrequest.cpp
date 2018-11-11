@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -37,249 +34,33 @@
 # include <stdio.h>
 #endif
 
-QT_BEGIN_NAMESPACE
-
-/*!
-    \class QNetworkRequest
-    \brief The QNetworkRequest class holds a request to be sent with QNetworkAccessManager.
-    \since 4.4
-
-    \ingroup network
-    \inmodule QtNetwork
-
-    QNetworkRequest is part of the Network Access API and is the class
-    holding the information necessary to send a request over the
-    network. It contains a URL and some ancillary information that can
-    be used to modify the request.
-
-    \sa QNetworkReply, QNetworkAccessManager
-*/
-
-/*!
-    \enum QNetworkRequest::KnownHeaders
-
-    List of known header types that QNetworkRequest parses. Each known
-    header is also represented in raw form with its full HTTP name.
-
-    \value ContentTypeHeader    corresponds to the HTTP Content-Type
-    header and contains a string containing the media (MIME) type and
-    any auxiliary data (for instance, charset)
-
-    \value ContentLengthHeader  corresponds to the HTTP Content-Length
-    header and contains the length in bytes of the data transmitted.
-
-    \value LocationHeader       corresponds to the HTTP Location
-    header and contains a URL representing the actual location of the
-    data, including the destination URL in case of redirections.
-
-    \value LastModifiedHeader   corresponds to the HTTP Last-Modified
-    header and contains a QDateTime representing the last modification
-    date of the contents
-
-    \value CookieHeader         corresponds to the HTTP Cookie header
-    and contains a QList<QNetworkCookie> representing the cookies to
-    be sent back to the server
-
-    \value SetCookieHeader      corresponds to the HTTP Set-Cookie
-    header and contains a QList<QNetworkCookie> representing the
-    cookies sent by the server to be stored locally
-
-    \sa header(), setHeader(), rawHeader(), setRawHeader()
-*/
-
-/*!
-    \enum QNetworkRequest::Attribute
-    \since 4.7
-
-    Attribute codes for the QNetworkRequest and QNetworkReply.
-
-    Attributes are extra meta-data that are used to control the
-    behavior of the request and to pass further information from the
-    reply back to the application. Attributes are also extensible,
-    allowing custom implementations to pass custom values.
-
-    The following table explains what the default attribute codes are,
-    the QVariant types associated, the default value if said attribute
-    is missing and whether it's used in requests or replies.
-
-    \value HttpStatusCodeAttribute
-        Replies only, type: QVariant::Int (no default)
-        Indicates the HTTP status code received from the HTTP server
-        (like 200, 304, 404, 401, etc.). If the connection was not
-        HTTP-based, this attribute will not be present.
-
-    \value HttpReasonPhraseAttribute
-        Replies only, type: QVariant::ByteArray (no default)
-        Indicates the HTTP reason phrase as received from the HTTP
-        server (like "Ok", "Found", "Not Found", "Access Denied",
-        etc.) This is the human-readable representation of the status
-        code (see above). If the connection was not HTTP-based, this
-        attribute will not be present.
-
-    \value RedirectionTargetAttribute
-        Replies only, type: QVariant::Url (no default)
-        If present, it indicates that the server is redirecting the
-        request to a different URL. The Network Access API does not by
-        default follow redirections: it's up to the application to
-        determine if the requested redirection should be allowed,
-        according to its security policies.
-        The returned URL might be relative. Use QUrl::resolved()
-        to create an absolute URL out of it.
-
-    \value ConnectionEncryptedAttribute
-        Replies only, type: QVariant::Bool (default: false)
-        Indicates whether the data was obtained through an encrypted
-        (secure) connection.
-
-    \value CacheLoadControlAttribute
-        Requests only, type: QVariant::Int (default: QNetworkRequest::PreferNetwork)
-        Controls how the cache should be accessed. The possible values
-        are those of QNetworkRequest::CacheLoadControl. Note that the
-        default QNetworkAccessManager implementation does not support
-        caching. However, this attribute may be used by certain
-        backends to modify their requests (for example, for caching proxies).
-
-    \value CacheSaveControlAttribute
-        Requests only, type: QVariant::Bool (default: true)
-        Controls if the data obtained should be saved to cache for
-        future uses. If the value is false, the data obtained will not
-        be automatically cached. If true, data may be cached, provided
-        it is cacheable (what is cacheable depends on the protocol
-        being used).
-
-    \value SourceIsFromCacheAttribute
-        Replies only, type: QVariant::Bool (default: false)
-        Indicates whether the data was obtained from cache
-        or not.
-
-    \value DoNotBufferUploadDataAttribute
-        Requests only, type: QVariant::Bool (default: false)
-        Indicates whether the QNetworkAccessManager code is
-        allowed to buffer the upload data, e.g. when doing a HTTP POST.
-        When using this flag with sequential upload data, the ContentLengthHeader
-        header must be set.
-
-    \value HttpPipeliningAllowedAttribute
-        Requests only, type: QVariant::Bool (default: false)
-        Indicates whether the QNetworkAccessManager code is
-        allowed to use HTTP pipelining with this request.
-
-    \value HttpPipeliningWasUsedAttribute
-        Replies only, type: QVariant::Bool
-        Indicates whether the HTTP pipelining was used for receiving
-        this reply.
-
-    \value CustomVerbAttribute
-       Requests only, type: QVariant::ByteArray
-       Holds the value for the custom HTTP verb to send (destined for usage
-       of other verbs than GET, POST, PUT and DELETE). This verb is set
-       when calling QNetworkAccessManager::sendCustomRequest().
-
-    \value CookieLoadControlAttribute
-        Requests only, type: QVariant::Int (default: QNetworkRequest::Automatic)
-        Indicates whether to send 'Cookie' headers in the request.
-        This attribute is set to false by QtWebKit when creating a cross-origin
-        XMLHttpRequest where withCredentials has not been set explicitly to true by the
-        Javascript that created the request.
-        See \l{http://www.w3.org/TR/XMLHttpRequest2/#credentials-flag}{here} for more information.
-        (This value was introduced in 4.7.)
-
-    \value CookieSaveControlAttribute
-        Requests only, type: QVariant::Int (default: QNetworkRequest::Automatic)
-        Indicates whether to save 'Cookie' headers received from the server in reply
-        to the request.
-        This attribute is set to false by QtWebKit when creating a cross-origin
-        XMLHttpRequest where withCredentials has not been set explicitly to true by the
-        Javascript that created the request.
-        See \l{http://www.w3.org/TR/XMLHttpRequest2/#credentials-flag} {here} for more information.
-        (This value was introduced in 4.7.)
-
-    \value AuthenticationReuseAttribute
-        Requests only, type: QVariant::Int (default: QNetworkRequest::Automatic)
-        Indicates whether to use cached authorization credentials in the request,
-        if available. If this is set to QNetworkRequest::Manual and the authentication
-        mechanism is 'Basic' or 'Digest', Qt will not send an an 'Authorization' HTTP
-        header with any cached credentials it may have for the request's URL.
-        This attribute is set to QNetworkRequest::Manual by QtWebKit when creating a cross-origin
-        XMLHttpRequest where withCredentials has not been set explicitly to true by the
-        Javascript that created the request.
-        See \l{http://www.w3.org/TR/XMLHttpRequest2/#credentials-flag} {here} for more information.
-        (This value was introduced in 4.7.)
-
-    \omitvalue MaximumDownloadBufferSizeAttribute
-
-    \omitvalue DownloadBufferAttribute
-
-    \omitvalue SynchronousRequestAttribute
-
-    \value User
-        Special type. Additional information can be passed in
-        QVariants with types ranging from User to UserMax. The default
-        implementation of Network Access will ignore any request
-        attributes in this range and it will not produce any
-        attributes in this range in replies. The range is reserved for
-        extensions of QNetworkAccessManager.
-
-    \value UserMax
-        Special type. See User.
-*/
-
-/*!
-    \enum QNetworkRequest::CacheLoadControl
-
-    Controls the caching mechanism of QNetworkAccessManager.
-
-    \value AlwaysNetwork        always load from network and do not
-    check if the cache has a valid entry (similar to the
-    "Reload" feature in browsers)
-
-    \value PreferNetwork        default value; load from the network
-    if the cached entry is older than the network entry
-
-    \value PreferCache          load from cache if available,
-    otherwise load from network. Note that this can return possibly
-    stale (but not expired) items from cache.
-
-    \value AlwaysCache          only load from cache, indicating error
-    if the item was not cached (i.e., off-line mode)
-*/
-
-/*!
-    \enum QNetworkRequest::LoadControl
-    \since 4.7
-
-    Indicates if an aspect of the request's loading mechanism has been
-    manually overridden, e.g. by QtWebKit.
-
-    \value Automatic            default value: indicates default behaviour.
-
-    \value Manual               indicates behaviour has been manually overridden.
-*/
-
 class QNetworkRequestPrivate: public QSharedData, public QNetworkHeadersPrivate
 {
  public:
+   static const int maxRedirectCount = 50;
+
    inline QNetworkRequestPrivate()
       : priority(QNetworkRequest::NormalPriority)
-#ifndef QT_NO_OPENSSL
+#ifdef QT_SSL
       , sslConfiguration(0)
 #endif
-   {
-      qRegisterMetaType<QNetworkRequest>();
-   }
+      , maxRedirectsAllowed(maxRedirectCount)
+   { }
+
    ~QNetworkRequestPrivate() {
-#ifndef QT_NO_OPENSSL
+
+#ifdef QT_SSL
       delete sslConfiguration;
 #endif
    }
-
 
    QNetworkRequestPrivate(const QNetworkRequestPrivate &other)
       : QSharedData(other), QNetworkHeadersPrivate(other) {
       url = other.url;
       priority = other.priority;
+      maxRedirectsAllowed = other.maxRedirectsAllowed;
 
-#ifndef QT_NO_OPENSSL
+#ifdef QT_SSL
       sslConfiguration = 0;
       if (other.sslConfiguration) {
          sslConfiguration = new QSslConfiguration(*other.sslConfiguration);
@@ -291,89 +72,55 @@ class QNetworkRequestPrivate: public QSharedData, public QNetworkHeadersPrivate
       return url == other.url &&
              priority == other.priority &&
              rawHeaders == other.rawHeaders &&
-             attributes == other.attributes;
+             attributes == other.attributes &&
+             maxRedirectsAllowed == other.maxRedirectsAllowed;
       // don't compare cookedHeaders
    }
 
    QUrl url;
    QNetworkRequest::Priority priority;
-#ifndef QT_NO_OPENSSL
+
+#ifdef QT_SSL
    mutable QSslConfiguration *sslConfiguration;
 #endif
+   int maxRedirectsAllowed;
 };
 
-/*!
-    Constructs a QNetworkRequest object with \a url as the URL to be
-    requested.
 
-    \sa url(), setUrl()
-*/
 QNetworkRequest::QNetworkRequest(const QUrl &url)
    : d(new QNetworkRequestPrivate)
 {
    d->url = url;
 }
 
-/*!
-    Creates a copy of \a other.
-*/
 QNetworkRequest::QNetworkRequest(const QNetworkRequest &other)
    : d(other.d)
 {
 }
 
-/*!
-    Disposes of the QNetworkRequest object.
-*/
 QNetworkRequest::~QNetworkRequest()
 {
    // QSharedDataPointer auto deletes
    d = 0;
 }
 
-/*!
-    Returns true if this object is the same as \a other (i.e., if they
-    have the same URL, same headers and same meta-data settings).
-
-    \sa operator!=()
-*/
 bool QNetworkRequest::operator==(const QNetworkRequest &other) const
 {
    return d == other.d || *d == *other.d;
 }
 
-/*!
-    \fn bool QNetworkRequest::operator!=(const QNetworkRequest &other) const
-
-    Returns false if this object is not the same as \a other.
-
-    \sa operator==()
-*/
-
-/*!
-    Creates a copy of \a other
-*/
 QNetworkRequest &QNetworkRequest::operator=(const QNetworkRequest &other)
 {
    d = other.d;
    return *this;
 }
 
-/*!
-    Returns the URL this network request is referring to.
 
-    \sa setUrl()
-*/
 QUrl QNetworkRequest::url() const
 {
    return d->url;
 }
 
-/*!
-    Sets the URL this network request is referring to to be \a url.
-
-    \sa url()
-*/
 void QNetworkRequest::setUrl(const QUrl &url)
 {
    d->url = url;
@@ -396,7 +143,7 @@ bool QNetworkRequest::hasRawHeader(const QByteArray &headerName) const
 
 QByteArray QNetworkRequest::rawHeader(const QByteArray &headerName) const
 {
-   QNetworkHeadersPrivate::RawHeadersList::ConstIterator it = d->findRawHeader(headerName);
+   QNetworkHeadersPrivate::RawHeadersList::const_iterator it = d->findRawHeader(headerName);
 
    if (it != d->rawHeaders.constEnd()) {
       return it->second;
@@ -420,14 +167,6 @@ QVariant QNetworkRequest::attribute(Attribute code, const QVariant &defaultValue
    return d->attributes.value(code, defaultValue);
 }
 
-/*!
-    Sets the attribute associated with code \a code to be value \a
-    value. If the attribute is already set, the previous value is
-    discarded. In special, if \a value is an invalid QVariant, the
-    attribute is unset.
-
-    \sa attribute(), QNetworkRequest::Attribute
-*/
 void QNetworkRequest::setAttribute(Attribute code, const QVariant &value)
 {
    if (value.isValid()) {
@@ -437,13 +176,8 @@ void QNetworkRequest::setAttribute(Attribute code, const QVariant &value)
    }
 }
 
-#ifndef QT_NO_OPENSSL
-/*!
-    Returns this network request's SSL configuration. By default, no
-    SSL settings are specified.
+#ifdef QT_SSL
 
-    \sa setSslConfiguration()
-*/
 QSslConfiguration QNetworkRequest::sslConfiguration() const
 {
    if (!d->sslConfiguration) {
@@ -452,18 +186,6 @@ QSslConfiguration QNetworkRequest::sslConfiguration() const
    return *d->sslConfiguration;
 }
 
-/*!
-    Sets this network request's SSL configuration to be \a config. The
-    settings that apply are the private key, the local certificate,
-    the SSL protocol (SSLv2, SSLv3, TLSv1 where applicable), the CA
-    certificates and the ciphers that the SSL backend is allowed to
-    use.
-
-    By default, no SSL configuration is set, which allows the backends
-    to choose freely what configuration is best for them.
-
-    \sa sslConfiguration(), QSslConfiguration::defaultConfiguration()
-*/
 void QNetworkRequest::setSslConfiguration(const QSslConfiguration &config)
 {
    if (!d->sslConfiguration) {
@@ -474,73 +196,32 @@ void QNetworkRequest::setSslConfiguration(const QSslConfiguration &config)
 }
 #endif
 
-/*!
-    \since 4.6
-
-    Allows setting a reference to the \a object initiating
-    the request.
-
-    For example QtWebKit sets the originating object to the
-    QWebFrame that initiated the request.
-
-    \sa originatingObject()
-*/
 void QNetworkRequest::setOriginatingObject(QObject *object)
 {
    d->originatingObject = object;
 }
 
-/*!
-    \since 4.6
-
-    Returns a reference to the object that initiated this
-    network request; returns 0 if not set or the object has
-    been destroyed.
-
-    \sa setOriginatingObject()
-*/
 QObject *QNetworkRequest::originatingObject() const
 {
    return d->originatingObject.data();
 }
 
-/*!
-    \since 4.7
-
-    Return the priority of this request.
-
-    \sa setPriority()
-*/
 QNetworkRequest::Priority QNetworkRequest::priority() const
 {
    return d->priority;
 }
 
-/*! \enum QNetworkRequest::Priority
-
-  \since 4.7
-
-  This enum lists the possible network request priorities.
-
-  \value HighPriority   High priority
-  \value NormalPriority Normal priority
-  \value LowPriority    Low priority
- */
-
-/*!
-    \since 4.7
-
-    Set the priority of this request to \a priority.
-
-    \note The \a priority is only a hint to the network access
-    manager.  It can use it or not. Currently it is used for HTTP to
-    decide which request should be sent first to a server.
-
-    \sa priority()
-*/
 void QNetworkRequest::setPriority(Priority priority)
 {
    d->priority = priority;
+}
+int QNetworkRequest::maximumRedirectsAllowed() const
+{
+   return d->maxRedirectsAllowed;
+}
+void QNetworkRequest::setMaximumRedirectsAllowed(int maxRedirectsAllowed)
+{
+   d->maxRedirectsAllowed = maxRedirectsAllowed;
 }
 
 static QByteArray headerName(QNetworkRequest::KnownHeaders header)
@@ -567,6 +248,10 @@ static QByteArray headerName(QNetworkRequest::KnownHeaders header)
       case QNetworkRequest::ContentDispositionHeader:
          return "Content-Disposition";
 
+      case QNetworkRequest::UserAgentHeader:
+         return "User-Agent";
+      case QNetworkRequest::ServerHeader:
+         return "Server";
          // no default:
          // if new values are added, this will generate a compiler warning
    }
@@ -580,11 +265,13 @@ static QByteArray headerValue(QNetworkRequest::KnownHeaders header, const QVaria
       case QNetworkRequest::ContentTypeHeader:
       case QNetworkRequest::ContentLengthHeader:
       case QNetworkRequest::ContentDispositionHeader:
+      case QNetworkRequest::UserAgentHeader:
+      case QNetworkRequest::ServerHeader:
          return value.toByteArray();
 
       case QNetworkRequest::LocationHeader:
-         switch (value.type()) {
-            case QVariant::Url:
+         switch (value.userType()) {
+            case QMetaType::QUrl:
                return value.toUrl().toEncoded();
 
             default:
@@ -592,9 +279,9 @@ static QByteArray headerValue(QNetworkRequest::KnownHeaders header, const QVaria
          }
 
       case QNetworkRequest::LastModifiedHeader:
-         switch (value.type()) {
-            case QVariant::Date:
-            case QVariant::DateTime:
+         switch (value.userType()) {
+            case QMetaType::QDate:
+            case QMetaType::QDateTime:
                // generate RFC 1123/822 dates:
                return QNetworkHeadersPrivate::toHttpDate(value.toDateTime());
 
@@ -610,7 +297,7 @@ static QByteArray headerValue(QNetworkRequest::KnownHeaders header, const QVaria
 
          QByteArray result;
          bool first = true;
-         foreach (const QNetworkCookie & cookie, cookies) {
+         for (const QNetworkCookie &cookie : cookies) {
             if (!first) {
                result += "; ";
             }
@@ -628,7 +315,7 @@ static QByteArray headerValue(QNetworkRequest::KnownHeaders header, const QVaria
 
          QByteArray result;
          bool first = true;
-         foreach (const QNetworkCookie & cookie, cookies) {
+         for (const QNetworkCookie &cookie : cookies) {
             if (!first) {
                result += ", ";
             }
@@ -642,10 +329,10 @@ static QByteArray headerValue(QNetworkRequest::KnownHeaders header, const QVaria
    return QByteArray();
 }
 
-static QNetworkRequest::KnownHeaders parseHeaderName(const QByteArray &headerName)
+static int parseHeaderName(const QByteArray &headerName)
 {
    if (headerName.isEmpty()) {
-      return QNetworkRequest::KnownHeaders(-1);
+      return -1;
    }
 
    switch (tolower(headerName.at(0))) {
@@ -678,11 +365,22 @@ static QNetworkRequest::KnownHeaders parseHeaderName(const QByteArray &headerNam
       case 's':
          if (qstricmp(headerName.constData(), "set-cookie") == 0) {
             return QNetworkRequest::SetCookieHeader;
+
+         } else if (qstricmp(headerName.constData(), "server") == 0) {
+            return QNetworkRequest::ServerHeader;
+
+         }
+
+         break;
+
+      case 'u':
+         if (qstricmp(headerName.constData(), "user-agent") == 0) {
+            return QNetworkRequest::UserAgentHeader;
          }
          break;
    }
 
-   return QNetworkRequest::KnownHeaders(-1); // nothing found
+   return -1; // nothing found
 }
 
 static QVariant parseHttpDate(const QByteArray &raw)
@@ -699,7 +397,8 @@ static QVariant parseCookieHeader(const QByteArray &raw)
 {
    QList<QNetworkCookie> result;
    QList<QByteArray> cookieList = raw.split(';');
-   foreach (const QByteArray & cookie, cookieList) {
+
+   for (const QByteArray &cookie : cookieList) {
       QList<QNetworkCookie> parsed = QNetworkCookie::parseCookies(cookie.trimmed());
       if (parsed.count() != 1) {
          return QVariant();   // invalid Cookie: header
@@ -715,6 +414,8 @@ static QVariant parseHeaderValue(QNetworkRequest::KnownHeaders header, const QBy
 {
    // header is always a valid value
    switch (header) {
+      case QNetworkRequest::UserAgentHeader:
+      case QNetworkRequest::ServerHeader:
       case QNetworkRequest::ContentTypeHeader:
          // copy exactly, convert to QString
          return QString::fromLatin1(value);
@@ -751,11 +452,12 @@ static QVariant parseHeaderValue(QNetworkRequest::KnownHeaders header, const QBy
    return QVariant();
 }
 
-QNetworkHeadersPrivate::RawHeadersList::ConstIterator
+QNetworkHeadersPrivate::RawHeadersList::const_iterator
 QNetworkHeadersPrivate::findRawHeader(const QByteArray &key) const
 {
-   RawHeadersList::ConstIterator it = rawHeaders.constBegin();
-   RawHeadersList::ConstIterator end = rawHeaders.constEnd();
+   RawHeadersList::const_iterator it  = rawHeaders.constBegin();
+   RawHeadersList::const_iterator end = rawHeaders.constEnd();
+
    for ( ; it != end; ++it)
       if (qstricmp(it->first.constData(), key.constData()) == 0) {
          return it;
@@ -772,8 +474,8 @@ QNetworkHeadersPrivate::RawHeadersList QNetworkHeadersPrivate::allRawHeaders() c
 QList<QByteArray> QNetworkHeadersPrivate::rawHeadersKeys() const
 {
    QList<QByteArray> result;
-   RawHeadersList::ConstIterator it = rawHeaders.constBegin(),
-                                 end = rawHeaders.constEnd();
+   RawHeadersList::const_iterator it = rawHeaders.constBegin(), end = rawHeaders.constEnd();
+
    for ( ; it != end; ++it) {
       result << it->first;
    }
@@ -805,8 +507,8 @@ void QNetworkHeadersPrivate::setAllRawHeaders(const RawHeadersList &list)
    cookedHeaders.clear();
    rawHeaders = list;
 
-   RawHeadersList::ConstIterator it = rawHeaders.constBegin();
-   RawHeadersList::ConstIterator end = rawHeaders.constEnd();
+   RawHeadersList::const_iterator it = rawHeaders.constBegin();
+   RawHeadersList::const_iterator end = rawHeaders.constEnd();
    for ( ; it != end; ++it) {
       parseAndSetHeader(it->first, it->second);
    }
@@ -831,8 +533,8 @@ void QNetworkHeadersPrivate::setCookedHeader(QNetworkRequest::KnownHeaders heade
       QByteArray rawValue = headerValue(header, value);
 
       if (rawValue.isEmpty()) {
-         qWarning("QNetworkRequest::setHeader: QVariant of type %s can not be used with header %s", value.typeName(),
-                  name.constData());
+         qWarning("QNetworkRequest::setHeader: QVariant of type %s can not be used with header %s",
+                  csPrintable(value.typeName()), name.constData());
          return;
       }
 
@@ -843,7 +545,7 @@ void QNetworkHeadersPrivate::setCookedHeader(QNetworkRequest::KnownHeaders heade
 
 void QNetworkHeadersPrivate::setRawHeaderInternal(const QByteArray &key, const QByteArray &value)
 {
-   RawHeadersList::Iterator it = rawHeaders.begin();
+   RawHeadersList::iterator it = rawHeaders.begin();
 
    while (it != rawHeaders.end()) {
       if (qstricmp(it->first.constData(), key.constData()) == 0) {
@@ -867,10 +569,11 @@ void QNetworkHeadersPrivate::setRawHeaderInternal(const QByteArray &key, const Q
 void QNetworkHeadersPrivate::parseAndSetHeader(const QByteArray &key, const QByteArray &value)
 {
    // is it a known header?
-   QNetworkRequest::KnownHeaders parsedKey = parseHeaderName(key);
+   const int parsedKeyAsInt = parseHeaderName(key);
 
-   if (parsedKey != QNetworkRequest::KnownHeaders(-1)) {
-
+   if (parsedKeyAsInt != -1) {
+      const QNetworkRequest::KnownHeaders parsedKey
+         = static_cast<QNetworkRequest::KnownHeaders>(parsedKeyAsInt);
       if (value.isNull()) {
          cookedHeaders.remove(parsedKey);
 
@@ -896,53 +599,53 @@ static int name_to_month(const char *month_str)
          switch (month_str[1]) {
             case 'a':
                return 1;
-               break;
+
             case 'u':
                switch (month_str[2] ) {
                   case 'n':
                      return 6;
-                     break;
+
                   case 'l':
                      return 7;
-                     break;
+
                }
          }
          break;
       case 'F':
          return 2;
-         break;
+
       case 'M':
          switch (month_str[2] ) {
             case 'r':
                return 3;
-               break;
+
             case 'y':
                return 5;
-               break;
+
          }
          break;
       case 'A':
          switch (month_str[1]) {
             case 'p':
                return 4;
-               break;
+
             case 'u':
                return 8;
-               break;
+
          }
          break;
       case 'O':
          return 10;
-         break;
+
       case 'S':
          return 9;
-         break;
+
       case 'N':
          return 11;
-         break;
+
       case 'D':
          return 12;
-         break;
+
    }
 
    return 0;
@@ -993,5 +696,3 @@ QByteArray QNetworkHeadersPrivate::toHttpDate(const QDateTime &dt)
    return QLocale::c().toString(dt, QLatin1String("ddd, dd MMM yyyy hh:mm:ss 'GMT'"))
           .toLatin1();
 }
-
-QT_END_NAMESPACE

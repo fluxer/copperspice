@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,15 +23,13 @@
 #ifndef QJSONDOCUMENT_H
 #define QJSONDOCUMENT_H
 
-#include <QtCore/qjsonvalue.h>
+#include <qjson.h>
+#include <qjsonarray.h>
+#include <qjsonobject.h>
+#include <qjsonvalue.h>
+#include <qstring.h>
 
-QT_BEGIN_NAMESPACE
-
-class QDebug;
-
-namespace QJsonPrivate {
-class Parser;
-}
+class QJsonParser;
 
 struct Q_CORE_EXPORT QJsonParseError {
    enum ParseError {
@@ -54,83 +49,75 @@ struct Q_CORE_EXPORT QJsonParseError {
       DocumentTooLarge
    };
 
-   QString    errorString() const;
+   QString errorString() const;
 
-   int        offset;
+   int offset;
    ParseError error;
 };
 
 class Q_CORE_EXPORT QJsonDocument
 {
  public:
-
-#ifdef Q_LITTLE_ENDIAN
-   static const uint BinaryFormatTag = ('q') | ('b' << 8) | ('j' << 16) | ('s' << 24);
-#else
-   static const uint BinaryFormatTag = ('q' << 24) | ('b' << 16) | ('j' << 8) | ('s');
-#endif
-
-   QJsonDocument();
-   explicit QJsonDocument(const QJsonObject &object);
-   explicit QJsonDocument(const QJsonArray &array);
-   ~QJsonDocument();
-
-   QJsonDocument(const QJsonDocument &other);
-   QJsonDocument &operator =(const QJsonDocument &other);
-
    enum DataValidation {
       Validate,
       BypassValidation
    };
-
-   static QJsonDocument fromRawData(const char *data, int size, DataValidation validation = Validate);
-   const char *rawData(int *size) const;
-
-   static QJsonDocument fromBinaryData(const QByteArray &data, DataValidation validation  = Validate);
-   QByteArray toBinaryData() const;
-
-   static QJsonDocument fromVariant(const QVariant &variant);
-   QVariant toVariant() const;
 
    enum JsonFormat {
       Indented,
       Compact
    };
 
-   static QJsonDocument fromJson(const QByteArray &json, QJsonParseError *error = 0);
+   QJsonDocument();
+   explicit QJsonDocument(const QJsonObject &object);
+   explicit QJsonDocument(const QJsonArray &array);
 
-   QByteArray toJson(JsonFormat format = Indented) const;
+   QJsonDocument(const QJsonDocument &other);
+   QJsonDocument(QJsonDocument &&other);
+
+   ~QJsonDocument();
+
+   // methods
+   QJsonArray array() const;
 
    bool isEmpty() const;
    bool isArray() const;
    bool isObject() const;
+   bool isNull() const;
 
    QJsonObject object() const;
-   QJsonArray array() const;
 
    void setObject(const QJsonObject &object);
    void setArray(const QJsonArray &array);
 
-   bool operator==(const QJsonDocument &other) const;
-   bool operator!=(const QJsonDocument &other) const {
-      return !(*this == other);
+   QVariant toVariant() const;
+
+   QByteArray toJson(JsonFormat format = Indented) const {
+      return toJsonByteArray(format);
    }
 
-   bool isNull() const;
+   QByteArray toJsonByteArray(JsonFormat format = Indented) const {
+      return toJsonString(format).toUtf8();
+   }
+
+   QString toJsonString(JsonFormat format = Indented) const;
+
+   //
+   static QJsonDocument fromJson(QStringView json, QJsonParseError *error = nullptr);
+   static QJsonDocument fromJson(const QByteArray &json, QJsonParseError *error = nullptr);
+   static QJsonDocument fromVariant(const QVariant &variant);
+
+   // operators
+   QJsonDocument &operator =(const QJsonDocument &other);
+
+   bool operator==(const QJsonDocument &other) const;
+
+   bool operator!=(const QJsonDocument &other) const {
+      return ! (*this == other);
+   }
 
  private:
-   friend class QJsonValue;
-   friend class QJsonPrivate::Data;
-   friend class QJsonPrivate::Parser;
-   friend Q_CORE_EXPORT QDebug operator<<(QDebug, const QJsonDocument &);
-
-   QJsonDocument(QJsonPrivate::Data *data);
-
-   QJsonPrivate::Data *d;
+   std::shared_ptr<QJsonValue> m_data;
 };
 
-Q_CORE_EXPORT QDebug operator<<(QDebug, const QJsonDocument &);
-
-QT_END_NAMESPACE
-
-#endif // QJSONDOCUMENT_H
+#endif

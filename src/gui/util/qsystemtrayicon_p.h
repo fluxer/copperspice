@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -34,8 +31,6 @@
 #include <QtGui/qpixmap.h>
 #include <QtCore/qstring.h>
 #include <QtCore/qpointer.h>
-
-QT_BEGIN_NAMESPACE
 
 class QSystemTrayIconSys;
 class QToolButton;
@@ -90,10 +85,10 @@ class QBalloonTip : public QWidget
    void balloon(const QPoint &, int, bool);
 
  protected:
-   void paintEvent(QPaintEvent *);
-   void resizeEvent(QResizeEvent *);
-   void mousePressEvent(QMouseEvent *e);
-   void timerEvent(QTimerEvent *e);
+   void paintEvent(QPaintEvent *) override;
+   void resizeEvent(QResizeEvent *) override;
+   void mousePressEvent(QMouseEvent *e) override;
+   void timerEvent(QTimerEvent *e) override;
 
  private:
    QSystemTrayIcon *trayIcon;
@@ -102,12 +97,11 @@ class QBalloonTip : public QWidget
 };
 
 #if defined(Q_WS_X11)
-QT_BEGIN_INCLUDE_NAMESPACE
+
 #include <QtCore/qcoreapplication.h>
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include <X11/Xutil.h>
-QT_END_INCLUDE_NAMESPACE
 
 class QSystemTrayIconSys : public QWidget
 {
@@ -141,17 +135,17 @@ class QSystemTrayIconSys : public QWidget
    static XVisualInfo sysTrayVisual;
 
  protected:
-   void paintEvent(QPaintEvent *pe);
-   void resizeEvent(QResizeEvent *re);
-   bool x11Event(XEvent *event);
-   void mousePressEvent(QMouseEvent *event);
-   void mouseDoubleClickEvent(QMouseEvent *event);
+   void paintEvent(QPaintEvent *pe) override;
+   void resizeEvent(QResizeEvent *re) override;
+   bool x11Event(XEvent *event) override;
+   void mousePressEvent(QMouseEvent *event) override;
+   void mouseDoubleClickEvent(QMouseEvent *event) override;
 
 #ifndef QT_NO_WHEELEVENT
-   void wheelEvent(QWheelEvent *event);
+   void wheelEvent(QWheelEvent *event) override;
 #endif
 
-   bool event(QEvent *e);
+   bool event(QEvent *e) override;
 
  private:
    QPixmap background;
@@ -160,7 +154,6 @@ class QSystemTrayIconSys : public QWidget
 };
 #endif // Q_WS_X11
 
-QT_END_NAMESPACE
 
 #endif // QT_NO_SYSTEMTRAYICON
 

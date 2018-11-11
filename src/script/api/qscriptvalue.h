@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,11 +23,9 @@
 #ifndef QSCRIPTVALUE_H
 #define QSCRIPTVALUE_H
 
-#include <QtCore/qstring.h>
-#include <QtCore/qlist.h>
-#include <QtCore/qsharedpointer.h>
-
-QT_BEGIN_NAMESPACE
+#include <qstring.h>
+#include <qlist.h>
+#include <qsharedpointer.h>
 
 class QScriptClass;
 class QScriptValue;
@@ -38,12 +33,9 @@ class QScriptEngine;
 class QScriptString;
 class QVariant;
 class QObject;
-struct QMetaObject;
 class QDateTime;
 
-#ifndef QT_NO_REGEXP
-class QRegExp;
-#endif
+class QMetaObject;
 
 typedef QList<QScriptValue> QScriptValueList;
 
@@ -52,6 +44,7 @@ typedef double qsreal;
 class QScriptValuePrivate;
 class QScriptEnginePrivate;
 struct QScriptValuePrivatePointerDeleter;
+
 class Q_SCRIPT_EXPORT QScriptValue
 {
  public:
@@ -103,7 +96,6 @@ class Q_SCRIPT_EXPORT QScriptValue
    QScriptValue(uint value);
    QScriptValue(qsreal value);
    QScriptValue(const QString &value);
-   QScriptValue(const QLatin1String &value);
 
    QScriptValue &operator=(const QScriptValue &other);
 
@@ -139,9 +131,8 @@ class Q_SCRIPT_EXPORT QScriptValue
    const QMetaObject *toQMetaObject() const;
    QScriptValue toObject() const;
    QDateTime toDateTime() const;
-#ifndef QT_NO_REGEXP
-   QRegExp toRegExp() const;
-#endif
+
+   QRegularExpression toRegExp() const;
 
    bool instanceOf(const QScriptValue &other) const;
 
@@ -208,7 +199,5 @@ class Q_SCRIPT_EXPORT QScriptValue
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QScriptValue::ResolveFlags)
 Q_DECLARE_OPERATORS_FOR_FLAGS(QScriptValue::PropertyFlags)
-
-QT_END_NAMESPACE
 
 #endif

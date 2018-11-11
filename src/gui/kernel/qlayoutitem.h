@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -86,14 +83,14 @@ class Q_GUI_EXPORT QSpacerItem : public QLayoutItem
    void changeSize(int w, int h, QSizePolicy::Policy hData = QSizePolicy::Minimum,
                    QSizePolicy::Policy vData = QSizePolicy::Minimum);
 
-   QSize sizeHint() const;
-   QSize minimumSize() const;
-   QSize maximumSize() const;
-   Qt::Orientations expandingDirections() const;
-   bool isEmpty() const;
-   void setGeometry(const QRect &);
-   QRect geometry() const;
-   QSpacerItem *spacerItem();
+   QSize sizeHint() const override;
+   QSize minimumSize() const override;
+   QSize maximumSize() const override;
+   Qt::Orientations expandingDirections() const override;
+   bool isEmpty() const override;
+   void setGeometry(const QRect &) override;
+   QRect geometry() const override;
+   QSpacerItem *spacerItem() override;
 
  private:
    int width;
@@ -111,17 +108,17 @@ class Q_GUI_EXPORT QWidgetItem : public QLayoutItem
       : wid(w) {
    }
 
-   QSize sizeHint() const;
-   QSize minimumSize() const;
-   QSize maximumSize() const;
-   Qt::Orientations expandingDirections() const;
-   bool isEmpty() const;
-   void setGeometry(const QRect &);
-   QRect geometry() const;
-   virtual QWidget *widget();
+   QSize sizeHint() const override;
+   QSize minimumSize() const override;
+   QSize maximumSize() const override;
+   Qt::Orientations expandingDirections() const override;
+   bool isEmpty() const override;
+   void setGeometry(const QRect &) override;
+   QRect geometry() const override;
+   virtual QWidget *widget() override;
 
-   bool hasHeightForWidth() const;
-   int heightForWidth(int) const;
+   bool hasHeightForWidth() const override;
+   int heightForWidth(int) const override;
 
  protected:
    QWidget *wid;
@@ -135,10 +132,10 @@ class Q_GUI_EXPORT QWidgetItemV2 : public QWidgetItem
    explicit QWidgetItemV2(QWidget *widget);
    ~QWidgetItemV2();
 
-   QSize sizeHint() const;
-   QSize minimumSize() const;
-   QSize maximumSize() const;
-   int heightForWidth(int width) const;
+   QSize sizeHint() const override;
+   QSize minimumSize() const override;
+   QSize maximumSize() const override;
+   int heightForWidth(int width) const override;
 
  private:
    enum { Dirty = -123, HfwCacheMaxSize = 3 };

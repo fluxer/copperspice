@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -103,10 +100,10 @@ class Q_GUI_EXPORT QDateTimeEdit : public QAbstractSpinBox
 
    using Sections = QFlags<Section>;
 
-   explicit QDateTimeEdit(QWidget *parent = 0);
-   explicit QDateTimeEdit(const QDateTime &dt, QWidget *parent = 0);
-   explicit QDateTimeEdit(const QDate &d, QWidget *parent = 0);
-   explicit QDateTimeEdit(const QTime &t, QWidget *parent = 0);
+   explicit QDateTimeEdit(QWidget *parent = nullptr);
+   explicit QDateTimeEdit(const QDateTime &dt, QWidget *parent = nullptr);
+   explicit QDateTimeEdit(const QDate &d, QWidget *parent = nullptr);
+   explicit QDateTimeEdit(const QTime &t, QWidget *parent = nullptr);
 
    QDateTime dateTime() const;
    QDate date() const;
@@ -168,12 +165,12 @@ class Q_GUI_EXPORT QDateTimeEdit : public QAbstractSpinBox
    Qt::TimeSpec timeSpec() const;
    void setTimeSpec(Qt::TimeSpec spec);
 
-   QSize sizeHint() const;
+   QSize sizeHint() const override;
 
-   virtual void clear();
-   virtual void stepBy(int steps);
+   void clear() override;
+   void stepBy(int steps) override;
 
-   bool event(QEvent *event);
+   bool event(QEvent *event) override;
 
    GUI_CS_SIGNAL_1(Public, void dateTimeChanged(const QDateTime &date))
    GUI_CS_SIGNAL_2(dateTimeChanged, date)
@@ -190,25 +187,26 @@ class Q_GUI_EXPORT QDateTimeEdit : public QAbstractSpinBox
    GUI_CS_SLOT_2(setTime)
 
  protected:
-   virtual void keyPressEvent(QKeyEvent *event);
+   void keyPressEvent(QKeyEvent *event) override;
 
 #ifndef QT_NO_WHEELEVENT
-   virtual void wheelEvent(QWheelEvent *event);
+   void wheelEvent(QWheelEvent *event) override;
 #endif
 
-   virtual void focusInEvent(QFocusEvent *event);
-   virtual bool focusNextPrevChild(bool next);
-   virtual QValidator::State validate(QString &input, int &pos) const;
-   virtual void fixup(QString &input) const;
+   void focusInEvent(QFocusEvent *event) override;
+   bool focusNextPrevChild(bool next) override;
+   QValidator::State validate(QString &input, int &pos) const override;
+   void fixup(QString &input) const override;
 
    virtual QDateTime dateTimeFromText(const QString &text) const;
    virtual QString textFromDateTime(const QDateTime &dt) const;
-   virtual StepEnabled stepEnabled() const;
-   virtual void mousePressEvent(QMouseEvent *event);
-   virtual void paintEvent(QPaintEvent *event);
+
+   StepEnabled stepEnabled() const override;
+   void mousePressEvent(QMouseEvent *event) override;
+   void paintEvent(QPaintEvent *event) override;
    void initStyleOption(QStyleOptionSpinBox *option) const;
 
-   QDateTimeEdit(const QVariant &val, QVariant::Type parserType, QWidget *parent = 0);
+   QDateTimeEdit(const QVariant &val, QVariant::Type parserType, QWidget *parent = nullptr);
 
  private:
    Q_DECLARE_PRIVATE(QDateTimeEdit)
@@ -223,8 +221,8 @@ class Q_GUI_EXPORT QTimeEdit : public QDateTimeEdit
    GUI_CS_OBJECT(QTimeEdit)
 
  public:
-   QTimeEdit(QWidget *parent = 0);
-   QTimeEdit(const QTime &time, QWidget *parent = 0);
+   QTimeEdit(QWidget *parent = nullptr);
+   QTimeEdit(const QTime &time, QWidget *parent = nullptr);
 };
 
 class Q_GUI_EXPORT QDateEdit : public QDateTimeEdit
@@ -232,8 +230,8 @@ class Q_GUI_EXPORT QDateEdit : public QDateTimeEdit
    GUI_CS_OBJECT(QDateEdit)
 
  public:
-   QDateEdit(QWidget *parent = 0);
-   QDateEdit(const QDate &date, QWidget *parent = 0);
+   QDateEdit(QWidget *parent = nullptr);
+   QDateEdit(const QDate &date, QWidget *parent = nullptr);
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QDateTimeEdit::Sections)

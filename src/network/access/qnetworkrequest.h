@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,12 +23,11 @@
 #ifndef QNETWORKREQUEST_H
 #define QNETWORKREQUEST_H
 
-#include <QtCore/QSharedDataPointer>
-#include <QtCore/QString>
-#include <QtCore/QUrl>
-#include <QtCore/QVariant>
+#include <QSharedDataPointer>
+#include <QString>
+#include <QUrl>
+#include <QVariant>
 
-QT_BEGIN_NAMESPACE
 
 class QSslConfiguration;
 class QNetworkRequestPrivate;
@@ -46,7 +42,9 @@ class Q_NETWORK_EXPORT QNetworkRequest
       LastModifiedHeader,
       CookieHeader,
       SetCookieHeader,
-      ContentDispositionHeader  // added for QMultipartMessage
+      ContentDispositionHeader,  // added for QMultipartMessage
+      UserAgentHeader,
+      ServerHeader
    };
    enum Attribute {
       HttpStatusCodeAttribute,
@@ -66,6 +64,11 @@ class Q_NETWORK_EXPORT QNetworkRequest
       MaximumDownloadBufferSizeAttribute, // internal
       DownloadBufferAttribute, // internal
       SynchronousRequestAttribute, // internal
+      BackgroundRequestAttribute,
+      SpdyAllowedAttribute,
+      SpdyWasUsedAttribute,
+      EmitAllUploadProgressSignalsAttribute,
+      FollowRedirectsAttribute,
 
       User = 1000,
       UserMax = 32767
@@ -90,7 +93,17 @@ class Q_NETWORK_EXPORT QNetworkRequest
    explicit QNetworkRequest(const QUrl &url = QUrl());
    QNetworkRequest(const QNetworkRequest &other);
    ~QNetworkRequest();
+
+   QNetworkRequest &operator=(QNetworkRequest &&other) {
+      swap(other);
+      return *this;
+   }
+
    QNetworkRequest &operator=(const QNetworkRequest &other);
+
+   void swap(QNetworkRequest &other)  {
+      qSwap(d, other.d);
+   }
 
    bool operator==(const QNetworkRequest &other) const;
    inline bool operator!=(const QNetworkRequest &other) const {
@@ -114,7 +127,7 @@ class Q_NETWORK_EXPORT QNetworkRequest
    QVariant attribute(Attribute code, const QVariant &defaultValue = QVariant()) const;
    void setAttribute(Attribute code, const QVariant &value);
 
-#ifndef QT_NO_OPENSSL
+#ifdef QT_SSL
    QSslConfiguration sslConfiguration() const;
    void setSslConfiguration(const QSslConfiguration &configuration);
 #endif
@@ -125,12 +138,13 @@ class Q_NETWORK_EXPORT QNetworkRequest
    Priority priority() const;
    void setPriority(Priority priority);
 
+   // HTTP redirect related
+   int maximumRedirectsAllowed() const;
+   void setMaximumRedirectsAllowed(int maximumRedirectsAllowed);
  private:
    QSharedDataPointer<QNetworkRequestPrivate> d;
    friend class QNetworkRequestPrivate;
 };
-
-QT_END_NAMESPACE
 
 Q_DECLARE_METATYPE(QNetworkRequest)
 

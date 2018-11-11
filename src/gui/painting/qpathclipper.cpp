@@ -1,27 +1,26 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
+
+#include <algorithm>
 
 #include <qpathclipper_p.h>
 #include <qbezier_p.h>
@@ -845,7 +844,7 @@ void QWingedEdge::intersectAndAdd()
          }
       }
 
-      qSort(intersections.data(), intersections.data() + intersections.size());
+      std::sort(intersections.data(), intersections.data() + intersections.size());
 
       int first = m_segments.segmentAt(i).va;
       int second = m_segments.segmentAt(i).vb;
@@ -992,7 +991,7 @@ void QPathSegments::addPath(const QPainterPath &path)
                QRectF bounds = bezier.bounds();
 
                // threshold based on similar algorithm as in qtriangulatingstroker.cpp
-               int threshold = qMin<float>(64, qMax(bounds.width(), bounds.height()) * (2 * qreal(3.14) / 6));
+               int threshold = qMin(64, qMax(bounds.width(), bounds.height()) * (2 * qreal(M_PI) / 6));
 
                if (threshold < 3) {
                   threshold = 3;
@@ -1732,7 +1731,7 @@ bool QPathClipper::doClip(QWingedEdge &list, ClipperMode mode)
       y_coords << list.vertex(i)->y;
    }
 
-   qSort(y_coords.begin(), y_coords.end());
+   std::sort(y_coords.begin(), y_coords.end());
    y_coords.resize(qRemoveDuplicates(y_coords.begin(), y_coords.end(), fuzzyCompare) - y_coords.begin());
 
 #ifdef QDEBUG_CLIPPER
@@ -1912,7 +1911,7 @@ bool QPathClipper::handleCrossingEdges(QWingedEdge &list, qreal y, ClipperMode m
    QVector<QCrossingEdge> crossings = findCrossings(list, y);
 
    Q_ASSERT(!crossings.isEmpty());
-   qSort(crossings.begin(), crossings.end());
+   std::sort(crossings.begin(), crossings.end());
 
    int windingA = 0;
    int windingB = 0;

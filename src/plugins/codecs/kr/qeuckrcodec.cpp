@@ -1,29 +1,26 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
 
-// Most of the cp949 code was originally written by Joon-Kyu Park, and is included 
+// Most of the cp949 code was originally written by Joon-Kyu Park, and is included
 // in Qt with the author's permission and the grateful thanks of the Qt team.
 
 /*! \class QEucKrCodec
@@ -48,6 +45,8 @@
     QByteArray fromUnicode(const QString& uc, int& lenInOut) const;
     QString toUnicode(const char* chars, int len) const;
 */
+
+#include <algorithm>
 
 #include "qeuckrcodec.h"
 #include "cp949codetbl.h"
@@ -3397,24 +3396,28 @@ QByteArray QCP949Codec::convertFromUnicode(const QChar *uc, int len, ConverterSt
     QByteArray rstr;
     rstr.resize(rlen);
     uchar* cursor = (uchar*)rstr.data();
+
     for (int i = 0; i < len; i++) {
         unsigned short ch = uc[i].unicode();
         uint j;
         if (ch < 0x80) {
             // ASCII
             *cursor++ = ch;
+
         } else if ((j = qt_UnicodeToKsc5601(ch))) {
             // KSC 5601
             *cursor++ = (j >> 8)   | 0x80;
             *cursor++ = (j & 0xff) | 0x80;
+
         } else {
-            const unsigned short *ptr = qBinaryFind(cp949_icode_to_unicode, cp949_icode_to_unicode + 8822, ch);
-            if (ptr == cp949_icode_to_unicode + 8822) {
+            const unsigned short *ptr = std::lower_bound(cp949_icode_to_unicode, cp949_icode_to_unicode + 8822, ch);
+
+            if (ptr == cp949_icode_to_unicode + 8822 || ch < *ptr) {
                 // Error
                 *cursor++ = replacement;
                 ++invalid;
-            }
-            else {
+
+            } else {
                 // The table 'cp949_icode_to_unicode' contains following
                 // 1. Elements of row 81-a0 (32 rows) consisting of 178 elements each.
                 // 2. Elements of row a1-fe not in EUC-KR consisting of 84 elements each.
@@ -3430,7 +3433,7 @@ QByteArray QCP949Codec::convertFromUnicode(const QChar *uc, int len, ConverterSt
                     row = internal_code / 178;
                     column = internal_code % 178;
                 }
-                else { 
+                else {
                     // code between a1-fe
                     internal_code -= 3008;
                     row = internal_code / 84;

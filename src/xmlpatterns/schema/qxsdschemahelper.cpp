@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -750,7 +747,7 @@ bool XsdSchemaHelper::isValidAttributeUsesRestriction(const XsdAttributeUse::Lis
 
          // 2.1.1
          if (baseAttributeUse->isRequired() == true && derivedAttributeUse->isRequired() == false) {
-            errorMsg = QtXmlPatterns::tr("Base attribute %1 is required but derived attribute is not.").arg(formatAttribute(
+            errorMsg = QtXmlPatterns::tr("Base attribute %1 is required but derived attribute is not.").formatArg(formatAttribute(
                           baseAttributeUse->attribute()->displayName(namePool)));
             return false;
          }
@@ -758,7 +755,7 @@ bool XsdSchemaHelper::isValidAttributeUsesRestriction(const XsdAttributeUse::Lis
          // 2.1.2
          if (!isSimpleDerivationOk(derivedAttributeUse->attribute()->type(), baseAttributeUse->attribute()->type(),
                                    SchemaType::DerivationConstraints())) {
-            errorMsg = QtXmlPatterns::tr("Type of derived attribute %1 cannot be validly derived from type of base attribute.").arg(
+            errorMsg = QtXmlPatterns::tr("Type of derived attribute %1 cannot be validly derived from type of base attribute.").formatArg(
                           formatAttribute(derivedAttributeUse->attribute()->displayName(namePool)));
             return false;
          }
@@ -796,13 +793,13 @@ bool XsdSchemaHelper::isValidAttributeUsesRestriction(const XsdAttributeUse::Lis
 
          if (!ok) {
             errorMsg =
-               QtXmlPatterns::tr("Value constraint of derived attribute %1 does not match value constraint of base attribute.").arg(
+               QtXmlPatterns::tr("Value constraint of derived attribute %1 does not match value constraint of base attribute.").formatArg(
                   formatAttribute(derivedAttributeUse->attribute()->displayName(namePool)));
             return false;
          }
       } else {
          if (!wildcard) {
-            errorMsg = QtXmlPatterns::tr("Derived attribute %1 does not exist in the base definition.").arg(formatAttribute(
+            errorMsg = QtXmlPatterns::tr("Derived attribute %1 does not exist in the base definition.").formatArg(formatAttribute(
                           derivedAttributeUse->attribute()->displayName(namePool)));
             return false;
          }
@@ -815,7 +812,7 @@ bool XsdSchemaHelper::isValidAttributeUsesRestriction(const XsdAttributeUse::Lis
          }
 
          if (!wildcardAllowsExpandedName(name, wildcard, namePool)) {
-            errorMsg = QtXmlPatterns::tr("Derived attribute %1 does not match the wildcard in the base definition.").arg(
+            errorMsg = QtXmlPatterns::tr("Derived attribute %1 does not match the wildcard in the base definition.").formatArg(
                           formatAttribute(derivedAttributeUse->attribute()->displayName(namePool)));
             return false;
          }
@@ -829,12 +826,12 @@ bool XsdSchemaHelper::isValidAttributeUsesRestriction(const XsdAttributeUse::Lis
       if (baseAttributeUse->isRequired()) {
          if (derivedAttributeUsesLookup.contains(baseAttributeUse->attribute()->name(namePool))) {
             if (!derivedAttributeUsesLookup.value(baseAttributeUse->attribute()->name(namePool))->isRequired()) {
-               errorMsg = QtXmlPatterns::tr("Base attribute %1 is required but derived attribute is not.").arg(formatAttribute(
+               errorMsg = QtXmlPatterns::tr("Base attribute %1 is required but derived attribute is not.").formatArg(formatAttribute(
                              baseAttributeUse->attribute()->displayName(namePool)));
                return false;
             }
          } else {
-            errorMsg = QtXmlPatterns::tr("Base attribute %1 is required but missing in derived definition.").arg(formatAttribute(
+            errorMsg = QtXmlPatterns::tr("Base attribute %1 is required but missing in derived definition.").formatArg(formatAttribute(
                           baseAttributeUse->attribute()->displayName(namePool)));
             return false;
          }
@@ -845,7 +842,7 @@ bool XsdSchemaHelper::isValidAttributeUsesRestriction(const XsdAttributeUse::Lis
    if (derivedWildcard) {
       if (!wildcard) {
          errorMsg =
-            QtXmlPatterns::tr("Derived definition contains an %1 element that does not exists in the base definition").arg(
+            QtXmlPatterns::tr("Derived definition contains an %1 element that does not exists in the base definition").formatArg(
                formatElement("anyAttribute."));
          return false;
       }
@@ -856,8 +853,8 @@ bool XsdSchemaHelper::isValidAttributeUsesRestriction(const XsdAttributeUse::Lis
       }
 
       if (!checkWildcardProcessContents(wildcard, derivedWildcard)) {
-         errorMsg = QtXmlPatterns::tr("%1 of derived wildcard is not a valid restriction of %2 of base wildcard").arg(
-                       formatKeyword("processContents")).arg(formatKeyword("processContents."));
+         errorMsg = QtXmlPatterns::tr("%1 of derived wildcard is not a valid restriction of %2 of base wildcard").formatArg(
+                       formatKeyword("processContents")).formatArg(formatKeyword("processContents."));
          return false;
       }
    }
@@ -883,13 +880,13 @@ bool XsdSchemaHelper::isValidAttributeUsesExtension(const XsdAttributeUse::List 
    for (int i = 0; i < attributeUses.count(); ++i) {
       const QXmlName attributeName = attributeUses.at(i)->attribute()->name(namePool);
       if (!lookupHash.contains(attributeName)) {
-         errorMsg = QtXmlPatterns::tr("Attribute %1 from base type is missing in derived type.").arg(formatKeyword(
+         errorMsg = QtXmlPatterns::tr("Attribute %1 from base type is missing in derived type.").formatArg(formatKeyword(
                        namePool->displayName(attributeName)));
          return false;
       }
 
       if (lookupHash.value(attributeName)->type() != attributeUses.at(i)->attribute()->type()) {
-         errorMsg = QtXmlPatterns::tr("Type of derived attribute %1 differs from type of base attribute.").arg(formatKeyword(
+         errorMsg = QtXmlPatterns::tr("Type of derived attribute %1 differs from type of base attribute.").formatArg(formatKeyword(
                        namePool->displayName(attributeName)));
          return false;
       }
@@ -898,7 +895,7 @@ bool XsdSchemaHelper::isValidAttributeUsesExtension(const XsdAttributeUse::List 
    // 1.3
    if (wildcard) {
       if (!derivedWildcard) {
-         errorMsg = QtXmlPatterns::tr("Base definition contains an %1 element that is missing in the derived definition").arg(
+         errorMsg = QtXmlPatterns::tr("Base definition contains an %1 element that is missing in the derived definition").formatArg(
                        formatElement("anyAttribute."));
          return false;
       }

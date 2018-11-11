@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,7 +23,7 @@
 #ifndef QPOINTER_H
 #define QPOINTER_H
 
-#include <QtCore/qsharedpointer.h>
+#include <qsharedpointer.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -50,12 +47,17 @@ class QPointer
 
  public:
    inline QPointer() { }
-   inline QPointer(T *p) : wp(p, true) { }
 
-   // compiler-generated copy/move ctor/assignment operators are fine!
+   inline QPointer(T *ptr)
+      : wp(ptr, true)
+   { }
 
-   inline QPointer<T> &operator=(T *p) {
-      wp.assign(static_cast<QObjectType *>(p));
+   ~QPointer () = default;
+
+   // compiler-generated copy/move ctor/assignment operators are fine
+
+   inline QPointer<T> &operator=(T *ptr) {
+      wp.assign(static_cast<QObjectType *>(ptr));
       return *this;
    }
 
@@ -80,9 +82,8 @@ class QPointer
       wp.clear();
    }
 };
-template <class T> Q_DECLARE_TYPEINFO_BODY(QPointer<T>, Q_MOVABLE_TYPE);
 
-#if (!defined(Q_CC_SUN) || (__SUNPRO_CC >= 0x580)) // ambiguity between const T * and T *
+template <class T> Q_DECLARE_TYPEINFO_BODY(QPointer<T>, Q_MOVABLE_TYPE);
 
 template <class T>
 inline bool operator==(const T *o, const QPointer<T> &p)
@@ -95,22 +96,6 @@ inline bool operator==(const QPointer<T> &p, const T *o)
 {
    return p.operator->() == o;
 }
-
-#else
-
-template<class T>
-inline bool operator==(const void *o, const QPointer<T> &p)
-{
-   return o == p.operator->();
-}
-
-template<class T>
-inline bool operator==(const QPointer<T> &p, const void *o)
-{
-   return p.operator->() == o;
-}
-
-#endif
 
 template <class T>
 inline bool operator==(T *o, const QPointer<T> &p)
@@ -130,9 +115,6 @@ inline bool operator==(const QPointer<T> &p1, const QPointer<T> &p2)
    return p1.operator->() == p2.operator->();
 }
 
-
-#if (!defined(Q_CC_SUN) || (__SUNPRO_CC >= 0x580)) // ambiguity between const T * and T *
-
 template <class T>
 inline bool operator!=(const T *o, const QPointer<T> &p)
 {
@@ -145,21 +127,6 @@ inline bool operator!= (const QPointer<T> &p, const T *o)
    return p.operator->() != o;
 }
 
-#else
-
-template<class T>
-inline bool operator!= (const void *o, const QPointer<T> &p)
-{
-   return o != p.operator->();
-}
-
-template<class T>
-inline bool operator!= (const QPointer<T> &p, const void *o)
-{
-   return p.operator->() != o;
-}
-
-#endif
 
 template <class T>
 inline bool operator!=(T *o, const QPointer<T> &p)

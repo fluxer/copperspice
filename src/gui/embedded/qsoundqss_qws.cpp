@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -218,7 +215,7 @@ static int getNumTok(QString &in)
 void QWSSoundServerClient::tryReadCommand()
 {
    while ( socket->canReadLine() ) {
-      QString l = QString::fromAscii(socket->readLine());
+      QString l = QString::fromLatin1(socket->readLine());
       l.truncate(l.length() - 1); // chomp
       QString functionName = getStringTok(l);
       int soundid = getNumTok(l);
@@ -772,11 +769,11 @@ class QWSSoundServerPrivate : public QObject
    GUI_CS_OBJECT(QWSSoundServerPrivate)
 
  public:
-   QWSSoundServerPrivate(QObject *parent = 0, const char *name = 0) : QObject(parent) {
+   QWSSoundServerPrivate(QObject *parent = nullptr, const char *name = 0) : QObject(parent) {
       timerId = 0;
 
       if (name) {
-         setObjectName(QString::fromAscii(name));
+         setObjectName(QString::fromLatin1(name));
       }
 
 #ifndef QT_NO_QWS_SOUNDSERVER
@@ -993,7 +990,7 @@ void QWSSoundServerPrivate::playFile(int wid, int sid, const QString &filename,
 
 void QWSSoundServerPrivate::checkPresetVolumes(int wid, int sid, QWSSoundServerProvider *p)
 {
-   QList<PresetVolume>::Iterator it = volumes.begin();
+   QList<PresetVolume>::iterator it = volumes.begin();
    while (it != volumes.end()) {
       PresetVolume v = *it;
       if (v.wid == wid && v.sid == sid) {
@@ -1060,7 +1057,7 @@ void QWSSoundServerPrivate::stopAll(int wid)
 {
    QWSSoundServerProvider *bucket;
    if (!active.isEmpty()) {
-      QList<QWSSoundServerProvider *>::Iterator it = active.begin();
+      QList<QWSSoundServerProvider *>::iterator it = active.begin();
       while (it != active.end()) {
          bucket = *it;
          if (bucket->groupId() == wid) {
@@ -1072,7 +1069,7 @@ void QWSSoundServerPrivate::stopAll(int wid)
       }
    }
    if (!inactive.isEmpty()) {
-      QList<QWSSoundServerProvider *>::Iterator it = inactive.begin();
+      QList<QWSSoundServerProvider *>::iterator it = inactive.begin();
       while (it != inactive.end()) {
          bucket = *it;
          if (bucket->groupId() == wid) {
@@ -1097,7 +1094,7 @@ void QWSSoundServerPrivate::setVolume(int wid, int sid, int lv, int rv)
    }
    // If gotten here, then it means wid/sid wasn't set up yet.
    // first find and remove current preset volumes, then add this one.
-   QList<PresetVolume>::Iterator it = volumes.begin();
+   QList<PresetVolume>::iterator it = volumes.begin();
    while (it != volumes.end()) {
       PresetVolume v = *it;
       if (v.wid == wid && v.sid == sid) {
@@ -1128,7 +1125,7 @@ void QWSSoundServerPrivate::setMute(int wid, int sid, bool m)
    }
    // if gotten here then setting is being applied before item
    // is created.
-   QList<PresetVolume>::Iterator it = volumes.begin();
+   QList<PresetVolume>::iterator it = volumes.begin();
    while (it != volumes.end()) {
       PresetVolume v = *it;
       if (v.wid == wid && v.sid == sid) {
@@ -1379,7 +1376,7 @@ void  QWSSoundServerPrivate::feedDevice(int fd)
       }
    }
 
-   QList<QWSSoundServerProvider *>::Iterator it = active.begin();
+   QList<QWSSoundServerProvider *>::iterator it = active.begin();
    while (it != active.end()) {
       bucket = *it;
       if (bucket->finished()) {
@@ -1555,7 +1552,7 @@ void QWSSoundClient::setSilent( bool enable )
 void QWSSoundClient::tryReadCommand()
 {
    while ( canReadLine() ) {
-      QString l = QString::fromAscii(readLine());
+      QString l = QString::fromLatin1(readLine());
       l.truncate(l.length() - 1); // chomp
       QStringList token = l.split(QLatin1Char(' '));
       if (token[0] == QLatin1String("SOUNDCOMPLETED")) {

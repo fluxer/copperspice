@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -58,16 +55,17 @@ class QToolBoxButton : public QAbstractButton
       selected = b;
       update();
    }
+
    inline void setIndex(int newIndex) {
       indexInPage = newIndex;
    }
 
-   QSize sizeHint() const;
-   QSize minimumSizeHint() const;
+   QSize sizeHint() const override;
+   QSize minimumSizeHint() const override;
 
  protected:
    void initStyleOption(QStyleOptionToolBox *opt) const;
-   void paintEvent(QPaintEvent *);
+   void paintEvent(QPaintEvent *) override;
 
  private:
    bool selected;
@@ -135,7 +133,7 @@ QToolBoxPrivate::Page *QToolBoxPrivate::page(QWidget *widget) const
       return 0;
    }
 
-   for (PageList::ConstIterator i = pageList.constBegin(); i != pageList.constEnd(); ++i)
+   for (PageList::const_iterator i = pageList.constBegin(); i != pageList.constEnd(); ++i)
       if ((*i).widget == widget) {
          return (Page *) & (*i);
       }
@@ -407,7 +405,7 @@ void QToolBoxPrivate::_q_buttonClicked()
    Q_Q(QToolBox);
    QToolBoxButton *tb = qobject_cast<QToolBoxButton *>(q->sender());
    QWidget *item = 0;
-   for (QToolBoxPrivate::PageList::ConstIterator i = pageList.constBegin(); i != pageList.constEnd(); ++i)
+   for (QToolBoxPrivate::PageList::const_iterator i = pageList.constBegin(); i != pageList.constEnd(); ++i)
       if ((*i).button == tb) {
          item = (*i).widget;
          break;
@@ -451,10 +449,12 @@ void QToolBox::setCurrentIndex(int index)
 void QToolBoxPrivate::relayout()
 {
    Q_Q(QToolBox);
+
    delete layout;
    layout = new QVBoxLayout(q);
    layout->setMargin(0);
-   for (QToolBoxPrivate::PageList::ConstIterator i = pageList.constBegin(); i != pageList.constEnd(); ++i) {
+
+   for (QToolBoxPrivate::PageList::const_iterator i = pageList.constBegin(); i != pageList.constEnd(); ++i) {
       layout->addWidget((*i).button);
       layout->addWidget((*i).sv);
    }

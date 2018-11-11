@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -44,7 +41,7 @@ class XsdSimpleType : public XsdUserSchemaType<AnySimpleType>
     *
     * @param namePool The name pool the type name is stored in.
     */
-   virtual QString displayName(const NamePool::Ptr &namePool) const;
+   QString displayName(const NamePool::Ptr &namePool) const override;
 
    /**
     * Sets the base @p type of the simple type.
@@ -57,7 +54,7 @@ class XsdSimpleType : public XsdUserSchemaType<AnySimpleType>
     * Returns the base type of the simple type or an empty pointer if no base type is
     * set.
     */
-   virtual SchemaType::Ptr wxsSuperType() const;
+   SchemaType::Ptr wxsSuperType() const override;
 
    /**
     * Sets the context @p component of the simple type.
@@ -138,7 +135,7 @@ class XsdSimpleType : public XsdUserSchemaType<AnySimpleType>
    /**
     * Returns the category (variety) of the simple type.
     */
-   virtual TypeCategory category() const;
+   TypeCategory category() const override;
 
    /**
     * Sets the derivation @p method of the simple type.
@@ -150,12 +147,12 @@ class XsdSimpleType : public XsdUserSchemaType<AnySimpleType>
    /**
     * Returns the derivation method of the simple type.
     */
-   virtual DerivationMethod derivationMethod() const;
+   DerivationMethod derivationMethod() const override;
 
    /**
     * Always returns @c true.
     */
-   virtual bool isDefinedBySchema() const;
+   bool isDefinedBySchema() const override;
 
  private:
    SchemaType::Ptr           m_superType;

@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -95,31 +92,35 @@ QKqueueFileSystemWatcherEngine::~QKqueueFileSystemWatcherEngine()
    close(kqpipe[0]);
    close(kqpipe[1]);
 
-   foreach (int id, pathToID)
-   ::close(id < 0 ? -id : id);
+   for (int id : pathToID) {
+      ::close(id < 0 ? -id : id);
+   }
 }
 
 QStringList QKqueueFileSystemWatcherEngine::addPaths(const QStringList &paths,
-      QStringList *files,
-      QStringList *directories)
+                  QStringList *files, QStringList *directories)
 {
    QStringList p = paths;
    {
       QMutexLocker locker(&mutex);
 
       QMutableListIterator<QString> it(p);
+
       while (it.hasNext()) {
          QString path = it.next();
          int fd;
+
 #if defined(O_EVTONLY)
-         fd = qt_safe_open(QFile::encodeName(path), O_EVTONLY);
+         fd = qt_safe_open(QFile::encodeName(path).constData(), O_EVTONLY);
 #else
-         fd = qt_safe_open(QFile::encodeName(path), O_RDONLY);
+         fd = qt_safe_open(QFile::encodeName(path).constData(), O_RDONLY);
 #endif
+
          if (fd == -1) {
             perror("QKqueueFileSystemWatcherEngine::addPaths: open");
             continue;
          }
+
          if (fd >= (int)FD_SETSIZE / 2 && fd < (int)FD_SETSIZE) {
             int fddup = fcntl(fd, F_DUPFD, FD_SETSIZE);
             if (fddup != -1) {

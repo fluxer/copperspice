@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -68,8 +65,9 @@ struct QRelation {
 class QRelatedTableModel : public QSqlTableModel
 {
  public:
-   QRelatedTableModel(QRelation *rel, QObject *parent = 0, QSqlDatabase db = QSqlDatabase());
-   bool select();
+   QRelatedTableModel(QRelation *rel, QObject *parent = nullptr, QSqlDatabase db = QSqlDatabase());
+   bool select() override;
+
  private:
    bool firstSelect;
    QRelation *relation;
@@ -168,11 +166,13 @@ bool QRelatedTableModel::select()
       firstSelect = false;
       return QSqlTableModel::select();
    }
+
    relation->clearDictionary();
    bool res = QSqlTableModel::select();
    if (res) {
       relation->populateDictionary();
    }
+
    return res;
 }
 
@@ -180,6 +180,7 @@ bool QRelatedTableModel::select()
 class QSqlRelationalTableModelPrivate: public QSqlTableModelPrivate
 {
    Q_DECLARE_PUBLIC(QSqlRelationalTableModel)
+
  public:
    QSqlRelationalTableModelPrivate()
       : QSqlTableModelPrivate(),
@@ -187,13 +188,13 @@ class QSqlRelationalTableModelPrivate: public QSqlTableModelPrivate
    }
    QString relationField(const QString &tableName, const QString &fieldName) const;
 
-   int nameToIndex(const QString &name) const;
+   int nameToIndex(const QString &name) const override;
    mutable QVector<QRelation> relations;
-   QSqlRecord baseRec; // the record without relations
+   QSqlRecord baseRec;                   // the record without relations
    void clearChanges();
-   void clearEditBuffer();
-   void clearCache();
-   void revertCachedRow(int row);
+   void clearEditBuffer() override;
+   void clearCache() override;
+   void revertCachedRow(int row) override;
 
    void translateFieldNames(int row, QSqlRecord &values) const;
    QSqlRelationalTableModel::JoinMode joinMode;
@@ -204,12 +205,15 @@ static void qAppendWhereClause(QString &query, const QString &clause1, const QSt
    if (clause1.isEmpty() && clause2.isEmpty()) {
       return;
    }
+
    if (clause1.isEmpty() || clause2.isEmpty()) {
       query.append(QLatin1String(" WHERE (")).append(clause1).append(clause2);
+
    } else
       query.append(QLatin1String(" WHERE (")).append(clause1).append(
          QLatin1String(") AND (")).append(clause2);
-   query.append(QLatin1String(") "));
+
+      query.append(QLatin1String(") "));
 }
 
 void QSqlRelationalTableModelPrivate::clearChanges()
@@ -455,13 +459,6 @@ void QSqlRelationalTableModel::setRelation(int column, const QSqlRelation &relat
    }
    d->relations[column].init(this, relation);
 }
-
-/*!
-    Returns the relation for the column \a column, or an invalid
-    relation if no relation is set.
-
-    \sa setRelation(), QSqlRelation::isValid()
-*/
 QSqlRelation QSqlRelationalTableModel::relation(int column) const
 {
    Q_D(const QSqlRelationalTableModel);
@@ -471,11 +468,10 @@ QSqlRelation QSqlRelationalTableModel::relation(int column) const
 QString QSqlRelationalTableModelPrivate::relationField(const QString &tableName,
       const QString &fieldName) const
 {
-   QString ret;
-   ret.reserve(tableName.size() + fieldName.size() + 1);
-   ret.append(tableName).append(QLatin1Char('.')).append(fieldName);
+   QString retval;
+   retval.append(tableName).append('.').append(fieldName);
 
-   return ret;
+   return retval;
 }
 
 /*!
@@ -530,25 +526,31 @@ QString QSqlRelationalTableModel::selectStatement() const
 
    for (int i = 0; i < rec.count(); ++i) {
       QSqlRelation relation = d->relations.value(i, nullRelation).rel;
+
       if (relation.isValid()) {
-         QString relTableAlias = QString::fromLatin1("relTblAl_%1").arg(i);
+         QString relTableAlias = QString::fromLatin1("relTblAl_%1").formatArg(i);
+
          if (!fList.isEmpty()) {
             fList.append(QLatin1String(", "));
          }
+
          fList.append(d->relationField(relTableAlias, relation.displayColumn()));
 
          // If there are duplicate field names they must be aliased
          if (fieldNames.value(fieldList[i]) > 1) {
             QString relTableName = relation.tableName().section(QChar::fromLatin1('.'), -1, -1);
+
             if (d->db.driver()->isIdentifierEscaped(relTableName, QSqlDriver::TableName)) {
                relTableName = d->db.driver()->stripDelimiters(relTableName, QSqlDriver::TableName);
             }
+
             QString displayColumn = relation.displayColumn();
+
             if (d->db.driver()->isIdentifierEscaped(displayColumn, QSqlDriver::FieldName)) {
                displayColumn = d->db.driver()->stripDelimiters(displayColumn, QSqlDriver::FieldName);
             }
-            fList.append(QString::fromLatin1(" AS %1_%2_%3").arg(relTableName).arg(displayColumn).arg(fieldNames.value(
-                            fieldList[i])));
+
+            fList.append(QString::fromLatin1(" AS %1_%2_%3").formatArg(relTableName).formatArg(displayColumn).formatArg(fieldNames.value(fieldList[i])));
             fieldNames.insert(fieldList[i], fieldNames.value(fieldList[i]) - 1);
          }
 

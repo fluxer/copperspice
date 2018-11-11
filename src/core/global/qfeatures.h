@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -122,9 +119,6 @@
 
 // Qt::WA_PaintOnScreen
 //#define QT_NO_PAINTONSCREEN
-
-// Painting Debug Utilities
-//#define QT_NO_PAINT_DEBUG
 
 // Phonon::AbstractMediaStream
 //#define QT_NO_PHONON_ABSTRACTMEDIASTREAM
@@ -288,9 +282,6 @@
 // QWheelEvent
 //#define QT_NO_WHEELEVENT
 
-//
-//#define QT_NO_XMLSTREAM
-
 
 // QButtonGroup
 #if !defined(QT_NO_BUTTONGROUP) && (defined(QT_NO_GROUPBOX))
@@ -403,11 +394,6 @@
 #define QT_NO_SOCKS5
 #endif
 
-// QSoftKeyManager
-#if !defined(QT_NO_SOFTKEYMANAGER) && (defined(QT_NO_ACTION))
-#define QT_NO_SOFTKEYMANAGER
-#endif
-
 // QSplitter
 #if !defined(QT_NO_SPLITTER) && (defined(QT_NO_RUBBERBAND))
 #define QT_NO_SPLITTER
@@ -436,16 +422,6 @@
 // QUndoStack
 #if !defined(QT_NO_UNDOSTACK) && (defined(QT_NO_UNDOCOMMAND))
 #define QT_NO_UNDOSTACK
-#endif
-
-// QXmlStreamReader
-#if !defined(QT_NO_XMLSTREAMREADER) && (defined(QT_NO_XMLSTREAM))
-#define QT_NO_XMLSTREAMREADER
-#endif
-
-// QXmlStreamWriter
-#if !defined(QT_NO_XMLSTREAMWRITER) && (defined(QT_NO_XMLSTREAM))
-#define QT_NO_XMLSTREAMWRITER
 #endif
 
 // Context menu
@@ -479,7 +455,7 @@
 #endif
 
 // OdfWriter
-#if !defined(QT_NO_TEXTODFWRITER) && (defined(QT_NO_XMLSTREAMWRITER))
+#if ! defined(QT_NO_TEXTODFWRITER) && (0)   // removed test which was always false
 #define QT_NO_TEXTODFWRITER
 #endif
 
@@ -554,7 +530,7 @@
 #endif
 
 // QtSvg module
-#if !defined(QT_NO_SVG) && (defined(QT_NO_XMLSTREAMREADER) || defined(QT_NO_CSSPARSER))
+#if !defined(QT_NO_SVG) && defined(QT_NO_CSSPARSER)
 #define QT_NO_SVG
 #endif
 

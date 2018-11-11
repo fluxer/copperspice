@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -80,40 +77,41 @@ class Q_OPENGL_EXPORT QGLTextureGlyphCache : public QImageTextureGlyphCache, pub
    QGLTextureGlyphCache(const QGLContext *context, QFontEngineGlyphCache::Type type, const QTransform &matrix);
    ~QGLTextureGlyphCache();
 
-   virtual void createTextureData(int width, int height);
-   virtual void resizeTextureData(int width, int height);
-   virtual void fillTexture(const Coord &c, glyph_t glyph, QFixed subPixelPosition);
-   virtual int glyphPadding() const;
-   virtual int maxTextureWidth() const;
-   virtual int maxTextureHeight() const;
+   void createTextureData(int width, int height) override;
+   void resizeTextureData(int width, int height) override;
+   void fillTexture(const Coord &c, glyph_t glyph, QFixed subPixelPosition) override;
+   int glyphPadding() const override;
+   int maxTextureWidth() const override;
+   int maxTextureHeight() const override;
 
-   inline GLuint texture() const {
+   GLuint texture() const {
       QGLTextureGlyphCache *that = const_cast<QGLTextureGlyphCache *>(this);
       QGLGlyphTexture *glyphTexture = that->m_textureResource.value(ctx);
       return glyphTexture ? glyphTexture->m_texture : 0;
    }
 
-   inline int width() const {
+   int width() const {
       QGLTextureGlyphCache *that = const_cast<QGLTextureGlyphCache *>(this);
       QGLGlyphTexture *glyphTexture = that->m_textureResource.value(ctx);
       return glyphTexture ? glyphTexture->m_width : 0;
    }
-   inline int height() const {
+
+   int height() const {
       QGLTextureGlyphCache *that = const_cast<QGLTextureGlyphCache *>(this);
       QGLGlyphTexture *glyphTexture = that->m_textureResource.value(ctx);
       return glyphTexture ? glyphTexture->m_height : 0;
    }
 
-   inline void setPaintEnginePrivate(QGL2PaintEngineExPrivate *p) {
+   void setPaintEnginePrivate(QGL2PaintEngineExPrivate *p) {
       pex = p;
    }
 
-   void setContext(const QGLContext *context);
-   inline const QGLContext *context() const {
+   void setContext(const QGLContext *context) ;
+   const QGLContext *context() const {
       return ctx;
    }
 
-   inline int serialNumber() const {
+   int serialNumber() const {
       return m_serialNumber;
    }
 
@@ -121,6 +119,7 @@ class Q_OPENGL_EXPORT QGLTextureGlyphCache : public QImageTextureGlyphCache, pub
       Nearest,
       Linear
    };
+
    FilterMode filterMode() const {
       return m_filterMode;
    }
@@ -130,12 +129,13 @@ class Q_OPENGL_EXPORT QGLTextureGlyphCache : public QImageTextureGlyphCache, pub
 
    void clear();
 
-   void contextDeleted(const QGLContext *context) {
+   void contextDeleted(const QGLContext *context) override {
       if (ctx == context) {
          ctx = 0;
       }
    }
-   void freeResource(void *) {
+
+   void freeResource(void *) override{
       ctx = 0;
    }
 

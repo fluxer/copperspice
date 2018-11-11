@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -55,9 +52,10 @@ class StringSplitter : public QAbstractXmlForwardIterator<QString>
 {
  public:
    StringSplitter(const Item::Iterator::Ptr &source);
-   virtual QString next();
-   virtual QString current() const;
-   virtual qint64 position() const;
+   QString next() override;
+   QString current() const override;
+   qint64 position() const override;
+
  private:
    QString loadNext();
    const Item::Iterator::Ptr   m_source;
@@ -68,8 +66,7 @@ class StringSplitter : public QAbstractXmlForwardIterator<QString>
 };
 
 StringSplitter::StringSplitter(const Item::Iterator::Ptr &source) : m_source(source)
-   , m_position(0)
-   , m_sourceAtEnd(false)
+   , m_position(0), m_sourceAtEnd(false)
 {
    Q_ASSERT(m_source);
    m_buffer.push(loadNext());
@@ -253,7 +250,7 @@ Item::Iterator::Ptr CollectionFN::evaluateSequence(const DynamicContext::Ptr &co
          const QUrl uri(AnyURI::toQUrl<ReportContext::FODC0004>(itemURI.stringValue(), context, this));
 
          // TODO 2. Resolve against static context base URI(store base URI at compile time)
-         context->error(QtXmlPatterns::tr("%1 cannot be retrieved").arg(formatResourcePath(uri)),
+         context->error(QtXmlPatterns::tr("%1 cannot be retrieved").formatArg(formatResourcePath(uri)),
                         ReportContext::FODC0004, this);
          return CommonValues::emptyIterator;
       } else {

@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -49,8 +46,7 @@ void ComputedNamespaceConstructor::evaluateToSequenceReceiver(const DynamicConte
 
    if (namespaceURI.isEmpty()) {
       context->error(QtXmlPatterns::tr("In a namespace constructor, the value for a namespace cannot be an empty string."),
-                     ReportContext::XTDE0930,
-                     this);
+                     ReportContext::XTDE0930, this);
    }
 
    /* One optimization could be to store a pointer to
@@ -59,10 +55,7 @@ void ComputedNamespaceConstructor::evaluateToSequenceReceiver(const DynamicConte
 
    if (!prefix.isEmpty() && !QXmlUtils::isNCName(prefix)) {
       context->error(QtXmlPatterns::tr("The prefix must be a valid %1, which %2 is not.")
-                     .arg(formatType(np, BuiltinTypes::xsNCName),
-                          formatKeyword(prefix)),
-                     ReportContext::XTDE0920,
-                     this);
+                     .formatArgs(formatType(np, BuiltinTypes::xsNCName), formatKeyword(prefix)), ReportContext::XTDE0920, this);
    }
    const QXmlName binding(np->allocateBinding(prefix, namespaceURI));
 
@@ -72,18 +65,14 @@ void ComputedNamespaceConstructor::evaluateToSequenceReceiver(const DynamicConte
 
    if (binding.prefix() == StandardPrefixes::xmlns) {
       context->error(QtXmlPatterns::tr("The prefix %1 cannot be bound.")
-                     .arg(formatKeyword(prefix)),
-                     ReportContext::XTDE0920,
-                     this);
+                     .formatArg(formatKeyword(prefix)), ReportContext::XTDE0920, this);
    }
 
    if ((binding.prefix() == StandardPrefixes::xml && binding.namespaceURI() != StandardNamespaces::xml)
          ||
          (binding.prefix() != StandardPrefixes::xml && binding.namespaceURI() == StandardNamespaces::xml)) {
       context->error(QtXmlPatterns::tr("Only the prefix %1 can be bound to %2 and vice versa.")
-                     .arg(formatKeyword(prefix), formatKeyword(namespaceURI)),
-                     ReportContext::XTDE0925,
-                     this);
+                     .formatArgs(formatKeyword(prefix), formatKeyword(namespaceURI)), ReportContext::XTDE0925, this);
    }
 
    context->outputReceiver()->namespaceBinding(binding);

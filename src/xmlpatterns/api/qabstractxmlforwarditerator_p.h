@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,42 +23,34 @@
 #ifndef QABSTRACTXMLFORWARDITERATOR_P_H
 #define QABSTRACTXMLFORWARDITERATOR_P_H
 
-#include <QtCore/QList>
-#include <QtCore/QVector>
-#include <QtCore/QSharedData>
-#include <QtCore/QString>
+#include <QList>
+#include <QVector>
+#include <QSharedData>
+#include <QString>
+#include <qcontainerfwd.h>
 
-QT_BEGIN_NAMESPACE
-
-template<typename T> class QVector;
 
 /* In this file we in some cases do not use QAbstractXmlForwardIterator's Ptr typedef.
  * This is a compiler workaround for MS VS 6.0. */
 
-template<typename T>
+template <typename T>
+class QAbstractXmlForwardIterator;
+
+class QAbstractXmlForwardIteratorPrivate;
+
+template <typename T>
 inline bool qIsForwardIteratorEnd(const T &unit)
 {
    return !unit;
 }
 
-/**
- * @short Helper class for StringSplitter
- *
- * Needed by the QAbstractXmlForwardIterator sub-class.
- *
- * @relates StringSplitter
- */
-template<>
+template <>
 inline bool qIsForwardIteratorEnd(const QString &unit)
 {
-   return unit.isNull();
+   return unit.isEmpty();
 }
 
-template<typename T> class QAbstractXmlForwardIterator;
-
-class QAbstractXmlForwardIteratorPrivate;
-
-template<typename T>
+template <typename T>
 class QAbstractXmlForwardIterator : public QSharedData
 {
  public:
@@ -96,10 +85,7 @@ class QAbstractXmlForwardIterator : public QSharedData
 namespace QPatternist {
 class DeduplicateIterator;
 
-template<typename InputType,
-         typename OutputType,
-         typename Derived,
-         typename ListType = QList<InputType> >
+template<typename InputType, typename OutputType, typename Derived, typename ListType = QList<InputType> >
 class ListIteratorPlatform : public QAbstractXmlForwardIterator<OutputType>
 {
    /* This declaration is a workaround for a set of GCC versions on OS X,
@@ -108,7 +94,7 @@ class ListIteratorPlatform : public QAbstractXmlForwardIterator<OutputType>
    friend class DeduplicateIterator;
 
  public:
-   virtual OutputType next() {
+   OutputType next() override {
       if (m_position == -1) {
          return OutputType();
       }
@@ -124,35 +110,32 @@ class ListIteratorPlatform : public QAbstractXmlForwardIterator<OutputType>
       return m_current;
    }
 
-   virtual OutputType current() const {
+   OutputType current() const override {
       return m_current;
    }
 
-   virtual qint64 position() const {
+   qint64 position() const override {
       return m_position;
    }
 
-   virtual qint64 count() {
+   qint64 count() override {
       return m_list.count();
    }
 
-   virtual typename QAbstractXmlForwardIterator<OutputType>::Ptr copy() const {
+   typename QAbstractXmlForwardIterator<OutputType>::Ptr copy() const  override {
       return QExplicitlySharedDataPointer<QAbstractXmlForwardIterator<OutputType> >(new
              ListIteratorPlatform<InputType, OutputType, Derived, ListType>(m_list));
    }
 
  protected:
-   inline ListIteratorPlatform(const ListType &list) : m_list(list)
-      , m_position(0) {
-   }
+   inline ListIteratorPlatform(const ListType &list) : m_list(list), m_position(0) { }
 
    const ListType  m_list;
    qint64          m_position;
    OutputType      m_current;
 };
 
-template<typename T,
-         typename ListType = QList<T> >
+template<typename T, typename ListType = QList<T> >
 class ListIterator : public ListIteratorPlatform<T, T, ListIterator<T, ListType>, ListType>
 {
    /*
@@ -162,19 +145,19 @@ class ListIterator : public ListIteratorPlatform<T, T, ListIterator<T, ListType>
 
    using ListIteratorPlatform<T, T, ListIterator<T, ListType>, ListType>::m_list;
 
-   static inline QVector<T> toVector(const QVector<T> &vector) {
+   static QVector<T> toVector(const QVector<T> &vector) {
       return vector;
    }
 
-   static inline QVector<T> toVector(const QList<T> &list) {
+   static QVector<T> toVector(const QList<T> &list) {
       return list.toVector();
    }
 
-   static inline QList<T> toList(const QVector<T> &vector) {
+   static QList<T> toList(const QVector<T> &vector) {
       return vector.toList();
    }
 
-   static inline QList<T> toList(const QList<T> &list) {
+   static QList<T> toList(const QList<T> &list) {
       return list;
    }
 
@@ -182,7 +165,7 @@ class ListIterator : public ListIteratorPlatform<T, T, ListIterator<T, ListType>
    inline ListIterator(const ListType &list) : ListIteratorPlatform<T, T, ListIterator<T, ListType>, ListType>(list) {
    }
 
-   virtual QList<T> toList() {
+   virtual QList<T> toList() override {
       return toList(m_list);
    }
 
@@ -201,20 +184,19 @@ class ListIterator : public ListIteratorPlatform<T, T, ListIterator<T, ListType>
 };
 
 template<typename T>
-inline
-typename QAbstractXmlForwardIterator<T>::Ptr
+inline typename QAbstractXmlForwardIterator<T>::Ptr
 makeListIterator(const QList<T> &list)
 {
    return typename ListIterator<T>::Ptr(new ListIterator<T>(list));
 }
 
 template<typename T>
-inline
-typename QAbstractXmlForwardIterator<T>::Ptr
+inline typename QAbstractXmlForwardIterator<T>::Ptr
 makeVectorIterator(const QVector<T> &vector)
 {
    return typename ListIterator<T, QVector<T> >::Ptr(new ListIterator<T, QVector<T> >(vector));
 }
+
 }
 
 template<typename T>
@@ -285,7 +267,7 @@ bool QAbstractXmlForwardIterator<T>::isEmpty()
 template<typename T>
 qint64 QAbstractXmlForwardIterator<T>::sizeHint() const
 {
-   Q_ASSERT_X(false, Q_FUNC_INFO, "This function is currently not expected to be used.");
+   Q_ASSERT_X(false, Q_FUNC_INFO, "This function is internal, unsupported, and should never be called.");
    return -1;
 }
 

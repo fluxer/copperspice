@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -43,23 +40,25 @@ class Q_GUI_EXPORT QItemEditorCreatorBase
    virtual ~QItemEditorCreatorBase() {}
 
    virtual QWidget *createWidget(QWidget *parent) const = 0;
-   virtual QByteArray valuePropertyName() const = 0;
+   virtual QString valuePropertyName() const = 0;
 };
 
 template <class T>
 class QItemEditorCreator : public QItemEditorCreatorBase
 {
  public:
-   inline QItemEditorCreator(const QByteArray &valuePropertyName);
-   inline QWidget *createWidget(QWidget *parent) const {
+   inline QItemEditorCreator(const QString &valuePropertyName);
+
+   inline QWidget *createWidget(QWidget *parent) const override {
       return new T(parent);
    }
-   inline QByteArray valuePropertyName() const {
+
+   inline QString valuePropertyName() const override {
       return propertyName;
    }
 
  private:
-   QByteArray propertyName;
+   QString propertyName;
 };
 
 template <class T>
@@ -69,20 +68,22 @@ class QStandardItemEditorCreator: public QItemEditorCreatorBase
    inline QStandardItemEditorCreator()
       : propertyName(T::staticMetaObject.userProperty().name()) {
    }
-   inline QWidget *createWidget(QWidget *parent) const {
+
+   inline QWidget *createWidget(QWidget *parent) const override {
       return new T(parent);
    }
-   inline QByteArray valuePropertyName() const {
+
+   inline QString valuePropertyName() const override {
       return propertyName;
    }
 
  private:
-   QByteArray propertyName;
+   QString propertyName;
 };
 
 
 template <class T>
-Q_INLINE_TEMPLATE QItemEditorCreator<T>::QItemEditorCreator(const QByteArray &avaluePropertyName)
+QItemEditorCreator<T>::QItemEditorCreator(const QString &avaluePropertyName)
    : propertyName(avaluePropertyName) {}
 
 class Q_GUI_EXPORT QItemEditorFactory
@@ -92,7 +93,7 @@ class Q_GUI_EXPORT QItemEditorFactory
    virtual ~QItemEditorFactory();
 
    virtual QWidget *createEditor(QVariant::Type type, QWidget *parent) const;
-   virtual QByteArray valuePropertyName(QVariant::Type type) const;
+   virtual QString valuePropertyName(QVariant::Type type) const;
 
    void registerEditor(QVariant::Type type, QItemEditorCreatorBase *creator);
 

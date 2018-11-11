@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -47,7 +44,7 @@ class Q_CORE_EXPORT QThread : public QObject
    static int idealThreadCount();
    static void yieldCurrentThread();
 
-   explicit QThread(QObject *parent = 0);
+   explicit QThread(QObject *parent = nullptr);
    ~QThread();
 
    enum Priority {
@@ -85,9 +82,9 @@ class Q_CORE_EXPORT QThread : public QObject
    // default argument causes thread to block indefinately
    bool wait(unsigned long time = ULONG_MAX);
 
-   static void sleep(unsigned long);
-   static void msleep(unsigned long);
-   static void usleep(unsigned long);
+   static void sleep(unsigned long secs);
+   static void msleep(unsigned long msecs);
+   static void usleep(unsigned long usecs);
 
    CORE_CS_SIGNAL_1(Public, void started())
    CORE_CS_SIGNAL_2(started)
@@ -102,7 +99,7 @@ class Q_CORE_EXPORT QThread : public QObject
 
    static void setTerminationEnabled(bool enabled = true);
 
-   QThread(QThreadPrivate &dd, QObject *parent = 0);
+   QThread(QThreadPrivate &dd, QObject *parent = nullptr);
    QScopedPointer<QThreadPrivate> d_ptr;
 
  private:

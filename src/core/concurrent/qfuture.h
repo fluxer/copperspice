@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,12 +23,9 @@
 #ifndef QFUTURE_H
 #define QFUTURE_H
 
-#include <QtCore/qglobal.h>
-#include <QtCore/qfutureinterface.h>
-#include <QtCore/qstring.h>
-#include <QtCore/qtconcurrentcompilertest.h>
-
-QT_BEGIN_NAMESPACE
+#include <qglobal.h>
+#include <qfutureinterface.h>
+#include <qtconcurrentcompilertest.h>
 
 template <typename T>
 class QFutureWatcher;
@@ -46,19 +40,25 @@ class QFuture
    QFuture()
       : d(QFutureInterface<T>::canceledResult()) {
    }
-   explicit QFuture(QFutureInterface<T> *p) // internal
+
+   explicit QFuture(QFutureInterface<T> *p)
+      // internal
       : d(*p) {
    }
+
    QFuture(const QFuture &other)
       : d(other.d) {
    }
+
    ~QFuture() {
    }
 
-   inline QFuture &operator=(const QFuture &other);
+   inline QFuture<T> &operator=(const QFuture &other);
+
    bool operator==(const QFuture &other) const {
       return (d == other.d);
    }
+
    bool operator!=(const QFuture &other) const {
       return (d != other.d);
    }
@@ -137,83 +137,103 @@ class QFuture
       typedef const T *pointer;
       typedef const T &reference;
 
+      using size_type = difference_type;
+
       inline const_iterator() {}
       inline const_iterator(QFuture const *const _future, int _index) : future(_future), index(_index) {}
-      inline const_iterator(const const_iterator &o) : future(o.future), index(o.index)  {}
-      inline const_iterator &operator=(const const_iterator &o) {
-         future = o.future;
-         index = o.index;
+
+      inline const_iterator(const const_iterator &other) : future(other.future), index(other.index)  {}
+
+      inline const_iterator &operator=(const const_iterator &other) {
+         future = other.future;
+         index  = other.index;
          return *this;
       }
+
       inline const T &operator*() const {
          return future->d.resultReference(index);
       }
+
       inline const T *operator->() const {
          return future->d.resultPointer(index);
       }
 
       inline bool operator!=(const const_iterator &other) const {
-         if (index == -1 && other.index == -1) { // comparing end != end?
+         if (index == -1 && other.index == -1) {
+            // comparing end != end?
             return false;
          }
+
          if (other.index == -1) {
             return (future->isRunning() || (index < future->resultCount()));
          }
          return (index != other.index);
       }
 
-      inline bool operator==(const const_iterator &o) const {
-         return !operator!=(o);
+      inline bool operator==(const const_iterator &other) const {
+         return !operator!=(other);
       }
+
       inline const_iterator &operator++() {
          ++index;
          return *this;
       }
+
+
       inline const_iterator operator++(int) {
          const_iterator r = *this;
          ++index;
          return r;
       }
+
       inline const_iterator &operator--() {
          --index;
          return *this;
       }
+
       inline const_iterator operator--(int) {
          const_iterator r = *this;
          --index;
          return r;
       }
-      inline const_iterator operator+(int j) const {
-         return const_iterator(future, index + j);
+
+      inline const_iterator operator+(size_type n) const {
+         return const_iterator(future, index + n);
       }
-      inline const_iterator operator-(int j) const {
-         return const_iterator(future, index - j);
+
+      inline const_iterator operator-(size_type n) const {
+         return const_iterator(future, index - n);
       }
-      inline const_iterator &operator+=(int j) {
-         index += j;
+
+      inline const_iterator &operator+=(size_type n) {
+         index += n;
          return *this;
       }
-      inline const_iterator &operator-=(int j) {
-         index -= j;
+
+      inline const_iterator &operator-=(size_type n) {
+         index -= n;
          return *this;
       }
+
     private:
       QFuture const *future;
       int index;
    };
 
    friend class const_iterator;
-   typedef const_iterator ConstIterator;
 
    const_iterator begin() const {
       return  const_iterator(this, 0);
    }
+
    const_iterator constBegin() const {
       return  const_iterator(this, 0);
    }
+
    const_iterator end() const {
       return const_iterator(this, -1);
    }
+
    const_iterator constEnd() const {
       return const_iterator(this, -1);
    }
@@ -221,12 +241,13 @@ class QFuture
  private:
    friend class QFutureWatcher<T>;
 
- public: // Warning: the d pointer is not documented and is considered private.
+ public:
+   // Warning: the d pointer is not documented and is considered private.
    mutable QFutureInterface<T> d;
 };
 
 template <typename T>
-inline QFuture<T> &QFuture<T>::operator=(const QFuture<T> &other)
+inline QFuture<T> & QFuture<T>::operator=(const QFuture<T> &other)
 {
    d = other.d;
    return *this;
@@ -254,43 +275,43 @@ inline QFuture<T> QFutureInterface<T>::future()
 
 template <class T>
 class QFutureIterator
-{ 
+{
    typedef typename QFuture<T>::const_iterator const_iterator;
    QFuture<T> c;
    const_iterator i;
-   
+
    public:
       inline QFutureIterator(const QFuture<T> &container)
          : c(container), i(c.constBegin()) {}
-   
+
       inline QFutureIterator &operator=(const QFuture<T> &container)
          { c = container; i = c.constBegin(); return *this; }
-      
-      inline void toFront() { i = c.constBegin(); } 
-      inline void toBack() { i = c.constEnd(); } 
-      inline bool hasNext() const { return i != c.constEnd(); } 
-      inline const T &next() { return *i++; } 
-      inline const T &peekNext() const { return *i; } 
-      inline bool hasPrevious() const { return i != c.constBegin(); } 
-      inline const T &previous() { return *--i; } 
-      inline const T &peekPrevious() const { const_iterator p = i; return *--p; } 
-      
-      inline bool findNext(const T &t)  { 
+
+      inline void toFront() { i = c.constBegin(); }
+      inline void toBack() { i = c.constEnd(); }
+      inline bool hasNext() const { return i != c.constEnd(); }
+      inline const T &next() { return *i++; }
+      inline const T &peekNext() const { return *i; }
+      inline bool hasPrevious() const { return i != c.constBegin(); }
+      inline const T &previous() { return *--i; }
+      inline const T &peekPrevious() const { const_iterator p = i; return *--p; }
+
+      inline bool findNext(const T &t)  {
          while (i != c.constEnd()) {
             if (*i++ == t) {
-               return true; 
+               return true;
             }
          }
-         return false;           
+         return false;
       }
-      
-      inline bool findPrevious(const T &t)   { 
+
+      inline bool findPrevious(const T &t)   {
          while (i != c.constBegin()) {
             if (*(--i) == t)  {
-               return true; 
+               return true;
             }
-         }  
-         return false;                 
+         }
+         return false;
       }
 };
 
@@ -301,24 +322,29 @@ class QFuture<void>
    QFuture()
       : d(QFutureInterface<void>::canceledResult()) {
    }
-   explicit QFuture(QFutureInterfaceBase *p) // internal
+   explicit QFuture(QFutureInterfaceBase *p)
+      // internal
       : d(*p) {
    }
+
    QFuture(const QFuture &other)
       : d(other.d) {
    }
+
    ~QFuture() {
    }
 
-   QFuture &operator=(const QFuture &other);
+   QFuture<void> &operator=(const QFuture<void> &other);
+
    bool operator==(const QFuture &other) const {
       return (d == other.d);
    }
+
    bool operator!=(const QFuture &other) const {
       return (d != other.d);
    }
 
-#if ! defined(Q_CC_XLC)
+
    template <typename T>
    QFuture(const QFuture<T> &other)
       : d(other.d) {
@@ -329,7 +355,6 @@ class QFuture<void>
       d = other.d;
       return *this;
    }
-#endif
 
    void cancel() {
       d.cancel();
@@ -406,6 +431,4 @@ QFuture<void> qToVoidFuture(const QFuture<T> &future)
    return QFuture<void>(future.d);
 }
 
-QT_END_NAMESPACE
-
-#endif // QFUTURE_H
+#endif

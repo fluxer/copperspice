@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -54,25 +51,25 @@ class QGraphicsSceneBspTreeIndex : public QGraphicsSceneIndex
    QGraphicsSceneBspTreeIndex(QGraphicsScene *scene = 0);
    ~QGraphicsSceneBspTreeIndex();
 
-   QList<QGraphicsItem *> estimateItems(const QRectF &rect, Qt::SortOrder order) const;
-   QList<QGraphicsItem *> estimateTopLevelItems(const QRectF &rect, Qt::SortOrder order) const;
-   QList<QGraphicsItem *> items(Qt::SortOrder order = Qt::DescendingOrder) const;
+   QList<QGraphicsItem *> estimateItems(const QRectF &rect, Qt::SortOrder order) const override;
+   QList<QGraphicsItem *> estimateTopLevelItems(const QRectF &rect, Qt::SortOrder order) const override;
+   QList<QGraphicsItem *> items(Qt::SortOrder order = Qt::DescendingOrder) const override;
 
    int bspTreeDepth() const;
    void setBspTreeDepth(int depth);
 
  protected :
-   GUI_CS_SLOT_1(Protected, void updateSceneRect(const QRectF &rect))
+   GUI_CS_SLOT_1(Protected, void updateSceneRect(const QRectF &rect) override)
    GUI_CS_SLOT_2(updateSceneRect)
 
-   bool event(QEvent *event);
-   void clear();
+   bool event(QEvent *event) override;
+   void clear() override;
 
-   void addItem(QGraphicsItem *item);
-   void removeItem(QGraphicsItem *item);
-   void prepareBoundingRectChange(const QGraphicsItem *item);
+   void addItem(QGraphicsItem *item) override;
+   void removeItem(QGraphicsItem *item) override;
+   void prepareBoundingRectChange(const QGraphicsItem *item) override;
 
-   void itemChange(const QGraphicsItem *item, QGraphicsItem::GraphicsItemChange change, const void *const value);
+   void itemChange(const QGraphicsItem *item, QGraphicsItem::GraphicsItemChange change, const void *const value) override;
 
  private :
    Q_DECLARE_PRIVATE(QGraphicsSceneBspTreeIndex)

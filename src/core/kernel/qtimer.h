@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -42,7 +39,7 @@ class Q_CORE_EXPORT QTimer : public QObject
    CORE_CS_PROPERTY_READ(active, isActive)
 
  public:
-   explicit QTimer(QObject *parent = 0);
+   explicit QTimer(QObject *parent = nullptr);
    ~QTimer();
 
    inline bool isActive() const;
@@ -52,7 +49,7 @@ class Q_CORE_EXPORT QTimer : public QObject
    inline int interval() const;
 
    inline void setSingleShot(bool singleShot);
-   static void singleShot(int msec, QObject *receiver, const char *member);
+   static void singleShot(int msec, QObject *receiver, const QString &member);
    inline bool isSingleShot() const;
 
    CORE_CS_SLOT_1(Public, void start(int msec))
@@ -68,7 +65,7 @@ class Q_CORE_EXPORT QTimer : public QObject
    CORE_CS_SIGNAL_2(timeout)
 
  protected:
-   void timerEvent(QTimerEvent *);
+   void timerEvent(QTimerEvent *) override;
 
  private:
    Q_DISABLE_COPY(QTimer)
@@ -76,6 +73,7 @@ class Q_CORE_EXPORT QTimer : public QObject
    inline int startTimer(int) {
       return -1;
    }
+
    inline void killTimer(int) {}
 
    int id, inter, del;

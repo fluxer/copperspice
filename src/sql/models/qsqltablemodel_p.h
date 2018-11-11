@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -49,8 +46,7 @@ class QSqlTableModelPrivate: public QSqlQueryModelPrivate
    static void setGeneratedValue(QSqlRecord &rec, int c, QVariant v);
    QSqlRecord record(const QVector<QVariant> &values) const;
 
-   bool exec(const QString &stmt, bool prepStatement,
-             const QSqlRecord &rec, const QSqlRecord &whereValues);
+   bool exec(const QString &stmt, bool prepStatement, const QSqlRecord &rec, const QSqlRecord &whereValues);
    virtual void revertCachedRow(int row);
    void revertInsertedRow();
    bool setRecord(int row, const QSqlRecord &record);
@@ -74,10 +70,13 @@ class QSqlTableModelPrivate: public QSqlQueryModelPrivate
    enum Op { None, Insert, Update, Delete };
 
    struct ModifiedRow {
-      ModifiedRow(Op o = None, const QSqlRecord &r = QSqlRecord()): op(o), rec(r) {
+      ModifiedRow(Op o = None, const QSqlRecord &r = QSqlRecord())
+         : op(o), rec(r) {
          clearGenerated(rec);
       }
+
       ModifiedRow(const ModifiedRow &other): op(other.op), rec(other.rec), primaryValues(other.primaryValues) {}
+
       Op op;
       QSqlRecord rec;
       QSqlRecord primaryValues;
@@ -85,7 +84,7 @@ class QSqlTableModelPrivate: public QSqlQueryModelPrivate
 
    QSqlRecord editBuffer;
 
-   typedef QMap<int, ModifiedRow> CacheMap;
+   using CacheMap = QMap<int, ModifiedRow>;
    CacheMap cache;
 };
 

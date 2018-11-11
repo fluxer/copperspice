@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -450,8 +447,10 @@ void QPicturePaintEngine::drawImage(const QRectF &r, const QImage &image, const 
 #ifdef QT_PICTURE_DEBUG
    qDebug() << " -> drawImage():" << r << sr;
 #endif
+
    int pos;
    SERIALIZE_CMD(QPicturePrivate::PdcDrawImage);
+
    if (d->pic_d->in_memory_only) {
       int index = d->pic_d->image_list.size();
       d->pic_d->image_list.append(image);
@@ -459,18 +458,21 @@ void QPicturePaintEngine::drawImage(const QRectF &r, const QImage &image, const 
    } else {
       d->s << r << image << sr << (quint32) flags;
    }
+
    writeCmdLength(pos, r, false);
 }
 
 void QPicturePaintEngine::drawTextItem(const QPointF &p , const QTextItem &ti)
 {
    Q_D(QPicturePaintEngine);
+
 #ifdef QT_PICTURE_DEBUG
    qDebug() << " -> drawTextItem():" << p << ti.text();
 #endif
 
    const QTextItemInt &si = static_cast<const QTextItemInt &>(ti);
-   if (si.chars == 0) {
+
+   if (si.m_iter == si.m_end) {
       QPaintEngine::drawTextItem(p, ti);   // Draw as path
    }
 
@@ -489,6 +491,7 @@ void QPicturePaintEngine::drawTextItem(const QPointF &p , const QTextItem &ti)
 
       d->s << p << ti.text() << fnt << ti.renderFlags() << double(fnt.d->dpi) / qt_defaultDpi() << justificationWidth;
       writeCmdLength(pos, /*brect=*/QRectF(), /*corr=*/false);
+
    } else if (d->pic_d->formatMajor >= 8) {
       // old old (buggy) format
       int pos;

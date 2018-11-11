@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -43,7 +40,7 @@ class Q_SQL_EXPORT QSqlTableModel: public QSqlQueryModel
  public:
    enum EditStrategy {OnFieldChange, OnRowChange, OnManualSubmit};
 
-   explicit QSqlTableModel(QObject *parent = 0, QSqlDatabase db = QSqlDatabase());
+   explicit QSqlTableModel(QObject *parent = nullptr, QSqlDatabase db = QSqlDatabase());
    virtual ~QSqlTableModel();
 
    virtual bool select();
@@ -51,15 +48,15 @@ class Q_SQL_EXPORT QSqlTableModel: public QSqlQueryModel
    virtual void setTable(const QString &tableName);
    QString tableName() const;
 
-   Qt::ItemFlags flags(const QModelIndex &index) const;
+   Qt::ItemFlags flags(const QModelIndex &index) const override;
 
-   QVariant data(const QModelIndex &idx, int role = Qt::DisplayRole) const;
-   bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole);
+   QVariant data(const QModelIndex &idx, int role = Qt::DisplayRole) const override;
+   bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
 
-   QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const;
+   QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
 
    bool isDirty(const QModelIndex &index) const;
-   void clear();
+   void clear() override;
 
    virtual void setEditStrategy(EditStrategy strategy);
    EditStrategy editStrategy() const;
@@ -68,26 +65,26 @@ class Q_SQL_EXPORT QSqlTableModel: public QSqlQueryModel
    QSqlDatabase database() const;
    int fieldIndex(const QString &fieldName) const;
 
-   void sort(int column, Qt::SortOrder order);
+   void sort(int column, Qt::SortOrder order) override;
    virtual void setSort(int column, Qt::SortOrder order);
 
    QString filter() const;
    virtual void setFilter(const QString &filter);
 
-   int rowCount(const QModelIndex &parent = QModelIndex()) const;
+   int rowCount(const QModelIndex &parent = QModelIndex()) const override;
 
-   bool removeColumns(int column, int count, const QModelIndex &parent = QModelIndex());
-   bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex());
-   bool insertRows(int row, int count, const QModelIndex &parent = QModelIndex());
+   bool removeColumns(int column, int count, const QModelIndex &parent = QModelIndex()) override;
+   bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
+   bool insertRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
 
    bool insertRecord(int row, const QSqlRecord &record);
    bool setRecord(int row, const QSqlRecord &record);
 
    virtual void revertRow(int row);
 
-   SQL_CS_SLOT_1(Public, bool submit())
+   SQL_CS_SLOT_1(Public, bool submit() override)
    SQL_CS_SLOT_2(submit)
-   SQL_CS_SLOT_1(Public, void revert())
+   SQL_CS_SLOT_1(Public, void revert() override)
    SQL_CS_SLOT_2(revert)
 
    SQL_CS_SLOT_1(Public, bool submitAll())
@@ -108,7 +105,7 @@ class Q_SQL_EXPORT QSqlTableModel: public QSqlQueryModel
    SQL_CS_SIGNAL_2(beforeDelete, row)
 
  protected:
-   QSqlTableModel(QSqlTableModelPrivate &dd, QObject *parent = 0, QSqlDatabase db = QSqlDatabase());
+   QSqlTableModel(QSqlTableModelPrivate &dd, QObject *parent = nullptr, QSqlDatabase db = QSqlDatabase());
 
    virtual bool updateRowInTable(int row, const QSqlRecord &values);
    virtual bool insertRowIntoTable(const QSqlRecord &values);

@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -342,7 +339,7 @@ void QIcdEngine::deleteConfiguration(const QString &iap_id)
         emit configurationRemoved(ptr);
     } else {
 #ifdef BEARER_MANAGEMENT_DEBUG
-        qDebug("IAP: %s, already missing from the known list", iap_id.toAscii().data());
+        qDebug("IAP: %s, already missing from the known list", iap_id.toLatin1().data());
 #endif
     }
 }
@@ -468,16 +465,18 @@ void QIcdEngine::addConfiguration(QString& iap_id)
                 accessPointConfigurations.insert(iap_id, ptr);
 
 #ifdef BEARER_MANAGEMENT_DEBUG
-                qDebug("IAP: %s, name: %s, added to known list", iap_id.toAscii().data(), cpPriv->name.toAscii().data());
+                qDebug("IAP: %s, name: %s, added to known list", iap_id.toLatin1().data(), cpPriv->name.toLatin1().data());
 #endif
                 locker.unlock();
                 emit configurationAdded(ptr);
                 locker.relock();
             }
         } else {
-            qWarning("IAP %s does not have \"type\" or \"name\" fields defined, skipping this IAP.", iap_id.toAscii().data());
+            qWarning("IAP %s does not have \"type\" or \"name\" fields defined, skipping this IAP.", iap_id.toLatin1().data());
         }
+
     } else {
+
 #ifdef BEARER_MANAGEMENT_DEBUG
 	qDebug() << "IAP" << iap_id << "already in db.";
 #endif
@@ -539,7 +538,7 @@ void QIcdEngine::addConfiguration(QString& iap_id)
             }
 	    }
 	} else {
-	    qWarning("Cannot find IAP %s from current configuration although it should be there.", iap_id.toAscii().data());
+	    qWarning("Can not find IAP %s from current configuration although it should be there.", iap_id.toLatin1().data());
 	}
     }
 }
@@ -616,15 +615,15 @@ void QIcdEngine::doRequestUpdate(QList<Maemo::IcdScanResult> scanned)
             mutex.lock();
 
 #ifdef BEARER_MANAGEMENT_DEBUG
-            qDebug("IAP: %s, name: %s, ssid: %s, added to known list",
-                   iap_id.toAscii().data(), ptr->name.toAscii().data(),
-                   !ssid.isEmpty() ? ssid.data() : "-");
+            qDebug("IAP: %s, name: %s, ssid: %s, added to known list", iap_id.toLatin1().data(),
+                  ptr->name.toLatin1().data(), ! ssid.isEmpty() ? ssid.data() : "-");
 #endif
         } else {
             knownConfigs.removeOne(iap_id);
+
 #ifdef BEARER_MANAGEMENT_DEBUG
             qDebug("IAP: %s, ssid: %s, already exists in the known list",
-                   iap_id.toAscii().data(), !ssid.isEmpty() ? ssid.data() : "-");
+                   iap_id.toLatin1().data(), ! ssid.isEmpty() ? ssid.data() : "-");
 #endif
         }
     }
@@ -664,7 +663,7 @@ void QIcdEngine::doRequestUpdate(QList<Maemo::IcdScanResult> scanned)
 
 #ifdef BEARER_MANAGEMENT_DEBUG
                     qDebug("IAP: %s, ssid: %s, discovered",
-                           iapid.toAscii().data(), toIcdConfig(ptr)->network_id.data());
+                           iapid.toLatin1().data(), toIcdConfig(ptr)->network_id.data());
 #endif
 
                     ptr->mutex.unlock();
@@ -942,7 +941,7 @@ void QIcdEngine::connectionStateSignalsSlot(QDBusMessage msg)
     default:
         break;
     }
-    
+
     locker.unlock();
     emit iapStateChanged(iapid, icd_connection_state);
     locker.relock();

@@ -1,27 +1,26 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
+
+#include <algorithm>
 
 #include <qtexttable.h>
 #include <qtextcursor.h>
@@ -301,39 +300,45 @@ struct QFragmentFindHelper {
    const QTextDocumentPrivate::FragmentMap &fragmentMap;
 };
 
-Q_STATIC_GLOBAL_INLINE_OPERATOR bool operator<(int fragment, const QFragmentFindHelper &helper)
+static inline bool operator<(int fragment, const QFragmentFindHelper &helper)
 {
    return helper.fragmentMap.position(fragment) < helper.pos;
 }
 
-Q_STATIC_GLOBAL_INLINE_OPERATOR bool operator<(const QFragmentFindHelper &helper, int fragment)
+static inline bool operator<(const QFragmentFindHelper &helper, int fragment)
 {
    return helper.pos < helper.fragmentMap.position(fragment);
 }
 
 int QTextTablePrivate::findCellIndex(int fragment) const
 {
-   QFragmentFindHelper helper(pieceTable->fragmentMap().position(fragment),
-                              pieceTable->fragmentMap());
-   QList<int>::ConstIterator it = qBinaryFind(cells.begin(), cells.end(), helper);
-   if (it == cells.end()) {
+   QFragmentFindHelper helper(pieceTable->fragmentMap().position(fragment), pieceTable->fragmentMap());
+
+   QList<int>::const_iterator it = std::lower_bound(cells.constBegin(), cells.constEnd(), helper);
+
+   if ((it == cells.constEnd()) || (helper < *it)) {
       return -1;
    }
+
    return it - cells.begin();
 }
 
 void QTextTablePrivate::fragmentAdded(const QChar &type, uint fragment)
 {
    dirty = true;
+
    if (blockFragmentUpdates) {
       return;
    }
+
    if (type == QTextBeginningOfFrame) {
       Q_ASSERT(cells.indexOf(fragment) == -1);
       const uint pos = pieceTable->fragmentMap().position(fragment);
+
       QFragmentFindHelper helper(pos, pieceTable->fragmentMap());
-      QList<int>::Iterator it = qLowerBound(cells.begin(), cells.end(), helper);
+      QList<int>::iterator it = std::lower_bound(cells.begin(), cells.end(), helper);
       cells.insert(it, fragment);
+
       if (!fragment_start || pos < pieceTable->fragmentMap().position(fragment_start)) {
          fragment_start = fragment;
       }
@@ -549,7 +554,8 @@ QTextTableCell QTextTable::cellAt(int position) const
    }
 
    QFragmentFindHelper helper(position, map);
-   QList<int>::ConstIterator it = qLowerBound(d->cells.begin(), d->cells.end(), helper);
+   QList<int>::const_iterator it = std::lower_bound(d->cells.begin(), d->cells.end(), helper);
+
    if (it != d->cells.begin()) {
       --it;
    }
@@ -1012,9 +1018,13 @@ void QTextTable::mergeCells(int row, int column, int numRows, int numCols)
 
    // find the position at which to insert the contents of the merged cells
    QFragmentFindHelper helper(origCellPosition, p->fragmentMap());
-   QList<int>::Iterator it = qBinaryFind(d->cells.begin(), d->cells.end(), helper);
+
+   QList<int>::iterator it = std::lower_bound(d->cells.begin(), d->cells.end(), helper);
+
    Q_ASSERT(it != d->cells.end());
+   Q_ASSERT(! (helper < *it));
    Q_ASSERT(*it == cellFragment);
+
    const int insertCellIndex = it - d->cells.begin();
    int insertFragment = d->cells.value(insertCellIndex + 1, d->fragment_end);
    uint insertPos = p->fragmentMap().position(insertFragment);
@@ -1045,9 +1055,12 @@ void QTextTable::mergeCells(int row, int column, int numRows, int numCols)
 
          if (firstCellIndex == -1) {
             QFragmentFindHelper helper(pos, p->fragmentMap());
-            QList<int>::Iterator it = qBinaryFind(d->cells.begin(), d->cells.end(), helper);
+            QList<int>::iterator it = std::lower_bound(d->cells.begin(), d->cells.end(), helper);
+
             Q_ASSERT(it != d->cells.end());
+            Q_ASSERT(! (helper < *it));
             Q_ASSERT(*it == fragment);
+
             firstCellIndex = cellIndex = it - d->cells.begin();
          }
 
@@ -1182,7 +1195,8 @@ void QTextTable::splitCell(int row, int column, int numRows, int numCols)
    for (int r = row + 1; r < row + rowSpan; ++r) {
       // find the cell before which to insert the new cell markers
       int gridIndex = r * d->nCols + column;
-      QVector<int>::iterator it = qUpperBound(d->cellIndices.begin(), d->cellIndices.end(), gridIndex);
+
+      QVector<int>::iterator it = std::upper_bound(d->cellIndices.begin(), d->cellIndices.end(), gridIndex);
       int cellIndex = it - d->cellIndices.begin();
       int fragment = d->cells.value(cellIndex, d->fragment_end);
       rowPositions[r - row] = p->fragmentMap().position(fragment);

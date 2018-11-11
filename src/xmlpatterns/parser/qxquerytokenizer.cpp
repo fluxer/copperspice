@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -67,7 +64,7 @@ const QChar XQueryTokenizer::current() const
 
 char XQueryTokenizer::peekCurrent() const
 {
-   return current().toAscii();
+   return current().toLatin1();
 }
 
 int XQueryTokenizer::peekForColonColon() const
@@ -77,7 +74,7 @@ int XQueryTokenizer::peekForColonColon() const
    int pos = m_pos;
 
    while (pos < m_length) {
-      switch (m_data.at(pos).toAscii()) {
+      switch (m_data.at(pos).toLatin1()) {
          /* Fallthrough these four. */
          case ' ':
          case '\t':
@@ -99,9 +96,7 @@ int XQueryTokenizer::peekForColonColon() const
    return -1;
 }
 
-Tokenizer::Token XQueryTokenizer::tokenAndChangeState(const TokenType code,
-      const State s,
-      const int advance)
+Tokenizer::Token XQueryTokenizer::tokenAndChangeState(const TokenType code, const State s, const int advance)
 {
    Q_ASSERT(advance >= 0);
    m_pos += advance;
@@ -109,30 +104,23 @@ Tokenizer::Token XQueryTokenizer::tokenAndChangeState(const TokenType code,
    return Token(code);
 }
 
-Tokenizer::Token XQueryTokenizer::tokenAndChangeState(const TokenType code,
-      const QString &value,
-      const State s)
+Tokenizer::Token XQueryTokenizer::tokenAndChangeState(const TokenType code, const QString &value, const State s)
 {
    setState(s);
    return Token(code, value);
 }
 
-Tokenizer::Token XQueryTokenizer::tokenAndAdvance(const TokenType code,
-      const int advance)
+Tokenizer::Token XQueryTokenizer::tokenAndAdvance(const TokenType code, const int advance)
 {
    Q_ASSERT(advance >= 0);
    m_pos += advance;
    return Token(code);
 }
 
-QString XQueryTokenizer::normalizeEOL(const QString &input,
-                                      const CharacterSkips &characterSkips)
+QString XQueryTokenizer::normalizeEOL(const QString &input, const CharacterSkips &characterSkips)
 {
    const int len = input.count();
    QString result;
-
-   /* The likely hood is rather high it'll be the same content. */
-   result.reserve(len);
 
    for (int i = 0; i < len; ++i) {
       const QChar &at = input.at(i);
@@ -286,7 +274,7 @@ Tokenizer::TokenType XQueryTokenizer::consumeWhitespace()
 char XQueryTokenizer::peekAhead(const int length) const
 {
    if (m_pos + length < m_length) {
-      return m_data.at(m_pos + length).toAscii();
+      return m_data.at(m_pos + length).toLatin1();
    } else {
       return 0;
    }
@@ -458,24 +446,25 @@ Tokenizer::Token XQueryTokenizer::tokenizeNumberLiteral()
 {
    setState(Operator);
    const int startPos = m_pos;
-   bool hasDot = false;
+
+   bool hasDot   = false;
    bool isXPath20 = false;
 
    for (; m_pos < m_length; ++m_pos) {
       QChar ch(current());
 
-      char cell = ch.cell();
+      char cell = ch.unicode() & 0xFF;
 
       if (cell == 'e' || cell == 'E') {
          isXPath20 = true;
          ++m_pos;
          ch = current();
 
-         if (ch.row() != 0) {
+         if (ch.unicode() > 0xFF) {
             break;
          }
 
-         cell = ch.cell();
+         cell = ch.unicode() & 0xFF;
 
          if (cell == '+' || cell == '-') {
             continue;
@@ -513,8 +502,9 @@ QString XQueryTokenizer::tokenizeCharacterReference()
 
    const QChar charRef(charForReference(content));
 
-   if (!charRef.isNull()) {
+   if (! charRef.isNull()) {
       return charRef;
+
    } else if (content.startsWith(QLatin1Char('#'))) {
       int base;
 
@@ -533,23 +523,16 @@ QString XQueryTokenizer::tokenizeCharacterReference()
       }
 
       bool conversionOK = false;
-      const int codepoint = content.toInt(&conversionOK, base);
+      const int codepoint = content.toInteger<int>(&conversionOK, base);
 
       if (conversionOK) {
          const QChar ch(codepoint);
+         return ch;
 
-         if (ch.isNull()) {
-            /* We likely have something which require surrogate pairs. */
-            QString result;
-            result += QChar(QChar::highSurrogate(codepoint));
-            result += QChar(QChar::lowSurrogate(codepoint));
-            return result;
-         } else {
-            return ch;
-         }
       } else {
          return QString();
       }
+
    } else {
       return QString();
    }
@@ -586,13 +569,9 @@ QChar XQueryTokenizer::charForReference(const QString &reference)
 Tokenizer::Token XQueryTokenizer::tokenizeStringLiteral()
 {
    const QChar delimiter(current());
-   /* We cannot unfortunately just scan and then do mid(),
-    * since we can encounter character references. */
+
+   /* We cannot unfortunately just scan and then do mid(),  since we can encounter character references. */
    QString result;
-
-   /* This is more likely than QString's default allocation. */
-   result.reserve(8);
-
    CharacterSkips skipEOLNormalization;
 
    /* Advance over the initial quote character. */
@@ -604,7 +583,7 @@ Tokenizer::Token XQueryTokenizer::tokenizeStringLiteral()
       if (c == QLatin1Char('&')) {
          const QString charRef(tokenizeCharacterReference());
 
-         if (charRef.isNull()) {
+         if (charRef.isEmpty()) {
             return error();
          } else {
             skipEOLNormalization.insert(result.count());
@@ -612,15 +591,16 @@ Tokenizer::Token XQueryTokenizer::tokenizeStringLiteral()
          }
 
       } else if (c == delimiter) {
-         /* Maybe the escaping mechanism is used. For instance, "s""s"
-          * has the value `s"s'. */
+         /* Maybe the escaping mechanism is used. For instance, "s""s"  has the value `s"s'. */
          ++m_pos;
 
-         if (current() == delimiter) { /* Double quote. */
+         if (current() == delimiter) {
+            /* Double quote. */
             result += delimiter;
          } else {
             return Token(STRING_LITERAL, normalizeEOL(result, skipEOLNormalization));
          }
+
       } else {
          result += c;
       }
@@ -660,7 +640,7 @@ bool XQueryTokenizer::aheadEquals(const char *const chs,
    }
 
    for (int i = offset; i < (len + offset); ++i) {
-      if (m_data.at(m_pos + i).toAscii() != chs[i - offset]) {
+      if (m_data.at(m_pos + i).toLatin1() != chs[i - offset]) {
          return false;
       }
    }
@@ -670,7 +650,7 @@ bool XQueryTokenizer::aheadEquals(const char *const chs,
 
 const TokenMap *XQueryTokenizer::lookupKeyword(const QString &keyword)
 {
-   return TokenLookup::value(keyword.toAscii().constData(), keyword.length());
+   return TokenLookup::value(keyword.toLatin1().constData(), keyword.length());
 }
 
 XQueryTokenizer::State XQueryTokenizer::state() const
@@ -1169,7 +1149,7 @@ Tokenizer::Token XQueryTokenizer::nextToken()
                       * to the state. */
                      m_pos = currentPos;
                      setState(Operator);
-                     return Token(NCNAME, QLatin1String(keyword->name));
+                     return Token(NCNAME, QString::fromLatin1(keyword->name));
                   }
                }
             }
@@ -1512,12 +1492,12 @@ Tokenizer::Token XQueryTokenizer::nextToken()
          }
          Q_ASSERT(false);
       }
+
       case AposAttributeContent:
       /* Fallthrough. */
       case QuotAttributeContent: {
          const QChar sep(state() == AposAttributeContent ? QLatin1Char('\'') : QLatin1Char('"'));
          QString result;
-         result.reserve(20);
 
          if (m_scanOnly) {
             int stack = 0;
@@ -1590,13 +1570,15 @@ Tokenizer::Token XQueryTokenizer::nextToken()
                } else {
                   return Token(ERROR);
                }
+
             } else if (curr == QLatin1Char('&')) {
                const QString ret(tokenizeCharacterReference());
-               if (ret.isNull()) {
+               if (ret.isEmpty()) {
                   return Token(ERROR);
                } else {
                   result.append(ret);
                }
+
             } else if (curr == QLatin1Char('<')) {
                return Token(STRING_LITERAL, result);
             } else {
@@ -1630,7 +1612,6 @@ Tokenizer::Token XQueryTokenizer::nextToken()
       }
       case ElementContent: {
          QString result;
-         result.reserve(20);
 
          /* Whether the text node, result, may be whitespace only. Character references
           * and CDATA sections disables that. */
@@ -1696,7 +1677,8 @@ Tokenizer::Token XQueryTokenizer::nextToken()
                }
                case '&': {
                   const QString ret(tokenizeCharacterReference());
-                  if (ret.isNull()) {
+
+                  if (ret.isEmpty()) {
                      return Token(ERROR);
                   } else {
                      skipEOLNormalization.insert(result.count());
@@ -1705,6 +1687,7 @@ Tokenizer::Token XQueryTokenizer::nextToken()
                      break;
                   }
                }
+
                case '{': {
                   // TODO remove this check, also below.
                   if (m_pos + 1 == m_length) {
@@ -1834,7 +1817,6 @@ Tokenizer::Token XQueryTokenizer::nextToken()
       }
       case PragmaContent: {
          QString result;
-         result.reserve(20);
 
          const bool hasWS = m_pos < m_length && current().isSpace();
 
@@ -1912,13 +1894,15 @@ Tokenizer::Token XQueryTokenizer::attributeAsRaw(const QChar sep,
          }
       } else if (peekCurrent() == '&') {
          const QString ret(tokenizeCharacterReference());
-         if (ret.isNull()) {
+
+         if (ret.isEmpty()) {
             return Token(ERROR);
          } else {
             result.append(ret);
             ++m_pos;
             continue;
          }
+
       } else if (peekCurrent() == otherSep) {
          result.append(current());
          ++m_pos;

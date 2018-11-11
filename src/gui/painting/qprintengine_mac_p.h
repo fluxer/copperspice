@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -53,35 +50,36 @@ class QMacPrintEngine : public QPaintEngine, public QPrintEngine
 
    Qt::HANDLE handle() const;
 
-   bool begin(QPaintDevice *dev);
-   bool end();
-   virtual QPaintEngine::Type type() const {
+   bool begin(QPaintDevice *dev) override;
+   bool end() override;
+
+   virtual QPaintEngine::Type type() const override {
       return QPaintEngine::MacPrinter;
    }
 
    QPaintEngine *paintEngine() const;
 
-   void setProperty(PrintEnginePropertyKey key, const QVariant &value);
-   QVariant property(PrintEnginePropertyKey key) const;
+   void setProperty(PrintEnginePropertyKey key, const QVariant &value) override;
+   QVariant property(PrintEnginePropertyKey key) const override;
 
-   QPrinter::PrinterState printerState() const;
+   QPrinter::PrinterState printerState() const override;
 
-   bool newPage();
-   bool abort();
-   int metric(QPaintDevice::PaintDeviceMetric) const;
+   bool newPage() override;
+   bool abort() override;
+   int metric(QPaintDevice::PaintDeviceMetric) const override;
 
-   void updateState(const QPaintEngineState &state);
+   void updateState(const QPaintEngineState &state) override;
 
-   virtual void drawLines(const QLineF *lines, int lineCount);
-   virtual void drawRects(const QRectF *r, int num);
-   virtual void drawPoints(const QPointF *p, int pointCount);
-   virtual void drawEllipse(const QRectF &r);
-   virtual void drawPolygon(const QPointF *points, int pointCount, PolygonDrawMode mode);
-   virtual void drawPixmap(const QRectF &r, const QPixmap &pm, const QRectF &sr);
-   virtual void drawImage(const QRectF &r, const QImage &pm, const QRectF &sr, Qt::ImageConversionFlags flags);
-   virtual void drawTextItem(const QPointF &p, const QTextItem &ti);
-   virtual void drawTiledPixmap(const QRectF &r, const QPixmap &pixmap, const QPointF &s);
-   virtual void drawPath(const QPainterPath &);
+   void drawLines(const QLineF *lines, int lineCount) override;
+   void drawRects(const QRectF *r, int num) override;
+   void drawPoints(const QPointF *p, int pointCount) override;
+   void drawEllipse(const QRectF &r) override;
+   void drawPolygon(const QPointF *points, int pointCount, PolygonDrawMode mode) override;
+   void drawPixmap(const QRectF &r, const QPixmap &pm, const QRectF &sr) override;
+   void drawImage(const QRectF &r, const QImage &pm, const QRectF &sr, Qt::ImageConversionFlags flags) override;
+   void drawTextItem(const QPointF &p, const QTextItem &ti) override;
+   void drawTiledPixmap(const QRectF &r, const QPixmap &pixmap, const QPointF &s) override;
+   void drawPath(const QPainterPath &) override;
 
  private:
    friend class QPrintDialog;
@@ -121,6 +119,7 @@ class QMacPrintEnginePrivate : public QPaintEnginePrivate
       hasCustomPaperSize(false), hasCustomPageMargins(false) {}
 
    ~QMacPrintEnginePrivate();
+
    void initialize();
    void releaseSession();
    bool newPage_helper();
@@ -131,6 +130,7 @@ class QMacPrintEnginePrivate : public QPaintEnginePrivate
    inline bool isPrintSessionInitialized() const {
       return printInfo != 0;
    }
+
    bool shouldSuppressStatus() const;
 };
 

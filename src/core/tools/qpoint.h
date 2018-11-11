@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,9 +23,10 @@
 #ifndef QPOINT_H
 #define QPOINT_H
 
-#include <QtCore/qnamespace.h>
+#include <qnamespace.h>
 
-QT_BEGIN_NAMESPACE
+class QDataStream;
+class QDebug;
 
 class Q_CORE_EXPORT QPoint
 {
@@ -36,26 +34,26 @@ class Q_CORE_EXPORT QPoint
    QPoint();
    QPoint(int xpos, int ypos);
 
-   bool isNull() const;
+   inline bool isNull() const;
 
-   int x() const;
-   int y() const;
-   void setX(int x);
-   void setY(int y);
+   inline int x() const;
+   inline int y() const;
+   inline void setX(int x);
+   inline void setY(int y);
 
    int manhattanLength() const;
 
-   int &rx();
-   int &ry();
+   inline int &rx();
+   inline int &ry();
 
-   QPoint &operator+=(const QPoint &p);
-   QPoint &operator-=(const QPoint &p);
+   inline QPoint &operator+=(const QPoint &p);
+   inline QPoint &operator-=(const QPoint &p);
 
-   QPoint &operator*=(float c);
-   QPoint &operator*=(double c);
-   QPoint &operator*=(int c);
+   inline QPoint &operator*=(float c);
+   inline QPoint &operator*=(double c);
+   inline QPoint &operator*=(int c);
 
-   QPoint &operator/=(qreal c);
+   inline QPoint &operator/=(qreal c);
 
    friend inline bool operator==(const QPoint &, const QPoint &);
    friend inline bool operator!=(const QPoint &, const QPoint &);
@@ -79,10 +77,8 @@ class Q_CORE_EXPORT QPoint
 
 Q_DECLARE_TYPEINFO(QPoint, Q_MOVABLE_TYPE);
 
-#ifndef QT_NO_DATASTREAM
 Q_CORE_EXPORT QDataStream &operator<<(QDataStream &, const QPoint &);
 Q_CORE_EXPORT QDataStream &operator>>(QDataStream &, QPoint &);
-#endif
 
 inline QPoint::QPoint()
 {
@@ -244,20 +240,20 @@ class Q_CORE_EXPORT QPointF
 
    qreal manhattanLength() const;
 
-   bool isNull() const;
+   inline bool isNull() const;
 
-   qreal x() const;
-   qreal y() const;
-   void setX(qreal x);
-   void setY(qreal y);
+   inline qreal x() const;
+   inline qreal y() const;
+   inline void setX(qreal x);
+   inline void setY(qreal y);
 
-   qreal &rx();
-   qreal &ry();
+   inline qreal &rx();
+   inline qreal &ry();
 
-   QPointF &operator+=(const QPointF &p);
-   QPointF &operator-=(const QPointF &p);
-   QPointF &operator*=(qreal c);
-   QPointF &operator/=(qreal c);
+   inline QPointF &operator+=(const QPointF &p);
+   inline QPointF &operator-=(const QPointF &p);
+   inline QPointF &operator*=(qreal c);
+   inline QPointF &operator/=(qreal c);
 
    friend inline bool operator==(const QPointF &, const QPointF &);
    friend inline bool operator!=(const QPointF &, const QPointF &);
@@ -268,7 +264,7 @@ class Q_CORE_EXPORT QPointF
    friend inline const QPointF operator-(const QPointF &);
    friend inline const QPointF operator/(const QPointF &, qreal);
 
-   QPoint toPoint() const;
+   inline QPoint toPoint() const;
 
  private:
    friend class QMatrix;
@@ -280,10 +276,8 @@ class Q_CORE_EXPORT QPointF
 
 Q_DECLARE_TYPEINFO(QPointF, Q_MOVABLE_TYPE);
 
-#ifndef QT_NO_DATASTREAM
 Q_CORE_EXPORT QDataStream &operator<<(QDataStream &, const QPointF &);
 Q_CORE_EXPORT QDataStream &operator>>(QDataStream &, QPointF &);
-#endif
 
 inline QPointF::QPointF() : xp(0), yp(0) { }
 
@@ -401,6 +395,5 @@ inline QPoint QPointF::toPoint() const
 
 Q_CORE_EXPORT QDebug operator<<(QDebug d, const QPointF &p);
 
-QT_END_NAMESPACE
 
 #endif // QPOINT_H

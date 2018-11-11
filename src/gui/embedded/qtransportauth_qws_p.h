@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -49,25 +46,17 @@ void hexstring( char *buf, const unsigned char *key, size_t sz );
 // proj id for ftok usage in sxe
 #define SXE_PROJ 10022
 
-/*!
-  \internal
-  memset for security purposes, guaranteed not to be optimized away
-  http://www.faqs.org/docs/Linux-HOWTO/Secure-Programs-HOWTO.html
-*/
+
 void *guaranteed_memset(void *v, int c, size_t n);
 
 class QUnixSocketMessage;
 
-/*!
-  \internal
-  \class AuthCookie
-  Struct to carry process authentication key and id
-*/
 #define QSXE_HEADER_LEN 24
 
-/*!
+/*
   \macro AUTH_ID
   Macro to manage authentication header.  Format of header is:
+
   \table
   \header \i BYTES  \i  CONTENT
      \row \i 0-3    \i  magic numbers
@@ -130,11 +119,6 @@ class QTransportAuthPrivate
    QMutex keyfileMutex;
 };
 
-/*!
-  \internal
-  Enforces the False Authentication Rate.  If more than 4 authentications
-  are received per minute the sxemonitor is notified that the FAR has been exceeded
-*/
 class FAREnforcer
 {
  public:

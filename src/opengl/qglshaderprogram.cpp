@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -475,11 +472,12 @@ QGLShaderProgramPrivate::~QGLShaderProgramPrivate()
 
 bool QGLShaderProgramPrivate::hasShader(QGLShader::ShaderType type) const
 {
-   foreach (QGLShader * shader, shaders) {
+   for (QGLShader * shader : shaders) {
       if (shader->shaderType() == type) {
          return true;
       }
    }
+
    return false;
 }
 
@@ -733,15 +731,18 @@ void QGLShaderProgram::removeAllShaders()
 {
    Q_D(QGLShaderProgram);
    d->removingShaders = true;
-   foreach (QGLShader * shader, d->shaders) {
+
+   for (QGLShader * shader : d->shaders) {
       if (d->programGuard.id() && shader && shader->d_func()->shaderGuard.id()) {
          glDetachShader(d->programGuard.id(), shader->d_func()->shaderGuard.id());
       }
    }
-   foreach (QGLShader * shader, d->anonShaders) {
+
+   for (QGLShader * shader : d->anonShaders) {
       // Delete shader objects that were created anonymously.
       delete shader;
    }
+
    d->shaders.clear();
    d->anonShaders.clear();
    d->linked = false;  // Program needs to be relinked.
@@ -786,14 +787,12 @@ bool QGLShaderProgram::link()
 
    // Set up the geometry shader parameters
    if (glProgramParameteriEXT) {
-      foreach (QGLShader * shader, d->shaders) {
+
+      for (QGLShader * shader : d->shaders) {
          if (shader->shaderType() & QGLShader::Geometry) {
-            glProgramParameteriEXT(program, GL_GEOMETRY_INPUT_TYPE_EXT,
-                                   d->geometryInputType);
-            glProgramParameteriEXT(program, GL_GEOMETRY_OUTPUT_TYPE_EXT,
-                                   d->geometryOutputType);
-            glProgramParameteriEXT(program, GL_GEOMETRY_VERTICES_OUT_EXT,
-                                   d->geometryVertexCount);
+            glProgramParameteriEXT(program, GL_GEOMETRY_INPUT_TYPE_EXT, d->geometryInputType);
+            glProgramParameteriEXT(program, GL_GEOMETRY_OUTPUT_TYPE_EXT, d->geometryOutputType);
+            glProgramParameteriEXT(program, GL_GEOMETRY_VERTICES_OUT_EXT, d->geometryVertexCount);
             break;
          }
       }
@@ -3211,13 +3210,14 @@ bool QGLShader::hasOpenGLShaders(ShaderType type, const QGLContext *context)
       return false;
    }
 
-   if ((type & Geometry) && !QByteArray((const char *) glGetString(GL_EXTENSIONS)).contains("GL_EXT_geometry_shader4")) {
+   const QString &extensionStr = cs_glGetString(GL_EXTENSIONS);
+
+   if ((type & Geometry) && ! extensionStr.contains("GL_EXT_geometry_shader4")) {
       return false;
    }
 
    return true;
 }
-
 
 
 #ifdef Q_MAC_COMPAT_GL_FUNCTIONS

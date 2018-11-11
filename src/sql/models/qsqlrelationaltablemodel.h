@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -71,31 +68,30 @@ class Q_SQL_EXPORT QSqlRelationalTableModel: public QSqlTableModel
       LeftJoin
    };
 
-   explicit QSqlRelationalTableModel(QObject *parent = 0,
-                                     QSqlDatabase db = QSqlDatabase());
+   explicit QSqlRelationalTableModel(QObject *parent = nullptr, QSqlDatabase db = QSqlDatabase());
    virtual ~QSqlRelationalTableModel();
 
-   QVariant data(const QModelIndex &item, int role = Qt::DisplayRole) const;
-   bool setData(const QModelIndex &item, const QVariant &value, int role = Qt::EditRole);
-   bool removeColumns(int column, int count, const QModelIndex &parent = QModelIndex());
+   QVariant data(const QModelIndex &item, int role = Qt::DisplayRole) const override;
+   bool setData(const QModelIndex &item, const QVariant &value, int role = Qt::EditRole) override;
+   bool removeColumns(int column, int count, const QModelIndex &parent = QModelIndex()) override;
 
-   void clear();
-   bool select();
+   void clear() override;
+   bool select() override;
 
-   void setTable(const QString &tableName);
+   void setTable(const QString &tableName) override;
    virtual void setRelation(int column, const QSqlRelation &relation);
    QSqlRelation relation(int column) const;
    virtual QSqlTableModel *relationModel(int column) const;
    void setJoinMode( QSqlRelationalTableModel::JoinMode joinMode );
 
-   SQL_CS_SLOT_1(Public, void revertRow(int row))
+   SQL_CS_SLOT_1(Public, void revertRow(int row) override)
    SQL_CS_SLOT_2(revertRow)
 
  protected:
-   QString selectStatement() const;
-   bool updateRowInTable(int row, const QSqlRecord &values);
-   bool insertRowIntoTable(const QSqlRecord &values);
-   QString orderByClause() const;
+   QString selectStatement() const override;
+   bool updateRowInTable(int row, const QSqlRecord &values) override;
+   bool insertRowIntoTable(const QSqlRecord &values) override;
+   QString orderByClause() const override;
 
  private:
    Q_DECLARE_PRIVATE(QSqlRelationalTableModel)

@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -91,20 +88,20 @@ class Q_GUI_EXPORT QGraphicsGridLayout : public QGraphicsLayout
    QGraphicsLayoutItem *itemAt(int row, int column) const;
 
    // inherited from QGraphicsLayout
-   int count() const;
-   QGraphicsLayoutItem *itemAt(int index) const;
-   void removeAt(int index);
+   int count() const override;
+   QGraphicsLayoutItem *itemAt(int index) const override;
+   void removeAt(int index) override;
    void removeItem(QGraphicsLayoutItem *item);
 
-   void invalidate();
+   void invalidate() override;
 
    // inherited from QGraphicsLayoutItem
-   void setGeometry(const QRectF &rect);
-   QSizeF sizeHint(Qt::SizeHint which, const QSizeF &constraint = QSizeF()) const;
+   void setGeometry(const QRectF &rect) override;
+   QSizeF sizeHint(Qt::SizeHint which, const QSizeF &constraint = QSizeF()) const override;
 
    // ####
-   //QRect cellRect(int row, int column, int rowSpan = 1, int columnSpan = 1) const;
-   //QSizePolicy::ControlTypes controlTypes(LayoutSide side) const;
+   // QRect cellRect(int row, int column, int rowSpan = 1, int columnSpan = 1) const;
+   // QSizePolicy::ControlTypes controlTypes(LayoutSide side) const;
 
  private:
    Q_DISABLE_COPY(QGraphicsGridLayout)

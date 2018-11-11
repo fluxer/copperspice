@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -60,7 +57,7 @@ class QAudioOutputBuffer : public QObject
       m_periodTime = m_maxPeriodSize / m_bytesPerFrame * 1000 / audioFormat.frequency();
 
       m_fillTimer = new QTimer(this);
-      connect(m_fillTimer, SIGNAL(timeout()), SLOT(fillBuffer()));
+      connect(m_fillTimer, &QTimer::timeout, this, &QAudioOutputBuffer::fillBuffer);
    }
 
    ~QAudioOutputBuffer() {
@@ -145,10 +142,11 @@ class QAudioOutputBuffer : public QObject
       m_fillTimer->stop();
    }
 
- signals:
-   void readyRead();
 
- private slots:
+   MULTI_CS_SIGNAL_1(Private, void readyRead())
+   MULTI_CS_SIGNAL_2(readyRead);
+
+ private:
    void fillBuffer() {
       const int free = m_buffer->free();
       const int writeSize = free - (free % m_maxPeriodSize);
@@ -208,18 +206,18 @@ class MacOutputDevice : public QIODevice
       open(QIODevice::WriteOnly | QIODevice::Unbuffered);
    }
 
-   qint64 readData(char *data, qint64 len) {
+   qint64 readData(char *data, qint64 len) override {
       Q_UNUSED(data);
       Q_UNUSED(len);
 
       return 0;
    }
 
-   qint64 writeData(const char *data, qint64 len) {
+   qint64 writeData(const char *data, qint64 len) override {
       return m_audioBuffer->writeBytes(data, len);
    }
 
-   bool isSequential() const {
+   bool isSequential() const override {
       return true;
    }
 
@@ -228,34 +226,40 @@ class MacOutputDevice : public QIODevice
 };
 
 
-QAudioOutputPrivate::QAudioOutputPrivate(const QByteArray &device, const QAudioFormat &format):
-   audioFormat(format)
+QAudioOutputPrivate::QAudioOutputPrivate(const QString  &device, const QAudioFormat &format)
+   : audioFormat(format)
 {
-   QDataStream ds(device);
-   quint32 did, mode;
+   auto iter_s = device.indexOfFast(":");
+   quint32 t_id = QString(device.constBegin(), iter_s).toInteger<quint32>();
 
-   ds >> did >> mode;
+   auto iter_e = device.indexOfFast(":", iter_s);
+   quint32 t_mode = QString(iter_s + 1, iter_e).toInteger<quint32>();
 
-   if (QAudio::Mode(mode) == QAudio::AudioInput) {
+   // (not used)  name = QString(iter_e + 1, device.constEnd());
+
+   if (QAudio::Mode(t_mode) == QAudio::AudioInput) {
       errorCode = QAudio::OpenError;
+
    } else {
       audioDeviceInfo = new QAudioDeviceInfoInternal(device, QAudio::AudioOutput);
       isOpen = false;
-      audioDeviceId = AudioDeviceID(did);
-      audioUnit = 0;
-      audioIO = 0;
-      startTime = 0;
-      totalFrames = 0;
-      audioBuffer = 0;
+
+      audioDeviceId = AudioDeviceID(t_id);
+      audioUnit     = 0;
+      audioIO       = 0;
+      startTime     = 0;
+      totalFrames   = 0;
+      audioBuffer   = 0;
+
       internalBufferSize = QtMultimediaInternal::default_buffer_size;
-      clockFrequency = AudioGetHostClockFrequency() / 1000;
+      clockFrequency     = AudioGetHostClockFrequency() / 1000;
       errorCode = QAudio::NoError;
       stateCode = QAudio::StoppedState;
       audioThreadState = Stopped;
 
       intervalTimer = new QTimer(this);
       intervalTimer->setInterval(1000);
-      connect(intervalTimer, SIGNAL(timeout()), SIGNAL(notify()));
+      connect(intervalTimer, SIGNAL(timeout()), this, SLOT(notify()));
    }
 }
 
@@ -355,7 +359,7 @@ bool QAudioOutputPrivate::open()
    }
 
    audioBuffer = new QtMultimediaInternal::QAudioOutputBuffer(internalBufferSize, periodSizeBytes, audioFormat);
-   connect(audioBuffer, SIGNAL(readyRead()), SLOT(inputReady()));  // Pull
+   connect(audioBuffer, SIGNAL(readyRead()), this, SLOT(inputReady()));  // Pull
 
    audioIO = new MacOutputDevice(audioBuffer, this);
 

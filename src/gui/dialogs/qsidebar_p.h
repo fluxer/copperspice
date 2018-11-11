@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -40,8 +37,8 @@ class QFileSystemModel;
 class QSideBarDelegate : public QStyledItemDelegate
 {
  public:
-   QSideBarDelegate(QWidget *parent = 0) : QStyledItemDelegate(parent) {}
-   void initStyleOption(QStyleOptionViewItem *option, const QModelIndex &index) const;
+   QSideBarDelegate(QWidget *parent = nullptr) : QStyledItemDelegate(parent) {}
+   void initStyleOption(QStyleOptionViewItem *option, const QModelIndex &index) const override;
 };
 
 class QUrlModel : public QStandardItemModel
@@ -54,18 +51,18 @@ class QUrlModel : public QStandardItemModel
       EnabledRole = Qt::UserRole + 2
    };
 
-   QUrlModel(QObject *parent = 0);
+   QUrlModel(QObject *parent = nullptr);
 
-   QStringList mimeTypes() const;
-   QMimeData *mimeData(const QModelIndexList &indexes) const;
+   QStringList mimeTypes() const override;
+   QMimeData *mimeData(const QModelIndexList &indexes) const override;
 
 #ifndef QT_NO_DRAGANDDROP
    bool canDrop(QDragEnterEvent *event);
-   bool dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent);
+   bool dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent) override;
 #endif
 
-   Qt::ItemFlags flags(const QModelIndex &index) const;
-   bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole);
+   Qt::ItemFlags flags(const QModelIndex &index) const override;
+   bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
 
    void setUrls(const QList<QUrl> &list);
    void addUrls(const QList<QUrl> &urls, int row = -1, bool move = true);
@@ -95,11 +92,11 @@ class QSidebar : public QListView
    GUI_CS_SIGNAL_1(Public, void goToUrl(const QUrl &url))
    GUI_CS_SIGNAL_2(goToUrl, url)
 
-   QSidebar(QWidget *parent = 0);
+   QSidebar(QWidget *parent = nullptr);
    void setModelAndUrls(QFileSystemModel *model, const QList<QUrl> &newUrls);
    ~QSidebar();
 
-   QSize sizeHint() const;
+   QSize sizeHint() const override;
 
    void setUrls(const QList<QUrl> &list) {
       urlModel->setUrls(list);
@@ -114,11 +111,11 @@ class QSidebar : public QListView
    void selectUrl(const QUrl &url);
 
  protected:
-   bool event(QEvent *e);
-   void focusInEvent(QFocusEvent *event);
+   bool event(QEvent *e) override;
+   void focusInEvent(QFocusEvent *event) override;
 
 #ifndef QT_NO_DRAGANDDROP
-   void dragEnterEvent(QDragEnterEvent *event);
+   void dragEnterEvent(QDragEnterEvent *event) override;
 #endif
 
  private:

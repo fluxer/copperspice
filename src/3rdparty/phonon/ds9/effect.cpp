@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -40,13 +37,16 @@ namespace Phonon
         Effect::Effect(CLSID effectClass, QObject *parent)
             : BackendNode(parent)
         {
-            //creation of the filter
-            for(int i = 0; i < FILTER_COUNT; ++i) {
+            // creation of the filter
+            for (int i = 0; i < FILTER_COUNT; ++i) {
                 Filter &filter = m_filters[i];
+
                 filter = Filter(CLSID_DMOWrapperFilter, IID_IBaseFilter);
                 Q_ASSERT(filter);
+
                 ComPointer<IDMOWrapperFilter> wrapper(filter, IID_IDMOWrapperFilter);
                 Q_ASSERT(wrapper);
+
                 wrapper->Init(effectClass, DMOCATEGORY_AUDIO_EFFECT);
             }
         }
@@ -64,48 +64,57 @@ namespace Phonon
         {
             QList<Phonon::EffectParameter> ret;
             ComPointer<IMediaParamInfo> paramInfo(m_filters[0], IID_IMediaParamInfo);
+
             if (!paramInfo) {
                 return ret;
             }
+
             DWORD paramCount = 0;
             paramInfo->GetParamCount( &paramCount);
 
             for(quint32 i = 0; i < paramCount; i++) {
                 MP_PARAMINFO info;
                 HRESULT hr = paramInfo->GetParamInfo(i, &info);
+
                 Q_ASSERT(SUCCEEDED(hr));
                 WCHAR *name = 0;
                 hr = paramInfo->GetParamText(i, &name);
+
                 Q_ASSERT(SUCCEEDED(hr));
                 QVariant def, min, max;
-
                 QVariantList values;
 
-                switch(info.mpType)
-                {
+                switch(info.mpType) {
+
                 case MPT_ENUM:
                     {
                         WCHAR *current = name;
-                        current += wcslen(current) + 1; //skip the name
-                        current += wcslen(current) + 1; //skip the unit
+                        current += wcslen(current) + 1;    //skip the name
+                        current += wcslen(current) + 1;    //skip the unit
+
                         for(; *current; current += wcslen(current) + 1) {
-                            values.append( QString::fromWCharArray(current) );
+                           std::wstring tmp(current);
+                           values.append( QString::fromStdWString(tmp) );
                         }
                     }
                     //FALLTHROUGH
+
                 case MPT_INT:
                     def = int(info.mpdNeutralValue);
                     min = int(info.mpdMinValue);
                     max = int(info.mpdMaxValue);
                     break;
+
                 case MPT_FLOAT:
                     def = info.mpdNeutralValue;
                     min = info.mpdMinValue;
                     max = info.mpdMaxValue;
                     break;
+
                 case MPT_BOOL:
                     def = bool(info.mpdNeutralValue);
                     break;
+
                 case MPT_MAX:
                     //Reserved ms-help://MS.PSDKSVR2003R2.1033/directshow/htm/mp_typeenumeration.htm
                     break;
@@ -114,7 +123,9 @@ namespace Phonon
                 Phonon::EffectParameter::Hints hint = info.mopCaps == MP_CAPS_CURVE_INVSQUARE ?
                     Phonon::EffectParameter::LogarithmicHint : Phonon::EffectParameter::Hints(0);
 
-                const QString n = QString::fromWCharArray(name);
+                std::wstring tmp(name);
+                const QString n = QString::fromStdWString(tmp);
+
                 ret.append(Phonon::EffectParameter(i, n, hint, def, min, max, values));
                 ::CoTaskMemFree(name); //let's free the memory
             }

@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -44,8 +41,6 @@
 
 #include <qprintengine_pdf_p.h>
 #include <qdrawhelper_p.h>
-
-QT_BEGIN_NAMESPACE
 
 extern qint64 qt_pixmap_id(const QPixmap &pixmap);
 extern qint64 qt_image_id(const QImage &image);
@@ -79,6 +74,7 @@ void QPdfPage::streamImage(int w, int h, int object)
 inline QPaintEngine::PaintEngineFeatures qt_pdf_decide_features()
 {
    QPaintEngine::PaintEngineFeatures f = QPaintEngine::AllFeatures;
+
    f &= ~(QPaintEngine::PorterDuff | QPaintEngine::PerspectiveTransform
           | QPaintEngine::ObjectBoundingModeGradients
 #ifndef USE_NATIVE_GRADIENTS
@@ -86,6 +82,7 @@ inline QPaintEngine::PaintEngineFeatures qt_pdf_decide_features()
 #endif
           | QPaintEngine::RadialGradientFill
           | QPaintEngine::ConicalGradientFill);
+
    return f;
 }
 
@@ -747,7 +744,7 @@ void QPdfEnginePrivate::xprintf(const char *fmt, ...)
 
    va_list args;
    va_start(args, fmt);
-   int bufsize = qvsnprintf(buf, msize, fmt, args);
+   int bufsize = std::vsnprintf(buf, msize, fmt, args);
 
    Q_ASSERT(bufsize < msize);
 
@@ -996,10 +993,13 @@ void QPdfEnginePrivate::embedFont(QFontSubset *font)
    //qDebug() << "embedFont" << font->object_id;
    int fontObject = font->object_id;
    QByteArray fontData = font->toTruetype();
+
 #ifdef FONT_DUMP
    static int i = 0;
+
    QString fileName("font%1.ttf");
-   fileName = fileName.arg(i++);
+   fileName = fileName.formatArg(i++);
+
    QFile ff(fileName);
    ff.open(QFile::WriteOnly);
    ff.write(fontData);
@@ -1016,16 +1016,20 @@ void QPdfEnginePrivate::embedFont(QFontSubset *font)
    {
       qreal scale = 1000 / properties.emSquare.toReal();
       addXrefEntry(fontDescriptor);
+
       QByteArray descriptor;
       QPdf::ByteStream s(&descriptor);
+
       s << "<< /Type /FontDescriptor\n"
         "/FontName /Q";
       int tag = fontDescriptor;
+
       for (int i = 0; i < 5; ++i) {
          s << (char)('A' + (tag % 26));
          tag /= 26;
       }
-      s <<  '+' << properties.postscriptName << "\n"
+
+      s <<  '+' << properties.postscriptName.toUtf8() << "\n"
         "/Flags " << 4 << "\n"
         "/FontBBox ["
         << properties.boundingBox.x()*scale
@@ -1041,6 +1045,7 @@ void QPdfEnginePrivate::embedFont(QFontSubset *font)
         ">> endobj\n";
       write(descriptor);
    }
+
    {
       addXrefEntry(fontstream);
       QByteArray header;
@@ -1050,26 +1055,30 @@ void QPdfEnginePrivate::embedFont(QFontSubset *font)
       s << "<<\n"
         "/Length1 " << fontData.size() << "\n"
         "/Length " << length_object << "0 R\n";
+
       if (do_compress) {
          s << "/Filter /FlateDecode\n";
       }
-      s << ">>\n"
-        "stream\n";
+
+      s << ">>\nstream\n";
+
       write(header);
       int len = writeCompressed(fontData);
-      write("endstream\n"
-            "endobj\n");
+
+      write("endstream\nendobj\n");
+
       addXrefEntry(length_object);
-      xprintf("%d\n"
-              "endobj\n", len);
+      xprintf("%d\nendobj\n", len);
    }
+
    {
       addXrefEntry(cidfont);
       QByteArray cid;
       QPdf::ByteStream s(&cid);
+
       s << "<< /Type /Font\n"
         "/Subtype /CIDFontType2\n"
-        "/BaseFont /" << properties.postscriptName << "\n"
+        "/BaseFont /" << properties.postscriptName.toUtf8() << "\n"
         "/CIDSystemInfo << /Registry (Adobe) /Ordering (Identity) /Supplement 0 >>\n"
         "/FontDescriptor " << fontDescriptor << "0 R\n"
         "/CIDToGIDMap /Identity\n"
@@ -1078,22 +1087,24 @@ void QPdfEnginePrivate::embedFont(QFontSubset *font)
         "endobj\n";
       write(cid);
    }
+
    {
       addXrefEntry(toUnicode);
       QByteArray touc = font->createToUnicodeMap();
-      xprintf("<< /Length %d >>\n"
-              "stream\n", touc.length());
+      xprintf("<< /Length %d >>\nstream\n", touc.length());
+
       write(touc);
-      write("endstream\n"
-            "endobj\n");
+      write("endstream\nendobj\n");
    }
+
    {
       addXrefEntry(fontObject);
       QByteArray font;
       QPdf::ByteStream s(&font);
+
       s << "<< /Type /Font\n"
         "/Subtype /Type0\n"
-        "/BaseFont /" << properties.postscriptName << "\n"
+        "/BaseFont /" << properties.postscriptName.toUtf8() << "\n"
         "/Encoding /Identity-H\n"
         "/DescendantFonts [" << cidfont << "0 R]\n"
         "/ToUnicode " << toUnicode << "0 R"
@@ -1102,7 +1113,6 @@ void QPdfEnginePrivate::embedFont(QFontSubset *font)
       write(font);
    }
 }
-
 
 void QPdfEnginePrivate::writeFonts()
 {
@@ -1208,6 +1218,7 @@ void QPdfEnginePrivate::writeTail()
    writeFonts();
    writePageRoot();
    addXrefEntry(xrefPositions.size(), false);
+
    xprintf("xref\n"
            "0 %d\n"
            "%010d 65535 f \n", xrefPositions.size() - 1, xrefPositions[0]);
@@ -1250,22 +1261,28 @@ void QPdfEnginePrivate::printString(const QString &string)
    // The 'text string' type in PDF is encoded either as PDFDocEncoding, or
    // Unicode UTF-16 with a Unicode byte order mark as the first character
    // (0xfeff), with the high-order byte first.
-   QByteArray array("(\xfe\xff");
-   const ushort *utf16 = string.utf16();
 
-   for (int i = 0; i < string.size(); ++i) {
-      char part[2] = {char((*(utf16 + i)) >> 8), char((*(utf16 + i)) & 0xff)};
+   QByteArray array("(\xfe\xff");
+
+   QString16 str16 = string.toUtf16();
+   const char16_t *utf16 = str16.constData();
+
+   for (int i = 0; i < str16.size_storage(); ++i) {
+      char16_t c   = utf16[i];
+      char part[2] = { char(c >> 8), char(c & 0xff) };
+
       for (int j = 0; j < 2; ++j) {
+
          if (part[j] == '(' || part[j] == ')' || part[j] == '\\') {
             array.append('\\');
          }
+
          array.append(part[j]);
       }
    }
+
    array.append(")");
    write(array);
 }
-
-QT_END_NAMESPACE
 
 #endif // QT_NO_PRINTER

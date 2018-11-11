@@ -2,21 +2,6 @@
 CORE_DIRS += src/core/global
 
 CORE_PUBLIC_INCLUDES += \
-	QBool \
-	QCOORD \
-	QFlag \
-	QFlags \
-	QForeachContainer \
-	QForeachContainerBase \
-	QGlobalStatic \
-	QGlobalStaticDeleter \
-	QIncompatibleFlag \
-	QIntegerForSize \
-	QInternal \
-	QLibraryInfo \
-	QNoImplicitBoolCast \
-	QSysInfo \
-	QTypeInfo \
 	Q_INT16 \
 	Q_INT32 \
 	Q_INT64 \
@@ -29,8 +14,22 @@ CORE_PUBLIC_INCLUDES += \
 	Q_UINT8 \
 	Q_ULLONG \
 	Q_ULONG \
+	QAssert \
+	QCOORD \
+	QFlag \
+	QFlags \
+	QGlobal \
+	QGlobalStatic \
+	QGlobalStaticDeleter \
+	QIncompatibleFlag \
+	QIntegerForSize \
+	QInternal \
+	QLibraryInfo \
+	QLog \
+	QNoImplicitBoolCast \
+	QSysInfo \
+	QTypeInfo \
 	Qt \
-	QtConfig \
 	QtCore \
 	QtEndian \
 	QtGlobal \
@@ -50,15 +49,13 @@ CORE_GLOBAL_INCLUDES = \
 	q_uint8.h \
 	q_ullong.h \
 	q_ulong.h \
-	qbool.h \
-	qconfig.h \
+	qassert.h \
 	qcoord.h \
 	qendian.h \
+	qexport.h \
 	qfeatures.h \
 	qflag.h \
 	qflags.h \
-	qforeachcontainer.h \
-	qforeachcontainerbase.h \
 	qglobal.h \
 	qglobalstatic.h \
 	qglobalstaticdeleter.h \
@@ -66,6 +63,7 @@ CORE_GLOBAL_INCLUDES = \
 	qintegerforsize.h \
 	qinternal.h \
 	qlibraryinfo.h \
+	qlog.h \
 	qnamespace.h \
 	qnoimplicitboolcast.h \
 	qnumeric.h \
@@ -73,7 +71,6 @@ CORE_GLOBAL_INCLUDES = \
 	qplatformposix.h \
 	qsysinfo.h \
 	qt.h \
-	qtconfig.h \
 	qtcore.h \
 	qtendian.h \
 	qtglobal.h \
@@ -84,18 +81,21 @@ CORE_GLOBAL_INCLUDES = \
 CORE_GLOBAL_PRIVATE_INCLUDES = \
 	qnumeric_p.h
 
-CORE_INCLUDES += $(CORE_GLOBAL_INCLUDES) qconfig.h
+CORE_INCLUDES += $(CORE_GLOBAL_INCLUDES)
 CORE_PRIVATE_INCLUDES += $(CORE_GLOBAL_PRIVATE_INCLUDES)
 
 noinst_HEADERS+=$(patsubst %,src/core/global/%,$(CORE_GLOBAL_INCLUDES)) \
 		$(patsubst %,src/core/global/%,$(CORE_GLOBAL_PRIVATE_INCLUDES))
 
-lib_libCsCore1_la_SOURCES += \
+lib_libCsCore@BUILD_ABI@_la_SOURCES += \
+	src/core/global/qassert.cpp \
+	src/core/global/qexport.cpp \
 	src/core/global/qglobal.cpp \
 	src/core/global/qlibraryinfo.cpp \
+	src/core/global/qlog.cpp \
 	src/core/global/qmalloc.cpp \
 	src/core/global/qnumeric.cpp \
-   src/core/global/qnamespace.cpp
+	src/core/global/qnamespace.cpp
 
 
 

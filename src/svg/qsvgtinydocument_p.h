@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -53,7 +50,8 @@ class Q_SVG_EXPORT QSvgTinyDocument : public QSvgStructureNode
  public:
    QSvgTinyDocument();
    ~QSvgTinyDocument();
-   Type type() const;
+
+   Type type() const override;
 
    QSize size() const;
    void setWidth(int len, bool percent);
@@ -68,12 +66,11 @@ class Q_SVG_EXPORT QSvgTinyDocument : public QSvgStructureNode
    QRectF viewBox() const;
    void setViewBox(const QRectF &rect);
 
-   virtual void draw(QPainter *p, QSvgExtraStates &);//from the QSvgNode
+   void draw(QPainter *p, QSvgExtraStates &) override;      //from the QSvgNode
 
    void draw(QPainter *p);
    void draw(QPainter *p, const QRectF &bounds);
-   void draw(QPainter *p, const QString &id,
-             const QRectF &bounds = QRectF());
+   void draw(QPainter *p, const QString &id, const QRectF &bounds = QRectF());
 
    QMatrix matrixForElement(const QString &id) const;
    QRectF boundsOnElement(const QString &id) const;
@@ -94,9 +91,10 @@ class Q_SVG_EXPORT QSvgTinyDocument : public QSvgStructureNode
    int currentFrame() const;
    void setCurrentFrame(int);
    void setFramesPerSecond(int num);
+
  private:
    void mapSourceToTarget(QPainter *p, const QRectF &targetRect, const QRectF &sourceRect = QRectF());
- private:
+ 
    QSize  m_size;
    bool   m_widthPercent;
    bool   m_heightPercent;

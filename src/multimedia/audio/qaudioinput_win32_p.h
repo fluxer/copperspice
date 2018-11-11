@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -41,34 +38,33 @@
 #include <QtMultimedia/qaudiodeviceinfo.h>
 #include <QtMultimedia/qaudioengine.h>
 
-
 QT_BEGIN_NAMESPACE
 
 class QAudioInputPrivate : public QAbstractAudioInput
 {
    MULTI_CS_OBJECT(QAudioInputPrivate)
  public:
-   QAudioInputPrivate(const QByteArray &device, const QAudioFormat &audioFormat);
+   QAudioInputPrivate(const QString &device, const QAudioFormat &audioFormat);
    ~QAudioInputPrivate();
 
    qint64 read(char *data, qint64 len);
 
-   QAudioFormat format() const;
-   QIODevice *start(QIODevice *device = 0);
-   void stop();
-   void reset();
-   void suspend();
-   void resume();
-   int bytesReady() const;
-   int periodSize() const;
-   void setBufferSize(int value);
-   int bufferSize() const;
-   void setNotifyInterval(int milliSeconds);
-   int notifyInterval() const;
-   qint64 processedUSecs() const;
-   qint64 elapsedUSecs() const;
-   QAudio::Error error() const;
-   QAudio::State state() const;
+   QAudioFormat format() const override;
+   QIODevice *start(QIODevice *device = 0) override;
+   void stop() override;
+   void reset() override;
+   void suspend() override;
+   void resume() override;
+   int bytesReady() const override;
+   int periodSize() const override;
+   void setBufferSize(int value) override;
+   int bufferSize() const override;
+   void setNotifyInterval(int milliSeconds) override;
+   int notifyInterval() const override;
+   qint64 processedUSecs() const override;
+   qint64 elapsedUSecs() const override;
+   QAudio::Error error() const override;
+   QAudio::State state() const override;
 
    QIODevice *audioSource;
    QAudioFormat settings;
@@ -79,7 +75,9 @@ class QAudioInputPrivate : public QAbstractAudioInput
    qint32 buffer_size;
    qint32 period_size;
    qint32 header;
-   QByteArray m_device;
+
+   QString m_device;
+
    int bytesAvailable;
    int intervalTime;
    QTime timeStamp;
@@ -124,8 +122,8 @@ class InputPrivate : public QIODevice
    InputPrivate(QAudioInputPrivate *audio);
    ~InputPrivate();
 
-   qint64 readData( char *data, qint64 len);
-   qint64 writeData(const char *data, qint64 len);
+   qint64 readData( char *data, qint64 len) override;
+   qint64 writeData(const char *data, qint64 len) override;
 
    void trigger();
  private:

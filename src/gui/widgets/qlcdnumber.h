@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -64,8 +61,8 @@ class Q_GUI_EXPORT QLCDNumber : public QFrame // LCD number widget
    GUI_CS_PROPERTY_WRITE(intValue, cs_displayI)
 
  public:
-   explicit QLCDNumber(QWidget *parent = 0);
-   explicit QLCDNumber(uint numDigits, QWidget *parent = 0);
+   explicit QLCDNumber(QWidget *parent = nullptr);
+   explicit QLCDNumber(uint numDigits, QWidget *parent = nullptr);
    ~QLCDNumber();
 
    enum Mode { Hex, Dec, Oct, Bin };
@@ -94,7 +91,7 @@ class Q_GUI_EXPORT QLCDNumber : public QFrame // LCD number widget
    double value() const;
    int intValue() const;
 
-   QSize sizeHint() const;
+   QSize sizeHint() const override;
 
    // wrapper for overloaded method
    inline void cs_displayD(double num);
@@ -130,8 +127,8 @@ class Q_GUI_EXPORT QLCDNumber : public QFrame // LCD number widget
    GUI_CS_SIGNAL_2(overflow)
 
  protected:
-   bool event(QEvent *e);
-   void paintEvent(QPaintEvent *);
+   bool event(QEvent *e) override;
+   void paintEvent(QPaintEvent *) override;
 
  private:
    Q_DISABLE_COPY(QLCDNumber)

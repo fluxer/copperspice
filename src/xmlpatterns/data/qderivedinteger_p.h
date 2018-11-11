@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -364,20 +361,19 @@ class DerivedInteger : public Numeric
        * variable solves it. */
       const StorageType minimum = minInclusive;
 
-      if ((limitsUsage & LimitUpwards) &&
-            num > maxInclusive) {
-         return ValidationError::createError(QtXmlPatterns::tr(
-                                                "Value %1 of type %2 exceeds maximum (%3).")
-                                             .arg(QPatternist::formatData(static_cast<xsInteger>(num)))
-                                             .arg(formatType(np, itemType()))
-                                             .arg(QPatternist::formatData(static_cast<xsInteger>(maxInclusive))));
-      } else if ((limitsUsage & LimitDownwards) &&
-                 lessThan(num, minimum)) {
-         return ValidationError::createError(QtXmlPatterns::tr(
-                                                "Value %1 of type %2 is below minimum (%3).")
-                                             .arg(QPatternist::formatData(static_cast<xsInteger>(num)))
-                                             .arg(formatType(np, itemType()))
-                                             .arg(QPatternist::formatData(static_cast<xsInteger>(minInclusive))));
+      if ((limitsUsage & LimitUpwards) && num > maxInclusive) {
+
+         return ValidationError::createError(QtXmlPatterns::tr("Value %1 of type %2 exceeds maximum (%3).")
+                                             .formatArg(QPatternist::formatData(static_cast<xsInteger>(num)))
+                                             .formatArg(formatType(np, itemType()))
+                                             .formatArg(QPatternist::formatData(static_cast<xsInteger>(maxInclusive))));
+
+      } else if ((limitsUsage & LimitDownwards) && lessThan(num, minimum)) {
+
+         return ValidationError::createError(QtXmlPatterns::tr("Value %1 of type %2 is below minimum (%3).")
+                                             .formatArg(QPatternist::formatData(static_cast<xsInteger>(num)))
+                                             .formatArg(formatType(np, itemType()))
+                                             .formatArg(QPatternist::formatData(static_cast<xsInteger>(minInclusive))));
       } else {
          return AtomicValue::Ptr(new DerivedInteger(num));
       }
@@ -395,25 +391,26 @@ class DerivedInteger : public Numeric
       bool conversionOk = false;
       TemporaryStorageType num;
 
-      /* Depending on the type, we need to call different conversion
-       * functions on QString. */
+      /* Depending on the type, we need to call different conversion functions on QString. */
       switch (DerivedType) {
          case TypeUnsignedLong: {
-            /* Qt decides to flag '-' as invalid, so remove it before. */
+
+            /* flag '-' as invalid, so remove it before. */
             if (strNumeric.contains(QLatin1Char('-'))) {
-               num = QString(strNumeric).remove(QLatin1Char('-')).toULongLong(&conversionOk);
+               num = QString(strNumeric).remove('-').toInteger<quint64>(&conversionOk);
 
                if (num != 0) {
                   conversionOk = false;
                }
             } else {
-               num = strNumeric.toULongLong(&conversionOk);
+               num = strNumeric.toInteger<quint64>(&conversionOk);
             }
 
             break;
          }
+
          default: {
-            num = strNumeric.toLongLong(&conversionOk);
+            num = strNumeric.toInteger<qint64>(&conversionOk);
             break;
          }
       }
@@ -434,52 +431,52 @@ class DerivedInteger : public Numeric
     *
     * @returns @c false if the number is 0, otherwise @c true.
     */
-   bool evaluateEBV(const QExplicitlySharedDataPointer<DynamicContext> &) const {
+   bool evaluateEBV(const QExplicitlySharedDataPointer<DynamicContext> &) const override {
       return m_value != 0;
    }
 
-   virtual QString stringValue() const {
+   QString stringValue() const override {
       return QString::number(m_value);
    }
 
-   virtual ItemType::Ptr type() const {
+   ItemType::Ptr type() const override {
       return itemType();
    }
 
-   virtual xsDouble toDouble() const {
+   xsDouble toDouble() const override {
       return static_cast<xsDouble>(m_value);
    }
 
-   virtual xsInteger toInteger() const {
+   xsInteger toInteger() const override {
       return m_value;
    }
 
-   virtual xsFloat toFloat() const {
+   xsFloat toFloat() const override {
       return static_cast<xsFloat>(m_value);
    }
 
-   virtual xsDecimal toDecimal() const {
+   xsDecimal toDecimal() const override {
       return static_cast<xsDecimal>(m_value);
    }
 
-   virtual Numeric::Ptr round() const {
+   Numeric::Ptr round() const override {
       /* xs:integerS never have a mantissa. */
       return Numeric::Ptr(static_cast<Numeric *>(const_cast<AtomicValue *>(Integer::fromValue(m_value).asAtomicValue())));
    }
 
-   virtual Numeric::Ptr roundHalfToEven(const xsInteger) const {
+   Numeric::Ptr roundHalfToEven(const xsInteger) const override {
       return Numeric::Ptr(static_cast<Numeric *>(const_cast<AtomicValue *>(Integer::fromValue(m_value).asAtomicValue())));
    }
 
-   virtual Numeric::Ptr floor() const {
+   Numeric::Ptr floor() const override {
       return Numeric::Ptr(static_cast<Numeric *>(const_cast<AtomicValue *>(Integer::fromValue(m_value).asAtomicValue())));
    }
 
-   virtual Numeric::Ptr ceiling() const {
+   Numeric::Ptr ceiling() const override{
       return Numeric::Ptr(static_cast<Numeric *>(const_cast<AtomicValue *>(Integer::fromValue(m_value).asAtomicValue())));
    }
 
-   virtual Numeric::Ptr abs() const {
+   Numeric::Ptr abs() const override {
       /* We unconditionally create an Integer even if we're a positive
        * value, because one part of this is the type change to
        * xs:integer.
@@ -495,7 +492,7 @@ class DerivedInteger : public Numeric
     * @returns always @c false, @c xs:DerivedInteger doesn't have
     * not-a-number in its value space.
     */
-   virtual bool isNaN() const {
+   bool isNaN() const override {
       return false;
    }
 
@@ -503,15 +500,15 @@ class DerivedInteger : public Numeric
     * @returns always @c false, @c xs:DerivedInteger doesn't have
     * infinity in its value space.
     */
-   virtual bool isInf() const {
+   bool isInf() const override {
       return false;
    }
 
-   virtual Item toNegated() const {
+   Item toNegated() const override {
       return Integer::fromValue(-xsInteger(m_value));
    }
 
-   virtual bool isSigned() const {
+   bool isSigned() const override {
       switch (DerivedType) {
          /* Fallthrough all these. */
          case TypeByte:
@@ -533,7 +530,7 @@ class DerivedInteger : public Numeric
       return false;
    }
 
-   virtual qulonglong toUnsignedInteger() const {
+   quint64 toUnsignedInteger() const override {
       switch (DerivedType) {
          /* Fallthrough all these. */
          case TypeByte:
@@ -543,9 +540,10 @@ class DerivedInteger : public Numeric
          case TypeNonNegativeInteger:
          case TypeNonPositiveInteger:
          case TypePositiveInteger:
+
          case TypeShort:
-            Q_ASSERT_X(false, Q_FUNC_INFO,
-                       "It makes no sense to call this function, see Numeric::toUnsignedInteger().");
+            Q_ASSERT_X(false, Q_FUNC_INFO, "This function should never be called.");
+
          /* Fallthrough all these. */
          case TypeUnsignedByte:
          case TypeUnsignedInt:

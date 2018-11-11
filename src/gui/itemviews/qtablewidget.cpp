@@ -1,27 +1,26 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
+
+#include <algorithm>
 
 #include <qtablewidget.h>
 
@@ -35,9 +34,9 @@ QT_BEGIN_NAMESPACE
 QTableModel::QTableModel(int rows, int columns, QTableWidget *parent)
    : QAbstractTableModel(parent),
      prototype(0),
-     tableItems(rows *columns, 0),
-     verticalHeaderItems(rows, 0),
-     horizontalHeaderItems(columns, 0)
+     tableItems(rows * columns, nullptr),
+     verticalHeaderItems(rows, nullptr),
+     horizontalHeaderItems(columns, nullptr)
 {}
 
 QTableModel::~QTableModel()
@@ -477,7 +476,7 @@ bool QTableModel::setItemData(const QModelIndex &index, const QMap<int, QVariant
    if (itm) {
       itm->view = 0; // prohibits item from calling itemChanged()
       bool changed = false;
-      for (QMap<int, QVariant>::ConstIterator it = roles.constBegin(); it != roles.constEnd(); ++it) {
+      for (QMap<int, QVariant>::const_iterator it = roles.constBegin(); it != roles.constEnd(); ++it) {
          if (itm->data(it.key()) != it.value()) {
             itm->setData(it.key(), it.value());
             changed = true;
@@ -495,7 +494,7 @@ bool QTableModel::setItemData(const QModelIndex &index, const QMap<int, QVariant
    }
 
    itm = createItem();
-   for (QMap<int, QVariant>::ConstIterator it = roles.constBegin(); it != roles.constEnd(); ++it) {
+   for (QMap<int, QVariant>::const_iterator it = roles.constBegin(); it != roles.constEnd(); ++it) {
       itm->setData(it.key(), it.value());
    }
    view->setItem(index.row(), index.column(), itm);
@@ -535,11 +534,12 @@ void QTableModel::sort(int column, Qt::SortOrder order)
    }
 
    LessThan compare = (order == Qt::AscendingOrder ? &itemLessThan : &itemGreaterThan);
-   qStableSort(sortable.begin(), sortable.end(), compare);
+   std::stable_sort(sortable.begin(), sortable.end(), compare);
 
    QVector<QTableWidgetItem *> sorted_table(tableItems.count());
    QModelIndexList from;
    QModelIndexList to;
+
    for (int i = 0; i < rowCount(); ++i) {
       int r = (i < sortable.count()
                ? sortable.at(i).second
@@ -583,7 +583,7 @@ void QTableModel::ensureSorted(int column, Qt::SortOrder order,
    }
 
    LessThan compare = (order == Qt::AscendingOrder ? &itemLessThan : &itemGreaterThan);
-   qStableSort(sorting.begin(), sorting.end(), compare);
+   std::stable_sort(sorting.begin(), sorting.end(), compare);
 
    QModelIndexList oldPersistentIndexes = persistentIndexList();
    QModelIndexList newPersistentIndexes = oldPersistentIndexes;
@@ -592,6 +592,7 @@ void QTableModel::ensureSorted(int column, Qt::SortOrder order,
    QVector<QTableWidgetItem *> colItems = columnItems(column);
    QVector<QTableWidgetItem *>::iterator vit = colItems.begin();
    bool changed = false;
+
    for (int i = 0; i < sorting.count(); ++i) {
       int oldRow = sorting.at(i).second;
       QTableWidgetItem *item = colItems.at(oldRow);
@@ -704,9 +705,9 @@ QVector<QTableWidgetItem *>::iterator QTableModel::sortedInsertionIterator(
    Qt::SortOrder order, QTableWidgetItem *item)
 {
    if (order == Qt::AscendingOrder) {
-      return qLowerBound(begin, end, item, QTableModelLessThan());
+      return std::lower_bound(begin, end, item, QTableModelLessThan());
    }
-   return qLowerBound(begin, end, item, QTableModelGreaterThan());
+   return std::lower_bound(begin, end, item, QTableModelGreaterThan());
 }
 
 bool QTableModel::itemLessThan(const QPair<QTableWidgetItem *, int> &left,

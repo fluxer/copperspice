@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -28,20 +25,34 @@
 #include <qurltlds_p.h>
 #include <qtldurl_p.h>
 #include <qstringlist.h>
-
-QT_BEGIN_NAMESPACE
+#include <qstringparser.h>
 
 static bool containsTLDEntry(const QString &entry)
 {
-   int index = qt_hash(entry) % tldCount;
-   int currentDomainIndex = tldIndices[index];
-   while (currentDomainIndex < tldIndices[index + 1]) {
-      QString currentEntry = QString::fromUtf8(tldData + currentDomainIndex);
-      if (currentEntry == entry) {
-         return true;
-      }
-      currentDomainIndex += qstrlen(tldData + currentDomainIndex) + 1; // +1 for the ending \0
+   int index = cs_stable_hash(entry) % tldCount;
+
+   // select the right chunk from the big table
+   short chunk     = 0;
+   uint chunkIndex = tldIndices[index];
+   uint offset     = 0;
+
+   while (chunk < tldChunkCount && tldIndices[index] >= tldChunks[chunk]) {
+        chunkIndex -= tldChunks[chunk];
+        offset     += tldChunks[chunk];
+        chunk++;
    }
+
+   // check all the entries from the given index
+   while (chunkIndex < tldIndices[index+1] - offset) {
+        QString currentEntry = QString::fromUtf8(tldData[chunk] + chunkIndex);
+
+        if (currentEntry == entry) {
+           return true;
+        }
+
+        chunkIndex += qstrlen(tldData[chunk] + chunkIndex) + 1; // +1 for the ending \0
+   }
+
    return false;
 }
 
@@ -54,18 +65,22 @@ static bool containsTLDEntry(const QString &entry)
 
 Q_CORE_EXPORT QString qTopLevelDomain(const QString &domain)
 {
-   QStringList sections = domain.toLower().split(QLatin1Char('.'), QString::SkipEmptyParts);
+   const QString domainLower = domain.toLower();
+   QStringList sections      = domainLower.split('.', QStringParser::SkipEmptyParts);
+
    if (sections.isEmpty()) {
       return QString();
    }
 
    QString level, tld;
    for (int j = sections.count() - 1; j >= 0; --j) {
-      level.prepend(QLatin1Char('.') + sections.at(j));
+      level.prepend('.' + sections.at(j));
+
       if (qIsEffectiveTLD(level.right(level.size() - 1))) {
          tld = level;
       }
    }
+
    return tld;
 }
 
@@ -83,23 +98,27 @@ Q_CORE_EXPORT bool qIsEffectiveTLD(const QString &domain)
       return true;
    }
 
-   if (domain.contains(QLatin1Char('.'))) {
-      int count = domain.size() - domain.indexOf(QLatin1Char('.'));
+   const int dot = domain.indexOf('.');
+
+   if (dot >= 0) {
+      int count = domain.size() - dot;
+
       QString wildCardDomain;
-      wildCardDomain.reserve(count + 1);
-      wildCardDomain.append(QLatin1Char('*'));
+
+      wildCardDomain.append('*');
       wildCardDomain.append(domain.right(count));
+
       // 2. if table contains '*.bar.com',
       // test if table contains '!foo.bar.com'
       if (containsTLDEntry(wildCardDomain)) {
          QString exceptionDomain;
-         exceptionDomain.reserve(domain.size() + 1);
-         exceptionDomain.append(QLatin1Char('!'));
+
+         exceptionDomain.append('!');
          exceptionDomain.append(domain);
+
          return (! containsTLDEntry(exceptionDomain));
       }
    }
    return false;
 }
 
-QT_END_NAMESPACE

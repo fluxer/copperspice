@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -62,16 +59,15 @@ void DocumentContentValidator::endElement()
    m_receiver->endElement();
 }
 
-void DocumentContentValidator::attribute(const QXmlName &name,
-      const QStringRef &value)
+void DocumentContentValidator::attribute(const QXmlName &name, QStringView value)
 {
    if (m_elementDepth == 0) {
       m_context->error(QtXmlPatterns::tr("An attribute node cannot be a "
-                                         "child of a document node. "
-                                         "Therefore, the attribute %1 "
-                                         "is out of place.")
-                       .arg(formatKeyword(m_context->namePool(), name)),
-                       ReportContext::XPTY0004, m_expr.data());
+                  "child of a document node. "
+                  "Therefore, the attribute %1 "
+                  "is out of place.")
+                  .formatArgs(formatKeyword(m_context->namePool(), name)), ReportContext::XPTY0004, m_expr.data());
+
    } else {
       m_receiver->attribute(name, value);
    }
@@ -82,7 +78,7 @@ void DocumentContentValidator::comment(const QString &value)
    m_receiver->comment(value);
 }
 
-void DocumentContentValidator::characters(const QStringRef &value)
+void DocumentContentValidator::characters(QStringView value)
 {
    m_receiver->characters(value);
 }

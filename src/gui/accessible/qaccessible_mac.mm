@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -739,15 +736,14 @@ bool isItInteresting(const QAInterface &interface)
    // state, so we disable the interface here
 
    const QAccessible::State state = interface.state();
-   if (state & QAccessible::Invisible ||
-         state & QAccessible::Offscreen ) {
+   if (state & QAccessible::Invisible || state & QAccessible::Offscreen ) {
       return false;
    }
 
    const QAccessible::Role role = interface.role();
 
    if (QObject *const object = interface.object()) {
-      const QString className = QLatin1String(object->metaObject()->className());
+      const QString className = object->metaObject()->className();
 
       // VoiceOver focusing on tool tips can be confusing. The contents of the tool tip is avalible
       // through the description attribute anyway, so we disable accessibility for tool tips.
@@ -917,13 +913,15 @@ QList<QAElement> lookup(const QList<QAInterface> &interfaces)
 {
    QList<QAElement> elements;
 
-   foreach (const QAInterface & interface, interfaces)
-   if (interface.isValid()) {
-      const QAElement element = accessibleHierarchyManager()->lookup(interface);
-      if (element.isValid()) {
-         elements.append(element);
+   for (const QAInterface & interface : interfaces) {
+      if (interface.isValid()) {
+         const QAElement element = accessibleHierarchyManager()->lookup(interface);
+         if (element.isValid()) {
+            elements.append(element);
+         }
       }
    }
+
    return elements;
 }
 
@@ -939,7 +937,7 @@ static QString nameForEventKind(UInt32 kind)
         case kEventAccessibleGetAllActionNames:     return QString("GetAllActionNames");    break;
         case kEventAccessibleGetFocusedChild:       return QString("GetFocusedChild");      break;
         default:
-            return QString("Unknown accessibility event type: %1").arg(kind);
+            return QString("Unknown accessibility event type: %1").formatArg(kind);
         break;
     };
 }

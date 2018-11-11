@@ -1,27 +1,26 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
+
+#include <algorithm>
 
 #include <qabstractbutton.h>
 #include <qabstractitemview.h>
@@ -109,29 +108,26 @@ void QButtonGroup::setExclusive(bool exclusive)
    d->exclusive = exclusive;
 }
 
-
-// TODO: Qt 5: Merge with addButton(QAbstractButton *button, int id)
-void QButtonGroup::addButton(QAbstractButton *button)
-{
-   addButton(button, -1);
-}
-
 void QButtonGroup::addButton(QAbstractButton *button, int id)
 {
    Q_D(QButtonGroup);
+
    if (QButtonGroup *previous = button->d_func()->group) {
       previous->removeButton(button);
    }
+
    button->d_func()->group = this;
    d->buttonList.append(button);
+
    if (id == -1) {
       QList<int> ids = d->mapping.values();
       if (ids.isEmpty()) {
          d->mapping[button] = -2;
       } else {
-         qSort(ids);
+         std::sort(ids.begin(), ids.end());
          d->mapping[button] = ids.first() - 1;
       }
+
    } else {
       d->mapping[button] = id;
    }

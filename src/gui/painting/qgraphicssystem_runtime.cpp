@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -296,16 +293,17 @@ QWindowSurface::WindowSurfaceFeatures QRuntimeWindowSurface::features() const
 }
 
 QRuntimeGraphicsSystem::QRuntimeGraphicsSystem()
-   : m_windowSurfaceDestroyPolicy(DestroyImmediately),
-     m_graphicsSystem(0)
+   : m_windowSurfaceDestroyPolicy(DestroyImmediately), m_graphicsSystem(0)
 {
    QApplicationPrivate::runtime_graphics_system = true;
 
-   if (!qgetenv("QT_DEFAULT_RUNTIME_SYSTEM").isEmpty()) {
-      m_graphicsSystemName = QString::fromLocal8Bit(qgetenv("QT_DEFAULT_RUNTIME_SYSTEM"));
+   if (! qgetenv("QT_DEFAULT_RUNTIME_SYSTEM").isEmpty()) {
+      m_graphicsSystemName = QString::fromUtf8(qgetenv("QT_DEFAULT_RUNTIME_SYSTEM"));
    } else {
+
 #ifdef QT_DEFAULT_RUNTIME_SYSTEM
       m_graphicsSystemName = QLatin1String(QT_DEFAULT_RUNTIME_SYSTEM);
+
       if (m_graphicsSystemName.isNull())
 #endif
          m_graphicsSystemName = QLatin1String("raster");

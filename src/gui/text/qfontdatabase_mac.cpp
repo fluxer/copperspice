@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -202,7 +199,7 @@ static QFontEngine *loadFromDatabase(QFontDef &req, const QFontPrivate *d)
 
    const char *stylehint = styleHint(req);
    if (stylehint) {
-      family_list << QLatin1String(stylehint);
+      family_list << QString::fromLatin1(stylehint);
    }
 
    // add QFont::defaultFamily() to the list, for compatibility with previous versions
@@ -210,9 +207,11 @@ static QFontEngine *loadFromDatabase(QFontDef &req, const QFontPrivate *d)
 
    QMutexLocker locker(fontDatabaseMutex());
    QFontDatabasePrivate *db = privateDb();
+
    if (!db->count) {
       initializeDb();
    }
+
    for (int i = 0; i < family_list.size(); ++i) {
       for (int k = 0; k < db->count; ++k) {
          if (db->families[k]->name.compare(family_list.at(i), Qt::CaseInsensitive) == 0) {
@@ -249,7 +248,7 @@ void QFontDatabase::load(const QFontPrivate *d, int script)
       qWarning("QFont: Must construct a QApplication before a QFont");
    }
 
-   Q_ASSERT(script >= 0 && script < QUnicodeTables::ScriptCount);
+   Q_ASSERT(script >= 0 && script < QChar::ScriptCount);
    Q_UNUSED(script);
 
    QFontDef req = d->request;
@@ -257,7 +256,7 @@ void QFontDatabase::load(const QFontPrivate *d, int script)
 
    // set the point size to 0 to get better caching
    req.pointSize = 0;
-   QFontCache::Key key = QFontCache::Key(req, QUnicodeTables::Common, d->screen);
+   QFontCache::Key key = QFontCache::Key(req, QChar::Script_Common, d->screen);
 
    if (!(d->engineData = QFontCache::instance()->findEngineData(key))) {
       d->engineData = new QFontEngineData;
@@ -326,15 +325,13 @@ static void registerFont(QFontDatabasePrivate::ApplicationFont *fnt)
 
    if (fnt->data.isEmpty()) {
 
-
       FSRef ref;
-      if (qt_mac_create_fsref(fnt->fileName, &ref) != noErr) {
+
+      if (FSPathMakeRef(reinterpret_cast<const UInt8 *>(fnt->fileName.constData()), &ref, 0) != noErr) {
          return;
       }
 
-      ATSFontActivateFromFileReference(&ref, kATSFontContextLocal, kATSFontFormatUnspecified, 0, kATSOptionFlagsDefault,
-                                       &handle);
-
+      ATSFontActivateFromFileReference(&ref, kATSFontContextLocal, kATSFontFormatUnspecified, 0, kATSOptionFlagsDefault, &handle);
 
    } else {
       e = ATSFontActivateFromMemory((void *)fnt->data.constData(), fnt->data.size(), kATSFontContextLocal,

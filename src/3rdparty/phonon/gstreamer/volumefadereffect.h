@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -47,20 +44,20 @@ namespace Gstreamer
         CS_INTERFACES(Phonon::VolumeFaderInterface)
 
         public:
-            VolumeFaderEffect(Backend *backend, QObject *parent = 0);
+            VolumeFaderEffect(Backend *backend, QObject *parent = nullptr);
             ~VolumeFaderEffect();
 
-            GstElement* createEffectBin();
-            GstElement *audioElement() { return m_effectBin; }
-            bool event(QEvent *);
+            GstElement* createEffectBin() override;
+            GstElement *audioElement() override { return m_effectBin; }
+            bool event(QEvent *) override;
             void updateFade();
 
             // VolumeFaderInterface:
-            float volume() const;
-            void setVolume(float volume);
-            Phonon::VolumeFaderEffect::FadeCurve fadeCurve() const;
-            void setFadeCurve(Phonon::VolumeFaderEffect::FadeCurve fadeCurve);
-            void fadeTo(float volume, int fadeTime);
+            float volume() const override;
+            void setVolume(float volume) override;
+            Phonon::VolumeFaderEffect::FadeCurve fadeCurve() const override;
+            void setFadeCurve(Phonon::VolumeFaderEffect::FadeCurve fadeCurve) override;
+            void fadeTo(float volume, int fadeTime) override;
 
             Phonon::VolumeFaderEffect::FadeCurve m_fadeCurve;
             int m_fadeTimer;

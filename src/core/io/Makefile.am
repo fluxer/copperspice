@@ -34,7 +34,7 @@ CORE_PUBLIC_INCLUDES += \
 	QTextStreamFunction \
 	QTextStreamManipulator \
 	QUrl \
-	QtDebug
+	QUrlQuery
 
 CORE_IO_INCLUDES = \
 	q_pid.h \
@@ -61,7 +61,6 @@ CORE_IO_INCLUDES = \
 	qsavefile.h \
 	qsettings.h \
 	qstandardpaths.h \
-	qtdebug.h \
 	qtemporarydir.h \
 	qtemporaryfile.h \
 	qtextistream.h \
@@ -70,7 +69,8 @@ CORE_IO_INCLUDES = \
 	qtextstreamfunction.h \
 	qtextstreammanipulator.h \
 	qts.h \
-	qurl.h
+	qurl.h \
+	qurlquery.h
 
 CORE_IO_PRIVATE_INCLUDES = \
 	qabstractfileengine_p.h \
@@ -86,6 +86,7 @@ CORE_IO_PRIVATE_INCLUDES = \
 	qprocess_p.h \
 	qresource_p.h \
 	qresource_iterator_p.h \
+	qurl_p.h \
 	qurltlds_p.h \
 	qtldurl_p.h \
 	qsavefile_p.h \
@@ -103,6 +104,7 @@ CORE_IO_PRIVATE_INCLUDES = \
 	qfilesystemmetadata_p.h \
 	qfilesystemiterator_p.h \
 	qtemporaryfile_p.h \
+	qwindowspipereader_p.h \
 	qwindowspipewriter_p.h
 
 CORE_INCLUDES += $(CORE_IO_INCLUDES)
@@ -111,7 +113,7 @@ CORE_PRIVATE_INCLUDES += $(CORE_IO_PRIVATE_INCLUDES)
 noinst_HEADERS+=$(patsubst %,src/core/io/%,$(CORE_IO_INCLUDES)) \
 		$(patsubst %,src/core/io/%,$(CORE_IO_PRIVATE_INCLUDES))
 
-lib_libCsCore1_la_SOURCES += \
+lib_libCsCore@BUILD_ABI@_la_SOURCES += \
 	src/core/io/qabstractfileengine.cpp \
 	src/core/io/qbuffer.cpp \
 	src/core/io/qdatastream.cpp \
@@ -133,6 +135,9 @@ lib_libCsCore1_la_SOURCES += \
 	src/core/io/qresource.cpp \
 	src/core/io/qresource_iterator.cpp \
 	src/core/io/qurl.cpp \
+	src/core/io/qurlquery.cpp \
+	src/core/io/qurlidna.cpp \
+	src/core/io/qurlrecode.cpp \
 	src/core/io/qsavefile.cpp \
 	src/core/io/qsettings.cpp \
 	src/core/io/qstandardpaths.cpp \
@@ -142,19 +147,9 @@ lib_libCsCore1_la_SOURCES += \
 	src/core/io/qfilesystementry.cpp \
 	src/core/io/qfilesystemengine.cpp
 
-## FIXME platform-specific
-# qfsfileengine_unix.cpp
-# qprocess_unix.cpp
-# qfilesystemwatcher_fsevents_p.h
-# qsettings_mac.cpp
-# qfilesystemwatcher_fsevents.cpp
-# qfilesystemwatcher_inotify_p.h
-# qfilesystemwatcher_dnotify_p.h
-# qfilesystemwatcher_kqueue.cpp
-# qfilesystemwatcher_kqueue_p.h
-
 if OSTYPE_WIN
-lib_libCsCore1_la_SOURCES += \
+lib_libCsCore@BUILD_ABI@_la_SOURCES += \
+	src/core/io/qwindowspipereader.cpp \
 	src/core/io/qwindowspipewriter.cpp \
 	src/core/io/qfilesystemiterator_win.cpp \
 	src/core/io/qsettings_win.cpp \
@@ -166,29 +161,30 @@ lib_libCsCore1_la_SOURCES += \
 endif
 
 if OSTYPE_LINUX
-lib_libCsCore1_la_SOURCES += \
+lib_libCsCore@BUILD_ABI@_la_SOURCES += \
 	src/core/io/qfsfileengine_unix.cpp \
 	src/core/io/qprocess_unix.cpp \
 	src/core/io/qfilesystemengine_unix.cpp \
 	src/core/io/qfilesystemwatcher_inotify.cpp \
 	src/core/io/qfilesystemwatcher_dnotify.cpp \
 	src/core/io/qfilesystemiterator_unix.cpp \
-	src/core/io/qstandardpaths_unix.cpp
+	src/core/io/qstandardpaths_unix.cpp \
+	src/core/io/forkfd_qt.cpp
 endif
 
 if OSTYPE_BSD
-lib_libCsCore1_la_SOURCES += \
-        src/core/io/qfsfileengine_unix.cpp \
-        src/core/io/qprocess_unix.cpp \
-        src/core/io/qfilesystemengine_unix.cpp \
-        src/core/io/qfilesystemwatcher_kqueue.cpp \
-        src/core/io/qfilesystemiterator_unix.cpp \
-        src/core/io/qstandardpaths_unix.cpp
+lib_libCsCore@BUILD_ABI@_la_SOURCES += \
+	src/core/io/qfsfileengine_unix.cpp \
+	src/core/io/qprocess_unix.cpp \
+	src/core/io/qfilesystemengine_unix.cpp \
+	src/core/io/qfilesystemwatcher_kqueue.cpp \
+	src/core/io/qfilesystemiterator_unix.cpp \
+	src/core/io/qstandardpaths_unix.cpp \
+	src/core/io/forkfd_qt.cpp
 endif
 
-
 if OSTYPE_DARWIN
-lib_libCsCore1_la_SOURCES += \
+lib_libCsCore@BUILD_ABI@_la_SOURCES += \
 	src/core/io/qfilesystemengine_unix.cpp \
 	src/core/io/qfilesystemiterator_unix.cpp \
 	src/core/io/qfilesystemwatcher_fsevents.cpp \
@@ -196,5 +192,7 @@ lib_libCsCore1_la_SOURCES += \
 	src/core/io/qfsfileengine_unix.cpp \
 	src/core/io/qprocess_unix.cpp \
 	src/core/io/qsettings_mac.cpp \
-	src/core/io/qstandardpaths_mac.cpp
+	src/core/io/qstandardpaths_mac.cpp \
+	src/core/io/forkfd_qt.cpp \
+	src/core/io/qurl_mac.mm
 endif

@@ -1,7 +1,7 @@
-lib_LTLIBRARIES += lib/libCsScript1.la
-lib_libCsScript1_la_SOURCES =
+lib_LTLIBRARIES += lib/libCsScript@BUILD_ABI@.la
+lib_libCsScript@BUILD_ABI@_la_SOURCES =
 
-lib_libCsScript1_la_CXXFLAGS = $(AM_CXXFLAGS) -Iinclude -Iinclude/QtCore -Iinclude/QtScript \
+lib_libCsScript@BUILD_ABI@_la_CXXFLAGS = $(AM_CXXFLAGS) -Iinclude -Iinclude/QtCore -Iinclude/QtScript \
 	-Iprivateinclude/QtCore \
 	-Iprivateinclude/QtScript \
 	-Iprivateinclude/QtScript/private \
@@ -35,40 +35,35 @@ lib_libCsScript1_la_CXXFLAGS = $(AM_CXXFLAGS) -Iinclude -Iinclude/QtCore -Iinclu
 	-DWTF_USE_JAVASCRIPTCORE_BINDINGS=1 \
 	-DWTF_CHANGES=1 \
 	-DJS_NO_EXPORT \
-	-DBUILDING_QT__=1 \
+	-DBUILDING_CS=1 \
 	-DWTF_USE_ACCELERATED_COMPOSITING \
 	-DJSC=QTJSC -Djscyyparse=qtjscyyparse -Djscyylex=qtjscyylex \
 	-Djscyyerror=qtjscyyerror \
 	-DWTF=QTWTF \
-	-UHAVE_CONFIG_H \
 	-DUSE_SYSTEM_MALLOC  \
-	-DQT_BUILD_SCRIPT_LIB \
-	-DQT_SHARED   \
-	-DQT_MAKEDLL
+	-DQT_BUILD_SCRIPT_LIB
 
-#	-DWTF_USE_JAVASCRIPTCORE_BINDINGS=1 -DWTF_CHANGES=1
-#	-DBUILDING_QT__
-#	-DBUILDING_JavaScriptCore -DBUILDING_WTF
-#	-DJSC=QTJSC -Djscyyparse=qtjscyyparse -Djscyylex=qtjscyylex
-#	-Djscyyerror=qtjscyyerror -DWTF=QTWTF -DWTF_EXPORT_PRIVATE="" -DQT_MAKEDLL
-#	-DWTF_USE_JSC -DWTF_PLATFORM_QT=1
-
-lib_libCsScript1_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined
-lib_libCsScript1_la_LIBADD = lib/libCsCore1.la
-
+lib_libCsScript@BUILD_ABI@_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined
+lib_libCsScript@BUILD_ABI@_la_LIBADD = lib/libCsCore@BUILD_ABI@.la
 
 if OSTYPE_WIN
-lib_libCsScript1_la_LDFLAGS += -lwinmm
+lib_libCsScript@BUILD_ABI@_la_LDFLAGS += -lwinmm
 endif
 
 if OSTYPE_DARWIN
-lib_libCsScript1_la_CXXFLAGS += -DENABLE_JSC_MULTIPLE_THREADS=0
+lib_libCsScript@BUILD_ABI@_la_CXXFLAGS += -DENABLE_JSC_MULTIPLE_THREADS=0
 endif
 
 SCRIPT_INCLUDES =
 SCRIPT_PUBLIC_INCLUDES =
 SCRIPT_PRIVATE_INCLUDES =
 SCRIPT_DIRS =
+
+EXTRA_DIST += \
+	src/script/CMakeLists.txt \
+	src/script/api/api.cmake \
+	src/script/bridge/bridge.cmake \
+	src/script/parser/parser.cmake
 
 include src/script/api/Makefile.am
 include src/script/bridge/Makefile.am
@@ -331,10 +326,7 @@ noinst_HEADERS += \
 	src/3rdparty/javascriptcore/JavaScriptCore/wtf/Assertions.h \
 	src/3rdparty/javascriptcore/JavaScriptCore/wtf/unicode/Collator.h \
 	src/3rdparty/javascriptcore/JavaScriptCore/wtf/unicode/qt4/UnicodeQt4.h \
-	src/3rdparty/javascriptcore/JavaScriptCore/wtf/unicode/glib/UnicodeGLib.h \
-	src/3rdparty/javascriptcore/JavaScriptCore/wtf/unicode/glib/UnicodeMacrosFromICU.h \
 	src/3rdparty/javascriptcore/JavaScriptCore/wtf/unicode/UTF8.h \
-	src/3rdparty/javascriptcore/JavaScriptCore/wtf/unicode/icu/UnicodeIcu.h \
 	src/3rdparty/javascriptcore/JavaScriptCore/wtf/unicode/Unicode.h \
 	src/3rdparty/javascriptcore/JavaScriptCore/wtf/Locker.h \
 	src/3rdparty/javascriptcore/JavaScriptCore/wtf/StringExtras.h \
@@ -374,7 +366,7 @@ noinst_HEADERS += \
 	src/3rdparty/javascriptcore/JavaScriptCore/pcre/ucptable.cpp
 
 
-lib_libCsScript1_la_SOURCES += \
+lib_libCsScript@BUILD_ABI@_la_SOURCES += \
 	src/3rdparty/javascriptcore/JavaScriptCore/API/JSBase.cpp \
 	src/3rdparty/javascriptcore/JavaScriptCore/API/JSCallbackConstructor.cpp \
 	src/3rdparty/javascriptcore/JavaScriptCore/API/JSCallbackFunction.cpp \
@@ -516,7 +508,6 @@ lib_libCsScript1_la_SOURCES += \
 	src/3rdparty/javascriptcore/JavaScriptCore/wtf/Threading.cpp \
 	src/3rdparty/javascriptcore/JavaScriptCore/wtf/TypeTraits.cpp \
 	src/3rdparty/javascriptcore/JavaScriptCore/wtf/unicode/CollatorDefault.cpp \
-	src/3rdparty/javascriptcore/JavaScriptCore/wtf/unicode/icu/CollatorICU.cpp \
 	src/3rdparty/javascriptcore/JavaScriptCore/wtf/unicode/UTF8.cpp \
 	src/3rdparty/javascriptcore/JavaScriptCore/yarr/RegexCompiler.cpp \
 	src/3rdparty/javascriptcore/JavaScriptCore/yarr/RegexInterpreter.cpp \
@@ -536,7 +527,7 @@ SCRIPT_HEADERS_INSTALLED= \
 
 BUILT_SOURCES+=.script-header-deps.mk
 
-$(lib_libCsScript1_la_SOURCES) : $(CORE_HEADERS_INSTALLED) $(SCRIPT_HEADERS_INSTALLED) 
+$(lib_libCsScript@BUILD_ABI@_la_SOURCES) : $(CORE_HEADERS_INSTALLED) $(SCRIPT_HEADERS_INSTALLED)
 
 -include .script-header-deps.mk
 

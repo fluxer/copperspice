@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -43,49 +40,59 @@ class QSqlNullResult : public QSqlResult
    }
 
  protected:
-   inline QVariant data(int) {
+   inline QVariant data(int) override {
       return QVariant();
    }
-   inline bool reset (const QString &) {
+
+   inline bool reset (const QString &) override {
       return false;
    }
-   inline bool fetch(int) {
+
+   inline bool fetch(int) override {
       return false;
    }
-   inline bool fetchFirst() {
+
+   inline bool fetchFirst() override {
       return false;
    }
-   inline bool fetchLast() {
+
+   inline bool fetchLast() override {
       return false;
    }
-   inline bool isNull(int) {
+
+   inline bool isNull(int) override {
       return false;
    }
-   inline int size()  {
+
+   inline int size()  override {
       return -1;
    }
-   inline int numRowsAffected() {
+
+   inline int numRowsAffected() override {
       return 0;
    }
 
-   inline void setAt(int) {}
-   inline void setActive(bool) {}
-   inline void setLastError(const QSqlError &) {}
-   inline void setQuery(const QString &) {}
-   inline void setSelect(bool) {}
-   inline void setForwardOnly(bool) {}
+   inline void setAt(int) override {}
+   inline void setActive(bool) override {}
+   inline void setLastError(const QSqlError &) override {}
+   inline void setQuery(const QString &) override {}
+   inline void setSelect(bool) override {}
+   inline void setForwardOnly(bool) override {}
 
-   inline bool exec() {
+   inline bool exec() override {
       return false;
    }
-   inline bool prepare(const QString &) {
+ 
+  inline bool prepare(const QString &) override {
       return false;
    }
-   inline bool savePrepare(const QString &) {
+
+   inline bool savePrepare(const QString &) override {
       return false;
    }
-   inline void bindValue(int, const QVariant &, QSql::ParamType) {}
-   inline void bindValue(const QString &, const QVariant &, QSql::ParamType) {}
+
+   inline void bindValue(int, const QVariant &, QSql::ParamType) override {}
+   inline void bindValue(const QString &, const QVariant &, QSql::ParamType) override {}
 };
 
 class QSqlNullDriver : public QSqlDriver
@@ -93,25 +100,27 @@ class QSqlNullDriver : public QSqlDriver
  public:
    inline QSqlNullDriver(): QSqlDriver() {
       QSqlDriver::setLastError(QSqlError(QLatin1String("Driver not loaded"),
-                                         QLatin1String("Driver not loaded"), QSqlError::ConnectionError));
+                  QLatin1String("Driver not loaded"), QSqlError::ConnectionError));
    }
 
-   inline bool hasFeature(DriverFeature) const {
-      return false;
-   }
-   inline bool open(const QString &, const QString &, const QString &, const QString &, int, const QString &) {
+   inline bool hasFeature(DriverFeature) const override {
       return false;
    }
 
-   inline void close() {}
-   inline QSqlResult *createResult() const {
+   inline bool open(const QString &, const QString &, const QString &, const QString &, int, const QString &) override {
+      return false;
+   }
+
+   inline void close() override {}
+
+   inline QSqlResult *createResult() const override {
       return new QSqlNullResult(this);
    }
 
  protected:
-   inline void setOpen(bool) {}
-   inline void setOpenError(bool) {}
-   inline void setLastError(const QSqlError &) {}
+   inline void setOpen(bool) override {}
+   inline void setOpenError(bool) override {}
+   inline void setLastError(const QSqlError &) override {}
 };
 
 QT_END_NAMESPACE

@@ -1,76 +1,78 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
 
 #include <qsystemlibrary_p.h>
 
-#include <QtCore/qvarlengtharray.h>
-#include <QtCore/qstringlist.h>
-#include <QtCore/qfileinfo.h>
-
-QT_BEGIN_NAMESPACE
+#include <qvarlengtharray.h>
+#include <qstringlist.h>
+#include <qstringparser.h>
+#include <qfileinfo.h>
 
 extern QString qAppFileName();
 
-
 static inline QString qSystemDirectory()
 {
-   QVarLengthArray<wchar_t, MAX_PATH> fullPath;
+   std::wstring fullPath(MAX_PATH, L'\0');
 
-   UINT retLen = ::GetSystemDirectory(fullPath.data(), MAX_PATH);
+   UINT retLen = ::GetSystemDirectory(&fullPath[0], MAX_PATH);
+
    if (retLen > MAX_PATH) {
       fullPath.resize(retLen);
-      retLen = ::GetSystemDirectory(fullPath.data(), retLen);
+      retLen = ::GetSystemDirectory(&fullPath[0], retLen);
    }
+
    // in some rare cases retLen might be 0
-   return QString::fromWCharArray(fullPath.constData(), int(retLen));
+   return QString::fromStdWString(fullPath, int(retLen));
 }
 
-HINSTANCE QSystemLibrary::load(const wchar_t *libraryName, bool onlySystemDirectory /* = true */)
+HINSTANCE QSystemLibrary::load(const QString &libraryName, bool onlySystemDirectory)
 {
    QStringList searchOrder;
 
-   if (!onlySystemDirectory) {
+   if (! onlySystemDirectory) {
       searchOrder << QFileInfo(qAppFileName()).path();
    }
 
    searchOrder << qSystemDirectory();
 
-   if (!onlySystemDirectory) {
-      const QString PATH = QString::fromWCharArray((const wchar_t *)_wgetenv(L"PATH"));
-      searchOrder << PATH.split(QLatin1Char(';'), QString::SkipEmptyParts);
+   if (! onlySystemDirectory) {
+      const QString path = QString::fromUtf16((const char16_t *)_wgetenv(L"PATH"));
+      searchOrder << path.split(';', QStringParser::SkipEmptyParts);
    }
 
-   const QString fileName = QString::fromWCharArray(libraryName) + QLatin1String(".dll");
+   const QString fileName = libraryName + ".dll";
+
    // Start looking in the order specified
    for (int i = 0; i < searchOrder.count(); ++i) {
+
       QString fullPathAttempt = searchOrder.at(i);
-      if (!fullPathAttempt.endsWith(QLatin1Char('\\'))) {
-         fullPathAttempt.append(QLatin1Char('\\'));
+
+      if (! fullPathAttempt.endsWith('\\')) {
+         fullPathAttempt.append('\\');
       }
+
       fullPathAttempt.append(fileName);
-      HINSTANCE inst = ::LoadLibrary((const wchar_t *)fullPathAttempt.utf16());
+      HINSTANCE inst = ::LoadLibrary(&fullPathAttempt.toStdWString()[0]);
+
       if (inst != 0) {
          return inst;
       }
@@ -79,5 +81,3 @@ HINSTANCE QSystemLibrary::load(const wchar_t *libraryName, bool onlySystemDirect
    return 0;
 }
 
-
-QT_END_NAMESPACE

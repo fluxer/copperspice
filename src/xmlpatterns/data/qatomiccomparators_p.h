@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -38,10 +35,7 @@ class StringComparator : public AtomicComparator
 {
 
  public:
-
-   virtual ComparisonResult compare(const Item &op1,
-                                    const AtomicComparator::Operator op,
-                                    const Item &op2) const;
+   ComparisonResult compare(const Item &op1, const AtomicComparator::Operator op, const Item &op2) const override;
 
    /**
     * Compares two strings, and returns @c true if they are considered equal as per
@@ -51,8 +45,7 @@ class StringComparator : public AtomicComparator
     * @see <a href="http://www.w3.org/TR/xpath-functions/#string-compare">XQuery 1.0 and XPath
     * 2.0 Functions and Operators, 7.3 ValueComparison::Equality and Comparison of Strings</a>
     */
-   virtual bool equals(const Item &op1,
-                       const Item &op2) const;
+   bool equals(const Item &op1, const Item &op2) const override;
 };
 
 class CaseInsensitiveStringComparator : public AtomicComparator
@@ -61,57 +54,46 @@ class CaseInsensitiveStringComparator : public AtomicComparator
    /**
     * Converts both string values to upper case and afterwards compare them.
     */
-   virtual ComparisonResult compare(const Item &op1,
-                                    const AtomicComparator::Operator op,
-                                    const Item &op2) const;
+   ComparisonResult compare(const Item &op1, const AtomicComparator::Operator op, const Item &op2) const override;
 
    /**
     * Converts both string values case insensitively.
     */
-   virtual bool equals(const Item &op1,
-                       const Item &op2) const;
+   bool equals(const Item &op1, const Item &op2) const override;
 };
 
 
 class BinaryDataComparator : public AtomicComparator
 {
  public:
-   virtual bool equals(const Item &op1,
-                       const Item &op2) const;
+   bool equals(const Item &op1, const Item &op2) const override;
 };
 
 class BooleanComparator : public AtomicComparator
 {
  public:
-   virtual ComparisonResult compare(const Item &op1,
-                                    const AtomicComparator::Operator op,
-                                    const Item &op2) const;
+   ComparisonResult compare(const Item &op1, const AtomicComparator::Operator op, const Item &op2) const override;
 
-   virtual bool equals(const Item &op1,
-                       const Item &op2) const;
+   bool equals(const Item &op1, const Item &op2) const override;
 };
 
 
 class AbstractFloatComparator : public AtomicComparator
 {
  public:
-   virtual ComparisonResult compare(const Item &op1,
-                                    const AtomicComparator::Operator op,
-                                    const Item &op2) const;
+   ComparisonResult compare(const Item &op1, const AtomicComparator::Operator op, const Item &op2) const override;
 
-   virtual bool equals(const Item &op1,
-                       const Item &op2) const;
+   bool equals(const Item &op1, const Item &op2) const override;
 };
 
 template<const AtomicComparator::Operator t_op>
 class AbstractFloatSortComparator : public AbstractFloatComparator
 {
  public:
-   virtual ComparisonResult compare(const Item &o1,
-                                    const AtomicComparator::Operator op,
-                                    const Item &o2) const {
+   ComparisonResult compare(const Item &o1, const AtomicComparator::Operator op, const Item &o2) const override {
       Q_ASSERT_X(t_op == OperatorLessThanNaNLeast || t_op == OperatorLessThanNaNGreatest, Q_FUNC_INFO,
                  "Can only be instantiated with those two.");
+
       Q_ASSERT(op == t_op);
       Q_UNUSED(op); /* Needed when building in release mode. */
 
@@ -140,53 +122,40 @@ class AbstractFloatSortComparator : public AbstractFloatComparator
 class DecimalComparator : public AtomicComparator
 {
  public:
-   virtual ComparisonResult compare(const Item &op1,
-                                    const AtomicComparator::Operator op,
-                                    const Item &op2) const;
+   ComparisonResult compare(const Item &op1, const AtomicComparator::Operator op, const Item &op2) const override;
 
-   virtual bool equals(const Item &op1,
-                       const Item &op2) const;
+   bool equals(const Item &op1, const Item &op2) const override;
 };
 
 
 class IntegerComparator : public AtomicComparator
 {
  public:
-   virtual ComparisonResult compare(const Item &op1,
-                                    const AtomicComparator::Operator op,
-                                    const Item &op2) const;
+   ComparisonResult compare(const Item &op1, const AtomicComparator::Operator op, const Item &op2) const override;
 
-   virtual bool equals(const Item &op1,
-                       const Item &op2) const;
+   bool equals(const Item &op1, const Item &op2) const override;
 };
 
 
 class QNameComparator : public AtomicComparator
 {
  public:
-   virtual bool equals(const Item &op1,
-                       const Item &op2) const;
+   bool equals(const Item &op1, const Item &op2) const override;
 };
 
 class AbstractDateTimeComparator : public AtomicComparator
 {
  public:
-   virtual ComparisonResult compare(const Item &op1,
-                                    const AtomicComparator::Operator op,
-                                    const Item &op2) const;
-   virtual bool equals(const Item &op1,
-                       const Item &op2) const;
+   ComparisonResult compare(const Item &op1, const AtomicComparator::Operator op, const Item &op2) const override;
+   bool equals(const Item &op1, const Item &op2) const override;
 };
 
 
 class AbstractDurationComparator : public AtomicComparator
 {
  public:
-   virtual ComparisonResult compare(const Item &op1,
-                                    const AtomicComparator::Operator op,
-                                    const Item &op2) const;
-   virtual bool equals(const Item &op1,
-                       const Item &op2) const;
+   ComparisonResult compare(const Item &op1, const AtomicComparator::Operator op, const Item &op2) const override;
+   bool equals(const Item &op1, const Item &op2) const override;
 
  private:
    static inline QDateTime addDurationToDateTime(const QDateTime &dateTime,

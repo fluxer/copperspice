@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -36,7 +33,7 @@
 
 #ifdef QT_USE_BUNDLED_LIBPNG
 #include <../../3rdparty/libpng/png.h>            // not sure if this can be changed to < >
-#include <../../3rdparty/libpng/pngconf.h>        // not sure if this can be changed to < > 
+#include <../../3rdparty/libpng/pngconf.h>        // not sure if this can be changed to < >
 #else
 #include <png.h>
 #include <pngconf.h>
@@ -631,13 +628,15 @@ static void set_text(const QImage &image, png_structp png_ptr, png_infop info_pt
                      const QString &description)
 {
    QMap<QString, QString> text;
-   foreach (const QString & key, image.textKeys()) {
+   for (const QString & key : image.textKeys()) {
       if (!key.isEmpty()) {
          text.insert(key, image.text(key));
       }
    }
-   foreach (const QString & pair, description.split(QLatin1String("\n\n"))) {
+
+   for (const QString & pair : description.split(QLatin1String("\n\n"))) {
       int index = pair.indexOf(QLatin1Char(':'));
+
       if (index >= 0 && pair.indexOf(QLatin1Char(' ')) < index) {
          QString s = pair.simplified();
          if (!s.isEmpty()) {
@@ -658,17 +657,20 @@ static void set_text(const QImage &image, png_structp png_ptr, png_infop info_pt
    png_textp text_ptr = new png_text[text.size()];
    memset(text_ptr, 0, text.size() * sizeof(png_text));
 
-   QMap<QString, QString>::ConstIterator it = text.constBegin();
+   QMap<QString, QString>::const_iterator it = text.constBegin();
    int i = 0;
+
    while (it != text.constEnd()) {
       text_ptr[i].key = qstrdup(it.key().left(79).toLatin1().constData());
       bool noCompress = (it.value().length() < 40);
 
 #ifdef PNG_iTXt_SUPPORTED
       bool needsItxt = false;
-      foreach(const QChar c, it.value()) {
-         uchar ch = c.cell();
-         if (c.row() || (ch < 0x20 && ch != '\n') || (ch > 0x7e && ch < 0xa0)) {
+
+      for (const QChar c : it.value()) {
+         uchar ch = c.unicode() & 0xFF;
+
+         if (c.unicode() > 0xFF || (ch < 0x20 && ch != '\n') || (ch > 0x7e && ch < 0xa0)) {
             needsItxt = true;
             break;
          }

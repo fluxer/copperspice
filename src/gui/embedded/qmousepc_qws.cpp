@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -287,7 +284,7 @@ class QWSPcMouseSubHandler_mouseman : public QWSPcMouseSubHandler
             nbstate |= Qt::RightButton;
          }
          if (buffer[0] & 0x04) {
-            nbstate |= Qt::MidButton;
+            nbstate |= Qt::MiddleButton;
          }
 
          int overflow = (buffer[0] >> 6) & 0x03;
@@ -431,21 +428,21 @@ class QWSPcMouseSubHandler_ms : public QWSPcMouseSubHandler_serial
 
    int tryData() {
       if (!(buffer[0] & 0x40)) {
-         if (buffer[0] == 0x20 && (bstate & Qt::MidButton)) {
+         if (buffer[0] == 0x20 && (bstate & Qt::MiddleButton)) {
             mman = 1; // mouseman extension
          }
          return 1;
       }
-      int extra = mman && (bstate & Qt::MidButton);
+      int extra = mman && (bstate & Qt::MiddleButton);
       if (nbuf >= 3 + extra) {
          int nbstate = 0;
          if (buffer[0] == 0x40 && !bstate && !buffer[1] && !buffer[2]) {
-            nbstate = Qt::MidButton;
+            nbstate = Qt::MiddleButton;
          } else {
             nbstate = ((buffer[0] & 0x20) >> 5)
                       | ((buffer[0] & 0x10) >> 3);
             if (extra && buffer[3] == 0x20) {
-               nbstate = Qt::MidButton;
+               nbstate = Qt::MiddleButton;
             }
          }
 
@@ -533,12 +530,12 @@ QWSPcMouseHandlerPrivate::QWSPcMouseHandlerPrivate(QWSPcMouseHandler *h,
       const QString &drv, const QString &arg)
    : handler(h), driver(drv)
 {
-   QStringList args = arg.split(QLatin1Char(':'), QString::SkipEmptyParts);
+   QStringList args = arg.split(QLatin1Char(':'), QStringParser::SkipEmptyParts);
 
    int index;
 
    accel = qreal(2.0);
-   QRegExp accelRegex(QLatin1String("^accel=(\\d+\\.?\\d*)$"));
+   QRegularExpression accelRegex(QLatin1String("^accel=(\\d+\\.?\\d*)$"));
    index = args.indexOf(accelRegex);
    if (index >= 0) {
       accel = qreal(accelRegex.cap(1).toDouble());
@@ -546,7 +543,7 @@ QWSPcMouseHandlerPrivate::QWSPcMouseHandlerPrivate(QWSPcMouseHandler *h,
    }
 
    accel_limit = 5;
-   QRegExp accelLimitRegex(QLatin1String("^accel_limit=(\\d+)$"));
+   QRegularExpression accelLimitRegex(QLatin1String("^accel_limit=(\\d+)$"));
    index = args.indexOf(accelLimitRegex);
    if (index >= 0) {
       accel_limit = accelLimitRegex.cap(1).toInt();
@@ -627,7 +624,7 @@ bool QWSPcMouseHandlerPrivate::sendEvent(QWSPcMouseSubHandler &h)
       return true;
    } else {
       h.takeMotion();
-      if (h.buttonState() & (Qt::RightButton | Qt::MidButton)) {
+      if (h.buttonState() & (Qt::RightButton | Qt::MiddleButton)) {
          // Strange for the user to press right or middle without
          // a moving mouse!
          h.worse();

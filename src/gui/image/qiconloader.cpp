@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -137,9 +134,11 @@ QStringList QIconLoader::themeSearchPaths() const
 {
    if (m_iconDirs.isEmpty()) {
       m_iconDirs = qt_guiPlatformPlugin()->iconThemeSearchPaths();
+
       // Always add resource directory as search path
-      m_iconDirs.append(QLatin1String(":/icons"));
+      m_iconDirs.append(":/icons");
    }
+
    return m_iconDirs;
 }
 
@@ -150,10 +149,13 @@ QIconTheme::QIconTheme(const QString &themeName)
 
    QList <QIconDirInfo> keyList;
    QStringList iconDirs = QIcon::themeSearchPaths();
+
    for ( int i = 0 ; i < iconDirs.size() ; ++i) {
       QDir iconDir(iconDirs[i]);
+
       QString themeDir = iconDir.path() + QLatin1Char('/') + themeName;
       themeIndex.setFileName(themeDir + QLatin1String("/index.theme"));
+
       if (themeIndex.exists()) {
          m_contentDir = themeDir;
          m_valid = true;
@@ -460,8 +462,7 @@ QIconLoaderEngineEntry *QIconLoaderEngine::entryForSize(const QSize &size)
  * we can never return a bigger size than the requested size.
  *
  */
-QSize QIconLoaderEngine::actualSize(const QSize &size, QIcon::Mode mode,
-                                    QIcon::State state)
+QSize QIconLoaderEngine::actualSize(const QSize &size, QIcon::Mode mode, QIcon::State state)
 {
    ensureLoaded();
 
@@ -471,7 +472,7 @@ QSize QIconLoaderEngine::actualSize(const QSize &size, QIcon::Mode mode,
       if (dir.type == QIconDirInfo::Scalable) {
          return size;
       } else {
-         int result = qMin<int>(dir.size, qMin(size.width(), size.height()));
+         int result = qMin(dir.size, qMin(size.width(), size.height()));
          return QSize(result, result);
       }
    }
@@ -490,11 +491,11 @@ QPixmap PixmapEntry::pixmap(const QSize &size, QIcon::Mode mode, QIcon::State st
 
    int actualSize = qMin(size.width(), size.height());
 
-   QString key = QLatin1Literal("$qt_theme_")
-                 % HexString<qint64>(basePixmap.cacheKey())
-                 % HexString<int>(mode)
-                 % HexString<qint64>(qApp->palette().cacheKey())
-                 % HexString<int>(actualSize);
+   QString key = "$cs_theme_"
+                  + HexString<qint64>(basePixmap.cacheKey())
+                  + HexString<int>(mode)
+                  + HexString<qint64>(qApp->palette().cacheKey())
+                  + HexString<int>(actualSize);
 
    QPixmap cachedPixmap;
    if (QPixmapCache::find(key, &cachedPixmap)) {

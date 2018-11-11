@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -249,6 +246,7 @@ QPixmap QPixmapIconEngine::pixmap(const QSize &size, QIcon::Mode mode, QIcon::St
 {
    QPixmap pm;
    QPixmapIconEngineEntry *pe = bestMatch(size, mode, state, false);
+
    if (pe) {
       pm = pe->pixmap;
    }
@@ -273,41 +271,48 @@ QPixmap QPixmapIconEngine::pixmap(const QSize &size, QIcon::Mode mode, QIcon::St
       actualSize.scale(size, Qt::KeepAspectRatio);
    }
 
-   QString key = QLatin1Literal("qt_")
-                 % HexString<quint64>(pm.cacheKey())
-                 % HexString<uint>(pe->mode)
-                 % HexString<quint64>(QApplication::palette().cacheKey())
-                 % HexString<uint>(actualSize.width())
-                 % HexString<uint>(actualSize.height());
+   QString key = "cs_"
+                 + HexString<quint64>(pm.cacheKey())
+                 + HexString<uint>(pe->mode)
+                 + HexString<quint64>(QApplication::palette().cacheKey())
+                 + HexString<uint>(actualSize.width())
+                 + HexString<uint>(actualSize.height());
 
    if (mode == QIcon::Active) {
-      if (QPixmapCache::find(key % HexString<uint>(mode), pm)) {
+      if (QPixmapCache::find(key + HexString<uint>(mode), pm)) {
          return pm;   // horray
       }
-      if (QPixmapCache::find(key % HexString<uint>(QIcon::Normal), pm)) {
+
+      if (QPixmapCache::find(key + HexString<uint>(QIcon::Normal), pm)) {
          QStyleOption opt(0);
-         opt.palette = QApplication::palette();
+         opt.palette    = QApplication::palette();
          QPixmap active = QApplication::style()->generatedIconPixmap(QIcon::Active, pm, &opt);
+
          if (pm.cacheKey() == active.cacheKey()) {
             return pm;
          }
       }
    }
 
-   if (!QPixmapCache::find(key % HexString<uint>(mode), pm)) {
+   if (!QPixmapCache::find(key + HexString<uint>(mode), pm)) {
       if (pm.size() != actualSize) {
          pm = pm.scaled(actualSize, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
       }
+
       if (pe->mode != mode && mode != QIcon::Normal) {
          QStyleOption opt(0);
+
          opt.palette = QApplication::palette();
          QPixmap generated = QApplication::style()->generatedIconPixmap(mode, pm, &opt);
+
          if (!generated.isNull()) {
             pm = generated;
          }
       }
-      QPixmapCache::insert(key % HexString<uint>(mode), pm);
+
+      QPixmapCache::insert(key + HexString<uint>(mode), pm);
    }
+
    return pm;
 }
 
@@ -1097,6 +1102,7 @@ QDataStream &operator<<(QDataStream &s, const QIcon &icon)
             qWarning("QIcon: Cannot stream QIconEngine. Use QIconEngineV2 instead.");
          }
       }
+
    } else if (s.version() == QDataStream::Qt_4_2) {
       if (icon.isNull()) {
          s << 0;
@@ -1112,20 +1118,13 @@ QDataStream &operator<<(QDataStream &s, const QIcon &icon)
             s << (uint) engine->pixmaps.at(i).state;
          }
       }
+
    } else {
       s << QPixmap(icon.pixmap(22, 22));
    }
+
    return s;
 }
-
-/*!
-    \fn QDataStream &operator>>(QDataStream &stream, QIcon &icon)
-    \relates QIcon
-    \since 4.2
-
-    Reads an image, or a set of images, from the given \a stream into
-    the given \a icon.
-*/
 
 QDataStream &operator>>(QDataStream &s, QIcon &icon)
 {
@@ -1133,16 +1132,19 @@ QDataStream &operator>>(QDataStream &s, QIcon &icon)
       icon = QIcon();
       QString key;
       s >> key;
+
       if (key == QLatin1String("QPixmapIconEngine")) {
          icon.d = new QIconPrivate;
          QIconEngineV2 *engine = new QPixmapIconEngine;
          icon.d->engine = engine;
          engine->read(s);
+
       } else if (key == QLatin1String("QIconLoaderEngine")) {
          icon.d = new QIconPrivate;
          QIconEngineV2 *engine = new QIconLoaderEngine();
          icon.d->engine = engine;
          engine->read(s);
+
 #if ! defined(QT_NO_SETTINGS)
       } else if (QIconEngineFactoryInterfaceV2 *factory = qobject_cast<QIconEngineFactoryInterfaceV2 *>(loaderV2()->instance(
                     key))) {
@@ -1153,6 +1155,7 @@ QDataStream &operator>>(QDataStream &s, QIcon &icon)
          }
 #endif
       }
+
    } else if (s.version() == QDataStream::Qt_4_2) {
       icon = QIcon();
       int num_entries;

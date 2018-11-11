@@ -1,27 +1,26 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
+
+#include <algorithm>
 
 #include <qtreeview.h>
 
@@ -81,7 +80,7 @@ void QTreeView::setModel(QAbstractItemModel *model)
       disconnect(d->model, SIGNAL(modelAboutToBeReset()), this, SLOT(_q_modelAboutToBeReset()));
    }
 
-   if (d->selectionModel) { 
+   if (d->selectionModel) {
       // support row editing
       disconnect(d->selectionModel, SIGNAL(currentRowChanged(const QModelIndex &, const QModelIndex &)),
                  d->model, SLOT(submit()));
@@ -538,7 +537,7 @@ void QTreeView::expand(const QModelIndex &index)
 
    int i = d->viewIndex(index);
 
-   if (i != -1) { 
+   if (i != -1) {
       // is visible
       d->expand(i, true);
 
@@ -1076,14 +1075,14 @@ void QTreeView::paintEvent(QPaintEvent *event)
    QPainter painter(viewport());
 
 #ifndef QT_NO_ANIMATION
-   if (d->isAnimating()) {  
+   if (d->isAnimating()) {
       drawTree(&painter, event->region() - d->animatedOperation.rect());
       d->drawAnimatedOperation(&painter);
    } else
 
 #endif
 
-   { 
+   {
       drawTree(&painter, event->region());
 
 #ifndef QT_NO_DRAGANDDROP
@@ -1098,7 +1097,7 @@ void QTreeViewPrivate::paintAlternatingRowColors(QPainter *painter, QStyleOption
 {
    Q_Q(const QTreeView);
 
-   if (! alternatingColors || 
+   if (! alternatingColors ||
          ! q->style()->styleHint(QStyle::SH_ItemView_PaintAlternatingRowColorsForEmptyArea, option, q)) {
       return;
    }
@@ -1178,7 +1177,7 @@ QItemViewPaintPairs QTreeViewPrivate::draggablePaintPairs(const QModelIndexList 
       return QAbstractItemViewPrivate::draggablePaintPairs(indexes, r);
    }
    QModelIndexList list;
-   foreach (const QModelIndex & idx, indexes) {
+   for (const QModelIndex & idx : indexes) {
       if (idx.column() > 0 && q->isFirstColumnSpanned(idx.row(), idx.parent())) {
          continue;
       }
@@ -1213,7 +1212,7 @@ void QTreeViewPrivate::adjustViewOptionsForIndex(QStyleOptionViewItemV4 *option,
 void QTreeView::drawTree(QPainter *painter, const QRegion &region) const
 {
    Q_D(const QTreeView);
-   const QVector<QTreeViewItem> viewItems = d->viewItems;  
+   const QVector<QTreeViewItem> viewItems = d->viewItems;
 
    QStyleOptionViewItemV4 option = d->viewOptionsV4();
    const QStyle::State state = option.state;
@@ -1275,12 +1274,12 @@ void QTreeView::drawTree(QPainter *painter, const QRegion &region) const
          d->spanning = viewItems.at(i).spanning;
 
          if (! multipleRects || ! drawn.contains(i)) {
-         
-            drawRow(painter, option, viewItems.at(i).index);        
 
-            if (multipleRects) { 
+            drawRow(painter, option, viewItems.at(i).index);
+
+            if (multipleRects) {
                // even if the rect only intersects the item,the entire item will be painted
-               drawn.append(i);  
+               drawn.append(i);
             }
          }
 
@@ -1433,7 +1432,7 @@ void QTreeView::drawRow(QPainter *painter, const QStyleOptionViewItem &option, c
                          && index.parent() == hover.parent() && index.row() == hover.row();
 
    QVector<int> logicalIndices;
-   QVector<QStyleOptionViewItemV4::ViewItemPosition> viewItemPosList;       
+   QVector<QStyleOptionViewItemV4::ViewItemPosition> viewItemPosList;
 
    // vector of left/middle/end for each logicalIndex
    d->calcLogicalIndices(&logicalIndices, &viewItemPosList, left, right);
@@ -1513,7 +1512,7 @@ void QTreeView::drawRow(QPainter *painter, const QStyleOptionViewItem &option, c
 
       /* Prior to Qt 4.3, the background of the branch (in selected state and
          alternate row color was provided by the view. For backward compatibility,
-         this is now delegated to the style using PE_PanelViewItemRow which 
+         this is now delegated to the style using PE_PanelViewItemRow which
          does the appropriate fill */
 
       if (headerSection == 0) {
@@ -1552,7 +1551,7 @@ void QTreeView::drawRow(QPainter *painter, const QStyleOptionViewItem &option, c
          style()->drawPrimitive(QStyle::PE_PanelItemViewRow, &opt, painter, this);
          opt.state = oldState;
       }
- 
+
       d->delegateForIndex(modelIndex)->paint(painter, opt, modelIndex);
    }
 
@@ -1662,7 +1661,7 @@ void QTreeView::drawBranches(QPainter *painter, const QRect &rect, const QModelI
    }
 
    // then go out level by level
-   for (--level; level >= outer; --level) { 
+   for (--level; level >= outer; --level) {
       // we have already drawn the innermost branch
       primitive.moveLeft(reverse ? primitive.left() + indent : primitive.left() - indent);
       opt.rect = primitive;
@@ -1968,7 +1967,7 @@ void QTreeView::doItemsLayout()
    }
 
    // prepare for a new layout
-   d->viewItems.clear(); 
+   d->viewItems.clear();
 
    QModelIndex parent = d->root;
 
@@ -2789,7 +2788,7 @@ int QTreeView::indexRowSizeHint(const QModelIndex &index) const
 
    // Hack to speed up the function
    option.rect.setWidth(-1);
- 
+
 
    for (int column = start; column <= end; ++column) {
 
@@ -2860,7 +2859,7 @@ void QTreeViewPrivate::initialize()
    header->setMovable(true);
    header->setStretchLastSection(true);
    header->setDefaultAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-   q->setHeader(header);  
+   q->setHeader(header);
 
 #ifndef QT_NO_ANIMATION
    QObject::connect(&animatedOperation, SIGNAL(finished()), q, SLOT(_q_endAnimatedOperation()));
@@ -3090,7 +3089,7 @@ void QTreeViewPrivate::drawAnimatedOperation(QPainter *painter) const
    bool collapsing = animatedOperation.direction() == QVariantAnimation::Backward;
    const QPixmap top = collapsing ? animatedOperation.before : animatedOperation.after;
    painter->drawPixmap(0, start, top, 0, end - current - 1, top.width(), top.height());
-  
+
    const QPixmap bottom = collapsing ? animatedOperation.after : animatedOperation.before;
    painter->drawPixmap(0, current, bottom);
 }
@@ -3270,7 +3269,7 @@ void QTreeViewPrivate::layout(int i, bool recursiveExpanding, bool afterIsUninit
    }
 
    // remove hidden items
-   if (hidden > 0) { 
+   if (hidden > 0) {
       if (! afterIsUninitialized) {
          removeViewItems(last + 1, hidden);
 
@@ -3715,8 +3714,9 @@ QList<QPair<int, int> > QTreeViewPrivate::columnRanges(const QModelIndex &topInd
          logicalIndexes << logical;
       }
    }
+
    //let's sort the list
-   qSort(logicalIndexes.begin(), logicalIndexes.end());
+   std::sort(logicalIndexes.begin(), logicalIndexes.end());
 
    QList<QPair<int, int> > ret;
    QPair<int, int> current;

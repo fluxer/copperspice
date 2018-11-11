@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -158,6 +155,7 @@ void QSqlTableModelPrivate::revertCachedRow(int row)
 {
    Q_Q(QSqlTableModel);
    ModifiedRow r = cache.value(row);
+
    switch (r.op) {
       case QSqlTableModelPrivate::None:
          Q_ASSERT_X(false, "QSqlTableModelPrivate::revertCachedRow()", "Invalid entry in cache map");
@@ -169,12 +167,15 @@ void QSqlTableModelPrivate::revertCachedRow(int row)
                              q->createIndex(row, q->columnCount() - 1));
          break;
       case QSqlTableModelPrivate::Insert: {
-         QMap<int, QSqlTableModelPrivate::ModifiedRow>::Iterator it = cache.find(row);
+         QMap<int, QSqlTableModelPrivate::ModifiedRow>::iterator it = cache.find(row);
+
          if (it == cache.end()) {
             return;
          }
+
          q->beginRemoveRows(QModelIndex(), row, row);
          it = cache.erase(it);
+
          while (it != cache.end()) {
             int oldKey = it.key();
             const QSqlTableModelPrivate::ModifiedRow oldValue = it.value();
@@ -768,10 +769,13 @@ bool QSqlTableModel::submitAll()
          d->clearEditBuffer();
          d->editIndex = -1;
          d->insertIndex = -1;
+
          return select();
+
       case OnManualSubmit:
-         for (QSqlTableModelPrivate::CacheMap::ConstIterator it = d->cache.constBegin();
-               it != d->cache.constEnd(); ++it) {
+         for (QSqlTableModelPrivate::CacheMap::const_iterator it = d->cache.constBegin();
+                  it != d->cache.constEnd(); ++it) {
+
             switch (it.value().op) {
                case QSqlTableModelPrivate::Insert:
                   if (!insertRowIntoTable(it.value().rec)) {
@@ -779,11 +783,13 @@ bool QSqlTableModel::submitAll()
                   }
                   d->bottom = d->bottom.sibling(d->bottom.row() + 1, d->bottom.column());
                   break;
+
                case QSqlTableModelPrivate::Update:
                   if (!updateRowInTable(it.key(), it.value().rec)) {
                      return false;
                   }
                   break;
+
                case QSqlTableModelPrivate::Delete:
                   if (!deleteRowFromTable(it.key())) {
                      return false;
@@ -794,31 +800,13 @@ bool QSqlTableModel::submitAll()
                   break;
             }
          }
+
          d->clearCache();
          return select();
    }
    return false;
 }
 
-/*!
-    This reimplemented slot is called by the item delegates when the
-    user stopped editing the current row.
-
-    Submits the currently edited row if the model's strategy is set
-    to OnRowChange or OnFieldChange. Does nothing for the OnManualSubmit
-    strategy.
-
-    Use submitAll() to submit all pending changes for the
-    OnManualSubmit strategy.
-
-    Returns true on success; otherwise returns false. Use lastError()
-    to query detailed error information.
-
-    On success the model will be repopulated. Any views
-    presenting it will lose their selections.
-
-    \sa revert(), revertRow(), submitAll(), revertAll(), lastError()
-*/
 bool QSqlTableModel::submit()
 {
    Q_D(QSqlTableModel);
@@ -828,18 +816,6 @@ bool QSqlTableModel::submit()
    return true;
 }
 
-/*!
-    This reimplemented slot is called by the item delegates when the
-    user canceled editing the current row.
-
-    Reverts the changes if the model's strategy is set to
-    OnRowChange. Does nothing for the other edit strategies.
-
-    Use revertAll() to revert all pending changes for the
-    OnManualSubmit strategy or revertRow() to revert a specific row.
-
-    \sa submit(), submitAll(), revertRow(), revertAll()
-*/
 void QSqlTableModel::revert()
 {
    Q_D(QSqlTableModel);
@@ -848,31 +824,6 @@ void QSqlTableModel::revert()
    }
 }
 
-/*!
-    \enum QSqlTableModel::EditStrategy
-
-    This enum type describes which strategy to choose when editing values in the database.
-
-    \value OnFieldChange  All changes to the model will be applied immediately to the database.
-    \value OnRowChange  Changes to a row will be applied when the user selects a different row.
-    \value OnManualSubmit  All changes will be cached in the model until either submitAll()
-                           or revertAll() is called.
-
-    Note: To prevent inserting only partly initialized rows into the database,
-    \c OnFieldChange will behave like \c OnRowChange for newly inserted rows.
-
-    \sa setEditStrategy()
-*/
-
-
-/*!
-    Sets the strategy for editing values in the database to \a
-    strategy.
-
-    This will revert any pending changes.
-
-    \sa editStrategy(), revertAll()
-*/
 void QSqlTableModel::setEditStrategy(EditStrategy strategy)
 {
    Q_D(QSqlTableModel);
@@ -880,22 +831,12 @@ void QSqlTableModel::setEditStrategy(EditStrategy strategy)
    d->strategy = strategy;
 }
 
-/*!
-    Returns the current edit strategy.
-
-    \sa setEditStrategy()
-*/
 QSqlTableModel::EditStrategy QSqlTableModel::editStrategy() const
 {
    Q_D(const QSqlTableModel);
    return d->strategy;
 }
 
-/*!
-    Reverts all pending changes.
-
-    \sa revert(), revertRow(), submitAll()
-*/
 void QSqlTableModel::revertAll()
 {
    Q_D(QSqlTableModel);
@@ -917,11 +858,6 @@ void QSqlTableModel::revertAll()
    }
 }
 
-/*!
-    Reverts all changes for the specified \a row.
-
-    \sa revert(), revertAll(), submit(), submitAll()
-*/
 void QSqlTableModel::revertRow(int row)
 {
    if (row < 0) {
@@ -949,62 +885,30 @@ void QSqlTableModel::revertRow(int row)
    }
 }
 
-/*!
-    Returns the primary key for the current table, or an empty
-    QSqlIndex if the table is not set or has no primary key.
-
-    \sa setTable(), setPrimaryKey(), QSqlDatabase::primaryIndex()
-*/
 QSqlIndex QSqlTableModel::primaryKey() const
 {
    Q_D(const QSqlTableModel);
    return d->primaryIndex;
 }
 
-/*!
-    Protected method that allows subclasses to set the primary key to
-    \a key.
-
-    Normally, the primary index is set automatically whenever you
-    call setTable().
-
-    \sa primaryKey(), QSqlDatabase::primaryIndex()
-*/
 void QSqlTableModel::setPrimaryKey(const QSqlIndex &key)
 {
    Q_D(QSqlTableModel);
    d->primaryIndex = key;
 }
 
-/*!
-    Returns a pointer to the used QSqlDatabase or 0 if no database was set.
-*/
 QSqlDatabase QSqlTableModel::database() const
 {
    Q_D(const QSqlTableModel);
    return d->db;
 }
 
-/*!
-    Sorts the data by \a column with the sort order \a order.
-    This will immediately select data, use setSort()
-    to set a sort order without populating the model with data.
-
-    \sa setSort(), select(), orderByClause()
-*/
 void QSqlTableModel::sort(int column, Qt::SortOrder order)
 {
    setSort(column, order);
    select();
 }
 
-/*!
-    Sets the sort order for \a column to \a order. This does not
-    affect the current data, to refresh the data using the new
-    sort order, call select().
-
-    \sa select(), orderByClause()
-*/
 void QSqlTableModel::setSort(int column, Qt::SortOrder order)
 {
    Q_D(QSqlTableModel);
@@ -1012,12 +916,6 @@ void QSqlTableModel::setSort(int column, Qt::SortOrder order)
    d->sortOrder = order;
 }
 
-/*!
-    Returns an SQL \c{ORDER BY} clause based on the currently set
-    sort order.
-
-    \sa setSort(), selectStatement()
-*/
 QString QSqlTableModel::orderByClause() const
 {
    Q_D(const QSqlTableModel);
@@ -1028,8 +926,10 @@ QString QSqlTableModel::orderByClause() const
    }
 
    QString table = d->tableName;
+
    //we can safely escape the field because it would have been obtained from the database
    //and have the correct case
+
    QString field = d->db.driver()->escapeIdentifier(f.name(), QSqlDriver::FieldName);
    s.append(QLatin1String("ORDER BY ")).append(table).append(QLatin1Char('.')).append(field);
    s += d->sortOrder == Qt::AscendingOrder ? QLatin1String(" ASC") : QLatin1String(" DESC");
@@ -1037,42 +937,33 @@ QString QSqlTableModel::orderByClause() const
    return s;
 }
 
-/*!
-    Returns the index of the field \a fieldName, or -1 if no corresponding field
-    exists in the model.
-*/
 int QSqlTableModel::fieldIndex(const QString &fieldName) const
 {
    Q_D(const QSqlTableModel);
    return d->rec.indexOf(fieldName);
 }
 
-/*!
-    Returns the SQL \c SELECT statement used internally to populate
-    the model. The statement includes the filter and the \c{ORDER BY}
-    clause.
 
-    \sa filter(), orderByClause()
-*/
 QString QSqlTableModel::selectStatement() const
 {
    Q_D(const QSqlTableModel);
+
    QString query;
+
    if (d->tableName.isEmpty()) {
       d->error = QSqlError(QLatin1String("No table name given"), QString(),
                            QSqlError::StatementError);
       return query;
    }
+
    if (d->rec.isEmpty()) {
       d->error = QSqlError(QLatin1String("Unable to find table ") + d->tableName, QString(),
                            QSqlError::StatementError);
       return query;
    }
 
-   query = d->db.driver()->sqlStatement(QSqlDriver::SelectStatement,
-                                        d->tableName,
-                                        d->rec,
-                                        false);
+   query = d->db.driver()->sqlStatement(QSqlDriver::SelectStatement, d->tableName, d->rec, false);
+
    if (query.isEmpty()) {
       d->error = QSqlError(QLatin1String("Unable to select fields from table ") + d->tableName,
                            QString(), QSqlError::StatementError);
@@ -1190,6 +1081,7 @@ bool QSqlTableModel::removeRows(int row, int count, const QModelIndex &parent)
 bool QSqlTableModel::insertRows(int row, int count, const QModelIndex &parent)
 {
    Q_D(QSqlTableModel);
+
    if (row < 0 || count <= 0 || row > rowCount() || parent.isValid()) {
       return false;
    }
@@ -1200,31 +1092,39 @@ bool QSqlTableModel::insertRows(int row, int count, const QModelIndex &parent)
          if (count != 1) {
             return false;
          }
+
          beginInsertRows(parent, row, row);
          d->insertIndex = row;
+
          // ### apply dangling changes...
          d->clearEditBuffer();
          emit primeInsert(row, d->editBuffer);
          break;
+
       case OnManualSubmit:
          beginInsertRows(parent, row, row + count - 1);
-         if (!d->cache.isEmpty()) {
-            QMap<int, QSqlTableModelPrivate::ModifiedRow>::Iterator it = d->cache.end();
+
+         if (! d->cache.isEmpty()) {
+            QMap<int, QSqlTableModelPrivate::ModifiedRow>::iterator it = d->cache.end();
+
             while (it != d->cache.begin() && (--it).key() >= row) {
                int oldKey = it.key();
+
                const QSqlTableModelPrivate::ModifiedRow oldValue = it.value();
+
                d->cache.erase(it);
                it = d->cache.insert(oldKey + count, oldValue);
             }
          }
 
          for (int i = 0; i < count; ++i) {
-            d->cache[row + i] = QSqlTableModelPrivate::ModifiedRow(QSqlTableModelPrivate::Insert,
-                                d->rec);
+            d->cache[row + i] = QSqlTableModelPrivate::ModifiedRow(QSqlTableModelPrivate::Insert, d->rec);
             emit primeInsert(row + i, d->cache[row + i].rec);
          }
+
          break;
    }
+
    endInsertRows();
    return true;
 }
@@ -1268,7 +1168,7 @@ int QSqlTableModel::rowCount(const QModelIndex &parent) const
 
    int rc = QSqlQueryModel::rowCount();
    if (d->strategy == OnManualSubmit) {
-      for (QSqlTableModelPrivate::CacheMap::ConstIterator it = d->cache.constBegin();
+      for (QSqlTableModelPrivate::CacheMap::const_iterator it = d->cache.constBegin();
             it != d->cache.constEnd(); ++it) {
          if (it.value().op == QSqlTableModelPrivate::Insert) {
             ++rc;
@@ -1296,9 +1196,11 @@ QModelIndex QSqlTableModel::indexInQuery(const QModelIndex &item) const
 {
    Q_D(const QSqlTableModel);
    const QModelIndex it = QSqlQueryModel::indexInQuery(item); // this adjusts columns only
+
    if (d->strategy == OnManualSubmit) {
       int rowOffset = 0;
-      QSqlTableModelPrivate::CacheMap::ConstIterator i = d->cache.constBegin();
+      QSqlTableModelPrivate::CacheMap::const_iterator i = d->cache.constBegin();
+
       while (i != d->cache.constEnd() && i.key() <= it.row()) {
          if (i.value().op == QSqlTableModelPrivate::Insert) {
             ++rowOffset;

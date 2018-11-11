@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -49,11 +46,11 @@ class QTextDocumentLayout : public QAbstractTextDocumentLayout
    explicit QTextDocumentLayout(QTextDocument *doc);
 
    // from the abstract layout
-   void draw(QPainter *painter, const PaintContext &context);
-   int hitTest(const QPointF &point, Qt::HitTestAccuracy accuracy) const;
+   void draw(QPainter *painter, const PaintContext &context) override;
+   int hitTest(const QPointF &point, Qt::HitTestAccuracy accuracy) const override;
 
-   int pageCount() const;
-   QSizeF documentSize() const;
+   int pageCount() const override;
+   QSizeF documentSize() const override;
 
    void setCursorWidth(int width);
    int cursorWidth() const;
@@ -64,8 +61,8 @@ class QTextDocumentLayout : public QAbstractTextDocumentLayout
    // internal for QTextEdit's NoWrap mode
    void setViewport(const QRectF &viewport);
 
-   virtual QRectF frameBoundingRect(QTextFrame *frame) const;
-   virtual QRectF blockBoundingRect(const QTextBlock &block) const;
+   QRectF frameBoundingRect(QTextFrame *frame) const override;
+   QRectF blockBoundingRect(const QTextBlock &block) const override;
 
    // ####
    int layoutStatus() const;
@@ -78,13 +75,14 @@ class QTextDocumentLayout : public QAbstractTextDocumentLayout
    bool contentHasAlignment() const;
 
  protected:
-   void documentChanged(int from, int oldLength, int length);
-   void resizeInlineObject(QTextInlineObject item, int posInDocument, const QTextFormat &format);
-   void positionInlineObject(QTextInlineObject item, int posInDocument, const QTextFormat &format);
+   void documentChanged(int from, int oldLength, int length) override;
+   void resizeInlineObject(QTextInlineObject item, int posInDocument, const QTextFormat &format) override;
+   void positionInlineObject(QTextInlineObject item, int posInDocument, const QTextFormat &format) override;
 
    void drawInlineObject(QPainter *p, const QRectF &rect, QTextInlineObject item,
-                         int posInDocument, const QTextFormat &format);
-   virtual void timerEvent(QTimerEvent *e);
+                         int posInDocument, const QTextFormat &format) override;
+
+   void timerEvent(QTimerEvent *e) override;
 
  private:
    QRectF doLayout(int from, int oldLength, int length);

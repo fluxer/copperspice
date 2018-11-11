@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -154,7 +151,7 @@ bool DeviceManager::canOpenDevice(GstElement *element) const
         return true;
 
     const QList<QByteArray> &list = GstHelper::extractProperties(element, "device");
-    foreach (const QByteArray &gstId, list) {
+    for (const QByteArray &gstId : list) {
         GstHelper::setProperty(element, "device", gstId);
         if (gst_element_set_state(element, GST_STATE_READY) == GST_STATE_CHANGE_SUCCESS) {
             return true;
@@ -242,10 +239,13 @@ GstElement *DeviceManager::createAudioSink(Category category)
             //do nothing as a fakesink will be created by default
         } else if (m_audioSink == "artssink") {
             sink = GST_ELEMENT(g_object_new(arts_sink_get_type(), NULL));
+
         } else if (!m_audioSink.isEmpty()) { //Use a custom sink
-            sink = gst_element_factory_make (m_audioSink, NULL);
+            sink = gst_element_factory_make (m_audioSink.constData(), NULL);
+
             if (canOpenDevice(sink))
-                m_backend->logMessage(QString("AudioOutput using %0").arg(QString::fromUtf8(m_audioSink)));
+                m_backend->logMessage(QString("AudioOutput using %0").formatArg(QString::fromUtf8(m_audioSink)));
+
             else if (sink) {
                 gst_object_unref(sink);
                 sink = 0;
@@ -364,7 +364,7 @@ void DeviceManager::updateDeviceList()
                 // This is a new device, add it
                 m_audioDeviceList.append(AudioDevice(this, gstId));
                 emit deviceAdded(deviceId(gstId));
-                m_backend->logMessage(QString("Found new audio device %0").arg(QString::fromUtf8(gstId)), Backend::Debug, this);
+                m_backend->logMessage(QString("Found new audio device %0").formatArg(QString::fromUtf8(gstId)), Backend::Debug, this);
             }
         }
 
@@ -373,14 +373,15 @@ void DeviceManager::updateDeviceList()
             for (int i = m_audioDeviceList.size() -1 ; i >= 0 ; --i) {
                 QByteArray currId = m_audioDeviceList[i].gstId;
                 bool found = false;
+
                 for (int k = list.size() -1  ; k >= 0 ; --k) {
                     if (currId == list[k]) {
                         found = true;
                         break;
                     }
                 }
-                if (!found) {
-                    m_backend->logMessage(QString("Audio device lost %0").arg(QString::fromUtf8(currId)), Backend::Debug, this);
+                if (! found) {
+                    m_backend->logMessage(QString("Audio device lost %0").formatArg(QString::fromUtf8(currId)), Backend::Debug, this);
                     emit deviceRemoved(deviceId(currId));
                     m_audioDeviceList.removeAt(i);
                 }

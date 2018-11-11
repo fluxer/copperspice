@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,21 +23,18 @@
 #include <qobject.h>
 #include <csmeta.h>
 #include <qmetaobject.h>
+#include <qstringlist.h>
+#include <qstringparser.h>
 
-#include <QByteArray>
-#include <QStringList>
-
-QMetaEnum::QMetaEnum(const char *name, const char *scope, bool isFlag)
+QMetaEnum::QMetaEnum(const QString &name, const QString &scope, bool isFlag)
+   : m_name(name), m_scope(scope), m_flag(isFlag)
 {
-   m_name  = name;
-   m_scope = scope;
-   m_flag  = isFlag;
 }
 
 QMetaEnum::QMetaEnum()
 {
-   m_name  = 0;
-   m_scope = 0;
+   m_name  = QString();
+   m_scope = QString();
 }
 
 bool QMetaEnum::isFlag() const
@@ -50,21 +44,20 @@ bool QMetaEnum::isFlag() const
 
 bool QMetaEnum::isValid() const
 {
-   return (this->name() != 0);
+   return m_name.isEmpty();
 }
 
-const char *QMetaEnum::key(int index) const
+const QString &QMetaEnum::key(int index) const
 {
    if (index < 0 || index >= m_data.size() ) {
-      return 0;
+      static QString retval;
+      return retval;
    }
 
    auto elem = m_data.begin();
    elem += index;
 
-   const char *retval = elem.key().constData();
-
-   return retval;
+   return elem.key();
 }
 
 int QMetaEnum::keyCount() const
@@ -73,9 +66,9 @@ int QMetaEnum::keyCount() const
    return count;
 }
 
-int QMetaEnum::keyToValue(const char *key) const
+int QMetaEnum::keyToValue(const QString &key) const
 {
-   if (! key) {
+   if (key.isEmpty()) {
       return -1;
    }
 
@@ -93,33 +86,30 @@ int QMetaEnum::keyToValue(const char *key) const
    return retval;
 }
 
-int QMetaEnum::keysToValue(const char *keys) const
+int QMetaEnum::keysToValue(const QString &keys) const
 {
    int value = 0;
+   QList<QString> list = keys.split('|');
 
-   QByteArray temp = keys;
-   QList<QByteArray> tList = temp.split('|');
-
-   for (auto elem = tList.begin(); elem != tList.end(); ++elem) {
-      temp  = elem->trimmed();
-      value |= keyToValue(temp.constData());
+   for (auto elem : list) {
+      value |= keyToValue(elem.trimmed());
    }
 
    return value;
 }
 
-const char *QMetaEnum::name() const
+const QString &QMetaEnum::name() const
 {
    return m_name;
 }
 
 // internal
-void QMetaEnum::setData(QMap<QByteArray, int> valueMap)
+void QMetaEnum::setData(QMap<QString, int> valueMap)
 {
    m_data = valueMap;
 }
 
-const char *QMetaEnum::scope() const
+const QString &QMetaEnum::scope() const
 {
    return m_scope;
 }
@@ -136,24 +126,23 @@ int QMetaEnum::value(int index) const
    return elem.value();
 }
 
-const char *QMetaEnum::valueToKey(int value) const
+const QString &QMetaEnum::valueToKey(int value) const
 {
-   const char *retval = 0;
-
    for (auto elem = m_data.begin(); elem != m_data.end(); ++elem) {
 
       if (elem.value() == value) {
-         retval = elem.key().constData();
-         break;
+         return elem.key();
       }
    }
+
+   static const QString retval;
 
    return retval;
 }
 
-QByteArray QMetaEnum::valueToKeys(int value) const
+QString QMetaEnum::valueToKeys(int value) const
 {
-   QByteArray keys = "";
+   QString keys;
 
    for (auto elem = m_data.begin(); elem != m_data.end(); ++elem) {
 

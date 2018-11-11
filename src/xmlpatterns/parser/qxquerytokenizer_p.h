@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -71,18 +68,16 @@ class XQueryTokenizer : public Tokenizer
       XQueryVersion
    };
 
-   XQueryTokenizer(const QString &query,
-                   const QUrl &location,
-                   const State startingState = Default);
+   XQueryTokenizer(const QString &query, const QUrl &location, const State startingState = Default);
 
-   virtual Token nextToken(YYLTYPE *const sourceLocator);
-   virtual int commenceScanOnly();
-   virtual void resumeTokenizationFrom(const int position);
+   Token nextToken(YYLTYPE *const sourceLocator) override;
+   int commenceScanOnly() override;
+   void resumeTokenizationFrom(const int position) override;
 
    /**
     * Does nothing.
     */
-   virtual void setParserContext(const ParserContext::Ptr &parseInfo);
+   void setParserContext(const ParserContext::Ptr &parseInfo) override;
 
  private:
 
@@ -131,16 +126,6 @@ class XQueryTokenizer : public Tokenizer
    static inline Token error();
    inline TokenType consumeWhitespace();
 
-   /**
-    * @short Returns the character at the current position, converted to
-    * @c ASCII.
-    *
-    * Equivalent to calling:
-    *
-    * @code
-    * current().toAscii();
-    * @endcode
-    */
    inline char peekCurrent() const;
 
    /**

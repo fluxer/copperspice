@@ -1,72 +1,86 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
 
-#include <QtCore/qglobal.h>
-#include <QtCore/qpoint.h>
-#include <QtCore/qstring.h>
-#include <QtGui/qpolygon.h>
-#include <QtCore/qstringbuilder.h>
+#include <qstring.h>
 
 #ifndef QHEXSTRING_P_H
 #define QHEXSTRING_P_H
 
-QT_BEGIN_NAMESPACE
-
-// internal helper. Converts an integer value to an unique string token
+// converts an integer or double to an unique string token
 template <typename T>
-struct HexString {
-   inline HexString(const T t)
-      : val(t) {
+struct HexString
+{
+   HexString(const T t)
+      : m_data(t)
+   { }
+
+   QString toString() const {
+      return QString("%1").formatArg(m_data, sizeof(T) * 2, 16, '0');
    }
 
-   inline void write(QChar *&dest) const {
-      const ushort hexChars[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
-      const char *c = reinterpret_cast<const char *>(&val);
-      for (uint i = 0; i < sizeof(T); ++i) {
-         *dest++ = hexChars[*c & 0xf];
-         *dest++ = hexChars[(*c & 0xf0) >> 4];
-         ++c;
-      }
-   }
-   const T val;
+   const T m_data;
 };
 
-// specialization to enable fast concatenating of our string tokens to a string
+template <>
+inline QString HexString<double>::toString() const {
+
+   uchar buffer[sizeof(double)];
+   memcpy(buffer, &m_data, sizeof(double));
+
+   QString retval;
+
+   for (int i = 0; i < sizeof(double); ++i) {
+      retval += QString("%1").formatArg(buffer[i], 2, 16, '0');
+   }
+
+   return retval;
+}
+
+template <>
+inline QString HexString<float>::toString() const {
+
+   uchar buffer[sizeof(float)];
+   memcpy(buffer, &m_data, sizeof(float));
+
+   QString retval;
+
+   for (int i = 0; i < sizeof(float); ++i) {
+      retval += QString("%1").formatArg(buffer[i], 2, 16, '0');
+   }
+
+   return retval;
+}
+
 template <typename T>
-struct QConcatenable<HexString<T> > {
-   typedef HexString<T> type;
-   enum { ExactSize = true };
-   static int size(const HexString<T> &) {
-      return sizeof(T) * 2;
-   }
-   static inline void appendTo(const HexString<T> &str, QChar *&out) {
-      str.write(out);
-   }
-   typedef QString ConvertTo;
-};
+QString operator+(QString str, HexString<T> hex)
+{
+   return std::move(str) + hex.toString();
+}
 
-QT_END_NAMESPACE
+template <typename T>
+QString operator+(HexString<T> hex, const QString &str)
+{
+   return hex.toString() + str;
+}
 
-#endif // QHEXSTRING_P_H
+
+#endif

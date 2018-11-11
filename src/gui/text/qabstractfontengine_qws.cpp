@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -506,8 +503,7 @@ QProxyFontEngine::~QProxyFontEngine()
    delete engine;
 }
 
-bool QProxyFontEngine::stringToCMap(const QChar *str, int len, QGlyphLayout *glyphs, int *nglyphs,
-                                    QTextEngine::ShaperFlags flags) const
+bool QProxyFontEngine::stringToCMap(QStringView str, QGlyphLayout *glyphs, int *nglyphs, QTextEngine::ShaperFlags flags) const
 {
    if (*nglyphs < len) {
       *nglyphs = len;
@@ -712,19 +708,20 @@ int QProxyFontEngine::glyphCount() const
    return engine->fontProperty(QAbstractFontEngine::GlyphCount).toInt();
 }
 
-bool QProxyFontEngine::canRender(const QChar *string, int len)
+bool QProxyFontEngine::canRender(QStringView str)
 {
    QVarLengthArray<uint> glyphs(len);
    int numGlyphs = len;
 
-   if (!engine->convertStringToGlyphIndices(string, len, glyphs.data(), &numGlyphs, /*flags*/0)) {
+   if (! engine->convertStringToGlyphIndices(str, len, glyphs.data(), &numGlyphs, 0)) {
       return false;
    }
 
-   for (int i = 0; i < numGlyphs; ++i)
-      if (!glyphs[i]) {
+   for (int i = 0; i < numGlyphs; ++i) {
+      if (! glyphs[i]) {
          return false;
       }
+   }
 
    return true;
 }

@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,19 +23,15 @@
 #ifndef QKEYSEQUENCE_H
 #define QKEYSEQUENCE_H
 
-#include <QtCore/qnamespace.h>
-#include <QtCore/qstring.h>
+#include <qnamespace.h>
+#include <qstring.h>
 #include <qobject.h>
-
-QT_BEGIN_NAMESPACE
 
 #ifndef QT_NO_SHORTCUT
 
-#ifndef QT_NO_DATASTREAM
 class QKeySequence;
 Q_GUI_EXPORT QDataStream &operator<<(QDataStream &in, const QKeySequence &ks);
 Q_GUI_EXPORT QDataStream &operator>>(QDataStream &out, QKeySequence &ks);
-#endif
 
 class QVariant;
 class QKeySequencePrivate;
@@ -132,7 +125,7 @@ class Q_GUI_EXPORT QKeySequence
    QKeySequence(StandardKey key);
    ~QKeySequence();
 
-   uint count() const; // ### Qt5/return 'int'
+   int count() const;
    bool isEmpty() const;
 
    enum SequenceMatch {
@@ -151,10 +144,8 @@ class Q_GUI_EXPORT QKeySequence
    static QKeySequence mnemonic(const QString &text);
    static QList<QKeySequence> keyBindings(StandardKey key);
 
-   // ### Qt5/kill 'operator QString' - it's evil
-   operator QString() const;
    operator QVariant() const;
-   operator int() const;
+
    int operator[](uint i) const;
    QKeySequence &operator=(const QKeySequence &other);
 
@@ -166,17 +157,21 @@ class Q_GUI_EXPORT QKeySequence
    inline void swap(QKeySequence &other) {
       qSwap(d, other.d);
    }
+
    bool operator==(const QKeySequence &other) const;
    inline bool operator!= (const QKeySequence &other) const {
       return !(*this == other);
    }
+
    bool operator< (const QKeySequence &ks) const;
    inline bool operator> (const QKeySequence &other) const {
       return other < *this;
    }
+
    inline bool operator<= (const QKeySequence &other) const {
       return !(other < *this);
    }
+
    inline bool operator>= (const QKeySequence &other) const {
       return !(*this < other);
    }
@@ -220,7 +215,5 @@ class Q_GUI_EXPORT QKeySequence
 };
 
 #endif // QT_NO_SHORTCUT
-
-QT_END_NAMESPACE
 
 #endif // QKEYSEQUENCE_H

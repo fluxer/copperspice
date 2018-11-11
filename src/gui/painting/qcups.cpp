@@ -1,27 +1,25 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
+
 #include <qdebug.h>
 #include "qcups_p.h"
 
@@ -246,10 +244,12 @@ const ppd_option_t *QCUPSSupport::ppdOption(const char *key) const
 const cups_option_t *QCUPSSupport::printerOption(const QString &key) const
 {
    for (int i = 0; i < printers[currPrinterIndex].num_options; ++i) {
-      if (QLatin1String(printers[currPrinterIndex].options[i].name) == key) {
+
+      if (QString::fromLatin1(printers[currPrinterIndex].options[i].name) == key) {
          return &printers[currPrinterIndex].options[i];
       }
    }
+
    return 0;
 }
 
@@ -380,13 +380,16 @@ void QCUPSSupport::collectMarkedOptions(QStringList &list, const ppd_group_t *gr
 void QCUPSSupport::collectMarkedOptionsHelper(QStringList &list, const ppd_group_t *group) const
 {
    for (int i = 0; i < group->num_options; ++i) {
+
       for (int j = 0; j < group->options[i].num_choices; ++j) {
+
          if (group->options[i].choices[j].marked == 1 &&
                qstrcmp(group->options[i].choices[j].choice, group->options[i].defchoice) != 0) {
-            list << QString::fromLocal8Bit(group->options[i].keyword) << QString::fromLocal8Bit(
-                    group->options[i].choices[j].choice);
+            list << QString::fromUtf8(group->options[i].keyword) << QString::fromUtf8(group->options[i].choices[j].choice);
          }
+
       }
+
    }
 }
 
@@ -394,7 +397,8 @@ QPair<int, QString> QCUPSSupport::tempFd()
 {
    char filename[512];
    int fd = _cupsTempFd(filename, 512);
-   return QPair<int, QString>(fd, QString::fromLocal8Bit(filename));
+
+   return QPair<int, QString>(fd, QString::fromUtf8(filename));
 }
 
 // Prints the given file and returns a job id.

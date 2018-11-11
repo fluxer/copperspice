@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -103,7 +100,7 @@
 
 #define QMAC_SPEAK_TO_ME
 #ifdef QMAC_SPEAK_TO_ME
-#include <qregexp.h>
+#include <qregularexpression.h>
 #endif
 
 #ifndef kThemeBrushAlternatePrimaryHighlightColor
@@ -179,30 +176,35 @@ void qt_mac_loadMenuNib(QT_MANGLE_NAMESPACE(QCocoaMenuLoader) *qtMenuLoader)
    // Create qt_menu.nib dir in temp.
    QDir temp = QDir::temp();
    temp.mkdir("qt_menu.nib");
-   QString nibDir = temp.canonicalPath() + QLatin1String("/") + QLatin1String("qt_menu.nib/");
-   if (!QDir(nibDir).exists()) {
+   QString nibDir = temp.canonicalPath() + "/qt_menu.nib/";
+
+   if (! QDir(nibDir).exists()) {
       qWarning("qt_mac_loadMenuNib() Could not create nib directory in temp");
       return;
    }
 
    // Copy nib files from resources to temp.
    QDir nibResource(":/copperspice/mac/qt_menu.nib/");
-   if (!nibResource.exists()) {
+   if (! nibResource.exists()) {
       qWarning("qt_mac_loadMenuNib() Could not load nib from resources");
       return;
    }
-   foreach (const QFileInfo & file, nibResource.entryInfoList())
-   QFile::copy(file.absoluteFilePath(), nibDir + QLatin1String("/") + file.fileName());
+
+   for (const QFileInfo & file : nibResource.entryInfoList()) {
+      QFile::copy(file.absoluteFilePath(), nibDir + QLatin1String("/") + file.fileName());
+   }
 
    // Load and instantiate nib file from temp
    NSURL *nibUrl = [NSURL fileURLWithPath: const_cast<NSString *>(reinterpret_cast<const NSString *>
                     (QCFString::toCFStringRef(nibDir)))];
+
    NSNib *nib = [[NSNib alloc] initWithContentsOfURL: nibUrl];
    [nib autorelease];
    if (!nib) {
       qWarning("qt_mac_loadMenuNib() Could not load nib from temp");
       return;
    }
+
    bool ok = [nib instantiateNibWithOwner: qtMenuLoader topLevelObjects: nil];
    if (!ok) {
       qWarning("qt_mac_loadMenuNib() Could not instantiate nib");
@@ -222,6 +224,7 @@ static void qt_mac_read_fontsmoothing_settings()
 
    const int *bits = (const int *) ((const QImage &) image).bits();
    int bpl = image.bytesPerLine() / 4;
+
    for (int y = 0; y < w; ++y) {
       for (int x = 0; x < h; ++x) {
          int r = qRed(bits[x]);
@@ -284,6 +287,7 @@ Q_GUI_EXPORT bool qt_mac_execute_apple_script(const char *script, long script_le
          CS_OSADisplay(theComponent, resultID, typeChar, kOSAModeNull, ret);
       }
    }
+
 bail:
    AEDisposeDesc(&scriptTextDesc);
    if (scriptID != kOSANullScript) {
@@ -334,13 +338,16 @@ static void qt_mac_debug_palette(const QPalette &pal, const QPalette &pal2, cons
                                  "Text", "BrightText", "ButtonText", "Base", "Window", "Shadow",
                                  "Highlight", "HighlightedText", "Link", "LinkVisited"
                                };
-   if (!where.isNull()) {
-      qDebug("qt-internal: %s", where.toLatin1().constData());
+
+   if (! where.isEmpty()) {
+      qDebug("qt-internal: %s", csPrintable(here));
    }
+
    for (int grp = 0; grp < QPalette::NColorGroups; grp++) {
       for (int role = 0; role < QPalette::NColorRoles; role++) {
-         QBrush b = pal.brush((QPalette::ColorGroup)grp, (QPalette::ColorRole)role);
+         QBrush b   = pal.brush((QPalette::ColorGroup)grp, (QPalette::ColorRole)role);
          QPixmap pm = b.texture();
+
          qDebug("  %s::%s %d::%d::%d [%p]%s", groups[grp], roles[role], b.color().red(),
                 b.color().green(), b.color().blue(), pm.isNull() ? 0 : &pm,
                 pal2.brush((QPalette::ColorGroup)grp, (QPalette::ColorRole)role) != b ? " (*)" : "");
@@ -371,6 +378,7 @@ void qt_mac_set_app_icon(const QPixmap &pixmap)
 {
    QMacCocoaAutoReleasePool pool;
    NSImage *image = NULL;
+
    if (pixmap.isNull()) {
       // Get Application icon from bundle
       image = [[NSImage imageNamed: @"NSApplicationIcon"] retain]; // released below
@@ -380,12 +388,6 @@ void qt_mac_set_app_icon(const QPixmap &pixmap)
 
    [[NSApplication sharedApplication] setApplicationIconImage: image];
    [image release];
-}
-
-Q_GUI_EXPORT void qt_mac_set_press_and_hold_context(bool b)
-{
-   Q_UNUSED(b);
-   qWarning("qt_mac_set_press_and_hold_context() This functionality is no longer available");
 }
 
 bool qt_nograb()                                // application no-grab option
@@ -402,22 +404,27 @@ void qt_mac_update_os_settings()
    if (!qApp) {
       return;
    }
-   if (!QApplication::startingUp()) {
+
+   if (! QApplication::startingUp()) {
       static bool needToPolish = true;
+
       if (needToPolish) {
          QApplication::style()->polish(qApp);
          needToPolish = false;
       }
    }
+
    //focus mode
    /* First worked as of 10.2.3 */
    QSettings appleSettings(QLatin1String("apple.com"));
    QVariant appleValue = appleSettings.value(QLatin1String("AppleKeyboardUIMode"), 0);
    qt_tab_all_widgets = (appleValue.toInt() & 0x2);
+
    //paging mode
    /* First worked as of 10.2.3 */
    appleValue = appleSettings.value(QLatin1String("AppleScrollerPagingBehavior"), false);
    qt_scrollbar_jump_to_pos = appleValue.toBool();
+
    //collapse
    /* First worked as of 10.3.3 */
    appleValue = appleSettings.value(QLatin1String("AppleMiniaturizeOnDoubleClick"), true);
@@ -483,13 +490,17 @@ void qt_mac_update_os_settings()
    }
 
    {
-      //setup the fonts
+      // setup the fonts
       struct FontMap {
-         FontMap(const char *qc, short fk) : qt_class(qc), font_key(fk) { }
-         const char *const qt_class;
-         short font_key;
+         FontMap(const char *qc, short fk)
+            : qt_class(QString::fromLatin1(qc)), font_key(fk)
+         { }
 
-      } mac_widget_fonts[] = {
+         QString qt_class;
+         short font_key;
+      };
+
+      static FontMap mac_widget_fonts[] = {
          FontMap("QPushButton",    kThemePushButtonFont),
          FontMap("QListView",      kThemeViewsFont),
          FontMap("QListBox",       kThemeViewsFont),
@@ -505,37 +516,30 @@ void qt_mac_update_os_settings()
          FontMap("QMenuItem",      kThemeMenuItemFont),       // It doesn't exist, but its unique.
          FontMap("QComboLineEdit", kThemeViewsFont),          // It doesn't exist, but its unique.
          FontMap("QSmallFont",     kThemeSmallSystemFont),    // It doesn't exist, but its unique.
-         FontMap("QMiniFont",      kThemeMiniSystemFont),     // It doesn't exist, but its unique.
-         FontMap(0, 0)
+         FontMap("QMiniFont",      kThemeMiniSystemFont)      // It doesn't exist, but its unique.
       };
 
-      for (int i = 0; mac_widget_fonts[i].qt_class; i++) {
-         QFont fnt = qt_mac_fontForThemeFont(mac_widget_fonts[i].font_key);
+      for (auto item : mac_widget_fonts) {
+         QFont fnt = qt_mac_fontForThemeFont(item.font_key);
+
          bool set_font = true;
          FontHash *hash = qt_app_fonts_hash();
 
-         if (!hash->isEmpty()) {
-            FontHash::const_iterator it
-               = hash->constFind(mac_widget_fonts[i].qt_class);
+         if (! hash->isEmpty()) {
+            FontHash::const_iterator it = hash->constFind(item.qt_class);
+
             if (it != hash->constEnd()) {
                set_font = (fnt != *it);
             }
          }
-         if (set_font) {
-            QApplication::setFont(fnt, mac_widget_fonts[i].qt_class);
 
-#ifdef DEBUG_PLATFORM_SETTINGS
-            qDebug("qt-internal: Font for %s [%s::%d::%d::%d]", mac_widget_fonts[i].qt_class,
-                   fnt.family().toLatin1().constData(), fnt.pointSize(), fnt.bold(), fnt.italic());
-#endif
+         if (set_font) {
+            QApplication::setFont(fnt, item.qt_class);
          }
       }
    }
-   QApplicationPrivate::initializeWidgetPaletteHash();
 
-#ifdef DEBUG_PLATFORM_SETTINGS
-   qDebug("qt_mac_update_os_settings");
-#endif
+   QApplicationPrivate::initializeWidgetPaletteHash();
 }
 
 void QApplicationPrivate::initializeWidgetPaletteHash()
@@ -543,11 +547,15 @@ void QApplicationPrivate::initializeWidgetPaletteHash()
    {
       //setup the palette
       struct PaletteMap {
-         inline PaletteMap(const char *qc, ThemeBrush a, ThemeBrush i) : qt_class(qc), active(a), inactive(i) { }
-         const char *const qt_class;
-         ThemeBrush active, inactive;
+         inline PaletteMap(const char *qc, ThemeBrush a, ThemeBrush i)
+            : qt_class(QString::fromLatin1(qc)), active(a), inactive(i)
+         { }
 
-      } mac_widget_colors[] = {
+         QString qt_class;
+         ThemeBrush active, inactive;
+      };
+
+      static PaletteMap mac_widget_colors[] = {
          PaletteMap("QToolButton", kThemeTextColorBevelButtonActive, kThemeTextColorBevelButtonInactive),
          PaletteMap("QAbstractButton", kThemeTextColorPushButtonActive, kThemeTextColorPushButtonInactive),
          PaletteMap("QHeaderView", kThemeTextColorPushButtonActive, kThemeTextColorPushButtonInactive),
@@ -561,20 +569,22 @@ void QApplicationPrivate::initializeWidgetPaletteHash()
          PaletteMap("QMenu", kThemeTextColorPopupLabelActive, kThemeTextColorPopupLabelInactive),
          PaletteMap("QTextEdit", 0, 0),
          PaletteMap("QTextControl", 0, 0),
-         PaletteMap("QLineEdit", 0, 0),
-         PaletteMap(0, 0, 0)
+         PaletteMap("QLineEdit", 0, 0)
       };
 
       QColor qc;
-      for (int i = 0; mac_widget_colors[i].qt_class; i++) {
+
+      for (auto item : mac_widget_colors) {
          QPalette pal;
-         if (mac_widget_colors[i].active != 0) {
-            qc = qt_mac_colorForThemeTextColor(mac_widget_colors[i].active);
+
+         if (item.active != 0) {
+            qc = qt_mac_colorForThemeTextColor(item.active);
             pal.setColor(QPalette::Active, QPalette::Text, qc);
             pal.setColor(QPalette::Active, QPalette::WindowText, qc);
             pal.setColor(QPalette::Active, QPalette::HighlightedText, qc);
 
-            qc = qt_mac_colorForThemeTextColor(mac_widget_colors[i].inactive);
+            qc = qt_mac_colorForThemeTextColor(item.inactive);
+
             pal.setColor(QPalette::Inactive, QPalette::Text, qc);
             pal.setColor(QPalette::Disabled, QPalette::Text, qc);
             pal.setColor(QPalette::Inactive, QPalette::WindowText, qc);
@@ -583,17 +593,19 @@ void QApplicationPrivate::initializeWidgetPaletteHash()
             pal.setColor(QPalette::Disabled, QPalette::HighlightedText, qc);
          }
 
-         if (!strcmp(mac_widget_colors[i].qt_class, "QMenu")) {
+         if (item.qt_class == "QMenu") {
             qc = qt_mac_colorForThemeTextColor(kThemeTextColorMenuItemActive);
             pal.setBrush(QPalette::ButtonText, qc);
+
             qc = qt_mac_colorForThemeTextColor(kThemeTextColorMenuItemSelected);
             pal.setBrush(QPalette::HighlightedText, qc);
+
             qc = qt_mac_colorForThemeTextColor(kThemeTextColorMenuItemDisabled);
             pal.setBrush(QPalette::Disabled, QPalette::Text, qc);
 
-         } else if (!strcmp(mac_widget_colors[i].qt_class, "QAbstractButton")
-                    || !strcmp(mac_widget_colors[i].qt_class, "QHeaderView")
-                    || !strcmp(mac_widget_colors[i].qt_class, "Q3Header")) { //special
+         } else if (item.qt_class == "QAbstractButton" || item.qt_class == "QHeaderView" || item.qt_class == "Q3Header") {
+             //special
+
             pal.setColor(QPalette::Disabled, QPalette::ButtonText,
                          pal.color(QPalette::Disabled, QPalette::Text));
             pal.setColor(QPalette::Inactive, QPalette::ButtonText,
@@ -601,10 +613,12 @@ void QApplicationPrivate::initializeWidgetPaletteHash()
             pal.setColor(QPalette::Active, QPalette::ButtonText,
                          pal.color(QPalette::Active, QPalette::Text));
 
-         } else if (!strcmp(mac_widget_colors[i].qt_class, "QAbstractItemView")) {
+         } else if (item.qt_class == "QAbstractItemView") {
             pal.setBrush(QPalette::Active, QPalette::Highlight,
                          qt_mac_colorForTheme(kThemeBrushAlternatePrimaryHighlightColor));
+
             qc = qt_mac_colorForThemeTextColor(kThemeTextColorMenuItemSelected);
+
             pal.setBrush(QPalette::Active, QPalette::HighlightedText, qc);
 
             pal.setBrush(QPalette::Inactive, QPalette::Text,
@@ -612,34 +626,30 @@ void QApplicationPrivate::initializeWidgetPaletteHash()
             pal.setBrush(QPalette::Inactive, QPalette::HighlightedText,
                          pal.brush(QPalette::Active, QPalette::Text));
 
-         } else if (!strcmp(mac_widget_colors[i].qt_class, "QTextEdit")
-                    || !strcmp(mac_widget_colors[i].qt_class, "QTextControl")) {
+         } else if (item.qt_class == "QTextEdit" || item.qt_class == "QTextControl") {
             pal.setBrush(QPalette::Inactive, QPalette::Text,
                          pal.brush(QPalette::Active, QPalette::Text));
             pal.setBrush(QPalette::Inactive, QPalette::HighlightedText,
                          pal.brush(QPalette::Active, QPalette::Text));
 
-         } else if (!strcmp(mac_widget_colors[i].qt_class, "QLineEdit")) {
+         } else if (item.qt_class == "QLineEdit") {
             pal.setBrush(QPalette::Disabled, QPalette::Base,
                          pal.brush(QPalette::Active, QPalette::Base));
          }
 
          bool set_palette = true;
+
          PaletteHash *phash = qt_app_palettes_hash();
-         if (!phash->isEmpty()) {
-            PaletteHash::const_iterator it
-               = phash->constFind(mac_widget_colors[i].qt_class);
+
+         if (! phash->isEmpty()) {
+            PaletteHash::const_iterator it = phash->constFind(item.qt_class);
             if (it != phash->constEnd()) {
                set_palette = (pal != *it);
             }
          }
-         if (set_palette) {
-            QApplication::setPalette(pal, mac_widget_colors[i].qt_class);
 
-#ifdef DEBUG_PLATFORM_SETTINGS
-            qt_mac_debug_palette(pal, QApplication::palette(), QLatin1String("Palette for ") +
-                                 QString::fromLatin1(mac_widget_colors[i].qt_class));
-#endif
+         if (set_palette) {
+            QApplication::setPalette(pal, item.qt_class);
          }
       }
    }
@@ -932,10 +942,13 @@ void qt_init(QApplicationPrivate *priv, int)
             CFTypeID valueType = CFGetTypeID(value);
             // Officially it's supposed to be a string, a boolean makes sense, so we'll check.
             // A number less so, but OK.
+
             if (valueType == CFStringGetTypeID()) {
-               forceTransform = !(QCFString::toQString(static_cast<CFStringRef>(value)).toInt());
+               forceTransform = !(QCFString::toQString(static_cast<CFStringRef>(value)).toInteger<int>());
+
             } else if (valueType == CFBooleanGetTypeID()) {
                forceTransform = !CFBooleanGetValue(static_cast<CFBooleanRef>(value));
+
             } else if (valueType == CFNumberGetTypeID()) {
                int valueAsInt;
                CFNumberGetValue(static_cast<CFNumberRef>(value), kCFNumberIntType, &valueAsInt);
@@ -950,8 +963,10 @@ void qt_init(QApplicationPrivate *priv, int)
                CFTypeID valueType = CFGetTypeID(value);
                if (valueType == CFBooleanGetTypeID()) {
                   forceTransform = !CFBooleanGetValue(static_cast<CFBooleanRef>(value));
+
                } else if (valueType == CFStringGetTypeID()) {
-                  forceTransform = !(QCFString::toQString(static_cast<CFStringRef>(value)).toInt());
+                  forceTransform = !(QCFString::toQString(static_cast<CFStringRef>(value)).toInteger<int>());
+
                } else if (valueType == CFNumberGetTypeID()) {
                   int valueAsInt;
                   CFNumberGetValue(static_cast<CFNumberRef>(value), kCFNumberIntType, &valueAsInt);
@@ -959,7 +974,6 @@ void qt_init(QApplicationPrivate *priv, int)
                }
             }
          }
-
 
          if (forceTransform) {
             TransformProcessType(&psn, kProcessTransformToForegroundApplication);
@@ -973,11 +987,13 @@ void qt_init(QApplicationPrivate *priv, int)
    if (int argc = priv->argc) {
       int i, j = 1;
       QString passed_psn;
+
       for (i = 1; i < argc; i++) {
          if (argv[i] && *argv[i] != '-') {
             argv[j++] = argv[i];
             continue;
          }
+
          QByteArray arg(argv[i]);
 #if defined(QT_DEBUG)
          if (arg == "-nograb") {
@@ -996,11 +1012,11 @@ void qt_init(QApplicationPrivate *priv, int)
       }
 
       //special hack to change working directory (for an app bundle) when running from finder
-      if (!passed_psn.isNull() && QDir::currentPath() == QLatin1String("/")) {
+      if (! passed_psn.isEmpty() && QDir::currentPath() == QLatin1String("/")) {
          QCFType<CFURLRef> bundleURL(CFBundleCopyBundleURL(CFBundleGetMainBundle()));
-         QString qbundlePath = QCFString(CFURLCopyFileSystemPath(bundleURL,
-                                         kCFURLPOSIXPathStyle));
-         if (qbundlePath.endsWith(QLatin1String(".app"))) {
+         QString qbundlePath = QCFString(CFURLCopyFileSystemPath(bundleURL, kCFURLPOSIXPathStyle));
+
+         if (qbundlePath.endsWith(".app")) {
             QDir::setCurrent(qbundlePath.section(QLatin1Char('/'), 0, -2));
          }
       }
@@ -1252,12 +1268,11 @@ void QApplicationPrivate::enterModal_sys(QWidget *widget)
 
 #ifdef DEBUG_MODAL_EVENTS
    Q_ASSERT(widget);
-   qDebug("Entering modal state with %s::%s::%p (%d)", widget->metaObject()->className(),
-          widget->objectName().toLocal8Bit().constData(),
-          widget, qt_modal_stack ? (int)qt_modal_stack->count() : -1);
+   qDebug("Entering modal state with %s::%s::%p (%d)", csPrintable(widget->metaObject()->className()),
+          csPrintable(widget->objectName()), widget, qt_modal_stack ? (int)qt_modal_stack->count() : -1);
 #endif
 
-   if (!qt_modal_stack) {
+   if (! qt_modal_stack) {
       qt_modal_stack = new QWidgetList;
    }
 
@@ -1279,22 +1294,27 @@ void QApplicationPrivate::enterModal_sys(QWidget *widget)
 void QApplicationPrivate::leaveModal_sys(QWidget *widget)
 {
    if (qt_modal_stack && qt_modal_stack->removeAll(widget)) {
+
 #ifdef DEBUG_MODAL_EVENTS
-      qDebug("Leaving modal state with %s::%s::%p (%d)", widget->metaObject()->className(),
-             widget->objectName().toLocal8Bit().constData(),
-             widget, qt_modal_stack->count());
+      qDebug("Leaving modal state with %s::%s::%p (%d)", csPrintable(widget->metaObject()->className()),
+             csPrintable(widget->objectName()), widget, qt_modal_stack->count());
 #endif
+
       if (qt_modal_stack->isEmpty()) {
          delete qt_modal_stack;
          qt_modal_stack = 0;
+
          QPoint p(QCursor::pos());
          app_do_modal = false;
+
          QWidget *w = 0;
+
          if (QWidget *grabber = QWidget::mouseGrabber()) {
             w = grabber;
          } else {
             w = QApplication::widgetAt(p.x(), p.y());
          }
+
          dispatchEnterLeave(w, qt_last_mouse_receiver); // send synthetic enter event
          qt_last_mouse_receiver = w;
       }
@@ -1307,11 +1327,11 @@ void QApplicationPrivate::leaveModal_sys(QWidget *widget)
 
 #ifdef DEBUG_MODAL_EVENTS
    else qDebug("Failure to remove %s::%s::%p -- %p", widget->metaObject()->className(),
-                  widget->objectName().toLocal8Bit().constData(), widget, qt_modal_stack);
+                  widget->objectName().toUtf8().constData(), widget, qt_modal_stack);
 #endif
 
    app_do_modal = (qt_modal_stack != 0);
-   if (!app_do_modal) {
+   if (! app_do_modal) {
       qt_event_request_menubarupdate();
    }
 }
@@ -1722,12 +1742,13 @@ bool QApplicationPrivate::qt_mac_apply_settings()
    */
 
    // read library (ie. plugin) path list
-   QString libpathkey = QString::fromLatin1("%1.%2/libraryPath").arg(CS_VERSION >> 16).arg((CS_VERSION & 0xff00) >> 8);
+   QString libpathkey = QString::fromLatin1("%1.%2/libraryPath").formatArg(CS_VERSION >> 16).formatArg((CS_VERSION & 0xff00) >> 8);
 
    QStringList pathlist = settings.value(libpathkey).toString().split(QLatin1Char(':'));
 
    if (!pathlist.isEmpty()) {
-      QStringList::ConstIterator it = pathlist.begin();
+      QStringList::const_iterator it = pathlist.begin();
+
       while (it != pathlist.end()) {
          QApplication::addLibraryPath(*it++);
       }
@@ -1784,13 +1805,15 @@ bool QApplicationPrivate::qt_mac_apply_settings()
 
       // read new QStyle
       QString stylename = settings.value(QLatin1String("style")).toString();
-      if (! stylename.isNull() && ! stylename.isEmpty()) {
+      if (! stylename.isEmpty() && ! stylename.isEmpty()) {
          QStyle *style = QStyleFactory::create(stylename);
+
          if (style) {
             QApplication::setStyle(style);
          } else {
             stylename = QLatin1String("default");
          }
+
       } else {
          stylename = QLatin1String("default");
       }
@@ -1860,8 +1883,10 @@ bool QApplicationPrivate::qt_mac_apply_settings()
 
       settings.beginGroup(QLatin1String("Font Substitutions"));
       QStringList fontsubs = settings.childKeys();
-      if (!fontsubs.isEmpty()) {
-         QStringList::Iterator it = fontsubs.begin();
+
+      if (! fontsubs.isEmpty()) {
+         QStringList::iterator it = fontsubs.begin();
+
          for (; it != fontsubs.end(); ++it) {
             QString fam = QString::fromLatin1((*it).toLatin1().constData());
             QStringList subs = settings.value(fam).toStringList();

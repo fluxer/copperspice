@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -762,60 +759,65 @@ QString QSimpleTextCodec::convertToUnicode(const char *chars, int len, Converter
    }
 
    const unsigned char *c = (const unsigned char *)chars;
-
-   QString r(len, Qt::Uninitialized);
-   QChar *uc = r.data();
+   QString retval;
 
    for (int i = 0; i < len; i++) {
       if (c[i] > 127) {
-         uc[i] = unicodevalues[forwardIndex].values[c[i] - 128];
+         retval.append(unicodevalues[forwardIndex].values[c[i] - 128]);
+
       } else {
-         uc[i] = QLatin1Char(c[i]);
+        retval.append(c[i]);
       }
    }
-   return r;
+
+   return retval;
 }
 
-QByteArray QSimpleTextCodec::convertFromUnicode(const QChar *in, int length, ConverterState *state) const
+QByteArray QSimpleTextCodec::convertFromUnicode(QStringView str, ConverterState *state) const
 {
    const char replacement = (state && state->flags & ConvertInvalidToNull) ? 0 : '?';
    int invalid = 0;
 
    QByteArray *rmap = reverseMap.load();
+
    if (!rmap) {
       rmap = buildReverseMap(this->forwardIndex);
+
       if (!reverseMap.testAndSetRelease(0, rmap)) {
          delete rmap;
          rmap = reverseMap.load();
       }
    }
 
-   QByteArray r(length, Qt::Uninitialized);
-   int i = length;
-   int u;
-   const QChar *ucp = in;
-   unsigned char *rp = (unsigned char *)r.data();
    const unsigned char *rmp = (const unsigned char *)rmap->constData();
    int rmsize = (int) rmap->size();
-   while (i--) {
-      u = ucp->unicode();
-      if (u < 128) {
-         *rp = (char)u;
+
+   QByteArray retval;
+
+   for (auto c : str) {
+      char32_t uc = c.unicode();
+
+      if (uc < 128) {
+         retval.append(uc & 0xFF);
+
       } else {
-         *rp = ((u < rmsize) ? (*(rmp + u)) : 0);
-         if (*rp == 0) {
-            *rp = replacement;
+         auto tmp = (uc < rmsize) ? (*(rmp + uc)) : 0;
+
+         if (tmp == 0) {
+            retval.append(replacement);
             ++invalid;
+
+         } else {
+            retval.append(tmp);
          }
       }
-      rp++;
-      ucp++;
    }
 
    if (state) {
       state->invalidChars += invalid;
    }
-   return r;
+
+   return retval;
 }
 
 QByteArray QSimpleTextCodec::name() const

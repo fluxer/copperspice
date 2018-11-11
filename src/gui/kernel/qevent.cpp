@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -310,7 +307,7 @@ QMouseEventEx::~QMouseEventEx()
 
     Returns the button state when the event was generated. The button
     state is a combination of Qt::LeftButton, Qt::RightButton,
-    Qt::MidButton using the OR operator. For mouse move events,
+    Qt::MiddleButton using the OR operator. For mouse move events,
     this is all buttons that are pressed down. For mouse press and
     double click events this includes the button that caused the
     event. For mouse release events this excludes the button that
@@ -963,7 +960,7 @@ QFocusEvent::~QFocusEvent()
 {
 }
 
-// ### Qt 5: remove
+// ### Qt5: remove
 /*!
     \internal
  */
@@ -1417,7 +1414,7 @@ QContextMenuEvent::QContextMenuEvent(Reason reason, const QPoint &pos)
 
     The returned value is a selection of the following values,
     combined with the OR operator:
-    Qt::LeftButton, Qt::RightButton, Qt::MidButton,
+    Qt::LeftButton, Qt::RightButton, Qt::MiddleButton,
     Qt::ShiftButton, Qt::ControlButton, and Qt::AltButton.
 */
 
@@ -2395,53 +2392,6 @@ QDragResponseEvent::~QDragResponseEvent()
 {
 }
 
-/*!
-    \class QDragMoveEvent
-    \brief The QDragMoveEvent class provides an event which is sent while a drag and drop action is in progress.
-
-    \ingroup events
-    \ingroup draganddrop
-
-    A widget will receive drag move events repeatedly while the drag
-    is within its boundaries, if it accepts
-    \l{QWidget::setAcceptDrops()}{drop events} and \l
-    {QWidget::dragEnterEvent()}{enter events}. The widget should
-    examine the event to see what kind of data it
-    \l{QDragMoveEvent::provides()}{provides}, and call the accept()
-    function to accept the drop if appropriate.
-
-    The rectangle supplied by the answerRect() function can be used to restrict
-    drops to certain parts of the widget. For example, we can check whether the
-    rectangle intersects with the geometry of a certain child widget and only
-    call \l{QDropEvent::acceptProposedAction()}{acceptProposedAction()} if that
-    is the case.
-
-    Note that this class inherits most of its functionality from
-    QDropEvent.
-
-    \sa QDragEnterEvent, QDragLeaveEvent, QDropEvent
-*/
-
-/*!
-    \class QDragLeaveEvent
-    \brief The QDragLeaveEvent class provides an event that is sent to a widget when a drag and drop action leaves it.
-
-    \ingroup events
-    \ingroup draganddrop
-
-    This event is always preceded by a QDragEnterEvent and a series
-    of \l{QDragMoveEvent}s. It is not sent if a QDropEvent is sent
-    instead.
-
-    \sa QDragEnterEvent, QDragMoveEvent, QDropEvent
-*/
-
-/*!
-    Constructs a QDragLeaveEvent.
-
-    \warning Do not create a QDragLeaveEvent yourself since these
-    objects rely on Qt's internal state.
-*/
 QDragLeaveEvent::QDragLeaveEvent()
    : QEvent(DragLeave)
 {}
@@ -3255,7 +3205,7 @@ QClipboardEvent::~QClipboardEvent()
     Returns the key sequence that triggered the event.
 */
 
-// ### Qt 5: remove
+// ### Qt5: remove
 /*!
     \fn const QKeySequence &QShortcutEvent::key()
 
@@ -3271,7 +3221,7 @@ QClipboardEvent::~QClipboardEvent()
     \sa QShortcut::id()
 */
 
-// ### Qt 5: remove
+// ### Qt5: remove
 /*!
     \fn int QShortcutEvent::shortcutId()
     \overload
@@ -3288,7 +3238,7 @@ QClipboardEvent::~QClipboardEvent()
     \sa QShortcut::activatedAmbiguously()
 */
 
-// ### Qt 5: remove
+// ### Qt5: remove
 /*!
     \fn bool QShortcutEvent::isAmbiguous()
 
@@ -4070,7 +4020,7 @@ QGesture *QGestureEvent::gesture(Qt::GestureType type) const
 QList<QGesture *> QGestureEvent::activeGestures() const
 {
    QList<QGesture *> gestures;
-   foreach (QGesture * gesture, d_func()->gestures) {
+   for (QGesture * gesture : d_func()->gestures) {
       if (gesture->state() != Qt::GestureCanceled) {
          gestures.append(gesture);
       }
@@ -4084,7 +4034,7 @@ QList<QGesture *> QGestureEvent::activeGestures() const
 QList<QGesture *> QGestureEvent::canceledGestures() const
 {
    QList<QGesture *> gestures;
-   foreach (QGesture * gesture, d_func()->gestures) {
+   for (QGesture * gesture : d_func()->gestures) {
       if (gesture->state() == Qt::GestureCanceled) {
          gestures.append(gesture);
       }

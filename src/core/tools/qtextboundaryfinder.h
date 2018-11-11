@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,21 +23,13 @@
 #ifndef QTEXTBOUNDARYFINDER_H
 #define QTEXTBOUNDARYFINDER_H
 
-#include <QtCore/qchar.h>
-#include <QtCore/qstring.h>
-
-QT_BEGIN_NAMESPACE
+#include <qstring.h>
 
 class QTextBoundaryFinderPrivate;
 
 class Q_CORE_EXPORT QTextBoundaryFinder
 {
  public:
-   QTextBoundaryFinder();
-   QTextBoundaryFinder(const QTextBoundaryFinder &other);
-   QTextBoundaryFinder &operator=(const QTextBoundaryFinder &other);
-   ~QTextBoundaryFinder();
-
    enum BoundaryType {
       Grapheme,
       Word,
@@ -50,14 +39,19 @@ class Q_CORE_EXPORT QTextBoundaryFinder
 
    enum BoundaryReason {
       NotAtBoundary = 0,
-      StartWord = 1,
-      EndWord = 2
-                //Hyphen
+      StartWord     = 1,
+      EndWord       = 2
+      // Hyphen
    };
    using BoundaryReasons = QFlags<BoundaryReason>;
 
-   QTextBoundaryFinder(BoundaryType type, const QString &string);
-   QTextBoundaryFinder(BoundaryType type, const QChar *chars, int length, unsigned char *buffer = 0, int bufferSize = 0);
+   QTextBoundaryFinder();
+   QTextBoundaryFinder(const QTextBoundaryFinder &other);
+   QTextBoundaryFinder(BoundaryType type, const QString &str);
+
+   ~QTextBoundaryFinder();
+
+   QTextBoundaryFinder &operator=(const QTextBoundaryFinder &other);
 
    inline bool isValid() const {
       return d;
@@ -66,6 +60,7 @@ class Q_CORE_EXPORT QTextBoundaryFinder
    inline BoundaryType type() const {
       return t;
    }
+
    QString string() const;
 
    void toStart();
@@ -81,16 +76,17 @@ class Q_CORE_EXPORT QTextBoundaryFinder
 
  private:
    BoundaryType t;
-   QString s;
-   const QChar *chars;
-   int length;
-   int pos;
+
+   QString m_str;
+   QString::const_iterator iter_pos;
+
+   bool m_valid = true;
+
    uint freePrivate : 1;
    uint unused : 31;
+
    QTextBoundaryFinderPrivate *d;
 };
-
-QT_END_NAMESPACE
 
 #endif
 

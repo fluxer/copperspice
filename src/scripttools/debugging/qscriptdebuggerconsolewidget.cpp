@@ -1,27 +1,26 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
+
+#include <algorithm>
 
 #include "qscriptdebuggerconsolewidget_p.h"
 #include "qscriptdebuggerconsolewidgetinterface_p_p.h"
@@ -45,7 +44,7 @@ namespace {
 class PromptLabel : public QLabel
 {
  public:
-   PromptLabel(QWidget *parent = 0)
+   PromptLabel(QWidget *parent = nullptr)
       : QLabel(parent) {
       setFrameShape(QFrame::NoFrame);
       setIndent(2);
@@ -66,7 +65,7 @@ class PromptLabel : public QLabel
 class InputEdit : public QLineEdit
 {
  public:
-   InputEdit(QWidget *parent = 0)
+   InputEdit(QWidget *parent = nullptr)
       : QLineEdit(parent) {
       setFrame(false);
       setSizePolicy(QSizePolicy::MinimumExpanding, sizePolicy().verticalPolicy());
@@ -78,7 +77,7 @@ class CommandLine : public QWidget
    SCRIPT_T_CS_OBJECT(CommandLine)
 
  public:
-   CommandLine(QWidget *parent = 0) : QWidget(parent) {
+   CommandLine(QWidget *parent = nullptr) : QWidget(parent) {
       promptLabel = new PromptLabel();
       inputEdit = new InputEdit();
       QHBoxLayout *hbox = new QHBoxLayout(this);
@@ -137,7 +136,7 @@ class CommandLine : public QWidget
 class QScriptDebuggerConsoleWidgetOutputEdit : public QPlainTextEdit
 {
  public:
-   QScriptDebuggerConsoleWidgetOutputEdit(QWidget *parent = 0)
+   QScriptDebuggerConsoleWidgetOutputEdit(QWidget *parent = nullptr)
       : QPlainTextEdit(parent) {
       setFrameShape(QFrame::NoFrame);
       setReadOnly(true);
@@ -246,7 +245,8 @@ void QScriptDebuggerConsoleWidgetPrivate::_q_onCompletionTaskFinished()
          for (int i = 0; i < task->resultCount(); ++i) {
             lst.append(task->resultAt(i).mid(task->length()));
          }
-         qSort(lst.begin(), lst.end(), lengthLessThan);
+         std::sort(lst.begin(), lst.end(), lengthLessThan);
+
          QString lcp = longestCommonPrefix(lst);
          if (!lcp.isEmpty()) {
             QString tmp = commandLine->input();

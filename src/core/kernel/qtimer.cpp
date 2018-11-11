@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,8 +23,6 @@
 #include <qtimer.h>
 #include <qabstracteventdispatcher.h>
 #include <qcoreapplication.h>
-
-QT_BEGIN_NAMESPACE
 
 static const int INV_TIMER = -1;                // invalid timer id
 
@@ -83,16 +78,16 @@ class QSingleShotTimer : public QObject
 
  public:
    ~QSingleShotTimer();
-   QSingleShotTimer(int msec, QObject *r, const char *m);
+   QSingleShotTimer(int msec, QObject *r, const QString &member);
 
    CORE_CS_SIGNAL_1(Public, void timeout())
    CORE_CS_SIGNAL_2(timeout)
 
  protected:
-   void timerEvent(QTimerEvent *);
+   void timerEvent(QTimerEvent *) override;
 };
 
-QSingleShotTimer::QSingleShotTimer(int msec, QObject *receiver, const char *member)
+QSingleShotTimer::QSingleShotTimer(int msec, QObject *receiver, const QString &member)
    : QObject(QAbstractEventDispatcher::instance())
 {
    connect(this, SIGNAL(timeout()), receiver, member);
@@ -113,31 +108,30 @@ void QSingleShotTimer::timerEvent(QTimerEvent *)
    if (timerId > 0) {
       killTimer(timerId);
    }
+
    timerId = -1;
    emit timeout();
 
-   // we would like to use delete later here, but it feels like a
-   // waste to post a new event to handle this event, so we just unset the flag
-   // and explicitly delete
    delete this;
 }
 
-void QTimer::singleShot(int msec, QObject *receiver, const char *member)
+void QTimer::singleShot(int msec, QObject *receiver, const QString &member)
 {
-   if (receiver && member) {
-      if (msec == 0) {
-         // special code shortpath for 0-timers
-         const char *bracketPosition = strchr(member, '(');
+   if (receiver && ! member.isEmpty()) {
 
-         if (! bracketPosition) {
+      if (msec == 0) {
+         // special code shortpath for 0 timers
+         int bracketPosition = member.indexOf('(');
+
+         if (bracketPosition == -1) {
             qWarning("QTimer::singleShot: Invalid slot specification");
             return;
          }
 
          // extract method name
-         QByteArray methodName(member, bracketPosition - member);
+         QString methodName = member.left(bracketPosition);
+         QMetaObject::invokeMethod(receiver, methodName, Qt::QueuedConnection);
 
-         QMetaObject::invokeMethod(receiver, methodName.constData(), Qt::QueuedConnection);
          return;
       }
 
@@ -158,4 +152,3 @@ void QTimer::setInterval(int msec)
    }
 }
 
-QT_END_NAMESPACE

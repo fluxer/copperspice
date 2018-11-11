@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -31,8 +28,8 @@
 #include <QVector>
 #include <QXmlName>
 
-#include "qitem_p.h"
-#include "qnamepool_p.h"
+#include <qitem_p.h>
+#include <qnamepool_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -145,11 +142,11 @@ class AccelTree : public QAbstractXmlNodeModel
       QXmlNodeModelIndex::NodeKind    m_kind : 8;
    };
 
-   virtual QUrl baseUri(const QXmlNodeModelIndex &ni) const;
-   virtual QUrl documentUri(const QXmlNodeModelIndex &ni) const;
-   virtual QXmlNodeModelIndex::NodeKind kind(const QXmlNodeModelIndex &ni) const;
-   virtual QXmlNodeModelIndex::DocumentOrder compareOrder(const QXmlNodeModelIndex &ni1,
-         const QXmlNodeModelIndex &ni2) const;
+   QUrl baseUri(const QXmlNodeModelIndex &ni) const override;
+   QUrl documentUri(const QXmlNodeModelIndex &ni) const override;
+   QXmlNodeModelIndex::NodeKind kind(const QXmlNodeModelIndex &ni) const override;
+   QXmlNodeModelIndex::DocumentOrder compareOrder(const QXmlNodeModelIndex &ni1,
+         const QXmlNodeModelIndex &ni2) const override;
 
    /**
     * @short Returns the root node.
@@ -157,24 +154,25 @@ class AccelTree : public QAbstractXmlNodeModel
     * This function does not use @p n, so a default constructed
     * QXmlNodeModelIndex may be passed.
     */
-   virtual QXmlNodeModelIndex root(const QXmlNodeModelIndex &n) const;
+   QXmlNodeModelIndex root(const QXmlNodeModelIndex &n) const override;
 
    virtual QXmlNodeModelIndex parent(const QXmlNodeModelIndex &ni) const;
-   virtual QXmlNodeModelIndex::Iterator::Ptr iterate(const QXmlNodeModelIndex &ni,
-         QXmlNodeModelIndex::Axis axis) const;
-   virtual QXmlName name(const QXmlNodeModelIndex &ni) const;
-   virtual QVector<QXmlName> namespaceBindings(const QXmlNodeModelIndex &n) const;
-   virtual void sendNamespaces(const QXmlNodeModelIndex &n,
-                               QAbstractXmlReceiver *const receiver) const;
-   virtual QString stringValue(const QXmlNodeModelIndex &n) const;
-   virtual QVariant typedValue(const QXmlNodeModelIndex &n) const;
-   virtual Item::Iterator::Ptr sequencedTypedValue(const QXmlNodeModelIndex &n) const;
-   virtual ItemType::Ptr type(const QXmlNodeModelIndex &ni) const;
-   virtual QXmlNodeModelIndex elementById(const QXmlName &id) const;
-   virtual QVector<QXmlNodeModelIndex> nodesByIdref(const QXmlName &idref) const;
-   virtual void copyNodeTo(const QXmlNodeModelIndex &node,
-                           QAbstractXmlReceiver *const receiver,
-                           const NodeCopySettings &settings) const;
+
+   QXmlNodeModelIndex::Iterator::Ptr iterate(const QXmlNodeModelIndex &ni,
+         QXmlNodeModelIndex::Axis axis) const override;
+
+   QXmlName name(const QXmlNodeModelIndex &ni) const override;
+   QVector<QXmlName> namespaceBindings(const QXmlNodeModelIndex &n) const override;
+   void sendNamespaces(const QXmlNodeModelIndex &n, QAbstractXmlReceiver *const receiver) const override;
+   QString stringValue(const QXmlNodeModelIndex &n) const override;
+   QVariant typedValue(const QXmlNodeModelIndex &n) const override;
+   Item::Iterator::Ptr sequencedTypedValue(const QXmlNodeModelIndex &n) const override;
+   ItemType::Ptr type(const QXmlNodeModelIndex &ni) const override;
+   QXmlNodeModelIndex elementById(const QXmlName &id) const override;
+   QVector<QXmlNodeModelIndex> nodesByIdref(const QXmlName &idref) const override;
+
+   void copyNodeTo(const QXmlNodeModelIndex &node, QAbstractXmlReceiver *const receiver,
+                  const NodeCopySettings &settings) const override;
 
    friend class AccelTreeBuilder<false>;
    friend class AccelTreeBuilder<true>;
@@ -281,9 +279,10 @@ class AccelTree : public QAbstractXmlNodeModel
    QUrl m_baseURI;
 
  protected:
-   virtual QXmlNodeModelIndex nextFromSimpleAxis(QAbstractXmlNodeModel::SimpleAxis,
-         const QXmlNodeModelIndex &) const;
-   virtual QVector<QXmlNodeModelIndex> attributes(const QXmlNodeModelIndex &element) const;
+   QXmlNodeModelIndex nextFromSimpleAxis(QAbstractXmlNodeModel::SimpleAxis,
+         const QXmlNodeModelIndex &) const override;
+
+   QVector<QXmlNodeModelIndex> attributes(const QXmlNodeModelIndex &element) const override;
 
  private:
    /**
@@ -295,8 +294,7 @@ class AccelTree : public QAbstractXmlNodeModel
     * Copies the children of @p node to @p receiver.
     */
    inline void copyChildren(const QXmlNodeModelIndex &node,
-                            QAbstractXmlReceiver *const receiver,
-                            const NodeCopySettings &settings) const;
+                  QAbstractXmlReceiver *const receiver, const NodeCopySettings &settings) const;
 
    /**
     * The key is the xml:id value, and the value is the element

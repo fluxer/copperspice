@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -29,10 +26,10 @@
 
 #include <QtCore/QDebug>
 #include <QtCore/QFile>
-#include <QtCore/QRegExp>
+#include <qregularexpression.h>
 #include <QtCore/QStack>
 #include <QtCore/QStack>
-#include <QtCore/QString>
+#include <qstring.h>
 #include <QtCore/QTextCodec>
 #include <QtCore/QCoreApplication>
 
@@ -84,7 +81,7 @@ static QString yyComment;
 static QString yyString;
 
 
-static qlonglong yyInteger;
+static qint64 yyInteger;
 static int yyParenDepth;
 static int yyLineNo;
 static int yyCurLineNo;
@@ -110,16 +107,19 @@ static QChar getChar()
    if (yyInPos >= yyInStr.size()) {
       return EOF;
    }
+
    QChar c = yyInStr[yyInPos++];
-   if (c.unicode() == '\n') {
+
+   if (c == '\n') {
       ++yyCurLineNo;
    }
-   return c.unicode();
+
+   return c;
 }
 
 static int getToken()
 {
-   const char tab[] = "bfnrt\"\'\\";
+   const char tab[]     = "bfnrt\"\'\\";
    const char backTab[] = "\b\f\n\r\t\"\'\\";
 
    yyIdent.clear();
@@ -223,15 +223,21 @@ static int getToken()
                while ( yyCh != EOF && yyCh != QLatin1Char('\n') && yyCh != QLatin1Char('"') ) {
                   if ( yyCh == QLatin1Char('\\') ) {
                      yyCh = getChar();
+
                      if ( yyCh == QLatin1Char('u') ) {
                         yyCh = getChar();
-                        uint unicode(0);
+
+                        char32_t unicode(0);
+
                         for (int i = 4; i > 0; --i) {
                            unicode = unicode << 4;
+
                            if ( yyCh.isDigit() ) {
                               unicode += yyCh.digitValue();
+
                            } else {
-                              int sub(yyCh.toLower().toAscii() - 87);
+                              int sub(yyCh.toLower()[0].toLatin1() - 87);
+
                               if ( sub > 15 || sub < 10) {
                                  yyMsg() << qPrintable(LU::tr("Invalid Unicode value.\n"));
                                  break;
@@ -240,13 +246,17 @@ static int getToken()
                            }
                            yyCh = getChar();
                         }
-                        yyString.append(QChar(unicode));
-                     } else if ( yyCh == QLatin1Char('\n') ) {
+
+                        yyString.append(QChar(char32_t(unicode)));
+
+                     } else if (yyCh == '\n') {
                         yyCh = getChar();
+
                      } else {
-                        yyString.append( QLatin1Char(backTab[strchr( tab, yyCh.toAscii() ) - tab]) );
+                        yyString.append( QLatin1Char(backTab[strchr( tab, yyCh.toLatin1() ) - tab]) );
                         yyCh = getChar();
                      }
+
                   } else {
                      yyString.append(yyCh);
                      yyCh = getChar();
@@ -612,8 +622,9 @@ static void parse( Translator *tor )
 bool loadJava(Translator &translator, const QString &filename, ConversionData &cd)
 {
    QFile file(filename);
+
    if (!file.open(QIODevice::ReadOnly)) {
-      cd.appendError(LU::tr("Cannot open %1: %2").arg(filename, file.errorString()));
+      cd.appendError(LU::tr("Cannot open %1: %2").formatArgs(filename, file.errorString()));
       return false;
    }
 

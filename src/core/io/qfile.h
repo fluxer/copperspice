@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,8 +23,8 @@
 #ifndef QFILE_H
 #define QFILE_H
 
-#include <QtCore/qfiledevice.h>
-#include <QtCore/qstring.h>
+#include <qfiledevice.h>
+#include <qstring.h>
 #include <stdio.h>
 
 #ifdef open
@@ -52,7 +49,7 @@ class Q_CORE_EXPORT QFile : public QFileDevice
    QFile(const QString &name, QObject *parent);
    ~QFile();
 
-   QString fileName() const;
+   QString fileName() const override;
    void setFileName(const QString &name);
 
    typedef QByteArray (*EncoderFn)(const QString &fileName);
@@ -91,22 +88,22 @@ class Q_CORE_EXPORT QFile : public QFileDevice
    bool copy(const QString &newName);
    static bool copy(const QString &fileName, const QString &newName);
 
-   bool open(OpenMode flags);
+   bool open(OpenMode flags) override;
    bool open(FILE *f, OpenMode ioFlags, FileHandleFlags handleFlags = DontCloseHandle);
    bool open(int fd, OpenMode ioFlags, FileHandleFlags handleFlags = DontCloseHandle);
 
-   qint64 size() const;
+   qint64 size() const override;
 
-   bool resize(qint64 sz);
+   bool resize(qint64 sz) override;
    static bool resize(const QString &filename, qint64 sz);
 
-   Permissions permissions() const;
+   Permissions permissions() const override;
    static Permissions permissions(const QString &filename);
-   bool setPermissions(Permissions permissionSpec);
+   bool setPermissions(Permissions permissionSpec) override;
    static bool setPermissions(const QString &filename, Permissions permissionSpec);
 
  protected:
-   QFile(QFilePrivate &dd, QObject *parent = 0);
+   QFile(QFilePrivate &dd, QObject *parent = nullptr);
 
  private:
    friend class QTemporaryFile;

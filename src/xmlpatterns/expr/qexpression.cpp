@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -182,9 +179,11 @@ Expression::Ptr Expression::invokeOptimizers(const Expression::Ptr &expr,
          OptimizationPass::ExpressionMarker::const_iterator mIt(sourceMarker.constBegin());
          sourceExpr = expr;
 
+         auto tmp = sourceExpr->operands();
+
          for (; mIt != mEnd; ++mIt) {
             Q_ASSERT(*mIt >= 0);
-            sourceExpr = sourceExpr->operands().at(*mIt);
+            sourceExpr = tmp.at(*mIt);
          }
 
          operands.append(sourceExpr);
@@ -293,8 +292,7 @@ void Expression::evaluateToSequenceReceiver(const DynamicContext::Ptr &context) 
 
 ItemType::Ptr Expression::expectedContextItemType() const
 {
-   Q_ASSERT_X(false, Q_FUNC_INFO,
-              "expectedContextItemType() must be overridden when RequiresContextItem is set.");
+   Q_ASSERT_X(false, Q_FUNC_INFO, "This function should never be called.");
    return ItemType::Ptr();
 }
 
@@ -353,8 +351,7 @@ OptimizationPass::List Expression::optimizationPasses() const
 
 ItemType::Ptr Expression::newFocusType() const
 {
-   Q_ASSERT_X(false, Q_FUNC_INFO,
-              "This function must be overridden when CreatesFocusForLast is set.");
+   Q_ASSERT_X(false, Q_FUNC_INFO, "This function should never be called.");
    return ItemType::Ptr();
 }
 
@@ -365,7 +362,7 @@ const SourceLocationReflection *Expression::actualReflection() const
 
 QString Expression::description() const
 {
-   return QString::fromLatin1("Expression, id: %1").arg(QString::number(id()));
+   return QString::fromLatin1("Expression, id: %1").formatArg(QString::number(id()));
 }
 
 PatternPriority Expression::patternPriority() const

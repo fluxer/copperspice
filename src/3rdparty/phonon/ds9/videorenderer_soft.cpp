@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -31,26 +28,16 @@
 
 #ifndef QT_NO_PHONON_VIDEO
 
-#include "qmeminputpin.h"
-#include "qbasefilter.h"
+#include <qmeminputpin.h>
+#include <qbasefilter.h>
 
 #include <QtGui/QPainter>
 #include <QtGui/QPaintEngine>
 #include <QtGui/QApplication>
 #include <QtCore/QTime>
 
-#define _USE_MATH_DEFINES //for pi
-#include <QtCore/qmath.h> //for sin and cos
-/* M_PI is a #define that may or may not be handled in <cmath> */
-#ifndef M_PI
-#define M_PI 3.14159265358979323846264338327950288419717
-#endif
-
-#include <dvdmedia.h> //for VIDEOINFOHEADER2
-
-//this will make a display every second of how many frames were pocessed and actually displayed
-//#define FPS_COUNTER
-
+#include <qmath.h>          //for pi, sin, cos
+#include <dvdmedia.h>       //for VIDEOINFOHEADER2
 
 #ifndef QT_NO_OPENGL
 #include <GL/gl.h>
@@ -240,15 +227,13 @@ namespace Phonon
                 }
             }
 
-            STDMETHODIMP Stop()
-            {
+            STDMETHODIMP Stop() override {
                 HRESULT hr = QBaseFilter::Stop();
                 beginFlush();
                 return hr;
             }
 
-            STDMETHODIMP Pause()
-            {
+            STDMETHODIMP Pause() override {
                 HRESULT hr = QBaseFilter::Pause();
                 if (m_inputPin->connected() == 0) {
                     ::SetEvent(m_receiveCanWait); //unblock the flow in receive
@@ -258,8 +243,7 @@ namespace Phonon
                 return hr;
             }
 
-            STDMETHODIMP Run(REFERENCE_TIME start)
-            {
+            STDMETHODIMP Run(REFERENCE_TIME start) override {
                 HRESULT hr = QBaseFilter::Run(start);
                 m_start = start;
 
@@ -278,7 +262,7 @@ namespace Phonon
                 return hr;
             }
 
-            HRESULT processSample(IMediaSample *sample);
+            HRESULT processSample(IMediaSample *sample) override;
 
             void applyMixerSettings(qreal brightness, qreal contrast, qreal hue, qreal saturation)
             {
@@ -378,34 +362,28 @@ namespace Phonon
               {
               }
 
-              STDMETHODIMP EndOfStream()
-              {
+              STDMETHODIMP EndOfStream() override {
                   m_renderer->endOfStream();
                   return QMemInputPin::EndOfStream();
               }
 
-              STDMETHODIMP ReceiveCanBlock()
-              {
+              STDMETHODIMP ReceiveCanBlock() override {
                   //yes, it can block
                   return S_OK;
               }
 
-              STDMETHODIMP BeginFlush()
-              {
+              STDMETHODIMP BeginFlush() override {
                   m_renderer->beginFlush();
                   return QMemInputPin::BeginFlush();
               }
 
-              STDMETHODIMP EndFlush()
-              {
+              STDMETHODIMP EndFlush() override {
                   m_renderer->endFlush();
                   return QMemInputPin::EndFlush();
               }
 
-
-              STDMETHODIMP GetAllocatorRequirements(ALLOCATOR_PROPERTIES *prop)
-              {
-                  if (!prop) {
+              STDMETHODIMP GetAllocatorRequirements(ALLOCATOR_PROPERTIES *prop) override {
+                  if (! prop) {
                       return E_POINTER;
                   }
 
@@ -414,12 +392,11 @@ namespace Phonon
                   return S_OK;
               }
 
-
-              STDMETHODIMP NotifyAllocator(IMemAllocator *alloc, BOOL readonly)
-              {
+              STDMETHODIMP NotifyAllocator(IMemAllocator *alloc, BOOL readonly) override {
                   if (!alloc) {
                       return E_POINTER;
                   }
+
                   ALLOCATOR_PROPERTIES prop;
                   HRESULT hr = alloc->GetProperties(&prop);
                   if (SUCCEEDED(hr) && prop.cBuffers == 1) {
@@ -432,8 +409,6 @@ namespace Phonon
 
                   return QMemInputPin::NotifyAllocator(alloc, readonly);
               }
-
-
 
         private:
             VideoRendererSoftFilter * const m_renderer;

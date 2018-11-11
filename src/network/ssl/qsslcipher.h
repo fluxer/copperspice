@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,29 +23,24 @@
 #ifndef QSSLCIPHER_H
 #define QSSLCIPHER_H
 
-#include <QtCore/qstring.h>
-#include <QtCore/qscopedpointer.h>
-#include <QtNetwork/qssl.h>
+#include <qstring.h>
+#include <qscopedpointer.h>
+#include <qssl.h>
 
-QT_BEGIN_NAMESPACE
-
-#ifndef QT_NO_OPENSSL
+#ifdef QT_SSL
 
 class QSslCipherPrivate;
 
 class Q_NETWORK_EXPORT QSslCipher
 {
 
- public:
+public:
    QSslCipher();
+   explicit QSslCipher(const QString &name);
    QSslCipher(const QString &name, QSsl::SslProtocol protocol);
    QSslCipher(const QSslCipher &other);
+
    ~QSslCipher();
-   QSslCipher &operator=(const QSslCipher &other);
-   bool operator==(const QSslCipher &other) const;
-   inline bool operator!=(const QSslCipher &other) const {
-      return !operator==(other);
-   }
 
    bool isNull() const;
    QString name() const;
@@ -61,7 +53,24 @@ class Q_NETWORK_EXPORT QSslCipher
    QString protocolString() const;
    QSsl::SslProtocol protocol() const;
 
- private:
+   void swap(QSslCipher &other) {
+      qSwap(d, other.d);
+   }
+
+
+   QSslCipher &operator=(QSslCipher &&other) {
+      swap(other);
+      return *this;
+   }
+
+   QSslCipher &operator=(const QSslCipher &other);
+   bool operator==(const QSslCipher &other) const;
+
+   inline bool operator!=(const QSslCipher &other) const {
+      return !operator==(other);
+   }
+
+private:
    QScopedPointer<QSslCipherPrivate> d;
    friend class QSslSocketBackendPrivate;
 };
@@ -69,9 +78,7 @@ class Q_NETWORK_EXPORT QSslCipher
 class QDebug;
 Q_NETWORK_EXPORT QDebug operator<<(QDebug debug, const QSslCipher &cipher);
 
-#endif // QT_NO_OPENSSL
-
-QT_END_NAMESPACE
+#endif
 
 #endif
 

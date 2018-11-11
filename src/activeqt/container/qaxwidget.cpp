@@ -56,7 +56,7 @@
 #include <qmetaobject.h>
 #include <qpainter.h>
 #include <qpointer.h>
-#include <qregexp.h>
+#include <qregularexpression.h>
 #include <quuid.h>
 #include <qwhatsthis.h>
 
@@ -421,9 +421,9 @@ static const ushort mouseTbl[] = {
     WM_RBUTTONDOWN,     QEvent::MouseButtonPress,       Qt::RightButton,
     WM_RBUTTONUP,       QEvent::MouseButtonRelease,     Qt::RightButton,
     WM_RBUTTONDBLCLK,   QEvent::MouseButtonDblClick,    Qt::RightButton,
-    WM_MBUTTONDOWN,     QEvent::MouseButtonPress,       Qt::MidButton,
-    WM_MBUTTONUP,       QEvent::MouseButtonRelease,     Qt::MidButton,
-    WM_MBUTTONDBLCLK,   QEvent::MouseButtonDblClick,    Qt::MidButton,
+    WM_MBUTTONDOWN,     QEvent::MouseButtonPress,       Qt::MiddleButton,
+    WM_MBUTTONUP,       QEvent::MouseButtonRelease,     Qt::MiddleButton,
+    WM_MBUTTONDBLCLK,   QEvent::MouseButtonDblClick,    Qt::MiddleButton,
     0,                  0,                              0
 };
 
@@ -433,7 +433,7 @@ static Qt::MouseButtons translateMouseButtonState(int s)
     if (s & MK_LBUTTON)
         bst |= Qt::LeftButton;
     if (s & MK_MBUTTON)
-        bst |= Qt::MidButton;
+        bst |= Qt::MiddleButton;
     if (s & MK_RBUTTON)
         bst |= Qt::RightButton;
 
@@ -1479,9 +1479,9 @@ HRESULT WINAPI QAxClientSite::SetBorderSpace(LPCBORDERWIDTHS pborderwidths)
 HRESULT WINAPI QAxClientSite::SetActiveObject(IOleInPlaceActiveObject *pActiveObject, LPCOLESTR pszObjName)
 {
     AX_DEBUG(QAxClientSite::SetActiveObject);
-    
+
     Q_UNUSED(pszObjName);
-    // we are ignoring the name of the object, as suggested by MSDN documentation 
+    // we are ignoring the name of the object, as suggested by MSDN documentation
     // for IOleInPlaceUIWindow::SetActiveObject().
 
     if (m_spInPlaceActiveObject) {
@@ -1498,7 +1498,7 @@ HRESULT WINAPI QAxClientSite::SetActiveObject(IOleInPlaceActiveObject *pActiveOb
     return S_OK;
 }
 
-//**** IOleDocumentSite
+// IOleDocumentSite
 HRESULT WINAPI QAxClientSite::ActivateMe(IOleDocumentView *pViewToActivate)
 {
     AX_DEBUG(QAxClientSite::ActivateMe);
@@ -1568,12 +1568,11 @@ void QAxClientSite::windowActivationChange()
 }
 
 
-//**** QWidget
+// QWidget
 
 QAxHostWidget::QAxHostWidget(QWidget *parent, QAxClientSite *ax)
 : QWidget(parent), setFocusTimer(0), hasFocus(false), axhost(ax)
 {
-    setAttribute(Qt::WA_NoBackground);
     setAttribute(Qt::WA_NoSystemBackground);
     setAttribute(Qt::WA_OpaquePaintEvent);
     setAttribute(Qt::WA_PaintOnScreen);

@@ -1,35 +1,29 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
 
-#ifndef QGLPIXELBUFFER_P_H
-#define QGLPIXELBUFFER_P_H
+#ifndef QGL_PIXELBUFFER_P_H
+#define QGL_PIXELBUFFER_P_H
 
-QT_BEGIN_NAMESPACE
-
-QT_BEGIN_INCLUDE_NAMESPACE
-#include "QtOpenGL/qglpixelbuffer.h"
+#include <qglpixelbuffer.h>
 #include <qgl_p.h>
 #include <qglpaintdevice_p.h>
 #include <qglobal.h>
@@ -104,23 +98,24 @@ DECLARE_HANDLE(HPBUFFERARB);
 #elif !defined(QT_NO_EGL)
 #include <qegl_p.h>
 #endif
-QT_END_INCLUDE_NAMESPACE
 
 class QEglContext;
-
 
 class QGLPBufferGLPaintDevice : public QGLPaintDevice
 {
  public:
-   virtual QPaintEngine *paintEngine() const {
+   QPaintEngine *paintEngine() const override {
       return pbuf->paintEngine();
    }
-   virtual QSize size() const {
+
+   QSize size() const override {
       return pbuf->size();
    }
-   virtual QGLContext *context() const;
-   virtual void endPaint();
+
+   QGLContext *context() const override;
+   void endPaint() override;
    void setPBuffer(QGLPixelBuffer *pb);
+
  private:
    QGLPixelBuffer *pbuf;
 };
@@ -128,14 +123,17 @@ class QGLPBufferGLPaintDevice : public QGLPaintDevice
 class QGLPixelBufferPrivate
 {
    Q_DECLARE_PUBLIC(QGLPixelBuffer)
+
  public:
    QGLPixelBufferPrivate(QGLPixelBuffer *q) : q_ptr(q), invalid(true), qctx(0), pbuf(0), ctx(0) {
+
 #ifdef Q_OS_WIN
       dc = 0;
 #elif defined(Q_OS_MAC)
       share_ctx = 0;
 #endif
    }
+
    bool init(const QSize &size, const QGLFormat &f, QGLWidget *shareWidget);
    void common_init(const QSize &size, const QGLFormat &f, QGLWidget *shareWidget);
    bool cleanup();
@@ -180,7 +178,5 @@ class QGLPixelBufferPrivate
    void *ctx;
 #endif
 };
-
-QT_END_NAMESPACE
 
 #endif // QGLPIXELBUFFER_P_H

@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -89,7 +86,7 @@ enum WIZ_WINDOWTHEMEATTRIBUTETYPE {
 #define WIZ_WTNCA_NODRAWCAPTION          0x00000001
 #define WIZ_WTNCA_NODRAWICON             0x00000002
 
-#define WIZ_DT_CENTER                    0x00000001 
+#define WIZ_DT_CENTER                    0x00000001
 #define WIZ_DT_VCENTER                   0x00000004
 #define WIZ_DT_SINGLELINE                0x00000020
 #define WIZ_DT_NOPREFIX                  0x00000800
@@ -710,14 +707,16 @@ bool QVistaHelper::drawTitleText(QPainter *painter, const QString &text, const Q
       dto.dwFlags = WIZ_DTT_COMPOSITED | WIZ_DTT_GLOWSIZE;
       dto.iGlowSize = glowSize();
 
-      pDrawThemeTextEx(hTheme, dcMem, 0, 0, (LPCWSTR)text.utf16(), -1, uFormat, &rctext, &dto );
+      pDrawThemeTextEx(hTheme, dcMem, 0, 0, &text.toStdWString()[0], -1, uFormat, &rctext, &dto );
       BitBlt(hdc, rect.left(), rect.top(), rect.width(), rect.height(), dcMem, 0, 0, SRCCOPY);
+
       SelectObject(dcMem, (HGDIOBJ) hOldBmp);
       SelectObject(dcMem, (HGDIOBJ) hOldFont);
       DeleteObject(bmp);
       DeleteObject(hCaptionFont);
       DeleteDC(dcMem);
       //ReleaseDC(hwnd, hdc);
+
    } else if (vistaState() == VistaBasic) {
       painter->drawText(rect, text);
    }
@@ -756,17 +755,19 @@ bool QVistaHelper::drawBlackRect(const QRect &rect, HDC hdc)
 bool QVistaHelper::resolveSymbols()
 {
    static bool tried = false;
-   if (!tried) {
-      QSystemLibrary dwmLib(L"dwmapi");
-      pDwmIsCompositionEnabled =
-         (PtrDwmIsCompositionEnabled)dwmLib.resolve("DwmIsCompositionEnabled");
+   if (! tried) {
+      QSystemLibrary dwmLib("dwmapi");
+
+      pDwmIsCompositionEnabled = (PtrDwmIsCompositionEnabled)dwmLib.resolve("DwmIsCompositionEnabled");
+
       if (pDwmIsCompositionEnabled) {
          pDwmDefWindowProc = (PtrDwmDefWindowProc)dwmLib.resolve("DwmDefWindowProc");
-         pDwmExtendFrameIntoClientArea =
-            (PtrDwmExtendFrameIntoClientArea)dwmLib.resolve("DwmExtendFrameIntoClientArea");
+         pDwmExtendFrameIntoClientArea = (PtrDwmExtendFrameIntoClientArea)dwmLib.resolve("DwmExtendFrameIntoClientArea");
       }
-      QSystemLibrary themeLib(L"uxtheme");
+
+      QSystemLibrary themeLib("uxtheme");
       pIsAppThemed = (PtrIsAppThemed)themeLib.resolve("IsAppThemed");
+
       if (pIsAppThemed) {
          pDrawThemeBackground = (PtrDrawThemeBackground)themeLib.resolve("DrawThemeBackground");
          pGetThemePartSize = (PtrGetThemePartSize)themeLib.resolve("GetThemePartSize");
@@ -778,6 +779,7 @@ bool QVistaHelper::resolveSymbols()
          pDrawThemeTextEx = (PtrDrawThemeTextEx)themeLib.resolve("DrawThemeTextEx");
          pSetWindowThemeAttribute = (PtrSetWindowThemeAttribute)themeLib.resolve("SetWindowThemeAttribute");
       }
+
       tried = true;
    }
 
@@ -809,10 +811,12 @@ int QVistaHelper::topOffset()
    if (vistaState() != VistaAero) {
       return titleBarSize() + 3;
    }
-   static const int aeroOffset =
-      QSysInfo::WindowsVersion == QSysInfo::WV_WINDOWS7 ?
+
+   static const int aeroOffset = QSysInfo::WindowsVersion == QSysInfo::WV_WINDOWS7 ?
       QStyleHelper::dpiScaled(4) : QStyleHelper::dpiScaled(13);
+
    int result = aeroOffset;
+
    if (QSysInfo::WindowsVersion < QSysInfo::WV_WINDOWS8) {
       result += titleBarSize();
    }

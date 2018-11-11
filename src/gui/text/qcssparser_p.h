@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,16 +23,16 @@
 #ifndef QCSSPARSER_P_H
 #define QCSSPARSER_P_H
 
-#include <QtCore/QStringList>
-#include <QtCore/QVector>
-#include <QtCore/QVariant>
-#include <QtCore/QPair>
-#include <QtCore/QSize>
-#include <QtCore/QMultiHash>
-#include <QtGui/QFont>
-#include <QtGui/QPalette>
-#include <QtGui/QIcon>
-#include <QtCore/QSharedData>
+#include <qstringlist.h>
+#include <qvector.h>
+#include <qvariant.h>
+#include <qpair.h>
+#include <qsize.h>
+#include <qmultihash.h>
+#include <qfont.h>
+#include <qpalette.h>
+#include <qicon.h>
+#include <qshareddata.h>
 
 #ifndef QT_NO_CSSPARSER
 
@@ -593,9 +590,11 @@ struct StyleSheet {
    QVector<PageRule> pageRules;
    QVector<ImportRule> importRules;
    StyleSheetOrigin origin;
+
    int depth; // applicable only for inline style sheets
    QMultiHash<QString, StyleRule> nameIndex;
    QMultiHash<QString, StyleRule> idIndex;
+
    void buildIndexes(Qt::CaseSensitivity nameCaseSensitivity = Qt::CaseSensitive);
 };
 
@@ -627,9 +626,11 @@ class Q_GUI_EXPORT StyleSelector
    QVector<StyleSheet> styleSheets;
    QString medium;
    Qt::CaseSensitivity nameCaseSensitivity;
+
  private:
    void matchRule(NodePtr node, const StyleRule &rules, StyleSheetOrigin origin,
-                  int depth, QMap<uint, StyleRule> *weightedRules);
+                  int depth, QMultiMap<uint, StyleRule> *weightedRules);
+
    bool selectorMatches(const Selector &rule, NodePtr node);
    bool basicSelectorMatches(const BasicSelector &rule, NodePtr node);
 };

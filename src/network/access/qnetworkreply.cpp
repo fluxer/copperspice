@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -27,13 +24,13 @@
 #include <qnetworkreply_p.h>
 #include <QtNetwork/qsslconfiguration.h>
 
-QT_BEGIN_NAMESPACE
-
+const int QNetworkReplyPrivate::progressSignalInterval = 100;
 QNetworkReplyPrivate::QNetworkReplyPrivate()
    : readBufferMaxSize(0),
+     emitAllUploadProgressSignals(false),
      operation(QNetworkAccessManager::UnknownOperation),
      errorCode(QNetworkReply::NoError)
-     , isFinished(false)
+   , isFinished(false)
 {
    // set the default attribute values
    attributes.insert(QNetworkRequest::ConnectionEncryptedAttribute, false);
@@ -414,7 +411,7 @@ QNetworkAccessManager *QNetworkReply::manager() const
 */
 QNetworkRequest QNetworkReply::request() const
 {
-   return d_func()->request;
+   return d_func()->originalRequest;
 }
 
 /*!
@@ -510,8 +507,8 @@ bool QNetworkReply::hasRawHeader(const QByteArray &headerName) const
 QByteArray QNetworkReply::rawHeader(const QByteArray &headerName) const
 {
    Q_D(const QNetworkReply);
-   QNetworkHeadersPrivate::RawHeadersList::ConstIterator it =
-      d->findRawHeader(headerName);
+   QNetworkHeadersPrivate::RawHeadersList::const_iterator it = d->findRawHeader(headerName);
+
    if (it != d->rawHeaders.constEnd()) {
       return it->second;
    }
@@ -558,7 +555,7 @@ QVariant QNetworkReply::attribute(QNetworkRequest::Attribute code) const
    return d_func()->attributes.value(code);
 }
 
-#ifndef QT_NO_OPENSSL
+#ifdef QT_SSL
 /*!
     Returns the SSL configuration and state associated with this
     reply, if SSL was used. It will contain the remote server's
@@ -570,7 +567,9 @@ QVariant QNetworkReply::attribute(QNetworkRequest::Attribute code) const
 */
 QSslConfiguration QNetworkReply::sslConfiguration() const
 {
-   return sslConfigurationImplementation();
+   QSslConfiguration config;
+   sslConfigurationImplementation(config);
+   return config;
 }
 
 /*!
@@ -579,45 +578,20 @@ QSslConfiguration QNetworkReply::sslConfiguration() const
 */
 void QNetworkReply::setSslConfiguration(const QSslConfiguration &config)
 {
-   if (config.isNull()) {
-      return;
-   }
-
    setSslConfigurationImplementation(config);
 }
 
-/*!
-    \overload
-    \since 4.6
-
-    If this function is called, the SSL errors given in \a errors
-    will be ignored.
-
-    Note that you can set the expected certificate in the SSL error:
-    If, for instance, you want to issue a request to a server that uses
-    a self-signed certificate, consider the following snippet:
-
-    \snippet doc/src/snippets/code/src_network_access_qnetworkreply.cpp 0
-
-    Multiple calls to this function will replace the list of errors that
-    were passed in previous calls.
-    You can clear the list of errors you want to ignore by calling this
-    function with an empty list.
-
-    \sa sslConfiguration(), sslErrors(), QSslSocket::ignoreSslErrors()
-*/
 void QNetworkReply::ignoreSslErrors(const QList<QSslError> &errors)
 {
    ignoreSslErrorsImplementation(errors);
 }
 #endif
 
-QSslConfiguration QNetworkReply::sslConfigurationImplementation() const
+void QNetworkReply::sslConfigurationImplementation(QSslConfiguration &) const
 {
-   return QSslConfiguration();
-}
 
-void QNetworkReply::setSslConfigurationImplementation(const QSslConfiguration &config)
+}
+void QNetworkReply::setSslConfigurationImplementation(const QSslConfiguration &)
 {
 }
 
@@ -625,25 +599,6 @@ void QNetworkReply::ignoreSslErrorsImplementation(const QList<QSslError> &errors
 {
 }
 
-/*!
-    If this function is called, SSL errors related to network
-    connection will be ignored, including certificate validation
-    errors.
-
-    \warning Be sure to always let the user inspect the errors
-    reported by the sslErrors() signal, and only call this method
-    upon confirmation from the user that proceeding is ok.
-    If there are unexpected errors, the reply should be aborted.
-    Calling this method without inspecting the actual errors will
-    most likely pose a security risk for your application. Use it
-    with great care!
-
-    This function can be called from the slot connected to the
-    sslErrors() signal, which indicates which errors were
-    found.
-
-    \sa sslConfiguration(), sslErrors(), QSslSocket::ignoreSslErrors()
-*/
 void QNetworkReply::ignoreSslErrors()
 {
 }
@@ -683,7 +638,7 @@ void QNetworkReply::setOperation(QNetworkAccessManager::Operation operation)
 void QNetworkReply::setRequest(const QNetworkRequest &request)
 {
    Q_D(QNetworkReply);
-   d->request = request;
+   d->originalRequest = request;
 }
 
 /*!
@@ -702,29 +657,12 @@ void QNetworkReply::setError(NetworkError errorCode, const QString &errorString)
    setErrorString(errorString); // in QIODevice
 }
 
-/*!
-    \since 4.8
-    Sets the reply as \a finished.
-
-    After having this set the replies data must not change.
-
-    \sa isFinished()
-*/
 void QNetworkReply::setFinished(bool finished)
 {
    Q_D(QNetworkReply);
    d->isFinished = finished;
 }
 
-
-/*!
-    Sets the URL being processed to be \a url. Normally, the URL
-    matches that of the request that was posted, but for a variety of
-    reasons it can be different (for example, a file path being made
-    absolute or canonical).
-
-    \sa url(), request(), QNetworkRequest::url()
-*/
 void QNetworkReply::setUrl(const QUrl &url)
 {
    Q_D(QNetworkReply);
@@ -777,4 +715,4 @@ void QNetworkReply::setAttribute(QNetworkRequest::Attribute code, const QVariant
    }
 }
 
-QT_END_NAMESPACE
+

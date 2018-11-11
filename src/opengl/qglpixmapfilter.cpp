@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -66,10 +63,10 @@ class QGLPixmapColorizeFilter: public QGLCustomShaderStage, public QGLPixmapFilt
  public:
    QGLPixmapColorizeFilter();
 
-   void setUniforms(QGLShaderProgram *program);
+   void setUniforms(QGLShaderProgram *program) override;
 
  protected:
-   bool processGL(QPainter *painter, const QPointF &pos, const QPixmap &pixmap, const QRectF &srcRect) const;
+   bool processGL(QPainter *painter, const QPointF &pos, const QPixmap &pixmap, const QRectF &srcRect) const override;
 };
 
 class QGLPixmapConvolutionFilter: public QGLCustomShaderStage, public QGLPixmapFilter<QPixmapConvolutionFilter>
@@ -78,10 +75,10 @@ class QGLPixmapConvolutionFilter: public QGLCustomShaderStage, public QGLPixmapF
    QGLPixmapConvolutionFilter();
    ~QGLPixmapConvolutionFilter();
 
-   void setUniforms(QGLShaderProgram *program);
+   void setUniforms(QGLShaderProgram *program) override;
 
  protected:
-   bool processGL(QPainter *painter, const QPointF &pos, const QPixmap &src, const QRectF &srcRect) const;
+   bool processGL(QPainter *painter, const QPointF &pos, const QPixmap &src, const QRectF &srcRect) const override;
 
  private:
    QByteArray generateConvolutionShader() const;
@@ -96,7 +93,7 @@ class QGLPixmapBlurFilter : public QGLCustomShaderStage, public QGLPixmapFilter<
    QGLPixmapBlurFilter();
 
  protected:
-   bool processGL(QPainter *painter, const QPointF &pos, const QPixmap &src, const QRectF &srcRect) const;
+   bool processGL(QPainter *painter, const QPointF &pos, const QPixmap &src, const QRectF &srcRect) const override;
 };
 
 class QGLPixmapDropShadowFilter : public QGLCustomShaderStage, public QGLPixmapFilter<QPixmapDropShadowFilter>
@@ -104,10 +101,10 @@ class QGLPixmapDropShadowFilter : public QGLCustomShaderStage, public QGLPixmapF
  public:
    QGLPixmapDropShadowFilter();
 
-   void setUniforms(QGLShaderProgram *program);
+   void setUniforms(QGLShaderProgram *program) override;
 
  protected:
-   bool processGL(QPainter *painter, const QPointF &pos, const QPixmap &src, const QRectF &srcRect) const;
+   bool processGL(QPainter *painter, const QPointF &pos, const QPixmap &src, const QRectF &srcRect) const override;
 };
 
 extern const QGLContext *qt_gl_share_context();
@@ -145,10 +142,11 @@ QPixmapFilter *QGL2PaintEngineEx::pixmapFilter(int type, const QPixmapFilter *pr
       default:
          break;
    }
+
    return QPaintEngineEx::pixmapFilter(type, prototype);
 }
 
-static const char *qt_gl_colorize_filter =
+static const QString qt_gl_colorize_filter =
    "uniform lowp vec4 colorizeColor;"
    "uniform lowp float colorizeStrength;"
    "lowp vec4 customShader(lowp sampler2D src, highp vec2 srcCoords)"
@@ -319,7 +317,7 @@ class QGLBlurTextureCache : public QObject
    void insertBlurTextureInfo(const QPixmap &pixmap, QGLBlurTextureInfo *info);
    void clearBlurTextureInfo(quint64 cacheKey);
 
-   void timerEvent(QTimerEvent *event);
+   void timerEvent(QTimerEvent *event) override;
 
  private:
    static void pixmapDestroyed(QPixmapData *pixmap);
@@ -395,7 +393,7 @@ void QGLBlurTextureCache::insertBlurTextureInfo(const QPixmap &pixmap, QGLBlurTe
 
 void QGLBlurTextureCache::pixmapDestroyed(QPixmapData *pmd)
 {
-   foreach (QGLBlurTextureCache * cache, blurTextureCaches) {
+   for (QGLBlurTextureCache * cache : blurTextureCaches) {
       if (cache->hasBlurTextureInfo(pmd->cacheKey())) {
          cache->clearBlurTextureInfo(pmd->cacheKey());
       }
@@ -535,7 +533,7 @@ bool QGLPixmapBlurFilter::processGL(QPainter *painter, const QPointF &pos, const
    return true;
 }
 
-static const char *qt_gl_drop_shadow_filter =
+static const QString qt_gl_drop_shadow_filter =
    "uniform lowp vec4 shadowColor;"
    "lowp vec4 customShader(lowp sampler2D src, highp vec2 srcCoords)"
    "{"

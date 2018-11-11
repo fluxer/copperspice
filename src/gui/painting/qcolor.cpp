@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -43,8 +40,6 @@ static bool allowX11ColorNames = false;
 #include <math.h>
 #include <stdio.h>
 #include <limits.h>
-
-QT_BEGIN_NAMESPACE
 
 #define QCOLOR_INT_RANGE_CHECK(fn, var) \
     do { \
@@ -155,7 +150,8 @@ QColor::QColor(Spec spec)
 QString QColor::name() const
 {
    QString s;
-   s.sprintf("#%02x%02x%02x", red(), green(), blue());
+   s = QString("#%1%2%3").formatArg(red(), 2, 16, '0').formatArg(green(), 2, 16, '0').formatArg(blue(), 2, 16, '0');
+
    return s;
 }
 
@@ -166,7 +162,7 @@ void QColor::setNamedColor(const QString &name)
 
 bool QColor::isValidColor(const QString &name)
 {
-   return !name.isEmpty() && QColor().setColorFromString(name);
+   return ! name.isEmpty() && QColor().setColorFromString(name);
 }
 
 bool QColor::setColorFromString(const QString &name)
@@ -176,11 +172,13 @@ bool QColor::setColorFromString(const QString &name)
       return true;
    }
 
-   if (name.startsWith(QLatin1Char('#'))) {
+   if (name.startsWith('#')) {
       QRgb rgb;
-      if (qt_get_hex_rgb(name.constData(), name.length(), &rgb)) {
+
+      if (qt_get_hex_rgb(name, &rgb)) {
          setRgb(rgb);
          return true;
+
       } else {
          invalidate();
          return false;
@@ -189,17 +187,19 @@ bool QColor::setColorFromString(const QString &name)
 
 #ifndef QT_NO_COLORNAMES
    QRgb rgb;
-   if (qt_get_named_rgb(name.constData(), name.length(), &rgb)) {
+
+   if (qt_get_named_rgb(name, &rgb)) {
       setRgba(rgb);
       return true;
    } else
 #endif
+
    {
+
 #ifdef Q_WS_X11
       XColor result;
-      if (allowX11ColorNames()
-            && QApplication::instance()
-            && QX11Info::display()
+
+      if (allowX11ColorNames() && QApplication::instance() && QX11Info::display()
             && XParseColor(QX11Info::display(), QX11Info::appColormap(), name.toLatin1().constData(), &result)) {
          setRgb(result.red >> 8, result.green >> 8, result.blue >> 8);
          return true;
@@ -410,12 +410,6 @@ void QColor::getRgb(int *r, int *g, int *b, int *a) const
    }
 }
 
-/*!
-    \obsolete
-    \fn void QColor::getRgba(int *r, int *g, int *b, int *a) const
-
-    Use getRgb() instead.
-*/
 void QColor::setRgbF(qreal r, qreal g, qreal b, qreal a)
 {
    if (r < qreal(0.0) || r > qreal(1.0)
@@ -1518,21 +1512,8 @@ QDebug operator<<(QDebug dbg, const QColor &c)
    return dbg.space();
 }
 
-#ifndef QT_NO_DATASTREAM
-
 QDataStream &operator<<(QDataStream &stream, const QColor &color)
 {
-   if (stream.version() < 7) {
-      if (!color.isValid()) {
-         return stream << quint32(0x49000000);
-      }
-      quint32 p = (quint32)color.rgb();
-      if (stream.version() == 1) { // Swap red and blue
-         p = ((p << 16) & 0xff0000) | ((p >> 16) & 0xff) | (p & 0xff00ff00);
-      }
-      return stream << p;
-   }
-
    qint8   s = color.cspec;
    quint16 a = color.ct.argb.alpha;
    quint16 r = color.ct.argb.red;
@@ -1552,20 +1533,6 @@ QDataStream &operator<<(QDataStream &stream, const QColor &color)
 
 QDataStream &operator>>(QDataStream &stream, QColor &color)
 {
-   if (stream.version() < 7) {
-      quint32 p;
-      stream >> p;
-      if (p == 0x49000000) {
-         color.invalidate();
-         return stream;
-      }
-      if (stream.version() == 1) { // Swap red and blue
-         p = ((p << 16) & 0xff0000) | ((p >> 16) & 0xff) | (p & 0xff00ff00);
-      }
-      color.setRgb(p);
-      return stream;
-   }
-
    qint8 s;
    quint16 a, r, g, b, p;
    stream >> s;
@@ -1584,6 +1551,4 @@ QDataStream &operator>>(QDataStream &stream, QColor &color)
 
    return stream;
 }
-#endif // QT_NO_DATASTREAM
 
-QT_END_NAMESPACE

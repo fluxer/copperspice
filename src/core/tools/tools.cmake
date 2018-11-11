@@ -1,17 +1,11 @@
 set(CORE_PUBLIC_INCLUDES
     ${CORE_PUBLIC_INCLUDES}
-    QAbstractConcatenable
     QArrayData
     QBitArray
     QBitRef
     QByteArray
     QByteRef
-    QByteArrayMatcher
     QCache
-    QChar
-    QCharRef
-    QConcatenable
-    QConstString
     QContiguousCache
     QContiguousCacheData
     QContiguousCacheTypedData
@@ -23,15 +17,9 @@ set(CORE_PUBLIC_INCLUDES
     QEasingCurve
     QElapsedTimer
     QExplicitlySharedDataPointer
+    QFlatMap
     QHash
-    QHashData
-    QHashDummyNode
-    QHashDummyValue
     QHashIterator
-    QHashNode
-    QLatin1Char
-    QLatin1Literal
-    QLatin1String
     QLine
     QLineF
     QLinkedList
@@ -39,15 +27,12 @@ set(CORE_PUBLIC_INCLUDES
     QLinkedListIterator
     QLinkedListNode
     QList
-    QListData
     QListIterator
     QLocale
     QMap
-    QMapData
     QMapIterator
-    QMapNode
-    QMapPayloadNode
     QMargins
+    QMessageAuthenticationCode
     QMultiHash
     QMultiMap
     QMutableHashIterator
@@ -63,7 +48,6 @@ set(CORE_PUBLIC_INCLUDES
     QQueue
     QRect
     QRectF
-    QRegExp
     QScopedArrayPointer
     QScopedPointer
     QScopedPointerArrayDeleter
@@ -78,13 +62,8 @@ set(CORE_PUBLIC_INCLUDES
     QSize
     QSizeF
     QStack
-    QStdWString
-    QString
-    QStringBuilder
     QStringList
     QStringListIterator
-    QStringMatcher
-    QStringRef
     QSystemLocale
     QTextBoundaryFinder
     QTime
@@ -101,7 +80,6 @@ set(CORE_PUBLIC_INCLUDES
 
 set(CORE_INCLUDES
     ${CORE_INCLUDES}
-    ${CMAKE_CURRENT_SOURCE_DIR}/tools/qabstractconcatenable.h
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qalgorithms.h
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qarraydata.h
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qarraydataops.h
@@ -109,12 +87,7 @@ set(CORE_INCLUDES
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qbitref.h
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qbytearray.h
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qbyteref.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/tools/qbytearraymatcher.h
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qcache.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/tools/qchar.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/tools/qcharref.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/tools/qconcatenable.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/tools/qconststring.h
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qcontainerfwd.h
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qcontiguouscache.h
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qcontiguouscachedata.h
@@ -127,16 +100,11 @@ set(CORE_INCLUDES
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qeasingcurve.h
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qelapsedtimer.h
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qexplicitlyshareddatapointer.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/tools/qflatmap.h
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qhash.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/tools/qhashfunc.h
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qhashfwd.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/tools/qhashdata.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/tools/qhashdummynode.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/tools/qhashdummyvalue.h
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qhashiterator.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/tools/qhashnode.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/tools/qlatin1char.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/tools/qlatin1literal.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/tools/qlatin1string.h
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qline.h
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qlinef.h
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qlinkedlist.h
@@ -144,15 +112,13 @@ set(CORE_INCLUDES
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qlinkedlistiterator.h
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qlinkedlistnode.h
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qlist.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/tools/qlistdata.h
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qlistiterator.h
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qlocale.h
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qmap.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/tools/qmapdata.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/tools/qmapfunc.h
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qmapiterator.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/tools/qmapnode.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/tools/qmappayloadnode.h
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qmargins.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/tools/qmessageauthenticationcode.h
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qmultihash.h
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qmultimap.h
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qmutablehashiterator.h
@@ -169,7 +135,6 @@ set(CORE_INCLUDES
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qrect.h
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qrectf.h
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qrefcount.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/tools/qregexp.h
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qscopedarraypointer.h
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qscopedpointer.h
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qscopedpointerarraydeleter.h
@@ -185,13 +150,8 @@ set(CORE_INCLUDES
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qsize.h
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qsizef.h
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qstack.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/tools/qstdwstring.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/tools/qstring.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/tools/qstringbuilder.h
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qstringlist.h
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qstringlistiterator.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/tools/qstringmatcher.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/tools/qstringref.h
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qsystemlocale.h
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qtalgorithms.h
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qtcontainerfwd.h
@@ -228,12 +188,12 @@ set(CORE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qarraydata.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qbitarray.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qbytearray.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/tools/qbytearraymatcher.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qcryptographichash.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qdatetime.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qeasingcurve.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qelapsedtimer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qfreelist.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/tools/qflatmap.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qhash.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qline.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qlinkedlist.cpp
@@ -243,23 +203,21 @@ set(CORE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qpoint.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qmap.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qmargins.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/tools/qmessageauthenticationcode.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qcontiguouscache.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qcommandlineoption.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qcommandlineparser.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qrect.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qrefcount.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/tools/qregexp.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qshareddata.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qsharedpointer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qsimd.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qsize.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/tools/qstring.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/tools/qstringbuilder.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qstringlist.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qtextboundaryfinder.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qtimeline.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/tools/qvector.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/tools/qvsnprintf.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/tools/qharfbuzz.cpp
     ${CMAKE_SOURCE_DIR}/src/3rdparty/harfbuzz/src/harfbuzz-buffer.c
     ${CMAKE_SOURCE_DIR}/src/3rdparty/harfbuzz/src/harfbuzz-gdef.c
     ${CMAKE_SOURCE_DIR}/src/3rdparty/harfbuzz/src/harfbuzz-gsub.c
@@ -268,13 +226,7 @@ set(CORE_SOURCES
     ${CMAKE_SOURCE_DIR}/src/3rdparty/harfbuzz/src/harfbuzz-open.c
     ${CMAKE_SOURCE_DIR}/src/3rdparty/harfbuzz/src/harfbuzz-stream.c
     ${CMAKE_SOURCE_DIR}/src/3rdparty/harfbuzz/src/harfbuzz-shaper-all.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/tools/qharfbuzz.cpp
 )
-
-# FIXME platform specific
-#  qelapsedtimer_mac.cpp
-#  qlocale_mac.mm
-#  qelapsedtimer_generic.cpp
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
     set(CORE_SOURCES
@@ -293,5 +245,6 @@ elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
         ${CORE_SOURCES}
         ${CMAKE_CURRENT_SOURCE_DIR}/tools/qelapsedtimer_mac.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/tools/qlocale_mac.mm
+        ${CMAKE_CURRENT_SOURCE_DIR}/tools/qbytearray_mac.mm
     )
 endif()

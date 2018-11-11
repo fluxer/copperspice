@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -29,7 +26,7 @@
 #include <qvariant.h>
 #include <qdatetime.h>
 #include <qmetatype.h>
-#include <qregexp.h>
+#include <qregularexpression.h>
 #include <qshareddata.h>
 #include <qsqlerror.h>
 #include <qsqlfield.h>
@@ -69,8 +66,6 @@
 Q_DECLARE_METATYPE(OCIEnv *)
 Q_DECLARE_METATYPE(OCIStmt *)
 
-QT_BEGIN_NAMESPACE
-
 #if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
 enum { QOCIEncoding = 2002 }; // AL16UTF16LE
 #else
@@ -97,21 +92,16 @@ typedef QVarLengthArray<ub2, 32> SizeArray;
 static QByteArray qMakeOraDate(const QDateTime &dt);
 static QDateTime qMakeDate(const char *oraDate);
 
-static QByteArray qMakeOCINumber(const qlonglong &ll, OCIError *err);
-static QByteArray qMakeOCINumber(const qulonglong &ull, OCIError *err);
+static QByteArray qMakeOCINumber(const qint64 &ll, OCIError *err);
+static QByteArray qMakeOCINumber(const quint64 &ull, OCIError *err);
 
-static qlonglong qMakeLongLong(const char *ociNumber, OCIError *err);
-static qulonglong qMakeULongLong(const char *ociNumber, OCIError *err);
+static qint64 qMakeLongLong(const char *ociNumber, OCIError *err);
+static quint64 qMakeULongLong(const char *ociNumber, OCIError *err);
 
 static QString qOraWarn(OCIError *err, int *errorCode = 0);
 
-#ifndef Q_CC_SUN
-static // for some reason, Sun CC can't use qOraWarning when it's declared static
-#endif
-void qOraWarning(const char *msg, OCIError *err);
+static void qOraWarning(const char *msg, OCIError *err);
 static QSqlError qMakeError(const QString &errString, QSqlError::ErrorType type, OCIError *err);
-
-
 
 class QOCIRowId: public QSharedData
 {
@@ -142,9 +132,7 @@ QOCIRowId::~QOCIRowId()
 }
 
 typedef QSharedDataPointer<QOCIRowId> QOCIRowIdPointer;
-QT_BEGIN_INCLUDE_NAMESPACE
 Q_DECLARE_METATYPE(QOCIRowIdPointer)
-QT_END_INCLUDE_NAMESPACE
 
 class QOCICols;
 
@@ -710,50 +698,40 @@ QByteArray qMakeOraDate(const QDateTime &dt)
 /*!
   \internal
 
-   Convert qlonglong to the internal Oracle OCINumber format.
+   Convert qint64 to the internal Oracle OCINumber format.
   */
-QByteArray qMakeOCINumber(const qlonglong &ll, OCIError *err)
+QByteArray qMakeOCINumber(const qint64 &ll, OCIError *err)
 {
    QByteArray ba(sizeof(OCINumber), 0);
 
-   OCINumberFromInt(err,
-                    &ll,
-                    sizeof(qlonglong),
-                    OCI_NUMBER_SIGNED,
-                    reinterpret_cast<OCINumber *>(ba.data()));
+   OCINumberFromInt(err, &ll, sizeof(qint64), OCI_NUMBER_SIGNED, reinterpret_cast<OCINumber *>(ba.data()));
    return ba;
 }
 
 /*!
   \internal
 
-   Convert qulonglong to the internal Oracle OCINumber format.
+   Convert quint64 to the internal Oracle OCINumber format.
   */
-QByteArray qMakeOCINumber(const qulonglong &ull, OCIError *err)
+QByteArray qMakeOCINumber(const quint64 &ull, OCIError *err)
 {
    QByteArray ba(sizeof(OCINumber), 0);
 
-   OCINumberFromInt(err,
-                    &ull,
-                    sizeof(qlonglong),
-                    OCI_NUMBER_UNSIGNED,
-                    reinterpret_cast<OCINumber *>(ba.data()));
+   OCINumberFromInt(err, &ull, sizeof(qint64), OCI_NUMBER_UNSIGNED, reinterpret_cast<OCINumber *>(ba.data()));
    return ba;
 }
 
-qlonglong qMakeLongLong(const char *ociNumber, OCIError *err)
+qint64 qMakeLongLong(const char *ociNumber, OCIError *err)
 {
-   qlonglong qll = 0;
-   OCINumberToInt(err, reinterpret_cast<const OCINumber *>(ociNumber), sizeof(qlonglong),
-                  OCI_NUMBER_SIGNED, &qll);
+   qint64 qll = 0;
+   OCINumberToInt(err, reinterpret_cast<const OCINumber *>(ociNumber), sizeof(qint64), OCI_NUMBER_SIGNED, &qll);
    return qll;
 }
 
-qulonglong qMakeULongLong(const char *ociNumber, OCIError *err)
+quint64 qMakeULongLong(const char *ociNumber, OCIError *err)
 {
-   qulonglong qull = 0;
-   OCINumberToInt(err, reinterpret_cast<const OCINumber *>(ociNumber), sizeof(qulonglong),
-                  OCI_NUMBER_UNSIGNED, &qull);
+   quint64 qull = 0;
+   OCINumberToInt(err, reinterpret_cast<const OCINumber *>(ociNumber), sizeof(quint64), OCI_NUMBER_UNSIGNED, &qull);
    return qull;
 }
 
@@ -2239,7 +2217,7 @@ bool QOCIDriver::open(const QString &db,
    if (!hostname.isEmpty())
       connectionString =
          QString::fromLatin1("(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(Host=%1)(Port=%2))"
-                             "(CONNECT_DATA=(SID=%3)))").arg(hostname).arg((port > -1 ? port : 1521)).arg(db);
+                             "(CONNECT_DATA=(SID=%3)))").formatArg(hostname).formatArg((port > -1 ? port : 1521)).formatArg(db);
 
    r = OCIHandleAlloc(d->env, reinterpret_cast<void **>(&d->srvhp), OCI_HTYPE_SERVER, 0, 0);
    if (r == OCI_SUCCESS)
@@ -2434,8 +2412,11 @@ QStringList QOCIDriver::tables(QSql::TableType type) const
    if (type & QSql::Tables) {
       QString query = QLatin1String("select owner, table_name from all_tables where ");
       QStringList whereList;
-      foreach(const QString & sysUserName, sysUsers)
-      whereList << QLatin1String("owner != '") + sysUserName + QLatin1String("' ");
+
+      for (const QString & sysUserName : sysUsers) {
+         whereList << QLatin1String("owner != '") + sysUserName + QLatin1String("' ");
+      }
+
       t.exec(query + whereList.join(QLatin1String(" and ")));
 
       while (t.next()) {
@@ -2460,8 +2441,11 @@ QStringList QOCIDriver::tables(QSql::TableType type) const
    if (type & QSql::Views) {
       QString query = QLatin1String("select owner, view_name from all_views where ");
       QStringList whereList;
-      foreach(const QString & sysUserName, sysUsers)
-      whereList << QLatin1String("owner != '") + sysUserName + QLatin1String("' ");
+
+      for (const QString & sysUserName : sysUsers) {
+         whereList << QLatin1String("owner != '") + sysUserName + QLatin1String("' ");
+      }
+
       t.exec(query + whereList.join(QLatin1String(" and ")));
       while (t.next()) {
          if (t.value(0).toString().toUpper() != d->user.toUpper()) {
@@ -2478,8 +2462,11 @@ QStringList QOCIDriver::tables(QSql::TableType type) const
       }
       QString query = QLatin1String("select owner, table_name from all_tables where ");
       QStringList whereList;
-      foreach(const QString & sysUserName, sysUsers)
-      whereList << QLatin1String("owner = '") + sysUserName + QLatin1String("' ");
+
+      for (const QString & sysUserName : sysUsers) {
+         whereList << QLatin1String("owner = '") + sysUserName + QLatin1String("' ");
+      }
+
       t.exec(query + whereList.join(QLatin1String(" or ")));
 
       while (t.next()) {
@@ -2531,9 +2518,9 @@ QSqlRecord QOCIDriver::record(const QString &tablename) const
                               "from all_tab_columns a "
                               "where a.table_name=%2"));
    if (d->serverVersion >= 9) {
-      stmt = stmt.arg(QLatin1String(", char_length "));
+      stmt = stmt.formatArg(QLatin1String(", char_length "));
    } else {
-      stmt = stmt.arg(QLatin1String(" "));
+      stmt = stmt.formatArg(QLatin1String(" "));
    }
    bool buildRecordInfo = false;
    QString table, owner, tmpStmt;
@@ -2545,7 +2532,7 @@ QSqlRecord QOCIDriver::record(const QString &tablename) const
       table = table.toUpper();
    }
 
-   tmpStmt = stmt.arg(QLatin1Char('\'') + table + QLatin1Char('\''));
+   tmpStmt = stmt.formatArg(QLatin1Char('\'') + table + QLatin1Char('\''));
    if (owner.isEmpty()) {
       owner = d->user;
    }
@@ -2733,5 +2720,3 @@ QString QOCIDriver::escapeIdentifier(const QString &identifier, IdentifierType t
    }
    return res;
 }
-
-QT_END_NAMESPACE

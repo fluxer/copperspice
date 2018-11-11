@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,13 +23,11 @@
 #ifndef QVALIDATOR_H
 #define QVALIDATOR_H
 
-#include <QtCore/qobject.h>
-#include <QtCore/qstring.h>
-#include <QtCore/qregexp.h>
-#include <QtCore/qlocale.h>
-#include <QScopedPointer>
-
-QT_BEGIN_NAMESPACE
+#include <qobject.h>
+#include <qstring.h>
+#include <qregularexpression.h>
+#include <qlocale.h>
+#include <qscopedpointer.h>
 
 #ifndef QT_NO_VALIDATOR
 
@@ -43,7 +38,7 @@ class Q_GUI_EXPORT QValidator : public QObject
    GUI_CS_OBJECT(QValidator)
 
  public:
-   explicit QValidator(QObject *parent = 0);
+   explicit QValidator(QObject *parent = nullptr);
    ~QValidator();
 
    enum State {
@@ -83,12 +78,12 @@ class Q_GUI_EXPORT QIntValidator : public QValidator
    GUI_CS_PROPERTY_NOTIFY(top, topChanged)
 
  public:
-   explicit QIntValidator(QObject *parent = 0);
-   QIntValidator(int bottom, int top, QObject *parent = 0);
+   explicit QIntValidator(QObject *parent = nullptr);
+   QIntValidator(int bottom, int top, QObject *parent = nullptr);
    ~QIntValidator();
 
-   QValidator::State validate(QString &, int &) const;
-   void fixup(QString &input) const;
+   QValidator::State validate(QString &, int &) const override;
+   void fixup(QString &input) const override;
 
    void setBottom(int);
    void setTop(int);
@@ -119,10 +114,7 @@ int QIntValidator::top() const
    return t;
 }
 
-
-
-#ifndef QT_NO_REGEXP
-
+// **
 class QDoubleValidatorPrivate;
 class QRegularExpressionValidatorPrivate;
 
@@ -146,15 +138,15 @@ class Q_GUI_EXPORT QDoubleValidator : public QValidator
    GUI_CS_PROPERTY_NOTIFY(notation, notationChanged)
 
  public:
-   explicit QDoubleValidator(QObject *parent = 0);
-   QDoubleValidator(double bottom, double top, int decimals, QObject *parent = 0);
+   explicit QDoubleValidator(QObject *parent = nullptr);
+   QDoubleValidator(double bottom, double top, int decimals, QObject *parent = nullptr);
    ~QDoubleValidator();
 
    enum Notation {
       StandardNotation,
       ScientificNotation
    };
-   QValidator::State validate(QString &, int &) const;
+   QValidator::State validate(QString &, int &) const override;
 
    virtual void setRange(double bottom, double top, int decimals = 0);
    void setBottom(double);
@@ -185,33 +177,6 @@ class Q_GUI_EXPORT QDoubleValidator : public QValidator
    int dec;
 };
 
-class Q_GUI_EXPORT QRegExpValidator : public QValidator
-{
-   GUI_CS_OBJECT(QRegExpValidator)
-
-   GUI_CS_PROPERTY_READ(regExp, regExp)
-   GUI_CS_PROPERTY_WRITE(regExp, setRegExp)
-   GUI_CS_PROPERTY_NOTIFY(regExp, regExpChanged)
-
- public:
-   explicit QRegExpValidator(QObject *parent = 0);
-   QRegExpValidator(const QRegExp &rx, QObject *parent = 0);
-   ~QRegExpValidator();
-
-   virtual QValidator::State validate(QString &input, int &pos) const;
-
-   void setRegExp(const QRegExp &rx);
-   inline const QRegExp &regExp() const;
-
-   GUI_CS_SIGNAL_1(Public, void regExpChanged(const QRegExp &regExp))
-   GUI_CS_SIGNAL_2(regExpChanged, regExp)
-
- private:
-   Q_DISABLE_COPY(QRegExpValidator)
-
-   QRegExp r;
-};
-
 class Q_GUI_EXPORT QRegularExpressionValidator : public QValidator
 {
    GUI_CS_OBJECT(QRegularExpressionValidator)
@@ -221,29 +186,27 @@ class Q_GUI_EXPORT QRegularExpressionValidator : public QValidator
    GUI_CS_PROPERTY_NOTIFY(regularExpression, regularExpressionChanged)
 
  public:
-   explicit QRegularExpressionValidator(QObject *parent = 0);
-   explicit QRegularExpressionValidator(const QRegExp &re, QObject *parent = 0);
+   explicit QRegularExpressionValidator(QObject *parent = nullptr);
+   explicit QRegularExpressionValidator(const QRegularExpression &regExp, QObject *parent = nullptr);
+
    ~QRegularExpressionValidator();
 
-   virtual QValidator::State validate(QString &input, int &pos) const;
+   QValidator::State validate(QString &input, int &pos) const override;
 
-   QRegExp regularExpression() const;
+   const QRegularExpression &regularExpression() const;
 
-   GUI_CS_SLOT_1(Public, void setRegularExpression(const QRegExp &re))
+   GUI_CS_SIGNAL_1(Public, void regularExpressionChanged(const QRegularExpression &regExp))
+   GUI_CS_SIGNAL_2(regularExpressionChanged, regExp)
+
+   GUI_CS_SLOT_1(Public, void setRegularExpression(const QRegularExpression &regExp))
    GUI_CS_SLOT_2(setRegularExpression)
 
-   GUI_CS_SIGNAL_1(Public, void regularExpressionChanged(const QRegExp &re))
-   GUI_CS_SIGNAL_2(regularExpressionChanged, re)
-
  private:
+   QRegularExpression m_regexp;
+
    Q_DISABLE_COPY(QRegularExpressionValidator)
    Q_DECLARE_PRIVATE(QRegularExpressionValidator)
 };
-
-const QRegExp &QRegExpValidator::regExp() const
-{
-   return r;
-}
 
 double QDoubleValidator::bottom() const
 {
@@ -260,11 +223,6 @@ int QDoubleValidator::decimals() const
    return dec;
 }
 
-#endif // QT_NO_REGEXP
-
-
 #endif // QT_NO_VALIDATOR
-
-QT_END_NAMESPACE
 
 #endif // QVALIDATOR_H

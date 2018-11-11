@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -27,9 +24,8 @@
 #include "uic.h"
 #include "ui4.h"
 
-#include <QtCore/QRegExp>
-#include <QtCore/QFileInfo>
-#include <QtCore/QDebug>
+#include <qfileinfo.h>
+#include <qdebug.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -121,13 +117,15 @@ QString Driver::findOrInsertButtonGroup(const DomButtonGroup *ui_group)
 const DomButtonGroup *Driver::findButtonGroup(const QString &attributeName) const
 {
    const ButtonGroupNameHash::const_iterator cend = m_buttonGroups.constEnd();
-   for (ButtonGroupNameHash::const_iterator it = m_buttonGroups.constBegin(); it != cend; ++it)
+
+   for (auto it = m_buttonGroups.constBegin(); it != cend; ++it)  {
       if (it.key()->attributeName() == attributeName) {
          return it.key();
       }
+   }
+
    return 0;
 }
-
 
 QString Driver::findOrInsertName(const QString &name)
 {
@@ -136,14 +134,18 @@ QString Driver::findOrInsertName(const QString &name)
 
 QString Driver::normalizedName(const QString &name)
 {
-   QString result = name;
-   QChar *data = result.data();
-   for (int i = name.size(); --i >= 0; ++data) {
-      if (!data->isLetterOrNumber()) {
-         *data = QLatin1Char('_');
+   QString retval;
+
+   for (QChar c : name) {
+
+      if (c.isLetterOrNumber()) {
+         retval.append(c);
+      } else {
+         retval.append('_');
       }
    }
-   return result;
+
+   return retval;
 }
 
 QString Driver::unique(const QString &instanceName, const QString &className)
@@ -161,6 +163,7 @@ QString Driver::unique(const QString &instanceName, const QString &className)
          alreadyUsed = true;
          name = base + QString::number(id++);
       }
+
    } else if (className.size()) {
       name = unique(qtify(className));
    } else {
@@ -169,12 +172,11 @@ QString Driver::unique(const QString &instanceName, const QString &className)
 
    if (alreadyUsed && className.size()) {
       fprintf(stderr, "%s: Warning: The name '%s' (%s) is already in use, defaulting to '%s'.\n",
-              qPrintable(m_option.messagePrefix()),
-              qPrintable(instanceName), qPrintable(className),
-              qPrintable(name));
+              qPrintable(m_option.messagePrefix()), qPrintable(instanceName), qPrintable(className), qPrintable(name));
    }
 
    m_nameRepository.insert(name, true);
+
    return name;
 }
 
@@ -182,16 +184,19 @@ QString Driver::qtify(const QString &name)
 {
    QString qname = name;
 
-   if (qname.at(0) == QLatin1Char('Q') || qname.at(0) == QLatin1Char('K')) {
+   if (qname.startsWith('Q') || qname.startsWith('K')) {
       qname = qname.mid(1);
    }
 
    int i = 0;
    while (i < qname.length()) {
+
       if (qname.at(i).toLower() != qname.at(i)) {
-         qname[i] = qname.at(i).toLower();
+         qname.replace(i, 1,  qname.at(i).toLower());
+
       } else {
          break;
+
       }
 
       ++i;
@@ -254,35 +259,41 @@ bool Driver::printDependencies(const QString &fileName)
 
 bool Driver::uic(const QString &fileName, DomUI *ui, QTextStream *out)
 {
-   m_option.inputFile = fileName;
-
+   m_option.inputFile     = fileName;
    QTextStream *oldOutput = m_output;
 
-   m_output = out != 0 ? out : &m_stdout;
+   if (out != nullptr) {
+      m_output = out;
+   } else {
+      m_output =&m_stdout;
+   }
 
    Uic tool(this);
-   bool rtn = false;
+   bool retval = false;
+
 #ifdef QT_UIC_CPP_GENERATOR
-   rtn = tool.write(ui);
+   retval = tool.write(ui);
 #else
    Q_UNUSED(ui);
-   fprintf(stderr, "uic: option to generate cpp code not compiled in [%s:%d]\n",
-           __FILE__, __LINE__);
+   fprintf(stderr, "Uic: option to generate cpp code not compiled in [%s:%d]\n", __FILE__, __LINE__);
 #endif
 
    m_output = oldOutput;
 
-   return rtn;
+   return retval;
 }
 
 bool Driver::uic(const QString &fileName, QTextStream *out)
 {
    QFile f;
+
    if (fileName.isEmpty()) {
       f.open(stdin, QIODevice::ReadOnly);
+
    } else {
       f.setFileName(fileName);
-      if (!f.open(QIODevice::ReadOnly)) {
+
+      if (! f.open(QIODevice::ReadOnly)) {
          return false;
       }
    }
@@ -294,7 +305,9 @@ bool Driver::uic(const QString &fileName, QTextStream *out)
 
    if (out) {
       m_output = out;
+
    } else {
+
 #ifdef Q_OS_WIN
       // As one might also redirect the output to a file on win,
       // we should not create the textstream with QFile::Text flag.
@@ -304,11 +317,13 @@ bool Driver::uic(const QString &fileName, QTextStream *out)
 #else
       m_output = new QTextStream(stdout, QIODevice::WriteOnly | QFile::Text);
 #endif
+
       deleteOutput = true;
    }
 
    Uic tool(this);
-   bool rtn = tool.write(&f);
+   bool retval = tool.write(&f);
+
    f.close();
 
    if (deleteOutput) {
@@ -317,12 +332,12 @@ bool Driver::uic(const QString &fileName, QTextStream *out)
 
    m_output = oldOutput;
 
-   return rtn;
+   return retval;
 }
 
 void Driver::reset()
 {
-   Q_ASSERT( m_output == 0 );
+   Q_ASSERT( m_output == 0);
 
    m_option = Option();
    m_output = 0;

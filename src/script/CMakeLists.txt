@@ -5,26 +5,17 @@ add_definitions(
     -DQLALR_NO_QSCRIPTGRAMMAR_DEBUG_INFO
     -DWTF_USE_JAVASCRIPTCORE_BINDINGS=1
     -DWTF_CHANGES=1
-    -DBUILDING_QT__=1
+    -DBUILDING_CS=1
     -DWTF_USE_ACCELERATED_COMPOSITING
     -DJSC=QTJSC
     -Djscyyparse=qtjscyyparse
     -Djscyylex=qtjscyylex
     -Djscyyerror=qtjscyyerror
     -DWTF=QTWTF
-    -UHAVE_CONFIG_H
     -DUSE_SYSTEM_MALLOC
     -DQT_BUILD_SCRIPT_LIB
-    -DQT_SHARED
-    -DQT_MAKEDLL
-#   -DWTF_USE_JAVASCRIPTCORE_BINDINGS=1 -DWTF_CHANGES=1
-#   -DBUILDING_QT__
-#   -DBUILDING_JavaScriptCore -DBUILDING_WTF
-#   -DJSC=QTJSC -Djscyyparse=qtjscyyparse -Djscyylex=qtjscyylex
-#   -Djscyyerror=qtjscyyerror -DWTF=QTWTF -DWTF_EXPORT_PRIVATE="" -DQT_MAKEDLL
-#   -DWTF_USE_JSC -DWTF_PLATFORM_QT=1
 )
-set(EXTRA_SCRIPT_LIBS CsCore${BUILD_MAJOR})
+set(EXTRA_SCRIPT_LIBS CsCore${BUILD_ABI})
 set(EXTRA_SCRIPT_CXXFLAGS)
 set(EXTRA_SCRIPT_LDFLAGS)
 
@@ -323,10 +314,7 @@ set(SCRIPT_INCLUDES
     ${CMAKE_SOURCE_DIR}/src/3rdparty/javascriptcore/JavaScriptCore/wtf/Assertions.h
     ${CMAKE_SOURCE_DIR}/src/3rdparty/javascriptcore/JavaScriptCore/wtf/unicode/Collator.h
     ${CMAKE_SOURCE_DIR}/src/3rdparty/javascriptcore/JavaScriptCore/wtf/unicode/qt4/UnicodeQt4.h
-    ${CMAKE_SOURCE_DIR}/src/3rdparty/javascriptcore/JavaScriptCore/wtf/unicode/glib/UnicodeGLib.h
-    ${CMAKE_SOURCE_DIR}/src/3rdparty/javascriptcore/JavaScriptCore/wtf/unicode/glib/UnicodeMacrosFromICU.h
     ${CMAKE_SOURCE_DIR}/src/3rdparty/javascriptcore/JavaScriptCore/wtf/unicode/UTF8.h
-    ${CMAKE_SOURCE_DIR}/src/3rdparty/javascriptcore/JavaScriptCore/wtf/unicode/icu/UnicodeIcu.h
     ${CMAKE_SOURCE_DIR}/src/3rdparty/javascriptcore/JavaScriptCore/wtf/unicode/Unicode.h
     ${CMAKE_SOURCE_DIR}/src/3rdparty/javascriptcore/JavaScriptCore/wtf/Locker.h
     ${CMAKE_SOURCE_DIR}/src/3rdparty/javascriptcore/JavaScriptCore/wtf/StringExtras.h
@@ -510,7 +498,6 @@ set(SCRIPT_SOURCES
     ${CMAKE_SOURCE_DIR}/src/3rdparty/javascriptcore/JavaScriptCore/wtf/Threading.cpp
     ${CMAKE_SOURCE_DIR}/src/3rdparty/javascriptcore/JavaScriptCore/wtf/TypeTraits.cpp
     ${CMAKE_SOURCE_DIR}/src/3rdparty/javascriptcore/JavaScriptCore/wtf/unicode/CollatorDefault.cpp
-    ${CMAKE_SOURCE_DIR}/src/3rdparty/javascriptcore/JavaScriptCore/wtf/unicode/icu/CollatorICU.cpp
     ${CMAKE_SOURCE_DIR}/src/3rdparty/javascriptcore/JavaScriptCore/wtf/unicode/UTF8.cpp
     ${CMAKE_SOURCE_DIR}/src/3rdparty/javascriptcore/JavaScriptCore/yarr/RegexCompiler.cpp
     ${CMAKE_SOURCE_DIR}/src/3rdparty/javascriptcore/JavaScriptCore/yarr/RegexInterpreter.cpp
@@ -549,9 +536,15 @@ endif()
 function_variable_fixup("${EXTRA_SCRIPT_CXXFLAGS}" EXTRA_SCRIPT_CXXFLAGS)
 function_variable_fixup("${EXTRA_SCRIPT_LDFLAGS}" EXTRA_SCRIPT_LDFLAGS)
 
-add_library(CsScript${BUILD_MAJOR} SHARED ${SCRIPT_SOURCES} ${SCRIPT_INCLUDES})
-target_link_libraries(CsScript${BUILD_MAJOR} ${EXTRA_SCRIPT_LIBS})
-set_target_properties(CsScript${BUILD_MAJOR} PROPERTIES
+add_library(CsScript${BUILD_ABI} SHARED ${SCRIPT_SOURCES} ${SCRIPT_INCLUDES})
+target_link_libraries(CsScript${BUILD_ABI} ${EXTRA_SCRIPT_LIBS})
+
+target_include_directories(CsScript${BUILD_ABI}
+   PUBLIC
+   $<INSTALL_INTERFACE:include/QtScript>
+)
+
+set_target_properties(CsScript${BUILD_ABI} PROPERTIES
     VERSION "0" # for compat
     SOVERSION "0.0.0" # for compat
     COMPILE_FLAGS ${EXTRA_SCRIPT_CXXFLAGS}
@@ -560,17 +553,18 @@ set_target_properties(CsScript${BUILD_MAJOR} PROPERTIES
 
 macro_generate_resources("${SCRIPT_SOURCES}")
 macro_generate_package(
-    CsScript${BUILD_MAJOR}
+    CsScript${BUILD_ABI}
     QtScript
     "${EXTRA_SCRIPT_CXXFLAGS}"
-    "${EXTRA_SCRIPT_LIBS}"
-    "CsCore${BUILD_MAJOR}"
+    "CsCore${BUILD_ABI}"
 )
 
 install(
-    TARGETS CsScript${BUILD_MAJOR}
+    TARGETS CsScript${BUILD_ABI}
     EXPORT CopperSpiceLibraryTargets ${INSTALL_TARGETS_DEFAULT_ARGS}
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
 install(

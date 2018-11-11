@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,8 +23,8 @@
 #ifndef QTEXTCODEC_H
 #define QTEXTCODEC_H
 
-#include <QtCore/qstring.h>
-#include <QtCore/qlist.h>
+#include <qstring.h>
+#include <qlist.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -67,10 +64,6 @@ class Q_CORE_EXPORT QTextCodec
    bool canEncode(QChar) const;
    bool canEncode(const QString &) const;
 
-   QString toUnicode(const QByteArray &) const;
-   QString toUnicode(const char *chars) const;
-   QByteArray fromUnicode(const QString &uc) const;
-
    enum ConversionFlag {
       DefaultConversion,
       ConvertInvalidToNull = 0x80000000,
@@ -81,39 +74,50 @@ class Q_CORE_EXPORT QTextCodec
 
    struct Q_CORE_EXPORT ConverterState {
       ConverterState(ConversionFlags f = DefaultConversion)
-         : flags(f), remainingChars(0), invalidChars(0), d(0) {
-         state_data[0] = state_data[1] = state_data[2] = 0;
+         : flags(f), remainingChars(0), invalidChars(0), d(0)
+      {
+         state_data[0] = 0;
+         state_data[1] = 0;
+         state_data[2] = 0;
       }
+
       ~ConverterState();
+
       ConversionFlags flags;
       int remainingChars;
       int invalidChars;
       uint state_data[3];
       void *d;
+
     private:
       Q_DISABLE_COPY(ConverterState)
    };
 
-   QString toUnicode(const char *in, int length, ConverterState *state = 0) const {
-      return convertToUnicode(in, length, state);
-   }
-   QByteArray fromUnicode(const QChar *in, int length, ConverterState *state = 0) const {
-      return convertFromUnicode(in, length, state);
+   QString toUnicode(const QByteArray &) const;
+   QString toUnicode(const char *chars) const;
+
+   QString toUnicode(const char *in, int len, ConverterState *state = nullptr) const {
+      return convertToUnicode(in, len, state);
    }
 
-   // ### Qt5/merge these functions.
-   QTextDecoder *makeDecoder() const;
-   QTextDecoder *makeDecoder(ConversionFlags flags) const;
-   QTextEncoder *makeEncoder() const;
-   QTextEncoder *makeEncoder(ConversionFlags flags) const;
+   QByteArray fromUnicode(const QString &str, ConverterState *state = nullptr) const {
+      return convertFromUnicode(str, state);
+   }
+
+   QByteArray fromUnicode(QStringView str, ConverterState *state = nullptr) const {
+      return convertFromUnicode(str, state);
+   }
+
+   QTextDecoder *makeDecoder(ConversionFlags flags = DefaultConversion) const;
+   QTextEncoder *makeEncoder(ConversionFlags flags = DefaultConversion) const;
 
    virtual QByteArray name() const = 0;
    virtual QList<QByteArray> aliases() const;
    virtual int mibEnum() const = 0;
 
  protected:
-   virtual QString convertToUnicode(const char *in, int length, ConverterState *state) const = 0;
-   virtual QByteArray convertFromUnicode(const QChar *in, int length, ConverterState *state) const = 0;
+   virtual QString convertToUnicode(const char *in, int len, ConverterState *state) const = 0;
+   virtual QByteArray convertFromUnicode(QStringView str, ConverterState *state) const = 0;
 
    QTextCodec();
    virtual ~QTextCodec();

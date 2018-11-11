@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -236,7 +233,7 @@ class Q_GUI_EXPORT QListWidget : public QListView
    friend class QListModel;
 
  public:
-   explicit QListWidget(QWidget *parent = 0);
+   explicit QListWidget(QWidget *parent = nullptr);
    ~QListWidget();
 
    QListWidgetItem *item(int row) const;
@@ -288,7 +285,7 @@ class Q_GUI_EXPORT QListWidget : public QListView
 
    bool isItemHidden(const QListWidgetItem *item) const;
    void setItemHidden(const QListWidgetItem *item, bool hide);
-   void dropEvent(QDropEvent *event);
+   void dropEvent(QDropEvent *event) override;
 
    GUI_CS_SLOT_1(Public, void scrollToItem(const QListWidgetItem *item, QAbstractItemView::ScrollHint hint = EnsureVisible))
    GUI_CS_SLOT_2(scrollToItem)
@@ -319,7 +316,7 @@ class Q_GUI_EXPORT QListWidget : public QListView
    GUI_CS_SIGNAL_2(itemSelectionChanged)
 
  protected:
-   bool event(QEvent *e);
+   bool event(QEvent *e) override;
    virtual QStringList mimeTypes() const;
    virtual QMimeData *mimeData(const QList<QListWidgetItem *> items) const;
 #ifndef QT_NO_DRAGANDDROP
@@ -332,7 +329,7 @@ class Q_GUI_EXPORT QListWidget : public QListView
    QListWidgetItem *itemFromIndex(const QModelIndex &index) const;
 
  private:
-   void setModel(QAbstractItemModel *model);
+   void setModel(QAbstractItemModel *model) override;
    Qt::SortOrder sortOrder() const;
 
    Q_DECLARE_PRIVATE(QListWidget)

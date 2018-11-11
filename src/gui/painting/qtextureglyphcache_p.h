@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -78,8 +75,7 @@ class Q_GUI_EXPORT QTextureGlyphCache : public QFontEngineGlyphCache
       }
    };
 
-   bool populate(QFontEngine *fontEngine, int numGlyphs, const glyph_t *glyphs,
-                 const QFixedPoint *positions);
+   bool populate(QFontEngine *fontEngine, int numGlyphs, const glyph_t *glyphs, const QFixedPoint *positions);
    void fillInPendingGlyphs();
 
    virtual void createTextureData(int width, int height) = 0;
@@ -146,10 +142,11 @@ class Q_GUI_EXPORT QImageTextureGlyphCache : public QTextureGlyphCache
  public:
    QImageTextureGlyphCache(QFontEngineGlyphCache::Type type, const QTransform &matrix)
       : QTextureGlyphCache(type, matrix) { }
-   virtual int glyphMargin() const;
-   virtual void createTextureData(int width, int height);
-   virtual void resizeTextureData(int width, int height);
-   virtual void fillTexture(const Coord &c, glyph_t glyph, QFixed subPixelPosition);
+
+   int glyphMargin() const override;
+   void createTextureData(int width, int height) override;
+   void resizeTextureData(int width, int height) override;
+   void fillTexture(const Coord &c, glyph_t glyph, QFixed subPixelPosition) override;
 
    inline const QImage &image() const {
       return m_image;

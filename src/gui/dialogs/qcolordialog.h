@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,9 +23,7 @@
 #ifndef QCOLORDIALOG_H
 #define QCOLORDIALOG_H
 
-#include <QtGui/qdialog.h>
-
-QT_BEGIN_NAMESPACE
+#include <qdialog.h>
 
 #ifndef QT_NO_COLORDIALOG
 
@@ -55,8 +50,8 @@ class Q_GUI_EXPORT QColorDialog : public QDialog
 
    using ColorDialogOptions = QFlags<ColorDialogOption>;
 
-   explicit QColorDialog(QWidget *parent = 0);
-   explicit QColorDialog(const QColor &initial, QWidget *parent = 0);
+   explicit QColorDialog(QWidget *parent = nullptr);
+   explicit QColorDialog(const QColor &initial, QWidget *parent = nullptr);
    ~QColorDialog();
 
    void setCurrentColor(const QColor &color);
@@ -70,24 +65,17 @@ class Q_GUI_EXPORT QColorDialog : public QDialog
    ColorDialogOptions options() const;
 
    using QDialog::open;
+   void open(QObject *receiver, const QString &member);
 
-   void open(QObject *receiver, const char *member);
+   void setVisible(bool visible) override;
 
-   void setVisible(bool visible);
+   static QColor getColor(const QColor &initial = Qt::white, QWidget *parent = nullptr,
+                  const QString &title = QString(),  ColorDialogOptions options = 0);
 
-   // ### Qt5/merge overloads with title = QString()
-   static QColor getColor(const QColor &initial, QWidget *parent, const QString &title,
-                          ColorDialogOptions options = 0);
-   static QColor getColor(const QColor &initial = Qt::white, QWidget *parent = 0);
-
-   // obsolete
-   static QRgb getRgba(QRgb rgba = 0xffffffff, bool *ok = 0, QWidget *parent = 0);
-
-   // ### Qt5/use QColor in signatures
    static int customCount();
-   static QRgb customColor(int index);
-   static void setCustomColor(int index, QRgb color);
-   static void setStandardColor(int index, QRgb color);
+   static QColor customColor(int index);
+   static void setCustomColor(int index, QColor color);
+   static void setStandardColor(int index, QColor color);
 
    GUI_CS_SIGNAL_1(Public, void currentColorChanged(const QColor &color))
    GUI_CS_SIGNAL_2(currentColorChanged, color)
@@ -96,8 +84,8 @@ class Q_GUI_EXPORT QColorDialog : public QDialog
    GUI_CS_SIGNAL_2(colorSelected, color)
 
  protected:
-   void changeEvent(QEvent *event);
-   void done(int result);
+   void changeEvent(QEvent *event) override;
+   void done(int result) override;
 
  private:
    Q_DISABLE_COPY(QColorDialog)
@@ -128,7 +116,5 @@ class Q_GUI_EXPORT QColorDialog : public QDialog
 Q_DECLARE_OPERATORS_FOR_FLAGS(QColorDialog::ColorDialogOptions)
 
 #endif // QT_NO_COLORDIALOG
-
-QT_END_NAMESPACE
 
 #endif // QCOLORDIALOG_H

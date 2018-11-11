@@ -1,53 +1,43 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
 
 #include "qvncserver.h"
 
-#include <QtCore/qtimer.h>
-#include <QtCore/qregexp.h>
-#include <QtGui/qwidget.h>
-#include <QtGui/qpolygon.h>
-#include <QtGui/qpainter.h>
-
-#include <QtGui/qevent.h>
+#include <qtimer.h>
+#include <qregularexpression.h>
+#include <qwidget.h>
+#include <qpolygon.h>
+#include <qpainter.h>
+#include <qevent.h>
 #include <QWindowSystemInterface>
-
 #include <qplatformdefs.h>
-
 #include <qdebug.h>
 
 #include <stdlib.h>
 
-
 #define QT_QWS_VNC_DEBUG
 #define QT_NO_QWS_CURSOR //###
 
-
 QT_BEGIN_NAMESPACE
-
-
 
 //copied from qscreen_qws.h
 #ifndef QT_QWS_DEPTH16_RGB
@@ -306,7 +296,7 @@ bool QRfbPointerEvent::read(QTcpSocket *s)
     if (buttonMask & 1)
         buttons |= Qt::LeftButton;
     if (buttonMask & 2)
-        buttons |= Qt::MidButton;
+        buttons |= Qt::MiddleButton;
     if (buttonMask & 4)
         buttons |= Qt::RightButton;
     if (buttonMask & 8)
@@ -803,7 +793,7 @@ static bool buttonChange(Qt::MouseButtons before, Qt::MouseButtons after, Qt::Mo
 {
     if (before == after)
         return false;
-    for (int b = Qt::LeftButton;  b <= Qt::MidButton; b<<=1) {
+    for (int b = Qt::LeftButton;  b <= Qt::MiddleButton; b<<=1) {
         if ((before & b) != (after & b)) {
             *button = static_cast<Qt::MouseButton>(b);
             *isPress = (after & b);

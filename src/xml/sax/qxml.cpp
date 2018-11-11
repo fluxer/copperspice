@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,7 +23,7 @@
 #include <qxml.h>
 #include <qtextcodec.h>
 #include <qbuffer.h>
-#include <qregexp.h>
+#include <qregularexpression.h>
 #include <qmap.h>
 #include <qhash.h>
 #include <qstack.h>
@@ -168,52 +165,45 @@ static const signed char charLookupTable[256] = {
 static bool stripTextDecl(QString &str)
 {
    QString textDeclStart(QLatin1String("<?xml"));
+
    if (str.startsWith(textDeclStart)) {
-      QRegExp textDecl(QString::fromLatin1(
+
+      QRegularExpression8 textDecl(QString::fromLatin1(
                           "^<\\?xml\\s+"
                           "(version\\s*=\\s*((['\"])[-a-zA-Z0-9_.:]+\\3))?"
                           "\\s*"
                           "(encoding\\s*=\\s*((['\"])[A-Za-z][-a-zA-Z0-9_.]*\\6))?"
-                          "\\s*\\?>"
-                       ));
-      QString strTmp = str.replace(textDecl, QLatin1String(""));
+                          "\\s*\\?>"));
+
+      QString strTmp = str.replace(textDecl, "");
+
       if (strTmp.length() != str.length()) {
          return false;   // external entity has wrong TextDecl
       }
+
       str = strTmp;
    }
+
    return true;
 }
-
 
 class QXmlAttributesPrivate
 {
 };
 
-/* \class QXmlInputSourcePrivate
-    \internal
-
-  There's a slight misdesign in this class that can
-  be worth to keep in mind: the `str' member is
-  a buffer which QXmlInputSource::next() returns from,
-  and which is populated from the input device or input
-  stream. However, when the input is a QString(the user called
-  QXmlInputSource::setData()), `str' has two roles: it's the
-  buffer, but also the source. This /seems/ to be no problem
-  because in the case of having no device or stream, the QString
-  is read in one go.
- */
 class QXmlInputSourcePrivate
 {
  public:
-   QIODevice *inputDevice;
+   QIODevice   *inputDevice;
    QTextStream *inputStream;
 
    QString str;
-   const QChar *unicode;
-   int pos;
-   int length;
+
+   QString::const_iterator m_position;
+   QString::const_iterator m_end;
+
    bool nextReturnedEndOfData;
+
 #ifndef QT_NO_TEXTCODEC
    QTextDecoder *encMapper;
 #endif
@@ -222,12 +212,14 @@ class QXmlInputSourcePrivate
    QString encodingDeclChars;
    bool lookingForEncodingDecl;
 };
+
 class QXmlParseExceptionPrivate
 {
  public:
    QXmlParseExceptionPrivate()
       : column(-1), line(-1) {
    }
+
    QXmlParseExceptionPrivate(const QXmlParseExceptionPrivate &other)
       : msg(other.msg), column(other.column), line(other.line),
         pub(other.pub), sys(other.sys) {
@@ -270,17 +262,20 @@ class QXmlSimpleReaderPrivate
       ExternParameterEntity() {}
       ExternParameterEntity(const QString &p, const QString &s)
          : publicId(p), systemId(s) {}
+
       QString publicId;
-      QString systemId;     
+      QString systemId;
    };
 
    struct ExternEntity {
       ExternEntity() {}
+
       ExternEntity(const QString &p, const QString &s, const QString &n)
          : publicId(p), systemId(s), notation(n) {}
+
       QString publicId;
       QString systemId;
-      QString notation;      
+      QString notation;
    };
 
    QMap<QString, ExternParameterEntity> externParameterEntities;
@@ -291,19 +286,26 @@ class QXmlSimpleReaderPrivate
    // used for parsing of entity references
    struct XmlRef {
       XmlRef()
-         : index(0) {}
+         : index(0)
+      {}
+
       XmlRef(const QString &_name, const QString &_value)
-         : name(_name), value(_value), index(0) {}
+         : name(_name), value(_value), index(0)
+      {}
+
       bool isEmpty() const {
          return index == value.length();
       }
+
       QChar next() {
          return value.at(index++);
       }
+
       QString name;
       QString value;
       int index;
    };
+
    QStack<XmlRef> xmlRefStack;
 
    // used for standalone declaration
@@ -385,33 +387,28 @@ class QXmlSimpleReaderPrivate
    QXmlLexicalHandler *lexicalHnd;
    QXmlDeclHandler    *declHnd;
 
-   QXmlInputSource *inputSource;
+   QXmlInputSource    *inputSource;
 
-   QChar c; // the character at reading position
-   int   lineNr; // number of line
-   int   columnNr; // position in line
+   QChar c;                    // the character at reading position
+   int   lineNr;               // number of line
+   int   columnNr;             // position in line
 
-   QChar   nameArray[256]; // only used for names
-   QString nameValue; // only used for names
-   int     nameArrayPos;
-   int     nameValueLen;
-   QChar   refArray[256]; // only used for references
-   QString refValue; // only used for references
-   int     refArrayPos;
-   int     refValueLen;
-   QChar   stringArray[256]; // used for any other strings that are parsed
-   QString stringValue; // used for any other strings that are parsed
-   int     stringArrayPos;
-   int     stringValueLen;
+   QString nameValue;          // only used for names
+   QString refValue;           // only used for references
+   QString stringValue;        // used for any other strings that are parsed
+
    QString emptyStr;
 
    QHash<QString, int> literalEntitySizes;
+
    // The entity at (QMap<QString,) referenced the entities at (QMap<QString,) (int>) times.
    QHash<QString, QHash<QString, int> > referencesToOtherEntities;
    QHash<QString, int> expandedSizes;
+
    // The limit to the amount of times the DTD parsing functions can be called
    // for the DTD currently being parsed.
-   static const int dtdRecursionLimit = 2;
+   constexpr static int dtdRecursionLimit = 2;
+
    // The maximum amount of characters an entity value may contain, after expansion.
    static const int entityCharacterLimit = 1024;
 
@@ -421,12 +418,14 @@ class QXmlSimpleReaderPrivate
    inline void stringAddC() {
       stringAddC(c);
    }
+
    const QString &name();
    void nameClear();
    void nameAddC(QChar);
    inline void nameAddC() {
       nameAddC(c);
    }
+
    const QString &ref();
    void refClear();
    void refAddC(QChar);
@@ -497,63 +496,9 @@ class QXmlSimpleReaderPrivate
    friend class QXmlSimpleReaderLocator;
 };
 
-/*!
-    \class QXmlParseException
-    \reentrant
-    \brief The QXmlParseException class is used to report errors with
-    the QXmlErrorHandler interface.
+constexpr int QXmlSimpleReaderPrivate::dtdRecursionLimit;
 
-    \inmodule QtXml
-    \ingroup xml-tools
-
-    The XML subsystem constructs an instance of this class when it
-    detects an error. You can retrieve the place where the error
-    occurred using systemId(), publicId(), lineNumber() and
-    columnNumber(), along with the error message(). The possible error
-    messages are:
-
-
-    \list
-        \o "no error occurred"
-        \o "error triggered by consumer"
-        \o "unexpected end of file"
-        \o "more than one document type definition"
-        \o "error occurred while parsing element"
-        \o "tag mismatch"
-        \o "error occurred while parsing content"
-        \o "unexpected character"
-        \o "invalid name for processing instruction"
-        \o "version expected while reading the XML declaration"
-        \o "wrong value for standalone declaration"
-        \o "encoding declaration or standalone declaration expected while reading the XML declaration"
-        \o "standalone declaration expected while reading the XML declaration"
-        \o "error occurred while parsing document type definition"
-        \o "letter is expected"
-        \o "error occurred while parsing comment"
-        \o "error occurred while parsing reference"
-        \o "internal general entity reference not allowed in DTD"
-        \o "external parsed general entity reference not allowed in attribute value"
-        \o "external parsed general entity reference not allowed in DTD"
-        \o "unparsed entity reference n wrong context"
-        \o "recursive entities"
-        \o "error in the text declaration of an external entity"
-    \endlist
-
-    Note that, if you want to display these error messages to your
-    application's users, they will be displayed in English unless
-    they are explicitly translated.
-
-    \sa QXmlErrorHandler, QXmlReader
-*/
-
-/*!
-    Constructs a parse exception with the error string \a name for
-    column \a c and line \a l for the public identifier \a p and the
-    system identifier \a s.
-*/
-
-QXmlParseException::QXmlParseException(const QString &name, int c, int l,
-                                       const QString &p, const QString &s)
+QXmlParseException::QXmlParseException(const QString &name, int c, int l, const QString &p, const QString &s)
    : d(new QXmlParseExceptionPrivate)
 {
    d->msg = name;
@@ -563,102 +508,47 @@ QXmlParseException::QXmlParseException(const QString &name, int c, int l,
    d->sys = s;
 }
 
-/*!
-    Creates a copy of \a other.
-*/
 QXmlParseException::QXmlParseException(const QXmlParseException &other) :
    d(new QXmlParseExceptionPrivate(*other.d))
 {
-
 }
 
-/*!
-    Destroys the QXmlParseException.
-*/
 QXmlParseException::~QXmlParseException()
 {
 }
 
-/*!
-    Returns the error message.
-*/
 QString QXmlParseException::message() const
 {
    return d->msg;
 }
-/*!
-    Returns the column number where the error occurred.
-*/
+
 int QXmlParseException::columnNumber() const
 {
    return d->column;
 }
-/*!
-    Returns the line number where the error occurred.
-*/
+
 int QXmlParseException::lineNumber() const
 {
    return d->line;
 }
-/*!
-    Returns the public identifier where the error occurred.
-*/
+
 QString QXmlParseException::publicId() const
 {
    return d->pub;
 }
-/*!
-    Returns the system identifier where the error occurred.
-*/
+
 QString QXmlParseException::systemId() const
 {
    return d->sys;
 }
 
-
-/*!
-    \class QXmlLocator
-    \reentrant
-    \brief The QXmlLocator class provides the XML handler classes with
-    information about the parsing position within a file.
-
-    \inmodule QtXml
-    \ingroup xml-tools
-
-    The reader reports a QXmlLocator to the content handler before it
-    starts to parse the document. This is done with the
-    QXmlContentHandler::setDocumentLocator() function. The handler
-    classes can now use this locator to get the position (lineNumber()
-    and columnNumber()) that the reader has reached.
-*/
-
-/*!
-    Constructor.
-*/
 QXmlLocator::QXmlLocator()
 {
 }
 
-/*!
-    Destructor.
-*/
 QXmlLocator::~QXmlLocator()
 {
 }
-
-/*!
-    \fn int QXmlLocator::columnNumber() const
-
-    Returns the column number (starting at 1) or -1 if there is no
-    column number available.
-*/
-
-/*!
-    \fn int QXmlLocator::lineNumber() const
-
-    Returns the line number (starting at 1) or -1 if there is no line
-    number available.
-*/
 
 class QXmlSimpleReaderLocator : public QXmlLocator
 {
@@ -669,12 +559,14 @@ class QXmlSimpleReaderLocator : public QXmlLocator
    ~QXmlSimpleReaderLocator() {
    }
 
-   int columnNumber() const {
+   int columnNumber() const override {
       return (reader->d_ptr->columnNr == -1 ? -1 : reader->d_ptr->columnNr + 1);
    }
-   int lineNumber() const {
+
+   int lineNumber() const override {
       return (reader->d_ptr->lineNr == -1 ? -1 : reader->d_ptr->lineNr + 1);
    }
+
    //    QString getPublicId()
    //    QString getSystemId()
 
@@ -704,168 +596,84 @@ class QXmlNamespaceSupportPrivate
    NamespaceMap ns;
 };
 
-/*!
-    \class QXmlNamespaceSupport
-    \since 4.4
-    \reentrant
-    \brief The QXmlNamespaceSupport class is a helper class for XML
-    readers which want to include namespace support.
-
-    \inmodule QtXml
-    \ingroup xml-tools
-
-    You can set the prefix for the current namespace with setPrefix(),
-    and get the list of current prefixes (or those for a given URI)
-    with prefixes(). The namespace URI is available from uri(). Use
-    pushContext() to start a new namespace context, and popContext()
-    to return to the previous namespace context. Use splitName() or
-    processName() to split a name into its prefix and local name.
-
-    \sa {Namespace Support via Features}
-*/
-
-/*!
-    Constructs a QXmlNamespaceSupport.
-*/
 QXmlNamespaceSupport::QXmlNamespaceSupport()
 {
    d = new QXmlNamespaceSupportPrivate;
 }
 
-/*!
-    Destroys a QXmlNamespaceSupport.
-*/
 QXmlNamespaceSupport::~QXmlNamespaceSupport()
 {
    delete d;
 }
 
-/*!
-    This function declares a prefix \a pre in the current namespace
-    context to be the namespace URI \a uri. The prefix remains in
-    force until this context is popped, unless it is shadowed in a
-    descendant context.
-
-    Note that there is an asymmetry in this library. prefix() does not
-    return the default "" prefix, even if you have declared one; to
-    check for a default prefix, you must look it up explicitly using
-    uri(). This asymmetry exists to make it easier to look up prefixes
-    for attribute names, where the default prefix is not allowed.
-*/
 void QXmlNamespaceSupport::setPrefix(const QString &pre, const QString &uri)
 {
-   if (pre.isNull()) {
+   if (pre.isEmpty()) {
       d->ns.insert(QLatin1String(""), uri);
    } else {
       d->ns.insert(pre, uri);
    }
 }
 
-/*!
-    Returns one of the prefixes mapped to the namespace URI \a uri.
-
-    If more than one prefix is currently mapped to the same URI, this
-    function makes an arbitrary selection; if you want all of the
-    prefixes, use prefixes() instead.
-
-    Note: to check for a default prefix, use the uri() function with
-    an argument of "".
-*/
 QString QXmlNamespaceSupport::prefix(const QString &uri) const
 {
    NamespaceMap::const_iterator itc, it = d->ns.constBegin();
+
    while ((itc = it) != d->ns.constEnd()) {
       ++it;
-      if (*itc == uri && !itc.key().isEmpty()) {
+      if (*itc == uri && ! itc.key().isEmpty()) {
          return itc.key();
       }
    }
-   return QLatin1String("");
+
+   return QString();
 }
 
-/*!
-    Looks up the prefix \a prefix in the current context and returns
-    the currently-mapped namespace URI. Use the empty string ("") for
-    the default namespace.
-*/
 QString QXmlNamespaceSupport::uri(const QString &prefix) const
 {
    return d->ns[prefix];
 }
 
-/*!
-    Splits the name \a qname at the ':' and returns the prefix in \a
-    prefix and the local name in \a localname.
-
-    \sa processName()
-*/
-void QXmlNamespaceSupport::splitName(const QString &qname, QString &prefix,
-                                     QString &localname) const
+void QXmlNamespaceSupport::splitName(const QString &qname, QString &prefix, QString &localname) const
 {
-   int pos = qname.indexOf(QLatin1Char(':'));
+   int pos = qname.indexOf(':');
+
    if (pos == -1) {
       pos = qname.size();
    }
 
-   prefix = qname.left(pos);
+   prefix    = qname.left(pos);
    localname = qname.mid(pos + 1);
 }
 
-/*!
-    Processes a raw XML 1.0 name in the current context by removing
-    the prefix and looking it up among the prefixes currently
-    declared.
-
-    \a qname is the raw XML 1.0 name to be processed. \a isAttribute
-    is true if the name is an attribute name.
-
-    This function stores the namespace URI in \a nsuri (which will be
-    set to an empty string if the raw name has an undeclared prefix),
-    and stores the local name (without prefix) in \a localname (which
-    will be set to an empty string if no namespace is in use).
-
-    Note that attribute names are processed differently than element
-    names: an unprefixed element name gets the default namespace (if
-    any), while an unprefixed attribute name does not.
-*/
-void QXmlNamespaceSupport::processName(const QString &qname,
-                                       bool isAttribute,
-                                       QString &nsuri, QString &localname) const
+void QXmlNamespaceSupport::processName(const QString &qname, bool isAttribute, QString &nsuri, QString &localname) const
 {
-   int len = qname.size();
-   const QChar *data = qname.constData();
-   for (int pos = 0; pos < len; ++pos) {
-      if (data[pos] == QLatin1Char(':')) {
-         nsuri = uri(qname.left(pos));
-         localname = qname.mid(pos + 1);
-         return;
-      }
+   auto iter = qname.indexOfFast(":");
+
+   if (iter != qname.end()) {
+      nsuri     = uri(QString(qname.begin(), iter));
+      localname = QString(iter + 1, qname.end());
+
+      return;
    }
 
    // there was no ':'
    nsuri.clear();
-   // attributes don't take default namespace
-   if (!isAttribute && !d->ns.isEmpty()) {
-      /*
-          We want to access d->ns.value(""), but as an optimization
-          we use the fact that "" compares less than any other
-          string, so it's either first in the map or not there.
-      */
+
+   // attributes do not take default namespace
+   if (! isAttribute && ! d->ns.isEmpty()) {
+
       NamespaceMap::const_iterator first = d->ns.constBegin();
+
       if (first.key().isEmpty()) {
-         nsuri = first.value();   // get default namespace
+         // get default namespace
+         nsuri = first.value();
       }
    }
+
    localname = qname;
 }
 
-/*!
-    Returns a list of all the prefixes currently declared.
-
-    If there is a default prefix, this function does not return it in
-    the list; check for the default prefix using uri() with an
-    argument of "".
-*/
 QStringList QXmlNamespaceSupport::prefixes() const
 {
    QStringList list;
@@ -880,20 +688,6 @@ QStringList QXmlNamespaceSupport::prefixes() const
    return list;
 }
 
-/*!
-    \overload
-
-    Returns a list of all prefixes currently declared for the
-    namespace URI \a uri.
-
-    The "xml:" prefix is included. If you only want one prefix that is
-    mapped to the namespace URI, and you don't care which one you get,
-    use the prefix() function instead.
-
-    Note: The empty (default) prefix is never included in this list;
-    to check for the presence of a default namespace, call uri() with
-    "" as the argument.
-*/
 QStringList QXmlNamespaceSupport::prefixes(const QString &uri) const
 {
    QStringList list;
@@ -984,19 +778,6 @@ void QXmlNamespaceSupport::reset()
     Constructs an empty attribute list.
 */
 
-/*!
-    \fn QXmlAttributes::~QXmlAttributes()
-
-    Destroys the attributes object.
-*/
-
-/*!
-    Looks up the index of an attribute by the qualified name \a qName.
-
-    Returns the index of the attribute or -1 if it wasn't found.
-
-    \sa {Namespace Support via Features}
-*/
 int QXmlAttributes::index(const QString &qName) const
 {
    for (int i = 0; i < attList.size(); ++i) {
@@ -1007,31 +788,6 @@ int QXmlAttributes::index(const QString &qName) const
    return -1;
 }
 
-/*! \overload
-  */
-int QXmlAttributes::index(const QLatin1String &qName) const
-{
-   for (int i = 0; i < attList.size(); ++i) {
-      if (attList.at(i).qname == qName) {
-         return i;
-      }
-   }
-   return -1;
-}
-
-/*!
-    \overload
-
-    Looks up the index of an attribute by a namespace name.
-
-    \a uri specifies the namespace URI, or an empty string if the name
-    has no namespace URI. \a localPart specifies the attribute's local
-    name.
-
-    Returns the index of the attribute, or -1 if it wasn't found.
-
-    \sa {Namespace Support via Features}
-*/
 int QXmlAttributes::index(const QString &uri, const QString &localPart) const
 {
    for (int i = 0; i < attList.size(); ++i) {
@@ -1161,32 +917,6 @@ QString QXmlAttributes::value(const QString &qName) const
    return attList.at(i).value;
 }
 
-/*!
-    \overload
-
-    Returns an attribute's value for the qualified name \a qName, or an
-    empty string if no attribute exists for the name given.
-
-    \sa {Namespace Support via Features}
-*/
-QString QXmlAttributes::value(const QLatin1String &qName) const
-{
-   int i = index(qName);
-   if (i == -1) {
-      return QString();
-   }
-   return attList.at(i).value;
-}
-
-/*!
-    \overload
-
-    Returns an attribute's value by namespace name.
-
-    \a uri specifies the namespace URI, or an empty string if the name
-    has no namespace URI. \a localName specifies the attribute's local
-    name.
-*/
 QString QXmlAttributes::value(const QString &uri, const QString &localName) const
 {
    int i = index(uri, localName);
@@ -1336,7 +1066,7 @@ QXmlInputSource::QXmlInputSource(QIODevice *dev)
 */
 QXmlInputSource::~QXmlInputSource()
 {
-   // ### Qt 5: close the input device. See task 153111
+   // ### Qt5: close the input device. See task 153111
 #ifndef QT_NO_TEXTCODEC
    delete d->encMapper;
 #endif
@@ -1363,15 +1093,19 @@ duplicated.
 */
 QChar QXmlInputSource::next()
 {
-   if (d->pos >= d->length) {
+   if (d->m_position == d->m_end) {
+
       if (d->nextReturnedEndOfData) {
          d->nextReturnedEndOfData = false;
          fetchData();
-         if (d->pos >= d->length) {
+
+         if (d->m_position == d->m_end) {
             return EndOfDocument;
          }
+
          return next();
       }
+
       d->nextReturnedEndOfData = true;
       return EndOfData;
    }
@@ -1379,36 +1113,23 @@ QChar QXmlInputSource::next()
    // QXmlInputSource has no way to signal encoding errors. The best we can do
    // is return EndOfDocument. We do *not* return EndOfData, because the reader
    // will then just call this function again to get the next char.
-   QChar c = d->unicode[d->pos++];
+
+   QChar c = *(d->m_position);
+   ++(d->m_position);
+
    if (c.unicode() == EndOfData) {
       c = EndOfDocument;
    }
+
    return c;
 }
 
-/*!
-    This function sets the position used by next() to the beginning of
-    the data returned by data(). This is useful if you want to use the
-    input source for more than one parse.
-
-    \note In the case that the underlying data source is a QIODevice,
-    the current position in the device is not automatically set to the
-    start of input. Call QIODevice::seek(0) on the device to do this.
-
-    \sa next()
-*/
 void QXmlInputSource::reset()
 {
    d->nextReturnedEndOfData = false;
-   d->pos = 0;
+   d->m_position = d->str.begin();
 }
 
-/*!
-    Returns the data the input source contains or an empty string if the
-    input source does not contain any data.
-
-    \sa setData() QXmlInputSource() fetchData()
-*/
 QString QXmlInputSource::data() const
 {
    if (d->nextReturnedEndOfData) {
@@ -1416,55 +1137,23 @@ QString QXmlInputSource::data() const
       that->d->nextReturnedEndOfData = false;
       that->fetchData();
    }
+
    return d->str;
 }
 
-/*!
-    Sets the data of the input source to \a dat.
-
-    If the input source already contains data, this function deletes
-    that data first.
-
-    \sa data()
-*/
-void QXmlInputSource::setData(const QString &dat)
+void QXmlInputSource::setData(const QString &inputStr)
 {
-   d->str = dat;
-   d->unicode = dat.unicode();
-   d->pos = 0;
-   d->length = d->str.length();
+   d->str        = inputStr;
+   d->m_position = d->str.begin();
+   d->m_end      = d->str.end();
+
    d->nextReturnedEndOfData = false;
 }
 
-/*!
-    \overload
-
-    The data \a dat is passed through the correct text-codec, before
-    it is set.
-*/
 void QXmlInputSource::setData(const QByteArray &dat)
 {
    setData(fromRawData(dat));
 }
-
-/*!
-    This function reads more data from the device that was set during
-    construction. If the input source already contained data, this
-    function deletes that data first.
-
-    This object contains no data after a call to this function if the
-    object was constructed without a device to read data from or if
-    this function was not able to get more data from the device.
-
-    There are two occasions where a fetch is done implicitly by
-    another function call: during construction (so that the object
-    starts out with some initial data where available), and during a
-    call to next() (if the data had run out).
-
-    You don't normally need to use this function if you use next().
-
-    \sa data() next() QXmlInputSource()
-*/
 
 void QXmlInputSource::fetchData()
 {
@@ -1482,6 +1171,7 @@ void QXmlInputSource::fetchData()
             QString *s = d->inputStream->string();
             rawData = QByteArray((const char *) s->constData(), s->size() * sizeof(QChar));
          }
+
       } else if (device->isOpen() || device->open(QIODevice::ReadOnly)) {
          rawData.resize(BufferSize);
          qint64 size = device->read(rawData.data(), BufferSize);
@@ -1575,7 +1265,7 @@ QString QXmlInputSource::fromRawData(const QByteArray &data, bool beginning)
 {
 #ifdef QT_NO_TEXTCODEC
    Q_UNUSED(beginning);
-   return QString::fromAscii(data.constData(), data.size());
+   return QString::fromLatin1(data.constData(), data.size());
 #else
    if (data.size() == 0) {
       return QString();
@@ -2608,134 +2298,74 @@ QString QXmlDefaultHandler::errorString() const
    return QString::fromLatin1(XMLERR_ERRORBYCONSUMER);
 }
 
-/*!
-    \reimp
-
-    This reimplementation does nothing.
-*/
 bool QXmlDefaultHandler::startDTD(const QString &, const QString &, const QString &)
 {
    return true;
 }
 
-/*!
-    \reimp
-
-    This reimplementation does nothing.
-*/
 bool QXmlDefaultHandler::endDTD()
 {
    return true;
 }
 
-/*!
-    \reimp
-
-    This reimplementation does nothing.
-*/
 bool QXmlDefaultHandler::startEntity(const QString &)
 {
    return true;
 }
 
-/*!
-    \reimp
-
-    This reimplementation does nothing.
-*/
 bool QXmlDefaultHandler::endEntity(const QString &)
 {
    return true;
 }
 
-/*!
-    \reimp
-
-    This reimplementation does nothing.
-*/
 bool QXmlDefaultHandler::startCDATA()
 {
    return true;
 }
 
-/*!
-    \reimp
-
-    This reimplementation does nothing.
-*/
 bool QXmlDefaultHandler::endCDATA()
 {
    return true;
 }
 
-/*!
-    \reimp
-
-    This reimplementation does nothing.
-*/
 bool QXmlDefaultHandler::comment(const QString &)
 {
    return true;
 }
 
-/*!
-    \reimp
-
-    This reimplementation does nothing.
-*/
-bool QXmlDefaultHandler::attributeDecl(const QString &, const QString &, const QString &, const QString &,
-                                       const QString &)
+bool QXmlDefaultHandler::attributeDecl(const QString &, const QString &, const QString &, const QString &, const QString &)
 {
    return true;
 }
 
-/*!
-    \reimp
-
-    This reimplementation does nothing.
-*/
 bool QXmlDefaultHandler::internalEntityDecl(const QString &, const QString &)
 {
    return true;
 }
 
-/*!
-    \reimp
-
-    This reimplementation does nothing.
-*/
 bool QXmlDefaultHandler::externalEntityDecl(const QString &, const QString &, const QString &)
 {
    return true;
 }
 
-
-/*********************************************
- *
- * QXmlSimpleReaderPrivate
- *
- *********************************************/
-
-inline bool QXmlSimpleReaderPrivate::atEnd()
+bool QXmlSimpleReaderPrivate::atEnd()
 {
    return (c.unicode() | 0x0001) == 0xffff;
 }
 
-inline void QXmlSimpleReaderPrivate::stringClear()
+void QXmlSimpleReaderPrivate::stringClear()
 {
-   stringValueLen = 0;
-   stringArrayPos = 0;
-}
-inline void QXmlSimpleReaderPrivate::nameClear()
-{
-   nameValueLen = 0;
-   nameArrayPos = 0;
+   stringValue.clear();
 }
 
-inline void QXmlSimpleReaderPrivate::refClear()
+void QXmlSimpleReaderPrivate::nameClear()
 {
-   refValueLen = 0;
-   refArrayPos = 0;
+   nameValue.clear();
+}
+
+void QXmlSimpleReaderPrivate::refClear()
+{
+   refValue.clear();
 }
 
 QXmlSimpleReaderPrivate::QXmlSimpleReaderPrivate(QXmlSimpleReader *reader)
@@ -2752,10 +2382,10 @@ QXmlSimpleReaderPrivate::QXmlSimpleReaderPrivate(QXmlSimpleReader *reader)
    declHnd    = 0;
 
    // default feature settings
-   useNamespaces = true;
-   useNamespacePrefixes = false;
+   useNamespaces            = true;
+   useNamespacePrefixes     = false;
    reportWhitespaceCharData = true;
-   reportEntities = false;
+   reportEntities           = false;
 }
 
 QXmlSimpleReaderPrivate::~QXmlSimpleReaderPrivate()
@@ -3156,7 +2786,6 @@ bool QXmlSimpleReader::feature(const QString &name, bool *ok) const
 {
    const QXmlSimpleReaderPrivate *d = d_func();
 
-   // "QT5" Change these strings to "cs.copperspice.com"
    if (ok != 0) {
       *ok = true;
    }
@@ -3167,12 +2796,10 @@ bool QXmlSimpleReader::feature(const QString &name, bool *ok) const
    } else if (name == QLatin1String("http://xml.org/sax/features/namespace-prefixes")) {
       return d->useNamespacePrefixes;
 
-   } else if (name ==
-              QLatin1String("http://trolltech.com/xml/features/report-whitespace-only-CharData")) { // Shouldn't change in Qt 4
+   } else if (name == QLatin1String("http://copperspice.com/xml/features/report-whitespace-only-CharData")) {
       return d->reportWhitespaceCharData;
 
-   } else if (name ==
-              QLatin1String("http://trolltech.com/xml/features/report-start-end-entity")) { // Shouldn't change in Qt 4
+   } else if (name == QLatin1String("http://copperspice.com/xml/features/report-start-end-entity")) {
       return d->reportEntities;
 
    } else {
@@ -3189,17 +2816,18 @@ void QXmlSimpleReader::setFeature(const QString &name, bool enable)
 {
    Q_D(QXmlSimpleReader);
 
-   // "QT5" Change these strings to "cs.copperspice.com"
    if (name == QLatin1String("http://xml.org/sax/features/namespaces")) {
       d->useNamespaces = enable;
+
    } else if (name == QLatin1String("http://xml.org/sax/features/namespace-prefixes")) {
       d->useNamespacePrefixes = enable;
-   } else if (name ==
-              QLatin1String("http://trolltech.com/xml/features/report-whitespace-only-CharData")) { // Shouldn't change in Qt 4
+
+   } else if (name == QLatin1String("http://copperspice.com/xml/features/report-whitespace-only-CharData")) {
       d->reportWhitespaceCharData = enable;
-   } else if (name ==
-              QLatin1String("http://trolltech.com/xml/features/report-start-end-entity")) { // Shouldn't change in Qt 4
+
+   } else if (name == QLatin1String("http://copperspice.com/xml/features/report-start-end-entity")) {
       d->reportEntities = enable;
+
    } else {
       qWarning("Unknown feature %s", name.toLatin1().data());
    }
@@ -3209,13 +2837,13 @@ void QXmlSimpleReader::setFeature(const QString &name, bool enable)
 */
 bool QXmlSimpleReader::hasFeature(const QString &name) const
 {
-   // "QT5" Change these strings to "cs.copperspice.com"
    if (name == QLatin1String("http://xml.org/sax/features/namespaces")
          || name == QLatin1String("http://xml.org/sax/features/namespace-prefixes")
-         || name ==
-         QLatin1String("http://trolltech.com/xml/features/report-whitespace-only-CharData") // Shouldn't change in Qt 4
-         || name == QLatin1String("http://trolltech.com/xml/features/report-start-end-entity")) { // Shouldn't change in Qt 4
+         || name == QLatin1String("http://copperspice.com/xml/features/report-whitespace-only-CharData")
+         || name == QLatin1String("http://copperspice.com/xml/features/report-start-end-entity")) {
+
       return true;
+
    } else {
       return false;
    }
@@ -3353,8 +2981,6 @@ QXmlDeclHandler *QXmlSimpleReader::declHandler() const
    return d->declHnd;
 }
 
-
-
 /*!
     \reimp
 */
@@ -3407,22 +3033,27 @@ bool QXmlSimpleReader::parse(const QXmlInputSource *input, bool incremental)
 
    if (incremental) {
       d->initIncrementalParsing();
+
    } else {
       delete d->parseStack;
       d->parseStack = 0;
    }
+
    d->init(input);
 
    // call the handler
    if (d->contentHnd) {
       d->contentHnd->setDocumentLocator(d->locator.data());
-      if (!d->contentHnd->startDocument()) {
+
+      if (! d->contentHnd->startDocument()) {
          d->reportParseError(d->contentHnd->errorString());
          d->tags.clear();
          return false;
       }
    }
+
    qt_xml_skipped_entity_in_content = false;
+
    return d->parseBeginOrContinue(0, incremental);
 }
 
@@ -3454,10 +3085,13 @@ bool QXmlSimpleReader::parse(const QXmlInputSource *input, bool incremental)
 bool QXmlSimpleReader::parseContinue()
 {
    Q_D(QXmlSimpleReader);
+
    if (d->parseStack == 0 || d->parseStack->isEmpty()) {
       return false;
    }
+
    d->initData();
+
    int state = d->parseStack->pop().state;
    return d->parseBeginOrContinue(state, true);
 }
@@ -3470,8 +3104,8 @@ bool QXmlSimpleReaderPrivate::parseBeginOrContinue(int state, bool incremental)
    bool atEndOrig = atEnd();
 
    if (state == 0) {
-      if (!parseProlog()) {
-         if (incremental && error.isNull()) {
+      if (! parseProlog()) {
+         if (incremental && error.isEmpty()) {
             pushParseState(0, 0);
             return true;
          } else {
@@ -3481,22 +3115,28 @@ bool QXmlSimpleReaderPrivate::parseBeginOrContinue(int state, bool incremental)
       }
       state = 1;
    }
+
    if (state == 1) {
-      if (!parseElement()) {
-         if (incremental && error.isNull()) {
+
+      if (! parseElement()) {
+
+         if (incremental && error.isEmpty()) {
             pushParseState(0, 1);
             return true;
+
          } else {
             tags.clear();
             return false;
          }
       }
+
       state = 2;
    }
+
    // parse Misc*
    while (!atEnd()) {
       if (!parseMisc()) {
-         if (incremental && error.isNull()) {
+         if (incremental && error.isEmpty()) {
             pushParseState(0, 2);
             return true;
          } else {
@@ -3505,34 +3145,39 @@ bool QXmlSimpleReaderPrivate::parseBeginOrContinue(int state, bool incremental)
          }
       }
    }
+
    if (!atEndOrig && incremental) {
       // we parsed something at all, so be prepared to come back later
       pushParseState(0, 2);
       return true;
    }
+
    // is stack empty?
-   if (!tags.isEmpty() && !error.isNull()) {
+   if (! tags.isEmpty() && !error.isEmpty()) {
       reportParseError(QLatin1String(XMLERR_UNEXPECTEDEOF));
       tags.clear();
       return false;
    }
+
    // call the handler
    if (contentHnd) {
       delete parseStack;
       parseStack = 0;
+
       if (!contentHnd->endDocument()) {
          reportParseError(contentHnd->errorString());
          return false;
       }
    }
+
    return true;
 }
 
 //
 // The following private parse functions have another semantics for the return
-// value: They return true iff parsing has finished successfully (i.e. the end
+// value: They return true if parsing has finished successfully (i.e. the end
 // of the XML file must be reached!). If one of these functions return false,
-// there is only an error when d->error.isNULL() is also false.
+// there is only an error when d->error.isEmpty() is also false.
 //
 
 /*
@@ -3837,20 +3482,26 @@ bool QXmlSimpleReaderPrivate::parseElement()
 
    if (parseStack == 0 || parseStack->isEmpty()) {
       state = Init;
+
    } else {
       state = parseStack->pop().state;
+
 #if defined(QT_QXML_DEBUG)
       qDebug("QXmlSimpleReader: parseElement (cont) in state %d", state);
 #endif
-      if (!parseStack->isEmpty()) {
+
+      if (! parseStack->isEmpty()) {
          ParseFunction function = parseStack->top().function;
+
          if (function == &QXmlSimpleReaderPrivate::eat_ws) {
             parseStack->pop();
+
 #if defined(QT_QXML_DEBUG)
             qDebug("QXmlSimpleReader: eat_ws (cont)");
 #endif
          }
-         if (!(this->*function)()) {
+
+         if (! (this->*function)()) {
             parseFailed(&QXmlSimpleReaderPrivate::parseElement, state);
             return false;
          }
@@ -3862,25 +3513,31 @@ bool QXmlSimpleReaderPrivate::parseElement()
          case ReadName:
             // store it on the stack
             tags.push(name());
+
             // empty the attributes
             attList.clear();
+
             if (useNamespaces) {
                namespaceSupport.pushContext();
             }
             break;
+
          case ETagBegin2:
             if (!processElementETagBegin2()) {
                return false;
             }
             break;
+
          case Attrib:
             if (!processElementAttribute()) {
                return false;
             }
             state = AttribPro;
             break;
+
          case Done:
             return true;
+
          case -1:
             reportParseError(QLatin1String(XMLERR_ERRORPARSINGELEMENT));
             return false;
@@ -3890,22 +3547,29 @@ bool QXmlSimpleReaderPrivate::parseElement()
          unexpectedEof(&QXmlSimpleReaderPrivate::parseElement, state);
          return false;
       }
+
       if (fastDetermineNameChar(c) == NameBeginning) {
          input = InpNameBe;
+
       } else if (c == QLatin1Char('>')) {
          input = InpGt;
+
       } else if (is_S(c)) {
          input = InpWs;
+
       } else if (c == QLatin1Char('/')) {
          input = InpSlash;
+
       } else {
          input = InpUnknown;
       }
+
       state = table[state][input];
 
       switch (state) {
          case ReadName:
             parseName_useRef = false;
+
             if (!parseName()) {
                parseFailed(&QXmlSimpleReaderPrivate::parseElement, state);
                return false;
@@ -3914,11 +3578,12 @@ bool QXmlSimpleReaderPrivate::parseElement()
          case Ws1:
          case Ws2:
          case Ws3:
-            if (!eat_ws()) {
+            if (! eat_ws()) {
                parseFailed(&QXmlSimpleReaderPrivate::parseElement, state);
                return false;
             }
             break;
+
          case STagEnd:
             // call the handler
             if (contentHnd) {
@@ -3939,15 +3604,18 @@ bool QXmlSimpleReaderPrivate::parseElement()
             }
             next();
             break;
+
          case STagEnd2:
-            if (!parseContent()) {
+            if (! parseContent()) {
                parseFailed(&QXmlSimpleReaderPrivate::parseElement, state);
                return false;
             }
             break;
+
          case ETagBegin:
             next();
             break;
+
          case ETagBegin2:
             // get the name of the tag
             parseName_useRef = false;
@@ -3956,6 +3624,7 @@ bool QXmlSimpleReaderPrivate::parseElement()
                return false;
             }
             break;
+
          case EmptyTag:
             if  (tags.isEmpty()) {
                reportParseError(QLatin1String(XMLERR_TAGMISMATCH));
@@ -3966,6 +3635,7 @@ bool QXmlSimpleReaderPrivate::parseElement()
             }
             next();
             break;
+
          case Attrib:
          case AttribPro:
             // get name and value of attribute
@@ -3974,11 +3644,13 @@ bool QXmlSimpleReaderPrivate::parseElement()
                return false;
             }
             break;
+
          case Done:
             next();
             break;
       }
    }
+
    return false;
 }
 
@@ -4011,7 +3683,8 @@ bool QXmlSimpleReaderPrivate::processElementEmptyTag()
          namespaceSupport.popContext();
          // call the handler for prefix mapping
          prefixesAfter = namespaceSupport.prefixes();
-         for (QStringList::Iterator it = prefixesBefore.begin(); it != prefixesBefore.end(); ++it) {
+
+         for (QStringList::iterator it = prefixesBefore.begin(); it != prefixesBefore.end(); ++it) {
             if (!prefixesAfter.contains(*it)) {
                if (!contentHnd->endPrefixMapping(*it)) {
                   reportParseError(contentHnd->errorString());
@@ -4208,19 +3881,25 @@ bool QXmlSimpleReaderPrivate::parseContent()
    if (parseStack == 0 || parseStack->isEmpty()) {
       contentCharDataRead = false;
       state = Init;
+
    } else {
       state = parseStack->pop().state;
+
 #if defined(QT_QXML_DEBUG)
       qDebug("QXmlSimpleReader: parseContent (cont) in state %d", state);
 #endif
-      if (!parseStack->isEmpty()) {
+
+      if (! parseStack->isEmpty()) {
          ParseFunction function = parseStack->top().function;
+
          if (function == &QXmlSimpleReaderPrivate::eat_ws) {
             parseStack->pop();
+
 #if defined(QT_QXML_DEBUG)
             qDebug("QXmlSimpleReader: eat_ws (cont)");
 #endif
          }
+
          if (!(this->*function)()) {
             parseFailed(&QXmlSimpleReaderPrivate::parseContent, state);
             return false;
@@ -4244,6 +3923,7 @@ bool QXmlSimpleReaderPrivate::parseContent()
             }
             state = PInstrR;
             break;
+
          case Com:
             if (lexicalHnd) {
                if (!lexicalHnd->comment(string())) {
@@ -4253,14 +3933,17 @@ bool QXmlSimpleReaderPrivate::parseContent()
             }
             state = ComR;
             break;
+
          case CDS:
             stringClear();
             break;
+
          case CDS2:
             if (!atEnd() && c != QLatin1Char(']')) {
                stringAddC(QLatin1Char(']'));
             }
             break;
+
          case CDS3:
             // test if this skipping was legal
             if (!atEnd()) {
@@ -4314,17 +3997,18 @@ bool QXmlSimpleReaderPrivate::parseContent()
             return false;
       }
 
-      // get input (use lookup-table instead of nested ifs for performance
-      // reasons)
+      // get input (use lookup-table instead of nested ifs for performance reasons)
       if (atEnd()) {
          unexpectedEof(&QXmlSimpleReaderPrivate::parseContent, state);
          return false;
       }
-      if (c.row()) {
+
+      if (c > 0xFF) {
          input = InpUnknown;
       } else {
-         input = mapCLT2FSMChar[charLookupTable[c.cell()]];
+         input = mapCLT2FSMChar[charLookupTable[c.unicode()]];
       }
+
       state = table[state][input];
 
       switch (state) {
@@ -4332,6 +4016,7 @@ bool QXmlSimpleReaderPrivate::parseContent()
             // skip the ending '>' of a CDATASection
             next();
             break;
+
          case ChD:
             // on first call: clear string
             if (!contentCharDataRead) {
@@ -4382,7 +4067,7 @@ bool QXmlSimpleReaderPrivate::parseContent()
                if (reportEntities) {
                   // report character data in chunks
                   if (contentHnd) {
-                     if (reportWhitespaceCharData || !string().simplified().isEmpty()) {
+                     if (reportWhitespaceCharData || ! string().simplified().isEmpty()) {
                         if (!contentHnd->characters(string())) {
                            reportParseError(contentHnd->errorString());
                            return false;
@@ -4400,19 +4085,23 @@ bool QXmlSimpleReaderPrivate::parseContent()
             break;
          case Lt:
             // call the handler for CharData
+
             if (contentHnd) {
                if (contentCharDataRead) {
-                  if (reportWhitespaceCharData || !string().simplified().isEmpty()) {
-                     if (!contentHnd->characters(string())) {
+
+                  if (reportWhitespaceCharData || ! string().simplified().isEmpty()) {
+                     if (! contentHnd->characters(string())) {
                         reportParseError(contentHnd->errorString());
                         return false;
                      }
                   }
                }
             }
+
             contentCharDataRead = false;
             next();
             break;
+
          case PInstr:
          case PInstrR:
             parsePI_xmldecl = false;
@@ -4458,6 +4147,7 @@ bool QXmlSimpleReaderPrivate::parseContent()
             break;
       }
    }
+
    return false;
 }
 
@@ -5018,10 +4708,10 @@ bool QXmlSimpleReaderPrivate::parseDoctype()
             break;
          case Mup:
             if (dtdRecursionLimit > 0 && parameterEntities.size() > dtdRecursionLimit) {
-               reportParseError(QString::fromLatin1(
-                                   "DTD parsing exceeded recursion limit of %1.").arg(dtdRecursionLimit));
+               reportParseError(QString::fromLatin1("DTD parsing exceeded recursion limit of %1.").formatArg(dtdRecursionLimit));
                return false;
             }
+
             if (!parseMarkupdecl()) {
                parseFailed(&QXmlSimpleReaderPrivate::parseDoctype, state);
                return false;
@@ -5457,13 +5147,16 @@ bool QXmlSimpleReaderPrivate::parsePEReference()
             bool skipIt = true;
             QString xmlRefString;
 
-            QMap<QString, QString>::Iterator it;
+            QMap<QString, QString>::iterator it;
             it = parameterEntities.find(ref());
+
             if (it != parameterEntities.end()) {
                skipIt = false;
                xmlRefString = *it;
+
             } else if (entityRes) {
-               QMap<QString, QXmlSimpleReaderPrivate::ExternParameterEntity>::Iterator it2;
+               QMap<QString, QXmlSimpleReaderPrivate::ExternParameterEntity>::iterator it2;
+
                it2 = externParameterEntities.find(ref());
                QXmlInputSource *ret = 0;
                if (it2 != externParameterEntities.end()) {
@@ -6667,28 +6360,27 @@ bool QXmlSimpleReaderPrivate::isExpandedEntityValueTooLarge(QString *errorMessag
       }
    }
 
-   for (QHash<QString, QHash<QString, int> >::const_iterator entityIt = referencesToOtherEntities.constBegin();
-         entityIt != referencesToOtherEntities.constEnd();
-         ++entityIt) {
+   for (auto entityIt = referencesToOtherEntities.constBegin(); entityIt != referencesToOtherEntities.constEnd(); ++entityIt) {
       const QString &entity = entityIt.key();
 
       QHash<QString, int>::iterator expandedIt = expandedSizes.find(entity);
+
       if (expandedIt == expandedSizes.end()) {
          expandedIt = expandedSizes.insert(entity, literalEntitySizes.value(entity));
-         for (QHash<QString, int>::const_iterator referenceIt = entityIt->constBegin();
-               referenceIt != entityIt->constEnd();
-               ++referenceIt) {
+
+         for (auto referenceIt = entityIt->constBegin(); referenceIt != entityIt->constEnd(); ++referenceIt) {
             const QString &referenceTo = referenceIt.key();
             const int references = referencesToOtherEntities.value(entity).value(referenceTo);
+
             // The total size of an entity's value is the expanded size of all of its referenced entities, plus its literal size.
             *expandedIt += expandedSizes.value(referenceTo) * references + literalEntitySizes.value(referenceTo) * references;
          }
 
          if (*expandedIt > entityCharacterLimit) {
+
             if (errorMessage) {
-               *errorMessage =
-                  QString::fromLatin1("The XML entity \"%1\" expands to a string that is too large to process (%2 characters > %3).")
-                  .arg(entity, *expandedIt, entityCharacterLimit);
+               *errorMessage = QString::fromLatin1("The XML entity \"%1\" expands to a string that is too large to process (%2 characters > %3).")
+                           .formatArgs(entity, QString::number(*expandedIt), QString::number(entityCharacterLimit));
             }
             return true;
          }
@@ -6762,25 +6454,34 @@ bool QXmlSimpleReaderPrivate::parseEntityDecl()
       { WsE,   -1,     -1,      Done,  -1,     -1      }, // PEEIDR
       { -1,    -1,     -1,      Done,  -1,     -1      }  // WsE
    };
+
    signed char state;
    signed char input;
 
    if (parseStack == 0 || parseStack->isEmpty()) {
       state = Init;
+
    } else {
+
       state = parseStack->pop().state;
+
 #if defined(QT_QXML_DEBUG)
       qDebug("QXmlSimpleReader: parseEntityDecl (cont) in state %d", state);
 #endif
-      if (!parseStack->isEmpty()) {
+
+      if (! parseStack->isEmpty()) {
          ParseFunction function = parseStack->top().function;
+
          if (function == &QXmlSimpleReaderPrivate::eat_ws) {
             parseStack->pop();
+
 #if defined(QT_QXML_DEBUG)
             qDebug("QXmlSimpleReader: eat_ws (cont)");
 #endif
+
          }
-         if (!(this->*function)()) {
+
+         if (! (this->*function)()) {
             parseFailed(&QXmlSimpleReaderPrivate::parseEntityDecl, state);
             return false;
          }
@@ -6807,6 +6508,7 @@ bool QXmlSimpleReaderPrivate::parseEntityDecl()
             }
             state = EValueR;
             break;
+
          case NNam:
             if ( !entityExist(name())) {
                externEntities.insert(name(), QXmlSimpleReaderPrivate::ExternEntity(publicId, systemId, ref()));
@@ -6819,6 +6521,7 @@ bool QXmlSimpleReaderPrivate::parseEntityDecl()
             }
             state = NNamR;
             break;
+
          case PEVal:
             if ( !entityExist(name())) {
                parameterEntities.insert(name(), string());
@@ -6831,6 +6534,7 @@ bool QXmlSimpleReaderPrivate::parseEntityDecl()
             }
             state = PEValR;
             break;
+
          case PEEID:
             if ( !entityExist(name())) {
                externParameterEntities.insert(name(), QXmlSimpleReaderPrivate::ExternParameterEntity(publicId, systemId));
@@ -6843,6 +6547,7 @@ bool QXmlSimpleReaderPrivate::parseEntityDecl()
             }
             state = PEEIDR;
             break;
+
          case EDDone:
             if ( !entityExist(name())) {
                externEntities.insert(name(), QXmlSimpleReaderPrivate::ExternEntity(publicId, systemId, QString()));
@@ -6866,19 +6571,27 @@ bool QXmlSimpleReaderPrivate::parseEntityDecl()
          unexpectedEof(&QXmlSimpleReaderPrivate::parseEntityDecl, state);
          return false;
       }
+
       if (is_S(c)) {
          input = InpWs;
-      } else if (c == QLatin1Char('%')) {
+
+      } else if (c == '%') {
          input = InpPer;
-      } else if (c == QLatin1Char('"') || c == QLatin1Char('\'')) {
+
+      } else if (c == '"' || c == '\'') {
          input = InpQuot;
-      } else if (c == QLatin1Char('>')) {
+
+      } else if (c == '>') {
          input = InpGt;
-      } else if (c == QLatin1Char('N')) {
+
+      } else if (c == 'N') {
          input = InpN;
+
       } else {
          input = InpUnknown;
+
       }
+
       state = table[state][input];
 
       switch (state) {
@@ -7606,25 +7319,35 @@ bool QXmlSimpleReaderPrivate::parseReference()
          unexpectedEof(&QXmlSimpleReaderPrivate::parseReference, state);
          return false;
       }
-      if        (c.row()) {
+
+      if (c > 0xFF) {
          input = InpUnknown;
-      } else if (c.cell() == '&') {
+
+      } else if (c == '&') {
          input = InpAmp;
-      } else if (c.cell() == ';') {
+
+      } else if (c == ';') {
          input = InpSemi;
-      } else if (c.cell() == '#') {
+
+      } else if (c == '#') {
          input = InpHash;
-      } else if (c.cell() == 'x') {
+
+      } else if (c == 'x') {
          input = InpX;
-      } else if ('0' <= c.cell() && c.cell() <= '9') {
+
+      } else if ('0' <= c && c <= '9') {
          input = InpNum;
-      } else if ('a' <= c.cell() && c.cell() <= 'f') {
+
+      } else if ('a' <= c && c <= 'f') {
          input = InpHex;
-      } else if ('A' <= c.cell() && c.cell() <= 'F') {
+
+      } else if ('A' <= c && c <= 'F') {
          input = InpHex;
+
       } else {
          input = InpUnknown;
       }
+
       state = table[state][input];
 
       switch (state) {
@@ -7649,35 +7372,43 @@ bool QXmlSimpleReaderPrivate::parseReference()
          case Name:
             // read the name into the ref
             parseName_useRef = true;
-            if (!parseName()) {
+            if (! parseName()) {
                parseFailed(&QXmlSimpleReaderPrivate::parseReference, state);
                return false;
             }
             break;
+
          case DoneD:
-            tmp = ref().toUInt(&ok, 10);
+            tmp = ref().toInteger<uint>(&ok, 10);
+
             if (ok) {
-               stringAddC(QChar(tmp));
+               stringAddC(QChar(char32_t(tmp)));
+
             } else {
                reportParseError(QLatin1String(XMLERR_ERRORPARSINGREFERENCE));
                return false;
             }
+
             parseReference_charDataRead = true;
             next();
             break;
+
          case DoneH:
-            tmp = ref().toUInt(&ok, 16);
+            tmp = ref().toInteger<uint>(&ok, 16);
+
             if (ok) {
-               stringAddC(QChar(tmp));
+               stringAddC(QChar(char32_t(tmp)));
             } else {
                reportParseError(QLatin1String(XMLERR_ERRORPARSINGREFERENCE));
                return false;
             }
+
             parseReference_charDataRead = true;
             next();
             break;
+
          case DoneN:
-            if (!processReference()) {
+            if (! processReference()) {
                return false;
             }
             next();
@@ -7758,9 +7489,11 @@ bool QXmlSimpleReaderPrivate::processReference()
          stringAddC(QLatin1Char('"'));
       }
       parseReference_charDataRead = true;
+
    } else {
-      QMap<QString, QString>::Iterator it;
+      QMap<QString, QString>::iterator it;
       it = entities.find(reference);
+
       if (it != entities.end()) {
          // "Internal General"
          switch (parseReference_context) {
@@ -7794,9 +7527,11 @@ bool QXmlSimpleReaderPrivate::processReference()
                reportParseError(QLatin1String(XMLERR_INTERNALGENERALENTITYINDTD));
                return false;
          }
+
       } else {
-         QMap<QString, QXmlSimpleReaderPrivate::ExternEntity>::Iterator itExtern;
+         QMap<QString, QXmlSimpleReaderPrivate::ExternEntity>::iterator itExtern;
          itExtern = externEntities.find(reference);
+
          if (itExtern == externEntities.end()) {
             // entity not declared
             // ### check this case for conformance
@@ -7833,12 +7568,13 @@ bool QXmlSimpleReaderPrivate::processReference()
                   qt_xml_skipped_entity_in_content = false;
                }
             }
-         } else if ((*itExtern).notation.isNull()) {
+         } else if ((*itExtern).notation.isEmpty()) {
             // "External Parsed General"
             switch (parseReference_context) {
                case InContent: {
                   // Included if validating
                   bool skipIt = true;
+
                   if (entityRes) {
                      QXmlInputSource *ret = 0;
                      if (!entityRes->resolveEntity((*itExtern).publicId, (*itExtern).systemId, ret)) {
@@ -7846,22 +7582,27 @@ bool QXmlSimpleReaderPrivate::processReference()
                         reportParseError(entityRes->errorString());
                         return false;
                      }
+
                      if (ret) {
                         QString xmlRefString;
                         QString buffer = ret->data();
+
                         while (buffer.length() > 0) {
                            xmlRefString += buffer;
                            ret->fetchData();
                            buffer = ret->data();
                         }
+
                         delete ret;
                         if (!stripTextDecl(xmlRefString)) {
                            reportParseError(QLatin1String(XMLERR_ERRORINTEXTDECL));
                            return false;
                         }
+
                         if (!insertXmlRef(xmlRefString, reference, false)) {
                            return false;
                         }
+
                         skipIt = false;
                      }
                   }
@@ -7877,11 +7618,13 @@ bool QXmlSimpleReaderPrivate::processReference()
                   parseReference_charDataRead = false;
                }
                break;
+
                case InAttributeValue:
                   // Forbidden
                   parseReference_charDataRead = false;
                   reportParseError(QLatin1String(XMLERR_EXTERNALGENERALENTITYINAV));
                   return false;
+
                case InEntityValue: {
                   // Bypassed
                   stringAddC(QLatin1Char('&'));
@@ -7892,6 +7635,7 @@ bool QXmlSimpleReaderPrivate::processReference()
                   parseReference_charDataRead = true;
                }
                break;
+
                case InDTD:
                   // Forbidden
                   parseReference_charDataRead = false;
@@ -8133,7 +7877,7 @@ void QXmlSimpleReaderPrivate::reportParseError(const QString &error)
 {
    this->error = error;
    if (errorHnd) {
-      if (this->error.isNull()) {
+      if (this->error.isEmpty()) {
          const QXmlParseException ex(QLatin1String(XMLERR_OK), columnNr + 1, lineNr + 1,
                                      thisPublicId, thisSystemId);
          errorHnd->fatalError(ex);
@@ -8173,7 +7917,7 @@ void QXmlSimpleReaderPrivate::unexpectedEof(ParseFunction where, int state)
 */
 void QXmlSimpleReaderPrivate::parseFailed(ParseFunction where, int state)
 {
-   if (parseStack != 0 && error.isNull()) {
+   if (parseStack != 0 && error.isEmpty()) {
       pushParseState(where, state);
    }
 }
@@ -8193,50 +7937,33 @@ void QXmlSimpleReaderPrivate::pushParseState(ParseFunction function, int state)
    parseStack->push(ps);
 }
 
-inline static void updateValue(QString &value, const QChar *array, int &arrayPos, int &valueLen)
-{
-   value.resize(valueLen + arrayPos);
-   memcpy(value.data() + valueLen, array, arrayPos * sizeof(QChar));
-   valueLen += arrayPos;
-   arrayPos = 0;
-}
-
-// use buffers instead of QString::operator+= when single characters are read
 const QString &QXmlSimpleReaderPrivate::string()
 {
-   updateValue(stringValue, stringArray, stringArrayPos, stringValueLen);
    return stringValue;
 }
+
 const QString &QXmlSimpleReaderPrivate::name()
 {
-   updateValue(nameValue, nameArray, nameArrayPos, nameValueLen);
    return nameValue;
 }
+
 const QString &QXmlSimpleReaderPrivate::ref()
 {
-   updateValue(refValue, refArray, refArrayPos, refValueLen);
    return refValue;
 }
 
 void QXmlSimpleReaderPrivate::stringAddC(QChar ch)
 {
-   if (stringArrayPos == 256) {
-      updateValue(stringValue, stringArray, stringArrayPos, stringValueLen);
-   }
-   stringArray[stringArrayPos++] = ch;
+   stringValue += ch;
 }
+
 void QXmlSimpleReaderPrivate::nameAddC(QChar ch)
 {
-   if (nameArrayPos == 256) {
-      updateValue(nameValue, nameArray, nameArrayPos, nameValueLen);
-   }
-   nameArray[nameArrayPos++] = ch;
+   nameValue += ch;
 }
+
 void QXmlSimpleReaderPrivate::refAddC(QChar ch)
 {
-   if (refArrayPos == 256) {
-      updateValue(refValue, refArray, refArrayPos, refValueLen);
-   }
-   refArray[refArrayPos++] = ch;
+   refValue += ch;
 }
-QT_END_NAMESPACE
+

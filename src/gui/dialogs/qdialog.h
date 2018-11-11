@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -44,14 +41,14 @@ class Q_GUI_EXPORT QDialog : public QWidget
    GUI_CS_PROPERTY_WRITE(modal, setModal)
 
  public:
-   explicit QDialog(QWidget *parent = 0, Qt::WindowFlags f = 0);
+   explicit QDialog(QWidget *parent = nullptr, Qt::WindowFlags f = 0);
    ~QDialog();
 
    enum DialogCode { Rejected, Accepted };
 
    int result() const;
 
-   void setVisible(bool visible);
+   void setVisible(bool visible) override;
 
    void setOrientation(Qt::Orientation orientation);
    Qt::Orientation orientation() const;
@@ -59,8 +56,8 @@ class Q_GUI_EXPORT QDialog : public QWidget
    void setExtension(QWidget *extension);
    QWidget *extension() const;
 
-   QSize sizeHint() const;
-   QSize minimumSizeHint() const;
+   QSize sizeHint() const override;
+   QSize minimumSizeHint() const override;
 
    void setSizeGripEnabled(bool);
    bool isSizeGripEnabled() const;
@@ -98,16 +95,16 @@ class Q_GUI_EXPORT QDialog : public QWidget
  protected:
    QDialog(QDialogPrivate &, QWidget *parent, Qt::WindowFlags f = 0);
 
-   void keyPressEvent(QKeyEvent *);
-   void closeEvent(QCloseEvent *);
-   void showEvent(QShowEvent *);
-   void resizeEvent(QResizeEvent *);
+   void keyPressEvent(QKeyEvent *) override;
+   void closeEvent(QCloseEvent *) override;
+   void showEvent(QShowEvent *) override;
+   void resizeEvent(QResizeEvent *) override;
 
 #ifndef QT_NO_CONTEXTMENU
-   void contextMenuEvent(QContextMenuEvent *);
+   void contextMenuEvent(QContextMenuEvent *) override;
 #endif
 
-   bool eventFilter(QObject *, QEvent *);
+   bool eventFilter(QObject *, QEvent *) override;
    void adjustPosition(QWidget *);
 
  private:

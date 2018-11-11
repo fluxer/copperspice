@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -34,13 +31,9 @@ QT_BEGIN_NAMESPACE
 using namespace QPatternist;
 
 GenericDynamicContext::GenericDynamicContext(const NamePool::Ptr &np,
-      QAbstractMessageHandler *const errHandler,
-      const LocationHash &locations) : m_messageHandler(errHandler)
-   , m_currentDateTime(QDateTime::currentDateTime().toTimeSpec(Qt::UTC))
-   , m_outputReceiver(0)
-   , m_namePool(np)
-   , m_locations(locations)
-   , m_uriResolver(0)
+      QAbstractMessageHandler *const errHandler, const LocationHash &locations)
+   : m_messageHandler(errHandler), m_currentDateTime(QDateTime::currentDateTime().toTimeSpec(Qt::UTC)),
+      m_outputReceiver(0), m_namePool(np), m_locations(locations), m_uriResolver(0)
 {
    Q_ASSERT(m_messageHandler);
    Q_ASSERT(m_namePool);
@@ -48,7 +41,6 @@ GenericDynamicContext::GenericDynamicContext(const NamePool::Ptr &np,
 
 QExplicitlySharedDataPointer<DayTimeDuration> GenericDynamicContext::implicitTimezone() const
 {
-   /* Or what do you prefer, sir? */
    return CommonValues::DayTimeDurationZero;
 }
 
@@ -64,7 +56,7 @@ QDateTime GenericDynamicContext::currentDateTime() const
 
 xsInteger GenericDynamicContext::contextPosition() const
 {
-   Q_ASSERT_X(false, Q_FUNC_INFO, "That this function is called makes no sense. A Focus should be used.");
+   Q_ASSERT_X(false, Q_FUNC_INFO, "This function should never be called.");
    return 0;
 }
 
@@ -75,13 +67,13 @@ Item GenericDynamicContext::contextItem() const
 
 xsInteger GenericDynamicContext::contextSize()
 {
-   Q_ASSERT_X(false, Q_FUNC_INFO, "That this function is called makes no sense. A Focus should be used.");
+   Q_ASSERT_X(false, Q_FUNC_INFO, "This function should never be called.");
    return 0;
 }
 
 void GenericDynamicContext::setFocusIterator(const Item::Iterator::Ptr &)
 {
-   Q_ASSERT_X(false, Q_FUNC_INFO, "That this function is called makes no sense. A Focus should be used.");
+   Q_ASSERT_X(false, Q_FUNC_INFO, "This function should never be called.");
 }
 
 Item::Iterator::Ptr GenericDynamicContext::focusIterator() const
@@ -101,7 +93,7 @@ void GenericDynamicContext::setOutputReceiver(QAbstractXmlReceiver *const receiv
 
 void GenericDynamicContext::setNodeBuilder(NodeBuilder::Ptr &builder)
 {
-   m_nodeBuilder = builder;
+   m_nodeBuilder = std::move(builder);
 }
 
 NodeBuilder::Ptr GenericDynamicContext::nodeBuilder(const QUrl &baseURI) const

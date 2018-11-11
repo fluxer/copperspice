@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -593,12 +590,13 @@ void QDockAreaLayoutInfo::fitItems()
             min_size -= item.size;
             min_size += pick(o, item.minimumSize());
             min_size = qMax(0, min_size);
+
          } else if (size > max_size) {
             // There is too much space to keep this widget's size
             item.flags &= ~QDockAreaLayoutItem::KeepSize;
             max_size -= item.size;
             max_size += pick(o, item.maximumSize());
-            max_size = qMin<int>(QWIDGETSIZE_MAX, max_size);
+            max_size = qMin(QWIDGETSIZE_MAX, max_size);
          }
       }
 
@@ -1800,12 +1798,16 @@ void QDockAreaLayoutInfo::split(int index, Qt::Orientation orientation,
 {
    if (orientation == o) {
       item_list.insert(index + 1, QDockAreaLayoutItem(dockWidgetItem));
+
    } else {
+
 #ifdef QT_NO_TABBAR
       const int tabBarShape = 0;
 #endif
+
       QDockAreaLayoutInfo *new_info
          = new QDockAreaLayoutInfo(sep, dockPos, orientation, tabBarShape, mainWindow);
+
       item_list[index].subinfo = new_info;
       new_info->item_list.append(item_list.at(index).widgetItem);
       item_list[index].widgetItem = 0;
@@ -1815,13 +1817,17 @@ void QDockAreaLayoutInfo::split(int index, Qt::Orientation orientation,
 
 QDockAreaLayoutItem &QDockAreaLayoutInfo::item(const QList<int> &path)
 {
-   Q_ASSERT(!path.isEmpty());
+   Q_ASSERT(! path.isEmpty());
+
    const int index = path.first();
+
    if (path.count() > 1) {
       const QDockAreaLayoutItem &item = item_list[index];
       Q_ASSERT(item.subinfo != 0);
+
       return item.subinfo->item(path.mid(1));
    }
+
    return item_list[index];
 }
 
@@ -2650,9 +2656,11 @@ const QDockAreaLayoutInfo *QDockAreaLayout::info(const QList<int> &path) const
 
 QDockAreaLayoutItem &QDockAreaLayout::item(const QList<int> &path)
 {
-   Q_ASSERT(!path.isEmpty());
+   Q_ASSERT(! path.isEmpty());
+
    const int index = path.first();
    Q_ASSERT(index >= 0 && index < QInternal::DockCount);
+
    return docks[index].item(path.mid(1));
 }
 
@@ -3519,6 +3527,7 @@ void QDockAreaLayout::keepSize(QDockWidget *w)
    if (path.isEmpty()) {
       return;
    }
+
    QDockAreaLayoutItem &item = this->item(path);
    if (item.size != -1) {
       item.flags |= QDockAreaLayoutItem::KeepSize;

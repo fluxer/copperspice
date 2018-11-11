@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -35,22 +32,18 @@ class Q_GUI_EXPORT QMimeSource
 
  public:
    virtual ~QMimeSource();
-   virtual const char *format(int n = 0) const = 0;
-   virtual bool provides(const char *) const;
-   virtual QByteArray encodedData(const char *) const = 0;
+   virtual QString format(int n = 0) const = 0;
+   virtual bool provides(const QString &mimeType) const;
+   virtual QByteArray encodedData(const QString &format) const = 0;
 };
 
-
 #if defined(Q_OS_WIN)
-
-QT_BEGIN_INCLUDE_NAMESPACE
 
 typedef struct tagFORMATETC FORMATETC;
 typedef struct tagSTGMEDIUM STGMEDIUM;
 struct IDataObject;
 
 #include <QtCore/qvariant.h>
-QT_END_INCLUDE_NAMESPACE
 
 /*
   Encapsulation of conversion between MIME and Windows CLIPFORMAT.
@@ -161,10 +154,8 @@ class Q_GUI_EXPORT QMacPasteboardMime
    virtual QList<QByteArray> convertFromMime(const QString &mime, QVariant data, QString flav) = 0;
 };
 
-// ### Qt5/Add const QStringList& QMacPasteboardMime::supportedFlavours()
+// ### Qt5/Add const QStringList & QMacPasteboardMime::supportedFlavours()
 Q_GUI_EXPORT void qRegisterDraggedTypes(const QStringList &types);
 #endif
-
-QT_END_NAMESPACE
 
 #endif // QMIME_H

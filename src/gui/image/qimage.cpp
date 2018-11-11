@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -47,8 +44,6 @@
 #include <qpaintengine_raster_p.h>
 #include <qimage_p.h>
 #include <qfont_p.h>
-
-QT_BEGIN_NAMESPACE
 
 static inline bool checkPixelSize(const QImage::Format format)
 {
@@ -90,7 +85,7 @@ static QImage rotated90(const QImage &src);
 static QImage rotated180(const QImage &src);
 static QImage rotated270(const QImage &src);
 
-// ### Qt 5: remove
+// ### Qt5: remove
 Q_GUI_EXPORT qint64 qt_image_id(const QImage &image)
 {
    return image.cacheKey();
@@ -116,13 +111,6 @@ QImageData::QImageData()
 {
 }
 
-/*! \fn QImageData * QImageData::create(const QSize &size, QImage::Format format, int numColors)
-
-    \internal
-
-    Creates a new image data.
-    Returns 0 if invalid parameters are give or anything else failed.
-*/
 QImageData *QImageData::create(const QSize &size, QImage::Format format, int numColors)
 {
    if (!size.isValid() || numColors < 0 || format == QImage::Format_Invalid) {
@@ -208,7 +196,6 @@ QImageData::~QImageData()
    data = 0;
 }
 
-
 bool QImageData::checkForAlphaPixels() const
 {
    bool has_alpha_pixels = false;
@@ -286,427 +273,6 @@ bool QImageData::checkForAlphaPixels() const
    return has_alpha_pixels;
 }
 
-/*!
-    \class QImage
-
-    \ingroup painting
-    \ingroup shared
-
-    \reentrant
-
-    \brief The QImage class provides a hardware-independent image
-    representation that allows direct access to the pixel data, and
-    can be used as a paint device.
-
-    Qt provides four classes for handling image data: QImage, QPixmap,
-    QBitmap and QPicture.  QImage is designed and optimized for I/O,
-    and for direct pixel access and manipulation, while QPixmap is
-    designed and optimized for showing images on screen. QBitmap is
-    only a convenience class that inherits QPixmap, ensuring a
-    depth of 1. Finally, the QPicture class is a paint device that
-    records and replays QPainter commands.
-
-    Because QImage is a QPaintDevice subclass, QPainter can be used to
-    draw directly onto images.  When using QPainter on a QImage, the
-    painting can be performed in another thread than the current GUI
-    thread.
-
-    The QImage class supports several image formats described by the
-    \l Format enum. These include monochrome, 8-bit, 32-bit and
-    alpha-blended images which are available in all versions of Qt
-    4.x.
-
-    QImage provides a collection of functions that can be used to
-    obtain a variety of information about the image. There are also
-    several functions that enables transformation of the image.
-
-    QImage objects can be passed around by value since the QImage
-    class uses \l{Implicit Data Sharing}{implicit data
-    sharing}. QImage objects can also be streamed and compared.
-
-    \note If you would like to load QImage objects in a static build of Qt,
-    refer to the \l{How To Create Qt Plugins#Static Plugins}{Plugin HowTo}.
-
-    \warning Painting on a QImage with the format
-    QImage::Format_Indexed8 is not supported.
-
-    \tableofcontents
-
-    \section1 Reading and Writing Image Files
-
-    QImage provides several ways of loading an image file: The file
-    can be loaded when constructing the QImage object, or by using the
-    load() or loadFromData() functions later on. QImage also provides
-    the static fromData() function, constructing a QImage from the
-    given data.  When loading an image, the file name can either refer
-    to an actual file on disk or to one of the application's embedded
-    resources. See \l{The Qt Resource System} overview for details
-    on how to embed images and other resource files in the
-    application's executable.
-
-    Simply call the save() function to save a QImage object.
-
-    The complete list of supported file formats are available through
-    the QImageReader::supportedImageFormats() and
-    QImageWriter::supportedImageFormats() functions. New file formats
-    can be added as plugins. By default, Qt supports the following
-    formats:
-
-    \table
-    \header \o Format \o Description                      \o Qt's support
-    \row    \o BMP    \o Windows Bitmap                   \o Read/write
-    \row    \o GIF    \o Graphic Interchange Format (optional) \o Read
-    \row    \o JPG    \o Joint Photographic Experts Group \o Read/write
-    \row    \o JPEG   \o Joint Photographic Experts Group \o Read/write
-    \row    \o PNG    \o Portable Network Graphics        \o Read/write
-    \row    \o PBM    \o Portable Bitmap                  \o Read
-    \row    \o PGM    \o Portable Graymap                 \o Read
-    \row    \o PPM    \o Portable Pixmap                  \o Read/write
-    \row    \o TIFF   \o Tagged Image File Format         \o Read/write
-    \row    \o XBM    \o X11 Bitmap                       \o Read/write
-    \row    \o XPM    \o X11 Pixmap                       \o Read/write
-    \endtable
-
-    \section1 Image Information
-
-    QImage provides a collection of functions that can be used to
-    obtain a variety of information about the image:
-
-    \table
-    \header
-    \o \o Available Functions
-
-    \row
-    \o Geometry
-    \o
-
-    The size(), width(), height(), dotsPerMeterX(), and
-    dotsPerMeterY() functions provide information about the image size
-    and aspect ratio.
-
-    The rect() function returns the image's enclosing rectangle. The
-    valid() function tells if a given pair of coordinates is within
-    this rectangle. The offset() function returns the number of pixels
-    by which the image is intended to be offset by when positioned
-    relative to other images, which also can be manipulated using the
-    setOffset() function.
-
-    \row
-    \o Colors
-    \o
-
-    The color of a pixel can be retrieved by passing its coordinates
-    to the pixel() function.  The pixel() function returns the color
-    as a QRgb value indepedent of the image's format.
-
-    In case of monochrome and 8-bit images, the colorCount() and
-    colorTable() functions provide information about the color
-    components used to store the image data: The colorTable() function
-    returns the image's entire color table. To obtain a single entry,
-    use the pixelIndex() function to retrieve the pixel index for a
-    given pair of coordinates, then use the color() function to
-    retrieve the color. Note that if you create an 8-bit image
-    manually, you have to set a valid color table on the image as
-    well.
-
-    The hasAlphaChannel() function tells if the image's format
-    respects the alpha channel, or not. The allGray() and
-    isGrayscale() functions tell whether an image's colors are all
-    shades of gray.
-
-    See also the \l {QImage#Pixel Manipulation}{Pixel Manipulation}
-    and \l {QImage#Image Transformations}{Image Transformations}
-    sections.
-
-    \row
-    \o Text
-    \o
-
-    The text() function returns the image text associated with the
-    given text key. An image's text keys can be retrieved using the
-    textKeys() function. Use the setText() function to alter an
-    image's text.
-
-    \row
-    \o Low-level information
-    \o
-
-    The depth() function returns the depth of the image. The supported
-    depths are 1 (monochrome), 8, 16, 24 and 32 bits. The
-    bitPlaneCount() function tells how many of those bits that are
-    used. For more information see the
-    \l {QImage#Image Formats}{Image Formats} section.
-
-    The format(), bytesPerLine(), and byteCount() functions provide
-    low-level information about the data stored in the image.
-
-    The cacheKey() function returns a number that uniquely
-    identifies the contents of this QImage object.
-    \endtable
-
-    \section1 Pixel Manipulation
-
-    The functions used to manipulate an image's pixels depend on the
-    image format. The reason is that monochrome and 8-bit images are
-    index-based and use a color lookup table, while 32-bit images
-    store ARGB values directly. For more information on image formats,
-    see the \l {Image Formats} section.
-
-    In case of a 32-bit image, the setPixel() function can be used to
-    alter the color of the pixel at the given coordinates to any other
-    color specified as an ARGB quadruplet. To make a suitable QRgb
-    value, use the qRgb() (adding a default alpha component to the
-    given RGB values, i.e. creating an opaque color) or qRgba()
-    function. For example:
-
-    \table
-    \header
-    \o {2,1}32-bit
-    \row
-    \o \inlineimage qimage-32bit_scaled.png
-    \o
-    \snippet doc/src/snippets/code/src_gui_image_qimage.cpp 0
-    \endtable
-
-    In case of a 8-bit and monchrome images, the pixel value is only
-    an index from the image's color table. So the setPixel() function
-    can only be used to alter the color of the pixel at the given
-    coordinates to a predefined color from the image's color table,
-    i.e. it can only change the pixel's index value. To alter or add a
-    color to an image's color table, use the setColor() function.
-
-    An entry in the color table is an ARGB quadruplet encoded as an
-    QRgb value. Use the qRgb() and qRgba() functions to make a
-    suitable QRgb value for use with the setColor() function. For
-    example:
-
-    \table
-    \header
-    \o {2,1} 8-bit
-    \row
-    \o \inlineimage qimage-8bit_scaled.png
-    \o
-    \snippet doc/src/snippets/code/src_gui_image_qimage.cpp 1
-    \endtable
-
-    QImage also provide the scanLine() function which returns a
-    pointer to the pixel data at the scanline with the given index,
-    and the bits() function which returns a pointer to the first pixel
-    data (this is equivalent to \c scanLine(0)).
-
-    \section1 Image Formats
-
-    Each pixel stored in a QImage is represented by an integer. The
-    size of the integer varies depending on the format. QImage
-    supports several image formats described by the \l Format
-    enum.
-
-    Monochrome images are stored using 1-bit indexes into a color table
-    with at most two colors. There are two different types of
-    monochrome images: big endian (MSB first) or little endian (LSB
-    first) bit order.
-
-    8-bit images are stored using 8-bit indexes into a color table,
-    i.e.  they have a single byte per pixel. The color table is a
-    QVector<QRgb>, and the QRgb typedef is equivalent to an unsigned
-    int containing an ARGB quadruplet on the format 0xAARRGGBB.
-
-    32-bit images have no color table; instead, each pixel contains an
-    QRgb value. There are three different types of 32-bit images
-    storing RGB (i.e. 0xffRRGGBB), ARGB and premultiplied ARGB
-    values respectively. In the premultiplied format the red, green,
-    and blue channels are multiplied by the alpha component divided by
-    255.
-
-    An image's format can be retrieved using the format()
-    function. Use the convertToFormat() functions to convert an image
-    into another format. The allGray() and isGrayscale() functions
-    tell whether a color image can safely be converted to a grayscale
-    image.
-
-    \section1 Image Transformations
-
-    QImage supports a number of functions for creating a new image
-    that is a transformed version of the original: The
-    createAlphaMask() function builds and returns a 1-bpp mask from
-    the alpha buffer in this image, and the createHeuristicMask()
-    function creates and returns a 1-bpp heuristic mask for this
-    image. The latter function works by selecting a color from one of
-    the corners, then chipping away pixels of that color starting at
-    all the edges.
-
-    The mirrored() function returns a mirror of the image in the
-    desired direction, the scaled() returns a copy of the image scaled
-    to a rectangle of the desired measures, and the rgbSwapped() function
-    constructs a BGR image from a RGB image.
-
-    The scaledToWidth() and scaledToHeight() functions return scaled
-    copies of the image.
-
-    The transformed() function returns a copy of the image that is
-    transformed with the given transformation matrix and
-    transformation mode: Internally, the transformation matrix is
-    adjusted to compensate for unwanted translation,
-    i.e. transformed() returns the smallest image containing all
-    transformed points of the original image. The static trueMatrix()
-    function returns the actual matrix used for transforming the
-    image.
-
-    There are also functions for changing attributes of an image
-    in-place:
-
-    \table
-    \header \o Function \o Description
-    \row
-    \o setDotsPerMeterX()
-    \o Defines the aspect ratio by setting the number of pixels that fit
-    horizontally in a physical meter.
-    \row
-    \o setDotsPerMeterY()
-    \o Defines the aspect ratio by setting the number of pixels that fit
-    vertically in a physical meter.
-    \row
-    \o fill()
-    \o Fills the entire image with the given pixel value.
-    \row
-    \o invertPixels()
-    \o Inverts all pixel values in the image using the given InvertMode value.
-    \row
-    \o setColorTable()
-    \o Sets the color table used to translate color indexes. Only
-    monochrome and 8-bit formats.
-    \row
-    \o setColorCount()
-    \o Resizes the color table. Only monochrome and 8-bit formats.
-
-    \endtable
-
-    \section1 Legal Information
-
-    For smooth scaling, the transformed() functions use code based on
-    smooth scaling algorithm by Daniel M. Duley.
-
-    \legalese
-     Copyright (C) 2004, 2005 Daniel M. Duley
-
-     Redistribution and use in source and binary forms, with or without
-        modification, are permitted provided that the following conditions
-        are met:
-
-     1. Redistributions of source code must retain the above copyright
-        notice, this list of conditions and the following disclaimer.
-     2. Redistributions in binary form must reproduce the above copyright
-        notice, this list of conditions and the following disclaimer in the
-        documentation and/or other materials provided with the distribution.
-
-     THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
-     IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-     OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-     IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
-     INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
-     NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-     DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-     THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-     (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
-     THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-    \endlegalese
-
-    \sa QImageReader, QImageWriter, QPixmap, QSvgRenderer, {Image Composition Example},
-        {Image Viewer Example}, {Scribble Example}, {Pixelator Example}
-*/
-
-/*!
-    \enum QImage::Endian
-    \compat
-
-    This enum type is used to describe the endianness of the CPU and
-    graphics hardware. It is provided here for compatibility with earlier versions of Qt.
-
-    Use the \l Format enum instead. The \l Format enum specify the
-    endianess for monchrome formats, but for other formats the
-    endianess is not relevant.
-
-    \value IgnoreEndian  Endianness does not matter. Useful for some
-                         operations that are independent of endianness.
-    \value BigEndian     Most significant bit first or network byte order, as on SPARC, PowerPC, and Motorola CPUs.
-    \value LittleEndian  Least significant bit first or little endian byte order, as on Intel x86.
-*/
-
-/*!
-    \enum QImage::InvertMode
-
-    This enum type is used to describe how pixel values should be
-    inverted in the invertPixels() function.
-
-    \value InvertRgb    Invert only the RGB values and leave the alpha
-                        channel unchanged.
-
-    \value InvertRgba   Invert all channels, including the alpha channel.
-
-    \sa invertPixels()
-*/
-
-/*!
-    \enum QImage::Format
-
-    The following image formats are available in Qt. Values greater
-    than QImage::Format_RGB16 were added in Qt 4.4. See the notes
-    after the table.
-
-    \value Format_Invalid   The image is invalid.
-    \value Format_Mono      The image is stored using 1-bit per pixel. Bytes are
-                            packed with the most significant bit (MSB) first.
-    \value Format_MonoLSB   The image is stored using 1-bit per pixel. Bytes are
-                            packed with the less significant bit (LSB) first.
-
-    \value Format_Indexed8  The image is stored using 8-bit indexes
-                            into a colormap.
-
-    \value Format_RGB32     The image is stored using a 32-bit RGB format (0xffRRGGBB).
-
-    \value Format_ARGB32    The image is stored using a 32-bit ARGB
-                            format (0xAARRGGBB).
-
-    \value Format_ARGB32_Premultiplied  The image is stored using a premultiplied 32-bit
-                            ARGB format (0xAARRGGBB), i.e. the red,
-                            green, and blue channels are multiplied
-                            by the alpha component divided by 255. (If RR, GG, or BB
-                            has a higher value than the alpha channel, the results are
-                            undefined.) Certain operations (such as image composition
-                            using alpha blending) are faster using premultiplied ARGB32
-                            than with plain ARGB32.
-
-    \value Format_RGB16     The image is stored using a 16-bit RGB format (5-6-5).
-
-    \value Format_ARGB8565_Premultiplied  The image is stored using a
-                            premultiplied 24-bit ARGB format (8-5-6-5).
-    \value Format_RGB666    The image is stored using a 24-bit RGB format (6-6-6).
-                            The unused most significant bits is always zero.
-    \value Format_ARGB6666_Premultiplied  The image is stored using a
-                            premultiplied 24-bit ARGB format (6-6-6-6).
-    \value Format_RGB555    The image is stored using a 16-bit RGB format (5-5-5).
-                            The unused most significant bit is always zero.
-    \value Format_ARGB8555_Premultiplied  The image is stored using a
-                            premultiplied 24-bit ARGB format (8-5-5-5).
-    \value Format_RGB888    The image is stored using a 24-bit RGB format (8-8-8).
-    \value Format_RGB444    The image is stored using a 16-bit RGB format (4-4-4).
-                            The unused bits are always zero.
-    \value Format_ARGB4444_Premultiplied  The image is stored using a
-                            premultiplied 16-bit ARGB format (4-4-4-4).
-
-    \note Drawing into a QImage with QImage::Format_Indexed8 is not
-    supported.
-
-    \note Do not render into ARGB32 images using QPainter.  Using
-    QImage::Format_ARGB32_Premultiplied is significantly faster.
-
-    \sa format(), convertToFormat()
-*/
-
-/*****************************************************************************
-  QImage member functions
- *****************************************************************************/
-
 // table to flip bits
 static const uchar bitflip[256] = {
    /*
@@ -742,47 +308,94 @@ const uchar *qt_get_bitflip_array()                        // called from QPixma
    return bitflip;
 }
 
-/*!
-    Constructs a null image.
-
-    \sa isNull()
-*/
-
 QImage::QImage()
    : QPaintDevice()
 {
    d = 0;
 }
 
-/*!
-    Constructs an image with the given \a width, \a height and \a
-    format.
-
-    A \l{isNull()}{null} image will be returned if memory cannot be allocated.
-
-    \warning This will create a QImage with uninitialized data. Call
-    fill() to fill the image with an appropriate pixel value before
-    drawing onto it with QPainter.
-*/
 QImage::QImage(int width, int height, Format format)
    : QPaintDevice()
 {
    d = QImageData::create(QSize(width, height), format, 0);
 }
 
-/*!
-    Constructs an image with the given \a size and \a format.
-
-    A \l{isNull()}{null} image is returned if memory cannot be allocated.
-
-    \warning This will create a QImage with uninitialized data. Call
-    fill() to fill the image with an appropriate pixel value before
-    drawing onto it with QPainter.
-*/
 QImage::QImage(const QSize &size, Format format)
    : QPaintDevice()
 {
    d = QImageData::create(size, format, 0);
+}
+
+QImage::QImage(uchar *data, int width, int height, Format format)
+   : QPaintDevice()
+{
+   d = QImageData::create(data, width, height, 0, format, false);
+}
+
+QImage::QImage(const uchar *data, int width, int height, Format format)
+   : QPaintDevice()
+{
+   d = QImageData::create(const_cast<uchar *>(data), width, height, 0, format, true);
+}
+
+QImage::QImage(uchar *data, int width, int height, int bytesPerLine, Format format)
+   : QPaintDevice()
+{
+   d = QImageData::create(data, width, height, bytesPerLine, format, false);
+}
+
+QImage::QImage(const uchar *data, int width, int height, int bytesPerLine, Format format)
+   : QPaintDevice()
+{
+   d = QImageData::create(const_cast<uchar *>(data), width, height, bytesPerLine, format, true);
+}
+
+QImage::QImage(const QString &fileName, const char *format)
+   : QPaintDevice()
+{
+   d = 0;
+   load(fileName, format);
+}
+
+QImage::QImage(const QImage &image)
+   : QPaintDevice()
+{
+   if (image.paintingActive()) {
+      d = 0;
+      operator=(image.copy());
+   } else {
+      d = image.d;
+      if (d) {
+         d->ref.ref();
+      }
+   }
+}
+
+#ifndef QT_NO_IMAGEFORMAT_XPM
+extern bool qt_read_xpm_image_or_array(QIODevice *device, const char *const *source, QImage &image);
+
+QImage::QImage(const char *const xpm[])
+   : QPaintDevice()
+{
+   d = 0;
+
+   if (!xpm) {
+      return;
+   }
+
+   if (! qt_read_xpm_image_or_array(0, xpm, *this)) {
+      // Issue: Warning because the constructor may be ambigious
+      qWarning("QImage::QImage(), XPM is not supported");
+   }
+}
+#endif
+
+
+QImage::~QImage()
+{
+   if (d && !d->ref.deref()) {
+      delete d;
+   }
 }
 
 QImageData *QImageData::create(uchar *data, int width, int height,  int bpl, QImage::Format format, bool readOnly)
@@ -793,7 +406,7 @@ QImageData *QImageData::create(uchar *data, int width, int height,  int bpl, QIm
       return d;
    }
 
-   if (!checkPixelSize(format)) {
+   if (! checkPixelSize(format)) {
       qWarning("QImageData::create(): Invalid pixel size for format %i",
                format);
       return 0;
@@ -834,87 +447,6 @@ QImageData *QImageData::create(uchar *data, int width, int height,  int bpl, QIm
    return d;
 }
 
-QImage::QImage(uchar *data, int width, int height, Format format)
-   : QPaintDevice()
-{
-   d = QImageData::create(data, width, height, 0, format, false);
-}
-
-QImage::QImage(const uchar *data, int width, int height, Format format)
-   : QPaintDevice()
-{
-   d = QImageData::create(const_cast<uchar *>(data), width, height, 0, format, true);
-}
-
-QImage::QImage(uchar *data, int width, int height, int bytesPerLine, Format format)
-   : QPaintDevice()
-{
-   d = QImageData::create(data, width, height, bytesPerLine, format, false);
-}
-
-QImage::QImage(const uchar *data, int width, int height, int bytesPerLine, Format format)
-   : QPaintDevice()
-{
-   d = QImageData::create(const_cast<uchar *>(data), width, height, bytesPerLine, format, true);
-}
-
-QImage::QImage(const QString &fileName, const char *format)
-   : QPaintDevice()
-{
-   d = 0;
-   load(fileName, format);
-}
-
-#ifndef QT_NO_IMAGEFORMAT_XPM
-extern bool qt_read_xpm_image_or_array(QIODevice *device, const char *const *source, QImage &image);
-
-
-QImage::QImage(const char *const xpm[])
-   : QPaintDevice()
-{
-   d = 0;
-   if (!xpm) {
-      return;
-   }
-   if (!qt_read_xpm_image_or_array(0, xpm, *this))
-      // Issue: Warning because the constructor may be ambigious
-   {
-      qWarning("QImage::QImage(), XPM is not supported");
-   }
-}
-#endif
-
-QImage::QImage(const QImage &image)
-   : QPaintDevice()
-{
-   if (image.paintingActive()) {
-      d = 0;
-      operator=(image.copy());
-   } else {
-      d = image.d;
-      if (d) {
-         d->ref.ref();
-      }
-   }
-}
-
-QImage::~QImage()
-{
-   if (d && !d->ref.deref()) {
-      delete d;
-   }
-}
-
-/*!
-    Assigns a shallow copy of the given \a image to this image and
-    returns a reference to this image.
-
-    For more information about shallow copies, see the \l {Implicit
-    Data Sharing} documentation.
-
-    \sa copy(), QImage()
-*/
-
 QImage &QImage::operator=(const QImage &image)
 {
    if (image.paintingActive()) {
@@ -930,14 +462,6 @@ QImage &QImage::operator=(const QImage &image)
    }
    return *this;
 }
-
-/*!
-    \fn void QImage::swap(QImage &other)
-    \since 4.8
-
-    Swaps image \a other with this image. This operation is very
-    fast and never fails.
-*/
 
 /*!
   \internal
@@ -983,37 +507,6 @@ void QImage::detach()
    }
 }
 
-
-/*!
-    \fn QImage QImage::copy(int x, int y, int width, int height) const
-    \overload
-
-    The returned image is copied from the position (\a x, \a y) in
-    this image, and will always have the given \a width and \a height.
-    In areas beyond this image, pixels are set to 0.
-
-*/
-
-/*!
-    \fn QImage QImage::copy(const QRect& rectangle) const
-
-    Returns a sub-area of the image as a new image.
-
-    The returned image is copied from the position (\a
-    {rectangle}.x(), \a{rectangle}.y()) in this image, and will always
-    have the size of the given \a rectangle.
-
-    In areas beyond this image, pixels are set to 0. For 32-bit RGB
-    images, this means black; for 32-bit ARGB images, this means
-    transparent black; for 8-bit images, this means the color with
-    index 0 in the color table which can be anything; for 1-bit
-    images, this means Qt::color0.
-
-    If the given \a rectangle is a null rectangle the entire image is
-    copied.
-
-    \sa QImage()
-*/
 QImage QImage::copy(const QRect &r) const
 {
    if (!d) {
@@ -2802,7 +2295,7 @@ static void convert_Indexed8_to_X32(QImageData *dest, const QImageData *src, Qt:
       uint *end = p + w;
 
       while (p < end) {
-         *p++ = colorTable.at(qMin<int>(tableSize, *b++));
+         *p++ = colorTable.at(qMin(tableSize, *b++));
       }
 
       src_data += src->bytes_per_line;
@@ -3484,8 +2977,9 @@ static QImage convertWithPalette(const QImage &src, QImage::Format format,
 
 #if !defined(QT_NO_IMAGE_TEXT)
    QString textsKeys = src.text();
-   QStringList textKeyList = textsKeys.split(QLatin1Char('\n'), QString::SkipEmptyParts);
-   foreach (const QString & textKey, textKeyList) {
+   QStringList textKeyList = textsKeys.split(QLatin1Char('\n'), QStringParser::SkipEmptyParts);
+
+   for (const QString & textKey : textKeyList) {
       QStringList textKeySplitted = textKey.split(QLatin1String(": "));
       dest.setText(textKeySplitted[0], textKeySplitted[1]);
    }
@@ -4594,23 +4088,6 @@ QImage QImage::rgbSwapped() const
    return res;
 }
 
-/*!
-    Loads an image from the file with the given \a fileName. Returns true if
-    the image was successfully loaded; otherwise returns false.
-
-    The loader attempts to read the image using the specified \a format, e.g.,
-    PNG or JPG. If \a format is not specified (which is the default), the
-    loader probes the file for a header to guess the file format.
-
-    The file name can either refer to an actual file on disk or to one
-    of the application's embedded resources. See the
-    \l{resources.html}{Resource System} overview for details on how to
-    embed images and other resource files in the application's
-    executable.
-
-    \sa {QImage#Reading and Writing Image Files}{Reading and Writing Image Files}
-*/
-
 bool QImage::load(const QString &fileName, const char *format)
 {
    if (fileName.isEmpty()) {
@@ -4618,19 +4095,14 @@ bool QImage::load(const QString &fileName, const char *format)
    }
 
    QImage image = QImageReader(fileName, format).read();
-   if (!image.isNull()) {
+
+   if (! image.isNull()) {
       operator=(image);
       return true;
    }
+
    return false;
 }
-
-/*!
-    \overload
-
-    This function reads a QImage from the given \a device. This can,
-    for example, be used to load an image directly into a QByteArray.
-*/
 
 bool QImage::load(QIODevice *device, const char *format)
 {
@@ -4642,20 +4114,6 @@ bool QImage::load(QIODevice *device, const char *format)
    return false;
 }
 
-/*!
-    \fn bool QImage::loadFromData(const uchar *data, int len, const char *format)
-
-    Loads an image from the first \a len bytes of the given binary \a
-    data. Returns true if the image was successfully loaded; otherwise
-    returns false.
-
-    The loader attempts to read the image using the specified \a format, e.g.,
-    PNG or JPG. If \a format is not specified (which is the default), the
-    loader probes the file for a header to guess the file format.
-
-    \sa {QImage#Reading and Writing Image Files}{Reading and Writing Image Files}
-*/
-
 bool QImage::loadFromData(const uchar *data, int len, const char *format)
 {
    QImage image = fromData(data, len, format);
@@ -4666,34 +4124,6 @@ bool QImage::loadFromData(const uchar *data, int len, const char *format)
    return false;
 }
 
-/*!
-    \fn bool QImage::loadFromData(const QByteArray &data, const char *format)
-
-    \overload
-
-    Loads an image from the given QByteArray \a data.
-*/
-
-/*!
-    \fn QImage QImage::fromData(const uchar *data, int size, const char *format)
-
-    Constructs a QImage from the first \a size bytes of the given
-    binary \a data. The loader attempts to read the image using the
-    specified \a format. If \a format is not specified (which is the default),
-    the loader probes the file for a header to guess the file format.
-    binary \a data. The loader attempts to read the image, either using the
-    optional image \a format specified or by determining the image format from
-    the data.
-
-    If \a format is not specified (which is the default), the loader probes the
-    file for a header to determine the file format. If \a format is specified,
-    it must be one of the values returned by QImageReader::supportedImageFormats().
-
-    If the loading of the image fails, the image returned will be a null image.
-
-    \sa load(), save(), {QImage#Reading and Writing Image Files}{Reading and Writing Image Files}
- */
-
 QImage QImage::fromData(const uchar *data, int size, const char *format)
 {
    QByteArray a = QByteArray::fromRawData(reinterpret_cast<const char *>(data), size);
@@ -4703,30 +4133,6 @@ QImage QImage::fromData(const uchar *data, int size, const char *format)
    return QImageReader(&b, format).read();
 }
 
-/*!
-    \fn QImage QImage::fromData(const QByteArray &data, const char *format)
-
-    \overload
-
-    Loads an image from the given QByteArray \a data.
-*/
-
-/*!
-    Saves the image to the file with the given \a fileName, using the
-    given image file \a format and \a quality factor. If \a format is
-    0, QImage will attempt to guess the format by looking at \a fileName's
-    suffix.
-
-    The \a quality factor must be in the range 0 to 100 or -1. Specify
-    0 to obtain small compressed files, 100 for large uncompressed
-    files, and -1 (the default) to use the default settings.
-
-    Returns true if the image was successfully saved; otherwise
-    returns false.
-
-    \sa {QImage#Reading and Writing Image Files}{Reading and Writing
-    Image Files}
-*/
 bool QImage::save(const QString &fileName, const char *format, int quality) const
 {
    if (isNull()) {
@@ -4770,75 +4176,34 @@ bool QImageData::doImageIO(const QImage *image, QImageWriter *writer, int qualit
    return writer->write(*image);
 }
 
-/*****************************************************************************
-  QImage stream functions
- *****************************************************************************/
-#if !defined(QT_NO_DATASTREAM)
-/*!
-    \fn QDataStream &operator<<(QDataStream &stream, const QImage &image)
-    \relates QImage
-
-    Writes the given \a image to the given \a stream as a PNG image,
-    or as a BMP image if the stream's version is 1. Note that writing
-    the stream to a file will not produce a valid image file.
-
-    \sa QImage::save(), {Serializing Qt Data Types}
-*/
-
 QDataStream &operator<<(QDataStream &s, const QImage &image)
 {
-   if (s.version() >= 5) {
-      if (image.isNull()) {
-         s << (qint32) 0; // null image marker
-         return s;
-      } else {
-         s << (qint32) 1;
-         // continue ...
-      }
+   if (image.isNull()) {
+      s << (qint32) 0; // null image marker
+      return s;
+   } else {
+      s << (qint32) 1;
+      // continue ...
    }
-   QImageWriter writer(s.device(), s.version() == 1 ? "bmp" : "png");
+
+   QImageWriter writer(s.device(), "png");
    writer.write(image);
    return s;
 }
 
-/*!
-    \fn QDataStream &operator>>(QDataStream &stream, QImage &image)
-    \relates QImage
-
-    Reads an image from the given \a stream and stores it in the given
-    \a image.
-
-    \sa QImage::load(), {Serializing Qt Data Types}
-*/
-
 QDataStream &operator>>(QDataStream &s, QImage &image)
 {
-   if (s.version() >= 5) {
-      qint32 nullMarker;
-      s >> nullMarker;
-      if (!nullMarker) {
-         image = QImage(); // null image
-         return s;
-      }
+   qint32 nullMarker;
+   s >> nullMarker;
+   if (!nullMarker) {
+      image = QImage(); // null image
+      return s;
    }
+
    image = QImageReader(s.device(), 0).read();
    return s;
 }
-#endif // QT_NO_DATASTREAM
 
-
-/*!
-    \fn bool QImage::operator==(const QImage & image) const
-
-    Returns true if this image and the given \a image have the same
-    contents; otherwise returns false.
-
-    The comparison can be slow, unless there is some obvious
-    difference (e.g. different size or format), in which case the
-    function will return quickly.
-
-    \sa operator=()
-*/
 
 bool QImage::operator==(const QImage &i) const
 {
@@ -5060,7 +4425,7 @@ QString QImage::text(const QString &key) const
    }
 
    QString tmp;
-   foreach (const QString & key, d->text.keys()) {
+   for (const QString & key : d->text.keys()) {
       if (!tmp.isEmpty()) {
          tmp += QLatin1String("\n\n");
       }
@@ -5122,9 +4487,9 @@ QString QImage::text(const char *key, const char *lang) const
    if (!d) {
       return QString();
    }
-   QString k = QString::fromAscii(key);
+   QString k = QString::fromLatin1(key);
    if (lang && *lang) {
-      k += QLatin1Char('/') + QString::fromAscii(lang);
+      k += QLatin1Char('/') + QString::fromLatin1(lang);
    }
    return d->text.value(k);
 }
@@ -5146,9 +4511,9 @@ QString QImage::text(const QImageTextKeyLang &kl) const
    if (!d) {
       return QString();
    }
-   QString k = QString::fromAscii(kl.key);
+   QString k = QString::fromLatin1(kl.key);
    if (!kl.lang.isEmpty()) {
-      k += QLatin1Char('/') + QString::fromAscii(kl.lang);
+      k += QLatin1Char('/') + QString::fromLatin1(kl.lang);
    }
    return d->text.value(k);
 }
@@ -5202,8 +4567,8 @@ QList<QImageTextKeyLang> QImage::textList() const
       int index = keys.at(i).indexOf(QLatin1Char('/'));
       if (index > 0) {
          QImageTextKeyLang tkl;
-         tkl.key = keys.at(i).left(index).toAscii();
-         tkl.lang = keys.at(i).mid(index + 1).toAscii();
+         tkl.key = keys.at(i).left(index).toLatin1();
+         tkl.lang = keys.at(i).mid(index + 1).toLatin1();
          imageTextKeys += tkl;
       }
    }
@@ -5246,9 +4611,9 @@ void QImage::setText(const char *key, const char *lang, const QString &s)
       return;
    }
 
-   QString k = QString::fromAscii(key);
+   QString k = QString::fromLatin1(key);
    if (lang && *lang) {
-      k += QLatin1Char('/') + QString::fromAscii(lang);
+      k += QLatin1Char('/') + QString::fromLatin1(lang);
    }
    d->text.insert(k, s);
 }

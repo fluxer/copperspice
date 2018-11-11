@@ -1,27 +1,26 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
+
+#include <algorithm>
 
 #include <QtCore/qglobal.h>
 #include <QtCore/qmutex.h>
@@ -83,8 +82,6 @@
 #endif
 
 #include <limits.h>
-
-QT_BEGIN_NAMESPACE
 
 Q_GUI_EXPORT extern bool qt_scaleForTransform(const QTransform &transform, qreal *scale); // qtransform.cpp
 
@@ -1030,7 +1027,6 @@ void QRasterPaintEnginePrivate::drawImage(const QPointF &pt,
         alpha);
 }
 
-
 void QRasterPaintEnginePrivate::systemStateChanged()
 {
    deviceRectUnclipped = QRect(0, 0,
@@ -1045,6 +1041,7 @@ void QRasterPaintEnginePrivate::systemStateChanged()
       deviceRect = deviceRectUnclipped;
       baseClip->setClipRect(deviceRect);
    }
+
 #ifdef QT_DEBUG_DRAW
    qDebug() << "systemStateChanged" << this << "deviceRect" << deviceRect << deviceRectUnclipped << systemClip;
 #endif
@@ -1852,7 +1849,7 @@ static bool splitPolygon(const QPointF *points, int pointCount, QVector<QPointF>
       sorted << points + i;
    }
 
-   qSort(sorted.begin(), sorted.end(), isAbove);
+   std::sort(sorted.begin(), sorted.end(), isAbove);
 
    qreal splitY = sorted.at(sorted.size() / 2)->y();
 
@@ -2582,7 +2579,7 @@ void QRasterPaintEngine::alphaPenBlt(const void *src, int bpl, int depth, int rx
    Q_D(QRasterPaintEngine);
    QRasterPaintEngineState *s = state();
 
-   if (!s->penData.blend) {
+   if (! s->penData.blend) {
       return;
    }
 
@@ -2591,6 +2588,7 @@ void QRasterPaintEngine::alphaPenBlt(const void *src, int bpl, int depth, int rx
    const QRect rect(rx, ry, w, h);
    const QClipData *clip = d->clip();
    bool unclipped = false;
+
    if (clip) {
       // inlined QRect::intersects
       const bool intersects = qMax(clip->xmin, rect.left()) <= qMin(clip->xmax - 1, rect.right())
@@ -2606,6 +2604,7 @@ void QRasterPaintEngine::alphaPenBlt(const void *src, int bpl, int depth, int rx
       if (!intersects) {
          return;
       }
+
    } else {
       // inlined QRect::intersects
       const bool intersects = qMax(0, rect.left()) <= qMin(rb->width() - 1, rect.right())
@@ -2638,6 +2637,7 @@ void QRasterPaintEngine::alphaPenBlt(const void *src, int bpl, int depth, int rx
                                        scanline, w, h, bpl, 0);
                return;
             }
+
          } else if (depth == 32) {
             // (A)RGB Alpha mask where the alpha component is not used.
             if (s->penData.alphaRGBBlit) {
@@ -2646,6 +2646,7 @@ void QRasterPaintEngine::alphaPenBlt(const void *src, int bpl, int depth, int rx
                return;
             }
          }
+
       } else if (d->deviceDepth == 32 && (depth == 8 || depth == 32)) {
          // (A)RGB Alpha mask where the alpha component is not used.
          if (!clip) {
@@ -2811,21 +2812,22 @@ bool QRasterPaintEngine::drawCachedGlyphs(int numGlyphs, const glyph_t *glyphs,
       const QFixedPoint *positions, QFontEngine *fontEngine)
 {
    Q_D(QRasterPaintEngine);
+
    QRasterPaintEngineState *s = state();
    const QFixed offs = QFixed::fromReal(aliasedCoordinateDelta);
 
-#if !defined(QT_NO_FREETYPE)
+#if ! defined(QT_NO_FREETYPE)
    if (fontEngine->type() == QFontEngine::Freetype) {
       QFontEngineFT *fe = static_cast<QFontEngineFT *>(fontEngine);
       const QFixed xOffs = fe->supportsSubPixelPositions() ? 0 : offs;
+
       QFontEngineFT::GlyphFormat neededFormat =
          painter()->device()->devType() == QInternal::Widget
          ? fe->defaultGlyphFormat()
          : QFontEngineFT::Format_A8;
 
-      if (d_func()->mono_surface
-            || fe->isBitmapFont() // alphaPenBlt can handle mono, too
-         ) {
+      if (d_func()->mono_surface || fe->isBitmapFont()) {
+         // alphaPenBlt can handle mono, too
          neededFormat = QFontEngineFT::Format_Mono;
       }
 
@@ -2842,7 +2844,7 @@ bool QRasterPaintEngine::drawCachedGlyphs(int numGlyphs, const glyph_t *glyphs,
          }
       }
 
-      if (!gset || gset->outline_drawing
+      if (! gset || gset->outline_drawing
             || !fe->loadGlyphs(gset, glyphs, numGlyphs, positions, neededFormat)) {
          return false;
       }
@@ -2876,7 +2878,7 @@ bool QRasterPaintEngine::drawCachedGlyphs(int numGlyphs, const glyph_t *glyphs,
             glyph = fe->loadGlyph(gset, glyphs[i], spp, neededFormat);
          }
 
-         if (!glyph || !glyph->data) {
+         if (! glyph || ! glyph->data) {
             continue;
          }
 
@@ -2885,12 +2887,15 @@ bool QRasterPaintEngine::drawCachedGlyphs(int numGlyphs, const glyph_t *glyphs,
             case QFontEngineFT::Format_Mono:
                pitch = ((glyph->width + 31) & ~31) >> 3;
                break;
+
             case QFontEngineFT::Format_A8:
                pitch = (glyph->width + 3) & ~3;
                break;
+
             case QFontEngineFT::Format_A32:
                pitch = glyph->width * 4;
                break;
+
             default:
                Q_ASSERT(false);
                pitch = 0;
@@ -2901,11 +2906,14 @@ bool QRasterPaintEngine::drawCachedGlyphs(int numGlyphs, const glyph_t *glyphs,
                      qFloor(positions[i].y + offs) - glyph->y,
                      glyph->width, glyph->height);
       }
+
       if (lockedFace) {
          fe->unlockFace();
       }
+
    } else
 #endif
+
    {
       QFontEngineGlyphCache::Type glyphType = fontEngine->glyphFormat >= 0
                                               ? QFontEngineGlyphCache::Type(fontEngine->glyphFormat)
@@ -2913,7 +2921,8 @@ bool QRasterPaintEngine::drawCachedGlyphs(int numGlyphs, const glyph_t *glyphs,
 
       QImageTextureGlyphCache *cache =
          static_cast<QImageTextureGlyphCache *>(fontEngine->glyphCache(0, glyphType, s->matrix));
-      if (!cache) {
+
+      if (! cache) {
          cache = new QImageTextureGlyphCache(glyphType, s->matrix);
          fontEngine->setGlyphCache(0, cache);
       }
@@ -2924,9 +2933,10 @@ bool QRasterPaintEngine::drawCachedGlyphs(int numGlyphs, const glyph_t *glyphs,
       const QImage &image = cache->image();
       int bpl = image.bytesPerLine();
 
-      int depth = image.depth();
+      int depth      = image.depth();
       int rightShift = 0;
-      int leftShift = 0;
+      int leftShift  = 0;
+
       if (depth == 32) {
          leftShift = 2;   // multiply by 4
       } else if (depth == 1) {
@@ -2935,10 +2945,11 @@ bool QRasterPaintEngine::drawCachedGlyphs(int numGlyphs, const glyph_t *glyphs,
 
       int margin = cache->glyphMargin();
       const uchar *bits = image.bits();
-      for (int i = 0; i < numGlyphs; ++i) {
 
+      for (int i = 0; i < numGlyphs; ++i) {
          QFixed subPixelPosition = cache->subPixelPositionForX(positions[i].x);
          QTextureGlyphCache::GlyphAndSubPixelPosition glyph(glyphs[i], subPixelPosition);
+
          const QTextureGlyphCache::Coord &c = cache->coords[glyph];
          if (c.isNull()) {
             continue;
@@ -2958,6 +2969,7 @@ bool QRasterPaintEngine::drawCachedGlyphs(int numGlyphs, const glyph_t *glyphs,
          alphaPenBlt(bits + ((c.x << leftShift) >> rightShift) + c.y * bpl, bpl, depth, x, y, c.w, c.h);
       }
    }
+
    return true;
 }
 
@@ -3092,19 +3104,13 @@ void QRasterPaintEngine::drawTextItem(const QPointF &p, const QTextItem &textIte
    const QTextItemInt &ti = static_cast<const QTextItemInt &>(textItem);
    QRasterPaintEngineState *s = state();
 
-#ifdef QT_DEBUG_DRAW
-   Q_D(QRasterPaintEngine);
-   fprintf(stderr, " - QRasterPaintEngine::drawTextItem(), (%.2f,%.2f), string=%s ct=%d\n",
-           p.x(), p.y(), QString::fromRawData(ti.chars, ti.num_chars).toLatin1().data(),
-           d->glyphCacheType);
-#endif
-
    ensurePen();
    ensureState();
 
 #if defined (Q_OS_WIN) || defined(Q_OS_MAC) || (defined(Q_OS_MAC) && defined(Q_WS_QPA))
 
-   if (!supportsTransformations(ti.fontEngine)) {
+   if (! supportsTransformations(ti.fontEngine)) {
+
       QVarLengthArray<QFixedPoint> positions;
       QVarLengthArray<glyph_t> glyphs;
 
@@ -3112,11 +3118,10 @@ void QRasterPaintEngine::drawTextItem(const QPointF &p, const QTextItem &textIte
       matrix.translate(p.x(), p.y());
 
       ti.fontEngine->getGlyphPositions(ti.glyphs, matrix, ti.flags, glyphs, positions);
-
       drawCachedGlyphs(glyphs.size(), glyphs.constData(), positions.constData(), ti.fontEngine);
+
       return;
    }
-
 
 #else
 
@@ -3131,8 +3136,8 @@ void QRasterPaintEngine::drawTextItem(const QPointF &p, const QTextItem &textIte
    if (s->matrix.type() < QTransform::TxScale
          && (fontEngine->type() == QFontEngine::QPF1 || fontEngine->type() == QFontEngine::QPF2
              || (fontEngine->type() == QFontEngine::Proxy
-                 && !(static_cast<QProxyFontEngine *>(fontEngine)->drawAsOutline()))
-            )) {
+                 && !(static_cast<QProxyFontEngine *>(fontEngine)->drawAsOutline())) )) {
+
       fontEngine->draw(this, qFloor(p.x() + aliasedCoordinateDelta), qFloor(p.y() + aliasedCoordinateDelta), ti);
       return;
    }
@@ -3157,7 +3162,8 @@ void QRasterPaintEngine::drawTextItem(const QPointF &p, const QTextItem &textIte
       for (int i = 0; i < glyphs.size(); i++) {
          QImage img = fontEngine->alphaMapForGlyph(glyphs[i]);
          glyph_metrics_t metrics = fontEngine->boundingBox(glyphs[i]);
-         // ### hm, perhaps an QFixed offs = QFixed::fromReal(aliasedCoordinateDelta) is needed here?
+
+         // ### perhaps a QFixed offs = QFixed::fromReal(aliasedCoordinateDelta) is needed here?
          alphaPenBlt(img.bits(), img.bytesPerLine(), img.depth(),
                      qRound(positions[i].x + metrics.x),
                      qRound(positions[i].y + metrics.y),
@@ -3172,6 +3178,7 @@ void QRasterPaintEngine::drawTextItem(const QPointF &p, const QTextItem &textIte
 #if defined(Q_WS_QWS) && !defined(QT_NO_QWS_QPF2)
    if (fontEngine->type() == QFontEngine::QPF2) {
       QFontEngine *renderingEngine = static_cast<QFontEngineQPF *>(fontEngine)->renderingEngine();
+
       if (renderingEngine) {
          fontEngine = renderingEngine;
       }
@@ -3190,12 +3197,14 @@ void QRasterPaintEngine::drawTextItem(const QPointF &p, const QTextItem &textIte
 
    QVarLengthArray<QFixedPoint> positions;
    QVarLengthArray<glyph_t> glyphs;
+
    fe->getGlyphPositions(ti.glyphs, matrix, ti.flags, glyphs, positions);
+
    if (glyphs.size() == 0) {
       return;
    }
 
-   if (!drawCachedGlyphs(glyphs.size(), glyphs.constData(), positions.constData(), fontEngine)) {
+   if (! drawCachedGlyphs(glyphs.size(), glyphs.constData(), positions.constData(), fontEngine)) {
       QPaintEngine::drawTextItem(p, ti);
    }
 
@@ -5243,9 +5252,8 @@ void dumpClip(int width, int height, const QClipData *clip)
    Q_ASSERT(x1 >= 0);
 
    fprintf(stderr, "clip %d: %d %d - %d %d\n", counter, x0, y0, x1, y1);
-   clipImg.save(QString::fromLatin1("clip-%0.png").arg(counter++));
+   clipImg.save(QString::fromLatin1("clip-%0.png").formatArg(counter++));
 }
 #endif
 
 
-QT_END_NAMESPACE

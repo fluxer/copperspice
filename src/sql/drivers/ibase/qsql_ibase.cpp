@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -694,7 +691,7 @@ static char *createArrayBuffer(char *buffer, const QList<QVariant> &list,
    if (list.size() != elements) { // size mismatch
       error = QLatin1String("Expected size: %1. Supplied size: %2");
       error = QLatin1String("Array size mismatch. Fieldname: %1 ")
-              + error.arg(elements).arg(list.size());
+              + error.formatArg(elements).formatArg(list.size());
       return 0;
    }
 
@@ -807,7 +804,7 @@ bool QIBaseResultPrivate::writeArray(int column, const QList<QVariant> &list)
 
    if (list.size() > arraySize) {
       error = QLatin1String("Array size missmatch: size of %1 is %2, size of provided list is %3");
-      error = error.arg(QLatin1String(sqlname)).arg(arraySize).arg(list.size());
+      error = error.formatArg(QLatin1String(sqlname)).formatArg(arraySize).formatArg(list.size());
       q->setLastError(QSqlError(error, QLatin1String(""), QSqlError::StatementError));
       return false;
    }
@@ -815,7 +812,7 @@ bool QIBaseResultPrivate::writeArray(int column, const QList<QVariant> &list)
    if (!createArrayBuffer(ba.data(), list,
                           qIBaseTypeName(desc.array_desc_dtype, inda->sqlvar[column].sqlscale < 0),
                           0, &desc, error, tc)) {
-      q->setLastError(QSqlError(error.arg(QLatin1String(sqlname)), QLatin1String(""),
+      q->setLastError(QSqlError(error.formatArg(QLatin1String(sqlname)), QLatin1String(""),
                                 QSqlError::StatementError));
       return false;
    }
@@ -1401,8 +1398,8 @@ QSqlRecord QIBaseResult::record() const
          q.exec(QLatin1String("select b.RDB$FIELD_PRECISION, b.RDB$FIELD_SCALE, b.RDB$FIELD_LENGTH, a.RDB$NULL_FLAG "
                               "FROM RDB$RELATION_FIELDS a, RDB$FIELDS b "
                               "WHERE b.RDB$FIELD_NAME = a.RDB$FIELD_SOURCE "
-                              "AND a.RDB$RELATION_NAME = '") + QString::fromAscii(v.relname, v.relname_length).toUpper() + QLatin1String("' "
-                                    "AND a.RDB$FIELD_NAME = '") + QString::fromAscii(v.sqlname, v.sqlname_length).toUpper() + QLatin1String("' "));
+                              "AND a.RDB$RELATION_NAME = '") + QString::fromLatin1(v.relname, v.relname_length).toUpper() + QLatin1String("' "
+                                    "AND a.RDB$FIELD_NAME = '") + QString::fromLatin1(v.sqlname, v.sqlname_length).toUpper() + QLatin1String("' "));
          if (q.first()) {
             if (v.sqlscale < 0) {
                f.setLength(q.value(0).toInt());
@@ -1870,7 +1867,7 @@ bool QIBaseDriver::subscribeToNotificationImplementation(const QString &name)
                   eBuffer->resultBuffer);
 
    if (status[0] == 1 && status[1]) {
-      setLastError(QSqlError(QString::fromLatin1("Could not subscribe to event notifications for %1.").arg(name)));
+      setLastError(QSqlError(QString::fromLatin1("Could not subscribe to event notifications for %1.").formatArg(name)));
       d->eventBuffers.remove(name);
       qFreeEventBuffer(eBuffer);
       return false;
@@ -1898,7 +1895,7 @@ bool QIBaseDriver::unsubscribeFromNotificationImplementation(const QString &name
    isc_cancel_events(status, &d->ibase, &eBuffer->eventId);
 
    if (status[0] == 1 && status[1]) {
-      setLastError(QSqlError(QString::fromLatin1("Could not unsubscribe from event notifications for %1.").arg(name)));
+      setLastError(QSqlError(QString::fromLatin1("Could not unsubscribe from event notifications for %1.").formatArg(name)));
       return false;
    }
 

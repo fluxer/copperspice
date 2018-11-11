@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -81,22 +78,27 @@ QXmlName::NamespaceCode NamespaceSupport::uri(const QXmlName::PrefixCode prefixC
 bool NamespaceSupport::processName(const QString &qname, NameType type, QXmlName &name) const
 {
    int len = qname.size();
-   const QChar *data = qname.constData();
+
    for (int pos = 0; pos < len; ++pos) {
-      if (data[pos] == QLatin1Char(':')) {
+
+      if (qname[pos] == ':') {
          const QXmlName::PrefixCode prefixCode = m_namePool->allocatePrefix(qname.left(pos));
-         if (!m_ns.contains(prefixCode)) {
+
+         if (! m_ns.contains(prefixCode)) {
             return false;
          }
-         const QXmlName::NamespaceCode namespaceCode = uri(prefixCode);
-         const QXmlName::LocalNameCode localNameCode = m_namePool->allocateLocalName(qname.mid(pos + 1));
+
+         const QXmlName::NamespaceCode  namespaceCode = uri(prefixCode);
+         const QXmlName::LocalNameCode  localNameCode = m_namePool->allocateLocalName(qname.mid(pos + 1));
          name = QXmlName(namespaceCode, localNameCode, prefixCode);
+
          return true;
       }
    }
 
    // there was no ':'
    QXmlName::NamespaceCode namespaceCode = 0;
+
    // attributes don't take default namespace
    if (type == ElementName && !m_ns.isEmpty()) {
       namespaceCode = m_ns.value(0);   // get default namespace

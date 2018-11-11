@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -3341,11 +3338,8 @@ enum SpanMethod {
    CallbackSpans
 };
 
-#if !defined(Q_CC_SUN)
-static
-#endif
-void drawBufferSpan(QSpanData *data, const uint *buffer, int bufsize,
-                    int x, int y, int length, uint const_alpha)
+
+static void drawBufferSpan(QSpanData *data, const uint *buffer, int bufsize, int x, int y, int length, uint const_alpha)
 {
 #if defined (Q_WS_QWS) && !defined(QT_NO_RASTERCALLBACKS)
    data->rasterEngine->drawBufferSpan(buffer, bufsize, x, y, length, const_alpha);
@@ -3360,10 +3354,7 @@ void drawBufferSpan(QSpanData *data, const uint *buffer, int bufsize,
 #endif
 }
 
-#if !defined(Q_CC_SUN)
-static
-#endif
-void blend_color_generic(int count, const QSpan *spans, void *userData)
+static void blend_color_generic(int count, const QSpan *spans, void *userData)
 {
    QSpanData *data = reinterpret_cast<QSpanData *>(userData);
    uint buffer[buffer_size];
@@ -7315,8 +7306,8 @@ static void qt_alphamapblit_quint32(QRasterBuffer *rasterBuffer,
          for (int i = 0; i < line.count; ++i) {
             const QSpan &clip = line.spans[i];
 
-            int start = qMax<int>(x, clip.x);
-            int end = qMin<int>(x + mapWidth, clip.x + clip.len);
+            int start = qMax(x, clip.x);
+            int end   = qMin(x + mapWidth, clip.x + clip.len);
 
             for (int xp = start; xp < end; ++xp) {
                const int coverage = map[xp - x];
@@ -7396,11 +7387,12 @@ static void qt_alphargbblit_quint32(QRasterBuffer *rasterBuffer,
          for (int i = 0; i < line.count; ++i) {
             const QSpan &clip = line.spans[i];
 
-            int start = qMax<int>(x, clip.x);
-            int end = qMin<int>(x + mapWidth, clip.x + clip.len);
+            int start = qMax(x, clip.x);
+            int end   = qMin(x + mapWidth, clip.x + clip.len);
 
             for (int xp = start; xp < end; ++xp) {
                const uint coverage = src[xp - x];
+
                if (coverage == 0xffffffff) {
                   dst[xp] = c;
                } else if (coverage != 0xff000000) {

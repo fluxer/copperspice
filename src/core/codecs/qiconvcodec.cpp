@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -54,7 +51,7 @@
 #  define UTF16 "UTF-16"
 #endif
 
-#if defined(Q_OS_MAC)
+#ifdef Q_OS_DARWIN
 #ifndef GNU_LIBICONV
 #define GNU_LIBICONV
 #endif
@@ -84,7 +81,7 @@ QIconvCodec::QIconvCodec()
    }
 #if defined(Q_OS_MAC)
    if (ptr_iconv_open == 0) {
-      QLibrary libiconv(QLatin1String("/usr/lib/libiconv"));
+      QLibrary libiconv("/usr/lib/libiconv");
       libiconv.setLoadHints(QLibrary::ExportExternalSymbolsHint);
 
       ptr_iconv_open = reinterpret_cast<Ptr_iconv_open>(libiconv.resolve("libiconv_open"));
@@ -192,11 +189,11 @@ QString QIconvCodec::convertToUnicode(const char *chars, int len, ConverterState
    if (!*pstate) {
       // first time, create the state
       iconv_t cd = QIconvCodec::createIconv_t(UTF16, 0);
+
       if (cd == reinterpret_cast<iconv_t>(-1)) {
          static int reported = 0;
          if (!reported++) {
-            fprintf(stderr,
-                    "QIconvCodec::convertToUnicode: using Latin-1 for conversion, iconv_open failed\n");
+            fprintf(stderr, "QIconvCodec::convertToUnicode: using Latin1 for conversion, iconv_open failed\n");
          }
          return QString::fromLatin1(chars, len);
       }
@@ -262,7 +259,8 @@ QString QIconvCodec::convertToUnicode(const char *chars, int len, ConverterState
 
          // some other error
          // note, cannot use qWarning() since we are implementing the codecForLocale :)
-         perror("QIconvCodec::convertToUnicode: using Latin-1 for conversion, iconv failed");
+
+         perror("QIconvCodec::convertToUnicode: using Latin1 for conversion, iconv failed");
 
          if (!convState) {
             // reset state
@@ -320,10 +318,10 @@ static bool setByteOrder(iconv_t cd)
    return true;
 }
 
-QByteArray QIconvCodec::convertFromUnicode(const QChar *uc, int len, ConverterState *convState) const
+QByteArray QIconvCodec::convertFromUnicode(QStringView str, ConverterState *convState) const
 {
-   char *inBytes;
-   char *outBytes;
+   char   *inBytes;
+   char   *outBytes;
    size_t inBytesLeft;
 
 #if defined(GNU_LIBICONV)
@@ -332,33 +330,49 @@ QByteArray QIconvCodec::convertFromUnicode(const QChar *uc, int len, ConverterSt
    char **inBytesPtr = &inBytes;
 #endif
 
+
+   // remove when enabled
+   perror("QIconvCodec::convertFromUnicode: using Latin1 for conversion, iconv failed for BOM");
+   return str.toLatin1();
+
+
+
    IconvState *temporaryState = 0;
    QThreadStorage<QIconvCodec::IconvState *> *ts = fromUnicodeState();
    IconvState *&state = (qt_locale_initialized && ts) ? ts->localData() : temporaryState;
-   if (!state) {
+
+   if (! state) {
       iconv_t cd = QIconvCodec::createIconv_t(0, UTF16);
+
       if (cd != reinterpret_cast<iconv_t>(-1)) {
-         if (!setByteOrder(cd)) {
-            perror("QIconvCodec::convertFromUnicode: using Latin-1 for conversion, iconv failed for BOM");
+         if (! setByteOrder(cd)) {
+            perror("QIconvCodec::convertFromUnicode: using Latin1 for conversion, iconv failed for BOM");
 
             iconv_close(cd);
             cd = reinterpret_cast<iconv_t>(-1);
 
-            return QString(uc, len).toLatin1();
+            return str.toLatin1();
          }
       }
       state = new IconvState(cd);
    }
+
    if (state->cd == reinterpret_cast<iconv_t>(-1)) {
       static int reported = 0;
-      if (!reported++) {
-         fprintf(stderr,
-                 "QIconvCodec::convertFromUnicode: using Latin-1 for conversion, iconv_open failed\n");
+
+      if (! reported++) {
+         fprintf(stderr, "QIconvCodec::convertFromUnicode: using Latin1 for conversion, iconv_open failed\n");
       }
+
       delete temporaryState;
-      return QString(uc, len).toLatin1();
+      return str.toLatin1();
    }
 
+   QByteArray ba;
+
+   // broom - resolve this code as soon as possible
+
+/*
    size_t outBytesLeft = len;
    QByteArray ba(outBytesLeft, Qt::Uninitialized);
    outBytes = ba.data();
@@ -410,7 +424,7 @@ QByteArray QIconvCodec::convertFromUnicode(const QChar *uc, int len, ConverterSt
             }
             default: {
                // note, cannot use qWarning() since we are implementing the codecForLocale :)
-               perror("QIconvCodec::convertFromUnicode: using Latin-1 for conversion, iconv failed");
+               perror("QIconvCodec::convertFromUnicode: using Latin1 for conversion, iconv failed");
 
                // reset to initial state
                iconv(state->cd, 0, &inBytesLeft, 0, &outBytesLeft);
@@ -433,6 +447,8 @@ QByteArray QIconvCodec::convertFromUnicode(const QChar *uc, int len, ConverterSt
    }
 
    delete temporaryState;
+*/
+
    return ba;
 }
 

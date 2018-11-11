@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -241,7 +238,7 @@ void *QGLContextPrivate::tryFormat(const QGLFormat &format)
    attribs[cnt++] = depth;
 
    if (device_is_pixmap) {
-      attribs[cnt++] = NSOpenGLPFAOffScreen;
+      attribs[cnt++] = NSOpenGLPFAOffScreen;                         // deprecated 10.7
    } else {
       if (format.doubleBuffer()) {
          attribs[cnt++] = NSOpenGLPFADoubleBuffer;
@@ -250,22 +247,27 @@ void *QGLContextPrivate::tryFormat(const QGLFormat &format)
    if (glFormat.stereo()) {
       attribs[cnt++] = NSOpenGLPFAStereo;
    }
+
    if (device_is_pixmap || format.alpha()) {
       attribs[cnt++] = NSOpenGLPFAAlphaSize;
       attribs[cnt++] = def(format.alphaBufferSize(), 8);
    }
+
    if (format.stencil()) {
       attribs[cnt++] = NSOpenGLPFAStencilSize;
       attribs[cnt++] = def(format.stencilBufferSize(), 8);
    }
+
    if (format.depth()) {
       attribs[cnt++] = NSOpenGLPFADepthSize;
       attribs[cnt++] = def(format.depthBufferSize(), 32);
    }
+
    if (format.accum()) {
       attribs[cnt++] = NSOpenGLPFAAccumSize;
       attribs[cnt++] = def(format.accumBufferSize(), 1);
    }
+
    if (format.sampleBuffers()) {
       attribs[cnt++] = NSOpenGLPFASampleBuffers;
       attribs[cnt++] = 1;
@@ -274,7 +276,7 @@ void *QGLContextPrivate::tryFormat(const QGLFormat &format)
    }
 
    if (devType == QInternal::Pbuffer) {
-      attribs[cnt++] = NSOpenGLPFAPixelBuffer;
+      attribs[cnt++] = NSOpenGLPFAPixelBuffer;                       // deprecated 10.7
    }
 
    attribs[cnt] = 0;
@@ -353,7 +355,7 @@ void QGLContext::updatePaintDevice()
    QMacCocoaAutoReleasePool pool;
 
    if (d->paintDevice->devType() == QInternal::Widget) {
-      //get control information
+      // get control information
       QWidget *w = (QWidget *)d->paintDevice;
       NSView *view = qt_mac_nativeview_for(w);
 
@@ -372,12 +374,14 @@ void QGLContext::updatePaintDevice()
       if ([static_cast<NSOpenGLContext *>(d->cx) view] != view && ![view isHidden]) {
          [static_cast<NSOpenGLContext *>(d->cx) setView: view];
       }
+
    } else if (d->paintDevice->devType() == QInternal::Pixmap) {
       const QPixmap *pm = static_cast<const QPixmap *>(d->paintDevice);
       [static_cast<NSOpenGLContext *>(d->cx) setOffScreen: qt_mac_pixmap_get_base(pm)
        width: pm->width()
        height: pm->height()
        rowbytes: qt_mac_pixmap_get_bytes_per_line(pm)];
+
    } else {
       qWarning("QGLContext::updatePaintDevice: Not sure how to render OpenGL on this device");
    }

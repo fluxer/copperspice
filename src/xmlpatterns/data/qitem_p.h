@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -47,11 +44,14 @@ class DynamicContext;
 class Item;
 class ItemType;
 class QObjectNodeModel;
-template<typename T> class EmptyIterator;
-template<typename T, typename ListType> class ListIterator;
 
-class AtomicValue : public QSharedData
-   , public CppCastingHelper<AtomicValue>
+template<typename T>
+class EmptyIterator;
+
+template<typename T, typename ListType>
+class ListIterator;
+
+class AtomicValue : public QSharedData, public CppCastingHelper<AtomicValue>
 {
  public:
    virtual ~AtomicValue();
@@ -192,12 +192,13 @@ class Item
 
    template<typename TCastTarget>
    inline TCastTarget *as() const {
-#if defined(Patternist_DEBUG) && !defined(Q_CC_XLC)
+
+#if defined(Patternist_DEBUG)
       /* At least on aix-xlc-64, the compiler cries when it sees dynamic_cast. */
       Q_ASSERT_X(atomicValue == 0 || dynamic_cast<const TCastTarget *>(atomicValue),
-                 Q_FUNC_INFO,
-                 "The cast is invalid. This class does not inherit the cast target.");
+                 Q_FUNC_INFO, "The cast is invalid. This class does not inherit the cast target.");
 #endif
+
       return const_cast<TCastTarget *>(static_cast<const TCastTarget *>(atomicValue));
    }
 
@@ -360,7 +361,7 @@ inline QXmlNodeModelIndex QXmlNodeModelIndex::root() const
    return m_storage.model->root(*this);
 }
 
-inline QXmlNodeModelIndex::Iterator::Ptr QXmlNodeModelIndex::iterate(const QXmlNodeModelIndex::Axis axis) const
+inline auto QXmlNodeModelIndex::iterate(const QXmlNodeModelIndex::Axis axis) const -> Iterator::Ptr
 {
    return m_storage.model->iterate(*this, axis);
 }
@@ -418,7 +419,7 @@ inline QString QXmlNodeModelIndex::stringValue() const
    return m_storage.model->stringValue(*this);
 }
 
-inline QPatternist::ItemType::Ptr QXmlNodeModelIndex::type() const
+inline QExplicitlySharedDataPointer<QPatternist::ItemType> QXmlNodeModelIndex::type() const
 {
    return m_storage.model->type(*this);
 }

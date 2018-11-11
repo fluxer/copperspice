@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -374,7 +371,6 @@ static int getControlSize(const QStyleOption *option, const QWidget *widget)
    return QAquaSizeLarge;
 }
 
-
 static inline bool isTreeView(const QWidget *widget)
 {
    return (widget && widget->parentWidget() &&
@@ -383,27 +379,29 @@ static inline bool isTreeView(const QWidget *widget)
 
 QString qt_mac_removeMnemonics(const QString &original)
 {
-   QString returnText(original.size(), 0);
-   int finalDest = 0;
-   int currPos = 0;
-   int l = original.length();
+   QString retval;
 
-   while (l) {
-      if (original.at(currPos) == QLatin1Char('&')
-            && (l == 1 || original.at(currPos + 1) != QLatin1Char('&'))) {
+   int currPos = 0;
+   int len     = original.length();
+
+   while (len != 0) {
+      if (original.at(currPos) == '&' && (len == 1 || original.at(currPos + 1) != '&')) {
+
          ++currPos;
-         --l;
-         if (l == 0) {
+         --len;
+
+         if (len == 0) {
             break;
          }
       }
-      returnText[finalDest] = original.at(currPos);
+
+      retval.append(original.at(currPos));
+
       ++currPos;
-      ++finalDest;
-      --l;
+      --len;
    }
-   returnText.truncate(finalDest);
-   return returnText;
+
+   return retval;
 }
 
 static inline ThemeTabDirection getTabDirection(QTabBar::Shape shape)
@@ -507,7 +505,9 @@ static QSize qt_aqua_get_known_size(QStyle::ContentsType ct, const QWidget *widg
    if ((widg && widg->testAttribute(Qt::WA_SetFont)) || !QApplication::desktopSettingsAware()) {
       // If you're using a custom font and it's bigger than the default font,
       // then no constraints for you. If you are smaller, we can try to help you out
+
       QFont font = qt_app_fonts_hash()->value(widg->metaObject()->className(), QFont());
+
       if (widg->font().pointSize() > font.pointSize()) {
          return ret;
       }
@@ -675,12 +675,15 @@ static QSize qt_aqua_get_known_size(QStyle::ContentsType ct, const QWidget *widg
                      width = qMax(width, qMax(iconSize.width(), pmSize.width()));
                      height = qMax(height, qMax(iconSize.height(), pmSize.height()));
                   }
-                  if (!bt->text().isNull() && bt->toolButtonStyle() != Qt::ToolButtonIconOnly) {
+
+                  if (!bt->text().isEmpty() && bt->toolButtonStyle() != Qt::ToolButtonIconOnly) {
                      int text_width = bt->fontMetrics().width(bt->text()),
                          text_height = bt->fontMetrics().height();
+
                      if (bt->toolButtonStyle() == Qt::ToolButtonTextUnderIcon) {
                         width = qMax(width, text_width);
                         height += text_height;
+
                      } else {
                         width += text_width;
                         width = qMax(height, text_height);
@@ -967,12 +970,14 @@ QAquaWidgetSize QMacStylePrivate::aquaSizeConstrain(const QStyleOption *option, 
       } else if (sz == &mini) {
          size_desc = "Mini";
       }
+
       qDebug("%s - %s: %s taken (%d, %d) [%d, %d]",
-             widg ? widg->objectName().toLatin1().constData() : "*Unknown*",
-             widg ? widg->metaObject()->className() : "*Unknown*", size_desc, widg->width(), widg->height(),
+             widg ? csPrintable(widg->objectName()) : "*Unknown*",
+             widg ? csPrintable(widg->metaObject()->className()) : "*Unknown*", size_desc, widg->width(), widg->height(),
              sz->width(), sz->height());
    }
 #endif
+
    return ret;
 
 #else
@@ -1294,9 +1299,11 @@ void QMacStylePrivate::drawCombobox(const HIRect &outerBounds, const HIThemeButt
       // We have an unscaled combobox, or popup-button; use Carbon directly.
       HIRect innerBounds = QMacStylePrivate::comboboxInnerBounds(outerBounds, bdi.kind);
       CS_HIThemeDrawButton(&innerBounds, &bdi, QMacCGContext(p), kHIThemeOrientationNormal, 0);
+
    } else {
       QPixmap buffer;
-      QString key = QString(QLatin1String("$qt_cbox%1-%2")).arg(int(bdi.state)).arg(int(bdi.adornment));
+      QString key = QString("$qt_cbox%1-%2").formatArg(int(bdi.state)).formatArg(int(bdi.adornment));
+
       if (!QPixmapCache::find(key, buffer)) {
          HIRect innerBoundsSmallCombo = {{3, 3}, {29, 25}};
          buffer = QPixmap(35, 28);
@@ -1348,9 +1355,10 @@ void QMacStylePrivate::drawTableHeader(const HIRect &outerBounds,
    Q_UNUSED(err);
 
    QPixmap buffer;
-   QString key = QString(QLatin1String("$qt_tableh%1-%2-%3")).arg(int(bdi.state)).arg(int(bdi.adornment)).arg(int(
-                    bdi.value));
-   if (!QPixmapCache::find(key, buffer)) {
+   QString key = QString(QLatin1String("$qt_tableh%1-%2-%3")).formatArg(int(bdi.state)).formatArg(int(bdi.adornment))
+                  .formatArg(int(bdi.value));
+
+   if (! QPixmapCache::find(key, buffer)) {
       HIRect headerNormalRect = {{0., 0.}, {16., CGFloat(headerHeight)}};
       buffer = QPixmap(headerNormalRect.size.width, headerNormalRect.size.height);
       buffer.fill(Qt::transparent);
@@ -2508,7 +2516,7 @@ int QMacStyle::styleHint(StyleHint sh, const QStyleOption *opt, const QWidget *w
          ret = true;
          break;
       case SH_Slider_AbsoluteSetButtons:
-         ret = Qt::LeftButton | Qt::MidButton;
+         ret = Qt::LeftButton | Qt::MiddleButton;
          break;
       case SH_Slider_PageSetButtons:
          ret = 0;

@@ -1,27 +1,26 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
+
+#include <algorithm>
 
 #include "backend.h"
 #include "backendnode.h"
@@ -50,7 +49,7 @@ namespace Phonon
     {
         QMutex *Backend::directShowMutex = 0;
 
-        bool Backend::AudioMoniker::operator==(const AudioMoniker &other)
+        bool Backend::AudioMoniker::operator==(const AudioMoniker &other) const
         {
             return other->IsEqual(*this) == S_OK;
         }
@@ -90,12 +89,12 @@ namespace Phonon
 #ifndef QT_NO_PHONON_EFFECT
             case EffectClass:
                 return new Effect(m_audioEffects[ args[0].toInt() ], parent);
-#endif 
+#endif
 
 #ifndef QT_NO_PHONON_VIDEO
             case VideoWidgetClass:
                 return new VideoWidget(qobject_cast<QWidget *>(parent));
-#endif 
+#endif
 
 #ifndef QT_NO_PHONON_VOLUMEFADEREFFECT
             case VolumeFaderEffectClass:
@@ -112,41 +111,44 @@ namespace Phonon
             return true;
 #else
             return false;
-#endif 
+#endif
         }
 
         QStringList Backend::availableMimeTypes() const
         {
             QStringList ret;
             {
-                QSettings settings(QLatin1String("HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Multimedia\\mplayer2\\mime types"), QSettings::NativeFormat);
+                QSettings settings(QLatin1String("HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Multimedia\\mplayer2\\mime types"),
+                  QSettings::NativeFormat);
                 ret += settings.childGroups();
             }
             {
-                QSettings settings(QLatin1String("HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Multimedia\\wmplayer\\mime types"), QSettings::NativeFormat);
+                QSettings settings(QLatin1String("HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Multimedia\\wmplayer\\mime types"),
+                  QSettings::NativeFormat);
                 ret += settings.childGroups();
             }
 
             ret.removeDuplicates();
             ret.replaceInStrings("\\", "/");
-            qSort(ret);
+            std::sort(ret.begin(), ret.end());
+
             return ret;
         }
 
-		Filter Backend::getAudioOutputFilter(int index) const
-		{
-			Filter ret;
-			if (index >= 0 && index < m_audioOutputs.count()) {
-				m_audioOutputs.at(index)->BindToObject(0, 0, IID_IBaseFilter, reinterpret_cast<void**>(&ret));
-			} else {
-				//just return the default audio renderer (not directsound)
-				ret = Filter(CLSID_AudioRender, IID_IBaseFilter);
-			}
-			return ret;
-		}
+      Filter Backend::getAudioOutputFilter(int index) const
+      {
+         Filter ret;
+         if (index >= 0 && index < m_audioOutputs.count()) {
+            m_audioOutputs.at(index)->BindToObject(0, 0, IID_IBaseFilter, reinterpret_cast<void**>(&ret));
+         } else {
+            //just return the default audio renderer (not directsound)
+            ret = Filter(CLSID_AudioRender, IID_IBaseFilter);
+         }
+         return ret;
+      }
 
 
-        QList<int> Backend::objectDescriptionIndexes(Phonon::ObjectDescriptionType type) const
+      QList<int> Backend::objectDescriptionIndexes(Phonon::ObjectDescriptionType type) const
         {
             QMutexLocker locker(&m_directShowMutex);
             QList<int> ret;
@@ -155,10 +157,12 @@ namespace Phonon
             {
             case Phonon::AudioOutputDeviceType:
                 {
-					ComPointer<ICreateDevEnum> devEnum(CLSID_SystemDeviceEnum, IID_ICreateDevEnum);
-					if (!devEnum) {
-						return ret; //it is impossible to enumerate the devices
-					}
+                    ComPointer<ICreateDevEnum> devEnum(CLSID_SystemDeviceEnum, IID_ICreateDevEnum);
+
+                    if (! devEnum) {
+                      return ret;       // not impossible to enumerate the devices
+                    }
+
                     ComPointer<IEnumMoniker> enumMon;
                     HRESULT hr = devEnum->CreateClassEnumerator(CLSID_AudioRendererCategory, enumMon.pparam(), 0);
                     if (FAILED(hr)) {
@@ -166,42 +170,51 @@ namespace Phonon
                     }
                     AudioMoniker mon;
 
-                    //let's reorder the devices so that directshound appears first
-                    int nbds = 0; //number of directsound devices
+
+                    // reorder the devices so direct sound appears first
+                    int nbds = 0; //number of direct sound devices
 
                     while (S_OK == enumMon->Next(1, mon.pparam(), 0)) {
                         LPOLESTR str = 0;
-                        mon->GetDisplayName(0,0,&str);
-                        const QString name = QString::fromWCharArray(str);
+                        mon->GetDisplayName(0, 0, &str);
 
-      						ComPointer<IMalloc> alloc;
-      						::CoGetMalloc(1, alloc.pparam());
+                        std::wstring tmp(str);
+                        const QString name = QString::fromStdWString(tmp);
+
+                        ComPointer<IMalloc> alloc;
+                        ::CoGetMalloc(1, alloc.pparam());
 
                         alloc->Free(str);
 
                         int insert_pos = 0;
-                        if (!m_audioOutputs.contains(mon)) {
+
+                        if (m_audioOutputs.contains(mon)) {
+                           insert_pos = m_audioOutputs.indexOf(mon);
+
+                        } else {
                             insert_pos = m_audioOutputs.count();
                             m_audioOutputs.append(mon);
-                        } else {
-                            insert_pos = m_audioOutputs.indexOf(mon);
+
                         }
 
-                        if (name.contains(QLatin1String("DirectSound"))) {
+                        if (name.contains("DirectSound")) {
                             ret.insert(nbds++, insert_pos);
+
                         } else {
                             ret.append(insert_pos);
                         }
                     }
 
-					break;
+                    break;
                 }
+
 #ifndef QT_NO_PHONON_EFFECT
             case Phonon::EffectType:
                 {
                     m_audioEffects.clear();
                     ComPointer<IEnumDMO> enumDMO;
                     HRESULT hr = ::DMOEnum(DMOCATEGORY_AUDIO_EFFECT, DMO_ENUMF_INCLUDE_KEYED, 0, 0, 0, 0, enumDMO.pparam());
+
                     if (SUCCEEDED(hr)) {
                         CLSID clsid;
                         while (S_OK == enumDMO->Next(1, &clsid, 0, 0)) {
@@ -212,11 +225,12 @@ namespace Phonon
                     break;
                 }
                 break;
-#endif //QT_NO_PHONON_EFFECT
+#endif
             default:
                 break;
             }
-			return ret;
+
+         return ret;
         }
 
         QHash<QByteArray, QVariant> Backend::objectDescriptionProperties(Phonon::ObjectDescriptionType type, int index) const
@@ -229,33 +243,40 @@ namespace Phonon
                 {
                     const AudioMoniker &mon = m_audioOutputs[index];
                     LPOLESTR str = 0;
-                    HRESULT hr = mon->GetDisplayName(0,0, &str);
+                    HRESULT hr   = mon->GetDisplayName(0,0, &str);
+
                     if (SUCCEEDED(hr)) {
-                        QString name = QString::fromWCharArray(str);
-						ComPointer<IMalloc> alloc;
-						::CoGetMalloc(1, alloc.pparam());
+                        std::wstring tmp(str);
+                        QString name = QString::fromStdWString(tmp);
+
+                        ComPointer<IMalloc> alloc;
+
+                        ::CoGetMalloc(1, alloc.pparam());
                         alloc->Free(str);
                         ret["name"] = name.mid(name.indexOf('\\') + 1);
-					}
+                }
 
                 }
                 break;
+
 #ifndef QT_NO_PHONON_EFFECT
             case Phonon::EffectType:
                 {
                     WCHAR name[80]; // 80 is clearly stated in the MSDN doc
                     HRESULT hr = ::DMOGetName(m_audioEffects[index], name);
+
                     if (SUCCEEDED(hr)) {
-                        ret["name"] = QString::fromWCharArray(name);
+                       std::wstring tmp(name);
+                       ret["name"] = QString::fromStdWString(tmp);
                     }
                 }
                 break;
-#endif 
+#endif
             default:
                 break;
             }
 
-			return ret;
+         return ret;
         }
 
         bool Backend::endConnectionChange(QSet<QObject *> objects)

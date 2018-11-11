@@ -38,8 +38,6 @@
 **
 ****************************************************************************/
 
-#define QT_NO_CAST_TO_ASCII
-
 #ifndef QT_NO_WIN_ACTIVEQT
 
 #include <qabstracteventdispatcher.h>
@@ -1797,10 +1795,12 @@ void QAxServerBase::resize(const QSize &size)
     QSize oldSize = qt.widget->size();
     qt.widget->resize(size);
     QSize newSize = qt.widget->size();
+
     // make sure we get a resize event even if not embedded as a control
-    if (!m_hWnd && !qt.widget->isVisible() && newSize != oldSize) {
+    if (! m_hWnd && !qt.widget->isVisible() && newSize != oldSize) {
         QResizeEvent resizeEvent(newSize, oldSize);
-#ifndef QT_DLL // import from static library
+
+#ifdef QT_STATIC      // import from static library
         extern bool qt_sendSpontaneousEvent(QObject*,QEvent*);
 #endif
         qt_sendSpontaneousEvent(qt.widget, &resizeEvent);
@@ -4069,7 +4069,7 @@ HRESULT WINAPI QAxServerBase::SetColorScheme(LOGPALETTE*)
 }
 
 
-#ifdef QT_DLL // avoid conflict with symbol in static lib
+#ifndef QT_STATIC    // avoid conflict with symbol in static lib
 bool qt_sendSpontaneousEvent(QObject *o, QEvent *e)
 {
     return QCoreApplication::sendSpontaneousEvent(o, e);
@@ -4449,13 +4449,13 @@ bool QAxServerBase::eventFilter(QObject *o, QEvent *e)
         m_spInPlaceFrame->EnableModeless(FALSE);
         MSG msg;
         // Visual Basic 6.0 posts the message WM_USER+3078 from the EnableModeless().
-        // While handling this message, VB will disable all current top-levels. After 
-        // this we have to re-enable the Qt modal widget to receive input events. 
+        // While handling this message, VB will disable all current top-levels. After
+        // this we have to re-enable the Qt modal widget to receive input events.
         if (PeekMessage(&msg, 0, WM_USER+3078, WM_USER+3078, PM_REMOVE)) {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
             QWidget *modalWidget = QApplication::activeModalWidget();
-            if (modalWidget && modalWidget->isVisible() && modalWidget->isEnabled() 
+            if (modalWidget && modalWidget->isVisible() && modalWidget->isEnabled()
                 && !IsWindowEnabled(modalWidget->effectiveWinId()))
                 EnableWindow(modalWidget->effectiveWinId(), TRUE);
         }

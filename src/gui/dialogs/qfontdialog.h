@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -56,8 +53,8 @@ class Q_GUI_EXPORT QFontDialog : public QDialog
 
    using FontDialogOptions = QFlags<FontDialogOption>;
 
-   explicit QFontDialog(QWidget *parent = 0);
-   explicit QFontDialog(const QFont &initial, QWidget *parent = 0);
+   explicit QFontDialog(QWidget *parent = nullptr);
+   explicit QFontDialog(const QFont &initial, QWidget *parent = nullptr);
    ~QFontDialog();
 
    void setCurrentFont(const QFont &font);
@@ -71,31 +68,28 @@ class Q_GUI_EXPORT QFontDialog : public QDialog
    FontDialogOptions options() const;
 
    using QDialog::open;
+   void open(QObject *receiver, const QString &member);
 
-   void open(QObject *receiver, const char *member);
+   void setVisible(bool visible) override;
 
-   void setVisible(bool visible);
+   static QFont getFont(bool *ok, const QFont &initial, QWidget *parent = nullptr, const QString &title = QString(),
+         FontDialogOptions options = FontDialogOptions());
 
-   // ### Qt5/merge overloads
-   static QFont getFont(bool *ok, const QFont &initial, QWidget *parent, const QString &title,
-                        FontDialogOptions options);
-   static QFont getFont(bool *ok, const QFont &initial, QWidget *parent, const QString &title);
-   static QFont getFont(bool *ok, const QFont &initial, QWidget *parent = 0);
-   static QFont getFont(bool *ok, QWidget *parent = 0);
+   static QFont getFont(bool *ok, QWidget *parent = nullptr);
 
    GUI_CS_SIGNAL_1(Public, void currentFontChanged(const QFont &font))
    GUI_CS_SIGNAL_2(currentFontChanged, font)
+
    GUI_CS_SIGNAL_1(Public, void fontSelected(const QFont &font))
    GUI_CS_SIGNAL_2(fontSelected, font)
 
  protected:
-   void changeEvent(QEvent *event);
-   void done(int result);
+   void changeEvent(QEvent *event) override;
+   void done(int result) override;
+
+   bool eventFilter(QObject *object, QEvent *event) override;
 
  private:
-   // ### Qt5/make protected
-   bool eventFilter(QObject *object, QEvent *event);
-
    Q_DISABLE_COPY(QFontDialog)
 
    GUI_CS_SLOT_1(Private, void _q_sizeChanged(const QString &un_named_arg1))

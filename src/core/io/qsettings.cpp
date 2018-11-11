@@ -1,27 +1,26 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
+
+#include <algorithm>
 
 #include <qdebug.h>
 #include <qplatformdefs.h>
@@ -43,11 +42,12 @@
 #endif
 
 #include <qsize.h>
+#include <qstringparser.h>
 #include <qpoint.h>
 #include <qrect.h>
 #include <qcoreapplication.h>
 
-#ifdef Q_OS_WIN                // for homedirpath reading from registry
+#ifdef Q_OS_WIN                        // for homedirpath reading from registry
 #include <qt_windows.h>
 #include <qsystemlibrary_p.h>
 #endif
@@ -55,11 +55,11 @@
 #include <stdlib.h>
 
 #ifndef CSIDL_COMMON_APPDATA
-#define CSIDL_COMMON_APPDATA	0x0023  // All Users\Application Data
+#define CSIDL_COMMON_APPDATA  0x0023   // All Users\Application Data
 #endif
 
 #ifndef CSIDL_APPDATA
-#define CSIDL_APPDATA		0x001a	// <username>\Application Data
+#define CSIDL_APPDATA      0x001a      // <username>\Application Data
 #endif
 
 // ************************************************************************
@@ -71,8 +71,6 @@
     QSettings object are immediately reflected in other setting
     objects of the same application.
 */
-
-QT_BEGIN_NAMESPACE
 
 struct QConfFileCustomFormat {
    QString extension;
@@ -102,10 +100,9 @@ inline bool qt_isEvilFsTypeName(const char *name)
 }
 
 #if defined(Q_OS_BSD4) && !defined(Q_OS_NETBSD)
-QT_BEGIN_INCLUDE_NAMESPACE
+
 # include <sys/param.h>
 # include <sys/mount.h>
-QT_END_INCLUDE_NAMESPACE
 
 static bool qIsLikelyToBeNfs(int handle)
 {
@@ -117,20 +114,22 @@ static bool qIsLikelyToBeNfs(int handle)
 }
 
 #elif defined(Q_OS_LINUX)
-QT_BEGIN_INCLUDE_NAMESPACE
+
 # include <sys/vfs.h>
+
 # ifdef QT_LINUXBASE
 // LSB 3.2 has fstatfs in sys/statfs.h, sys/vfs.h is just an empty dummy header
 #  include <sys/statfs.h>
 # endif
 
-QT_END_INCLUDE_NAMESPACE
 # ifndef NFS_SUPER_MAGIC
 #  define NFS_SUPER_MAGIC       0x00006969
 # endif
+
 # ifndef AUTOFS_SUPER_MAGIC
 #  define AUTOFS_SUPER_MAGIC    0x00000187
 # endif
+
 # ifndef AUTOFSNG_SUPER_MAGIC
 #  define AUTOFSNG_SUPER_MAGIC  0x7d92b1a0
 # endif
@@ -147,9 +146,9 @@ static bool qIsLikelyToBeNfs(int handle)
 }
 
 #elif defined(Q_OS_SOLARIS) || defined(Q_OS_HPUX) || defined(Q_OS_UNIXWARE)  || defined(Q_OS_NETBSD)
-QT_BEGIN_INCLUDE_NAMESPACE
+
 # include <sys/statvfs.h>
-QT_END_INCLUDE_NAMESPACE
+
 
 static bool qIsLikelyToBeNfs(int handle)
 {
@@ -157,11 +156,13 @@ static bool qIsLikelyToBeNfs(int handle)
    if (fstatvfs(handle, &buf) != 0) {
       return false;
    }
+
 #if defined(Q_OS_NETBSD)
    return qt_isEvilFsTypeName(buf.f_fstypename);
 #else
    return qt_isEvilFsTypeName(buf.f_basetype);
 #endif
+
 }
 #else
 static inline bool qIsLikelyToBeNfs(int /* handle */)
@@ -508,8 +509,8 @@ QString QSettingsPrivate::variantToString(const QVariant &v)
       }
 
       default: {
-#ifndef QT_NO_DATASTREAM
          QByteArray a;
+
          {
             QDataStream s(&a, QIODevice::WriteOnly);
             s.setVersion(QDataStream::Qt_4_0);
@@ -519,9 +520,7 @@ QString QSettingsPrivate::variantToString(const QVariant &v)
          result = QLatin1String("@Variant(");
          result += QString::fromLatin1(a.constData(), a.size());
          result += QLatin1Char(')');
-#else
-         Q_ASSERT(!"QSettings: Cannot save custom types without QDataStream support");
-#endif
+
          break;
       }
    }
@@ -532,36 +531,43 @@ QString QSettingsPrivate::variantToString(const QVariant &v)
 
 QVariant QSettingsPrivate::stringToVariant(const QString &s)
 {
-   if (s.startsWith(QLatin1Char('@'))) {
-      if (s.endsWith(QLatin1Char(')'))) {
+   if (s.startsWith('@')) {
+
+      if (s.endsWith(')')) {
+
          if (s.startsWith(QLatin1String("@ByteArray("))) {
             return QVariant(s.toLatin1().mid(11, s.size() - 12));
+
          } else if (s.startsWith(QLatin1String("@Variant("))) {
-#ifndef QT_NO_DATASTREAM
+
             QByteArray a(s.toLatin1().mid(9));
             QDataStream stream(&a, QIODevice::ReadOnly);
+
             stream.setVersion(QDataStream::Qt_4_0);
             QVariant result;
             stream >> result;
-            return result;
-#else
-            Q_ASSERT(!"QSettings: Cannot load custom types without QDataStream support");
-#endif
 
-         } else if (s.startsWith(QLatin1String("@Rect("))) {
+            return result;
+
+         } else if (s.startsWith("@Rect(")) {
             QStringList args = QSettingsPrivate::splitArgs(s, 5);
+
             if (args.size() == 4) {
-               return QVariant(QRect(args[0].toInt(), args[1].toInt(), args[2].toInt(), args[3].toInt()));
+               return QVariant(QRect(args[0].toInteger<int>(), args[1].toInteger<int>(), args[2].toInteger<int>(), args[3].toInteger<int>()));
             }
-         } else if (s.startsWith(QLatin1String("@Size("))) {
+
+         } else if (s.startsWith("@Size(")) {
             QStringList args = QSettingsPrivate::splitArgs(s, 5);
+
             if (args.size() == 2) {
-               return QVariant(QSize(args[0].toInt(), args[1].toInt()));
+               return QVariant(QSize(args[0].toInteger<int>(), args[1].toInteger<int>()));
             }
-         } else if (s.startsWith(QLatin1String("@Point("))) {
+
+         } else if (s.startsWith("@Point(")) {
             QStringList args = QSettingsPrivate::splitArgs(s, 6);
+
             if (args.size() == 2) {
-               return QVariant(QPoint(args[0].toInt(), args[1].toInt()));
+               return QVariant(QPoint(args[0].toInteger<int>(), args[1].toInteger<int>()));
             }
 
          } else if (s == QLatin1String("@Invalid()")) {
@@ -569,6 +575,7 @@ QVariant QSettingsPrivate::stringToVariant(const QString &s)
          }
 
       }
+
       if (s.startsWith(QLatin1String("@@"))) {
          return QVariant(s.mid(1));
       }
@@ -610,7 +617,7 @@ bool QSettingsPrivate::iniUnescapedKey(const QByteArray &key, int from, int to, 
 {
    bool lowercaseOnly = true;
    int i = from;
-   result.reserve(result.length() + (to - from));
+
    while (i < to) {
       int ch = (uchar)key.at(i);
 
@@ -647,7 +654,7 @@ bool QSettingsPrivate::iniUnescapedKey(const QByteArray &key, int from, int to, 
 
       bool ok;
       ch = key.mid(firstDigitPos, numDigits).toInt(&ok, 16);
-      if (!ok) {
+      if (! ok) {
          result += QLatin1Char('%');
          // ### missing U
          ++i;
@@ -669,11 +676,13 @@ void QSettingsPrivate::iniEscapedString(const QString &str, QByteArray &result, 
    bool needsQuotes = false;
    bool escapeNextIfDigit = false;
    int i;
+
    bool useCodec = codec && !str.startsWith(QLatin1String("@ByteArray("))
-		   && !str.startsWith(QLatin1String("@Variant("));
+         && !str.startsWith(QLatin1String("@Variant("));
    int startPos = result.size();
 
    result.reserve(startPos + str.size() * 3 / 2);
+
    for (i = 0; i < str.size(); ++i) {
       uint ch = str.at(i).unicode();
       if (ch == ';' || ch == ',' || ch == '=') {
@@ -722,25 +731,24 @@ void QSettingsPrivate::iniEscapedString(const QString &str, QByteArray &result, 
             result += '\\';
             result += (char)ch;
             break;
-	 default:
-	    if (ch <= 0x1F || (ch >= 0x7F && !useCodec)) {
-	       result += "\\x";
-	       result += QByteArray::number(ch, 16);
-	       escapeNextIfDigit = true;
-#ifndef QT_NO_TEXTCODEC
-	    } else if (useCodec) {
-	       // slow
-	       result += codec->fromUnicode(str.at(i));
-#endif
+
+         default:
+            if (ch <= 0x1F || (ch >= 0x7F && ! useCodec)) {
+               result += "\\x";
+               result += QByteArray::number(ch, 16);
+               escapeNextIfDigit = true;
+
+            } else if (useCodec) {
+               result += codec->fromUnicode(str.mid(i, 1));
+
             } else {
                result += (char)ch;
+
             }
       }
    }
 
-   if (needsQuotes
-         || (startPos < result.size() && (result.at(startPos) == ' '
-                                          || result.at(result.size() - 1) == ' '))) {
+   if (needsQuotes || (startPos < result.size() && (result.at(startPos) == ' ' || result.at(result.size() - 1) == ' '))) {
       result.insert(startPos, '"');
       result += '"';
    }
@@ -766,7 +774,7 @@ void QSettingsPrivate::iniEscapedStringList(const QStringList &strs, QByteArray 
           QVariant().toStringList() returns an empty QStringList,
           so we're in good shape.
 
-          ### Qt 5: Use a nicer syntax, e.g. @List, for variant lists
+          ### Qt5: Use a nicer syntax, e.g. @List, for variant lists
       */
       result += "@Invalid()";
 
@@ -781,22 +789,22 @@ void QSettingsPrivate::iniEscapedStringList(const QStringList &strs, QByteArray 
 }
 
 bool QSettingsPrivate::iniUnescapedStringList(const QByteArray &str, int from, int to,
-      QString &stringResult, QStringList &stringListResult,
-      QTextCodec *codec)
+                  QString &stringResult, QStringList &stringListResult, QTextCodec *codec)
 {
 #ifdef QT_NO_TEXTCODE
    Q_UNUSED(codec);
 #endif
+
    static const char escapeCodes[][2] = {
-      { 'a', '\a' },
-      { 'b', '\b' },
-      { 'f', '\f' },
-      { 'n', '\n' },
-      { 'r', '\r' },
-      { 't', '\t' },
-      { 'v', '\v' },
-      { '"', '"' },
-      { '?', '?' },
+      { 'a', '\a'  },
+      { 'b', '\b'  },
+      { 'f', '\f'  },
+      { 'n', '\n'  },
+      { 'r', '\r'  },
+      { 't', '\t'  },
+      { 'v', '\v'  },
+      { '"', '"'   },
+      { '?', '?'   },
       { '\'', '\'' },
       { '\\', '\\' }
    };
@@ -817,6 +825,7 @@ StSkipSpaces:
 
 StNormal:
    while (i < to) {
+
       switch (str.at(i)) {
          case '\\':
             ++i;
@@ -843,9 +852,11 @@ StNormal:
                if ((ch >= '0' && ch <= '9') || (ch >= 'A' && ch <= 'F') || (ch >= 'a' && ch <= 'f')) {
                   goto StHexEscape;
                }
+
             } else if (ch >= '0' && ch <= '7') {
                escapeVal = ch - '0';
                goto StOctEscape;
+
             } else if (ch == '\n' || ch == '\r') {
                if (i < to) {
                   char ch2 = str.at(i);
@@ -854,37 +865,47 @@ StNormal:
                      ++i;
                   }
                }
+
             } else {
                // the character is skipped
             }
             break;
+
          case '"':
             ++i;
             currentValueIsQuoted = true;
             inQuotedString = !inQuotedString;
+
             if (!inQuotedString) {
                goto StSkipSpaces;
             }
+
             break;
+
          case ',':
             if (!inQuotedString) {
                if (!currentValueIsQuoted) {
                   iniChopTrailingSpaces(stringResult);
                }
+
                if (!isStringList) {
                   isStringList = true;
                   stringListResult.clear();
                   stringResult.squeeze();
                }
+
                stringListResult.append(stringResult);
                stringResult.clear();
                currentValueIsQuoted = false;
                ++i;
                goto StSkipSpaces;
             }
-         // fallthrough
+
+            // fallthrough
+
          default: {
             int j = i + 1;
+
             while (j < to) {
                ch = str.at(j);
                if (ch == '\\' || ch == '"' || ch == ',') {
@@ -893,23 +914,19 @@ StNormal:
                ++j;
             }
 
-#ifndef QT_NO_TEXTCODEC
             if (codec) {
                stringResult += codec->toUnicode(str.constData() + i, j - i);
-            } else
-#endif
-            {
-               int n = stringResult.size();
-               stringResult.resize(n + (j - i));
-               QChar *resultData = stringResult.data() + n;
-               for (int k = i; k < j; ++k) {
-                  *resultData++ = QLatin1Char(str.at(k));
-               }
+
+            } else  {
+               stringResult.append(QString::fromUtf8(str.mid(i, j - i)));
+
             }
+
             i = j;
          }
       }
    }
+
    goto end;
 
 StHexEscape:
@@ -927,6 +944,7 @@ StHexEscape:
       escapeVal += strchr(hexDigits, ch) - hexDigits;
       ++i;
       goto StHexEscape;
+
    } else {
       stringResult += QChar(escapeVal);
       goto StNormal;
@@ -944,6 +962,7 @@ StOctEscape:
       escapeVal += ch - '0';
       ++i;
       goto StOctEscape;
+
    } else {
       stringResult += QChar(escapeVal);
       goto StNormal;
@@ -1031,24 +1050,23 @@ void QConfFileSettingsPrivate::initAccess()
 static QString windowsConfigPath(int type)
 {
    QString result;
-
-   QSystemLibrary library(QLatin1String("shell32"));
+   QSystemLibrary library("shell32");
 
    typedef BOOL (WINAPI * GetSpecialFolderPath)(HWND, LPWSTR, int, BOOL);
    GetSpecialFolderPath SHGetSpecialFolderPath = (GetSpecialFolderPath)library.resolve("SHGetSpecialFolderPathW");
+
    if (SHGetSpecialFolderPath) {
-      wchar_t path[MAX_PATH];
-      SHGetSpecialFolderPath(0, path, type, FALSE);
-      result = QString::fromWCharArray(path);
+      std::wstring path(MAX_PATH, L'\0');
+      SHGetSpecialFolderPath(0, &path[0], type, FALSE);
+      result = QString::fromStdWString(path);
    }
 
    if (result.isEmpty()) {
       switch (type) {
-
-
          case CSIDL_COMMON_APPDATA:
             result = QLatin1String("C:\\temp\\qt-common");
             break;
+
          case CSIDL_APPDATA:
             result = QLatin1String("C:\\temp\\qt-user");
             break;
@@ -1453,18 +1471,19 @@ void QConfFileSettingsPrivate::syncConfFile(int confFileNo)
    }
 
 #ifdef Q_OS_WIN
-   HANDLE readSemaphore = 0;
+   HANDLE readSemaphore  = 0;
    HANDLE writeSemaphore = 0;
+
    static const int FileLockSemMax = 50;
    int numReadLocks = readOnly ? 1 : FileLockSemMax;
 
    if (file.isOpen()) {
       // Acquire the write lock if we will be writing
       if (!readOnly) {
-         QString writeSemName = QLatin1String("QSettingsWriteSem ");
+         QString writeSemName = "QSettingsWriteSem ";
          writeSemName.append(file.fileName());
 
-         writeSemaphore = CreateSemaphore(0, 1, 1, reinterpret_cast<const wchar_t *>(writeSemName.utf16()));
+         writeSemaphore = CreateSemaphore(0, 1, 1, &writeSemName.toStdWString()[0]);
 
          if (writeSemaphore) {
             WaitForSingleObject(writeSemaphore, INFINITE);
@@ -1475,20 +1494,20 @@ void QConfFileSettingsPrivate::syncConfFile(int confFileNo)
       }
 
       // Acquire all the read locks if we will be writing, to make sure nobody
-      // reads while we're writing. If we are only reading, acquire a single
-      // read lock.
-      QString readSemName(QLatin1String("QSettingsReadSem "));
+      // reads while we're writing. If we are only reading, acquire a single read lock
+      QString readSemName("QSettingsReadSem ");
       readSemName.append(file.fileName());
 
-      readSemaphore = CreateSemaphore(0, FileLockSemMax, FileLockSemMax,
-                                      reinterpret_cast<const wchar_t *>(readSemName.utf16()));
+      readSemaphore = CreateSemaphore(0, FileLockSemMax, FileLockSemMax, &readSemName.toStdWString()[0]);
 
       if (readSemaphore) {
          for (int i = 0; i < numReadLocks; ++i) {
             WaitForSingleObject(readSemaphore, INFINITE);
          }
+
       } else {
          setStatus(QSettings::AccessError);
+
          if (writeSemaphore != 0) {
             ReleaseSemaphore(writeSemaphore, 1, 0);
             CloseHandle(writeSemaphore);
@@ -1506,9 +1525,11 @@ void QConfFileSettingsPrivate::syncConfFile(int confFileNo)
    if (file.isOpen()) {
       if (createFile) {
          QFile::Permissions perms = file.permissions() | QFile::ReadOwner | QFile::WriteOwner;
+
          if (!confFile->userPerms) {
             perms |= QFile::ReadGroup | QFile::ReadOther;
          }
+
          file.setPermissions(perms);
       }
    }
@@ -1776,6 +1797,7 @@ bool QConfFileSettingsPrivate::readIniFile(const QByteArray &data,
          // this is a section
          QByteArray iniSection;
          int idx = data.indexOf(']', lineStart);
+
          if (idx == -1 || idx >= lineStart + lineLen) {
             ok = false;
             iniSection = data.mid(lineStart + 1, lineLen - 1);
@@ -1787,17 +1809,22 @@ bool QConfFileSettingsPrivate::readIniFile(const QByteArray &data,
 
          if (qstricmp(iniSection.constData(), "general") == 0) {
             currentSection.clear();
+
          } else {
             if (qstricmp(iniSection.constData(), "%general") == 0) {
-               currentSection = QLatin1String(iniSection.constData() + 1);
+               currentSection = iniSection.constData() + 1;
+
             } else {
                currentSection.clear();
                iniUnescapedKey(iniSection, 0, iniSection.size(), currentSection);
             }
-            currentSection += QLatin1Char('/');
+
+            currentSection += '/';
          }
+
          currentSectionStart = dataPos;
       }
+
       ++position;
    }
 
@@ -1843,7 +1870,7 @@ bool QConfFileSettingsPrivate::readIniSection(const QSettingsKey &section, const
       bool keyIsLowercase = (iniUnescapedKey(data, lineStart, keyEnd, key) && sectionIsLowercase);
 
       QString strValue;
-      strValue.reserve(lineLen - (valueStart - lineStart));
+
       bool isStringList = iniUnescapedStringList(data, valueStart, lineStart + lineLen,
                           strValue, strListValue, codec);
       QVariant variant;
@@ -1931,12 +1958,14 @@ bool QConfFileSettingsPrivate::writeIniFile(QIODevice &device, const ParsedSetti
    }
 
    const int sectionCount = iniMap.size();
+
    QVector<QSettingsIniKey> sections;
    sections.reserve(sectionCount);
+
    for (i = iniMap.constBegin(); i != iniMap.constEnd(); ++i) {
       sections.append(QSettingsIniKey(i.key(), i.value().position));
    }
-   qSort(sections);
+   std::sort(sections.begin(), sections.end());
 
    bool writeError = false;
    for (int j = 0; !writeError && j < sectionCount; ++j) {
@@ -2435,33 +2464,17 @@ void QSettings::endGroup()
    }
 }
 
-/*!
-    Returns the current group.
-
-    \sa beginGroup(), endGroup()
-*/
 QString QSettings::group() const
 {
    Q_D(const QSettings);
    return d->groupPrefix.left(d->groupPrefix.size() - 1);
 }
 
-/*!
-    Adds \a prefix to the current group and starts reading from an
-    array. Returns the size of the array.
-
-    Example:
-
-    \snippet doc/src/snippets/code/src_corelib_io_qsettings.cpp 15
-
-    Use beginWriteArray() to write the array in the first place.
-
-    \sa beginWriteArray(), endArray(), setArrayIndex()
-*/
 int QSettings::beginReadArray(const QString &prefix)
 {
    Q_D(QSettings);
    d->beginGroupOrArray(QSettingsGroup(d->normalizedKey(prefix), false));
+
    return value(QLatin1String("size")).toInt();
 }
 
@@ -2902,8 +2915,5 @@ QSettings::Format QSettings::registerFormat(const QString &extension, ReadFunc r
 
    return QSettings::Format((int)QSettings::CustomFormat1 + index);
 }
-
-
-QT_END_NAMESPACE
 
 #endif // QT_NO_SETTINGS

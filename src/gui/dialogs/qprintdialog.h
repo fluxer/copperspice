@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,7 +23,7 @@
 #ifndef QPRINTDIALOG_H
 #define QPRINTDIALOG_H
 
-#include <QtGui/qabstractprintdialog.h>
+#include <qabstractprintdialog.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -44,7 +41,7 @@ class Q_GUI_EXPORT QUnixPrintWidget : public QWidget
    GUI_CS_OBJECT(QUnixPrintWidget)
 
  public:
-   QUnixPrintWidget(QPrinter *printer, QWidget *parent = 0);
+   QUnixPrintWidget(QPrinter *printer, QWidget *parent = nullptr);
    ~QUnixPrintWidget();
    void updatePrinter();
 
@@ -76,17 +73,17 @@ class Q_GUI_EXPORT QPrintDialog : public QAbstractPrintDialog
    GUI_CS_PROPERTY_WRITE(options, setOptions)
 
  public:
-   explicit QPrintDialog(QPrinter *printer, QWidget *parent = 0);
-   explicit QPrintDialog(QWidget *parent = 0);
+   explicit QPrintDialog(QPrinter *printer, QWidget *parent = nullptr);
+   explicit QPrintDialog(QWidget *parent = nullptr);
    ~QPrintDialog();
 
-   int exec();
+   int exec() override;
 
-#if defined (Q_OS_UNIX) && !defined(Q_OS_MAC)
-   virtual void accept();
+#if defined (Q_OS_UNIX) && ! defined(Q_OS_MAC)
+   void accept() override;
 #endif
 
-   void done(int result);
+   void done(int result) override;
    void setOption(PrintDialogOption option, bool on = true);
    bool testOption(PrintDialogOption option) const;
    void setOptions(PrintDialogOptions options);
@@ -94,11 +91,11 @@ class Q_GUI_EXPORT QPrintDialog : public QAbstractPrintDialog
    PrintDialogOptions options() const;
 
 #if defined(Q_OS_UNIX) || defined(Q_OS_MAC) || defined(Q_OS_WIN)
-   void setVisible(bool visible);
+   void setVisible(bool visible) override;
 #endif
 
    using QDialog::open;
-   void open(QObject *receiver, const char *member);
+   void open(QObject *receiver, const QString &member);
 
    using QDialog::accepted;
    GUI_CS_SIGNAL_1(Public, void accepted(QPrinter *printer))
@@ -113,10 +110,10 @@ class Q_GUI_EXPORT QPrintDialog : public QAbstractPrintDialog
    GUI_CS_SLOT_2(_q_collapseOrExpandDialog)
 #endif
 
-# if defined(Q_OS_UNIX) && !defined (Q_OS_MAC) && !defined(QT_NO_MESSAGEBOX)
+#if defined(Q_OS_UNIX) && !defined (Q_OS_MAC) && !defined(QT_NO_MESSAGEBOX)
    GUI_CS_SLOT_1(Private, void _q_checkFields())
    GUI_CS_SLOT_2(_q_checkFields)
-# endif
+#endif
 
    friend class QUnixPrintWidget;
 };

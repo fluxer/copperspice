@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -43,6 +40,7 @@
 #include <qplatformdefs.h>
 #include <qcrashhandler_p.h>
 #include <qbytearray.h>
+#include <qstring.h>
 
 #ifndef QT_NO_CRASHHANDLER
 
@@ -50,22 +48,20 @@
 #include <signal.h>
 #include <stdlib.h>
 
-QT_BEGIN_NAMESPACE
-
 QtCrashHandler QSegfaultHandler::callback = 0;
 
-#if defined(__GLIBC__) && (__GLIBC__ >= 2) && !defined(__UCLIBC__) && !defined(QT_LINUXBASE)
-QT_BEGIN_INCLUDE_NAMESPACE
-#include <qstring.h>
+#if defined(__GLIBC__) && (__GLIBC__ >= 2) && ! defined(__UCLIBC__) && ! defined(QT_LINUXBASE)
+
 #include <execinfo.h>
-QT_END_INCLUDE_NAMESPACE
 
 static void print_backtrace(FILE *outb)
 {
    void *stack[128];
    int stack_size = backtrace(stack, sizeof(stack) / sizeof(void *));
    char **stack_symbols = backtrace_symbols(stack, stack_size);
+
    fprintf(outb, "Stack [%d]:\n", stack_size);
+
    if (FILE *cppfilt = popen("c++filt", "rw")) {
       dup2(fileno(outb), fileno(cppfilt));
       for (int i = stack_size - 1; i >= 0; --i) {
@@ -84,33 +80,24 @@ static void init_backtrace(char **, int)
 
 #else /* Don't use the GLIBC callback */
 /* Code sourced from: */
-QT_BEGIN_INCLUDE_NAMESPACE
+
 #include <stdarg.h>
 #include <string.h>
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 
-QT_END_INCLUDE_NAMESPACE
-
-
 static char *globalProgName = NULL;
 static bool backtrace_command(FILE *outb, const char *format, ...)
 {
-
    bool ret = false;
    char buffer[50];
 
-   /*
-    * Please note that vsnprintf() is not ASync safe (ie. cannot safely
-    * be used from a signal handler.) If this proves to be a problem
-    * then the cmd string can be built by more basic functions such as
-    * strcpy, strcat, and a home-made integer-to-ascii function.
-    */
    va_list args;
    char cmd[512];
+
    va_start(args, format);
-   qvsnprintf(cmd, 512, format, args);
+   std:vsnprintf(cmd, 512, format, args);
    va_end(args);
 
    char *foo = cmd;
@@ -118,9 +105,11 @@ static bool backtrace_command(FILE *outb, const char *format, ...)
    if (FILE *inb = popen(foo, "r")) {
       while (!feof(inb)) {
          int len = fread(buffer, 1, sizeof(buffer), inb);
-         if (!len) {
+
+         if (! len) {
             break;
          }
+
          if (!ret) {
             fwrite("Output from ", 1, strlen("Output from "), outb);
             strtok(cmd, " ");
@@ -130,8 +119,10 @@ static bool backtrace_command(FILE *outb, const char *format, ...)
          }
          fwrite(buffer, 1, len, outb);
       }
+
       fclose(inb);
    }
+
    return ret;
 }
 
@@ -277,19 +268,23 @@ void qt_signal_handler(int sig)
       (*QSegfaultHandler::callback)();
       _exit(1);
    }
+
    FILE *outb = stderr;
    if (char *crash_loc = ::getenv("QT_CRASH_OUTPUT")) {
       if (FILE *new_outb = fopen(crash_loc, "w")) {
-         fprintf(stderr, "Crash (backtrace written to %s)!!!\n", crash_loc);
+         fprintf(stderr, "Crash (backtrace written to %s)\n", crash_loc);
          outb = new_outb;
       }
    } else {
-      fprintf(outb, "Crash!!!\n");
+      fprintf(outb, "Crash\n");
    }
+
    print_backtrace(outb);
+
    if (outb != stderr) {
       fclose(outb);
    }
+
    _exit(1);
 }
 
@@ -306,7 +301,5 @@ QSegfaultHandler::initialize(char **argv, int argc)
    sigaction(SIGSEGV, &SignalAction, NULL);
    sigaction(SIGBUS, &SignalAction, NULL);
 }
-
-QT_END_NAMESPACE
 
 #endif // QT_NO_CRASHHANDLER

@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -47,22 +44,17 @@
 #include <fcntl.h>
 #include <errno.h>
 
-QT_BEGIN_NAMESPACE
-
 #ifndef QT_NO_QWS_QPF2
 
 #include <qpfutil.cpp>
-
-QT_BEGIN_INCLUDE_NAMESPACE
 
 #if defined(Q_WS_QWS)
 #include <qwscommand_qws_p.h>
 #include <qwsdisplay_qws.h>
 #include <qabstractfontengine_p.h>
 #endif
-#include <qplatformdefs.h>
 
-QT_END_INCLUDE_NAMESPACE
+#include <qplatformdefs.h>
 
 //#define DEBUG_HEADER
 //#define DEBUG_FONTENGINE
@@ -237,7 +229,8 @@ QList<QByteArray> QFontEngineQPF::cleanUpAfterClientCrash(const QList<int> &cras
 {
    QList<QByteArray> removedFonts;
    QDir dir(qws_fontCacheDir(), QLatin1String(" *.qsf"));
-   foreach (const QFileInfo &fi, dir.entryInfoList()) {
+
+   for (const QFileInfo &fi : dir.entryInfoList()) {
       const QByteArray fileName = QFile::encodeName(fi.absoluteFilePath());
 
       int fd = QT_OPEN(fileName.constData(), O_RDONLY, 0);
@@ -766,22 +759,25 @@ QFontEngine::Type QFontEngineQPF::type() const
    return QFontEngine::QPF2;
 }
 
-bool QFontEngineQPF::canRender(const QChar *string, int len)
+bool QFontEngineQPF::canRender(QStringView str)
 {
    const uchar *cmap = externalCMap ? externalCMap : (fontData + cmapOffset);
 
    if (symbol) {
       for (int i = 0; i < len; ++i) {
-         unsigned int uc = getChar(string, i, len);
+         unsigned int uc = getChar(str, i, len);
          glyph_t g = getTrueTypeGlyphIndex(cmap, uc);
+
          if(!g && uc < 0x100)
             g = getTrueTypeGlyphIndex(cmap, uc + 0xf000);
          if (!g)
             return false;
       }
+
    } else {
       for (int i = 0; i < len; ++i) {
-         unsigned int uc = getChar(string, i, len);
+         unsigned int uc = getChar(str, i, len);
+
          if (!getTrueTypeGlyphIndex(cmap, uc))
             return false;
       }
@@ -1199,7 +1195,6 @@ void QFontEngineMultiQWS::loadEngine(int at)
 
 void QFontEngineMultiQWS::draw(QPaintEngine */*p*/, qreal /*x*/, qreal /*y*/, const QTextItemInt &/*si*/)
 {
-   qFatal("QFontEngineMultiQWS::draw should never be called!");
+   qFatal("QFontEngineMultiQWS::Draw should never be called");
 }
 
-QT_END_NAMESPACE

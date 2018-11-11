@@ -1,31 +1,26 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
 
 #include <qaudio_mac_p.h>
-
-QT_BEGIN_NAMESPACE
 
 // Debugging
 QDebug operator<<(QDebug dbg, const QAudioFormat &audioFormat)
@@ -45,14 +40,16 @@ QDebug operator<<(QDebug dbg, const QAudioFormat &audioFormat)
 // Conversion
 QAudioFormat toQAudioFormat(AudioStreamBasicDescription const &sf)
 {
-   QAudioFormat    audioFormat;
+   QAudioFormat audioFormat;
 
    audioFormat.setFrequency(sf.mSampleRate);
    audioFormat.setChannels(sf.mChannelsPerFrame);
    audioFormat.setSampleSize(sf.mBitsPerChannel);
-   audioFormat.setCodec(QString::fromLatin1("audio/pcm"));
+   audioFormat.setCodec("audio/pcm");
+
    audioFormat.setByteOrder((sf.mFormatFlags & kAudioFormatFlagIsBigEndian) != 0 ? QAudioFormat::BigEndian :
                             QAudioFormat::LittleEndian);
+
    QAudioFormat::SampleType type = QAudioFormat::UnSignedInt;
    if ((sf.mFormatFlags & kAudioFormatFlagIsSignedInteger) != 0) {
       type = QAudioFormat::SignedInt;
@@ -113,12 +110,12 @@ QAudioRingBuffer::~QAudioRingBuffer()
 
 int QAudioRingBuffer::used() const
 {
-   return m_bufferUsed;
+   return m_bufferUsed.load();
 }
 
 int QAudioRingBuffer::free() const
 {
-   return m_bufferSize - m_bufferUsed;
+    return m_bufferSize - m_bufferUsed.load();
 }
 
 int QAudioRingBuffer::size() const
@@ -130,9 +127,6 @@ void QAudioRingBuffer::reset()
 {
    m_readPos = 0;
    m_writePos = 0;
-   m_bufferUsed = 0;
+   m_bufferUsed.store(0);
 }
-
-QT_END_NAMESPACE
-
 

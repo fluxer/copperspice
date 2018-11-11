@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -1720,7 +1717,7 @@ void QWSServerPrivate::dereferenceFont(QWSClientPrivate *client, const QByteArra
 
 static void cleanupFontsDir()
 {
-   static bool dontDelete = !qgetenv("QWS_KEEP_FONTS").isEmpty();
+   static bool dontDelete = ! qgetenv("QWS_KEEP_FONTS").isEmpty();
    if (dontDelete) {
       return;
    }
@@ -1737,7 +1734,7 @@ static void cleanupFontsDir()
 
 void QWSServerPrivate::cleanupFonts(bool force)
 {
-   static bool dontDelete = !qgetenv("QWS_KEEP_FONTS").isEmpty();
+   static bool dontDelete = ! qgetenv("QWS_KEEP_FONTS").isEmpty();
    if (dontDelete) {
       return;
    }
@@ -1746,7 +1743,7 @@ void QWSServerPrivate::cleanupFonts(bool force)
    qDebug() << "cleanupFonts()";
 #endif
    if (!fontReferenceCount.isEmpty()) {
-      QMap<QByteArray, int>::Iterator it = fontReferenceCount.begin();
+      QMap<QByteArray, int>::iterator it = fontReferenceCount.begin();
       while (it != fontReferenceCount.end()) {
          if (it.value() && !force) {
             ++it;
@@ -2186,7 +2183,7 @@ void QWSServerPrivate::sendMaxWindowRectEvents(const QRect &rect)
 */
 void QWSServer::setDefaultMouse(const char *m)
 {
-   *defaultMouse() = QString::fromAscii(m);
+   *defaultMouse() = QString::fromLatin1(m);
 }
 
 /*!
@@ -2203,7 +2200,7 @@ void QWSServer::setDefaultMouse(const char *m)
 */
 void QWSServer::setDefaultKeyboard(const char *k)
 {
-   *defaultKeyboard() = QString::fromAscii(k);
+   *defaultKeyboard() = QString::fromLatin1(k);
 }
 
 #ifndef QT_NO_QWS_CURSOR
@@ -2255,7 +2252,7 @@ void QWSServer::sendMouseEvent(const QPoint &pos, int state, int wheel)
    qwsServerPrivate->mouseState = state;
 
 #ifndef QT_NO_QWS_INPUTMETHODS
-   const int btnMask = Qt::LeftButton | Qt::RightButton | Qt::MidButton;
+   const int btnMask = Qt::LeftButton | Qt::RightButton | Qt::MiddleButton;
    int stroke_count; // number of strokes to keep shown.
    if (force_reject_strokeIM || !current_IM) {
       stroke_count = 0;
@@ -2282,7 +2279,7 @@ void QWSServer::sendMouseEvent(const QPoint &pos, int state, int wheel)
 
 void QWSServerPrivate::sendMouseEventUnfiltered(const QPoint &pos, int state, int wheel)
 {
-   const int btnMask = Qt::LeftButton | Qt::RightButton | Qt::MidButton;
+   const int btnMask = Qt::LeftButton | Qt::RightButton | Qt::MiddleButton;
    QWSMouseEvent event;
 
    QWSWindow *win = qwsServer->windowAt(pos);
@@ -3178,7 +3175,7 @@ void QWSServerPrivate::invokeSelectCursor(QWSSelectCursorCommand *cmd, QWSClient
       curs = QWSCursor::systemCursor(id);
    } else {
       QWSCursorMap cursMap = client->cursors;
-      QWSCursorMap::Iterator it = cursMap.find(id);
+      QWSCursorMap::iterator it = cursMap.find(id);
       if (it != cursMap.end()) {
          curs = it.value();
       }
@@ -3694,10 +3691,12 @@ void QWSServer::closeMouse()
 void QWSServer::openMouse()
 {
    Q_D(QWSServer);
-   QString mice = QString::fromLatin1(qgetenv("QWS_MOUSE_PROTO"));
+
+   QString mice = QString::fromUtf8(qgetenv("QWS_MOUSE_PROTO"));
+
 #if defined(QT_QWS_CASSIOPEIA)
    if (mice.isEmpty()) {
-      mice = QLatin1String("TPanel:/dev/tpanel");
+      mice = "TPanel:/dev/tpanel";
    }
 #endif
    if (mice.isEmpty()) {
@@ -3767,11 +3766,11 @@ QWSMouseHandler *QWSServerPrivate::newMouseHandler(const QString &spec)
    }
 
    int screen = -1;
-   const QList<QRegExp> regexps = QList<QRegExp>()
-                                  << QRegExp(QLatin1String(":screen=(\\d+)\\b"))
-                                  << QRegExp(QLatin1String("\\bscreen=(\\d+):"));
+   const QList<QRegularExpression> regexps = QList<QRegularExpression>()
+                                  << QRegularExpression(QLatin1String(":screen=(\\d+)\\b"))
+                                  << QRegularExpression(QLatin1String("\\bscreen=(\\d+):"));
    for (int i = 0; i < regexps.size(); ++i) {
-      QRegExp regexp = regexps.at(i);
+      QRegularExpression regexp = regexps.at(i);
       if (regexp.indexIn(mouseDev) == -1) {
          continue;
       }
@@ -3848,7 +3847,8 @@ void QWSServer::setKeyboardHandler(QWSKeyboardHandler *kh)
 */
 void QWSServer::openKeyboard()
 {
-   QString keyboards = QString::fromLatin1(qgetenv("QWS_KEYBOARD"));
+   QString keyboards = QString::fromUtf8(qgetenv("QWS_KEYBOARD"));
+
 #if defined(QT_QWS_CASSIOPEIA)
    if (keyboards.isEmpty()) {
       keyboards = QLatin1String("Buttons");
@@ -3866,6 +3866,7 @@ void QWSServer::openKeyboard()
    QString device;
    QString type;
    QStringList keyboard = keyboards.split(QLatin1Char(' '));
+
    for (int i = keyboard.size() - 1; i >= 0; --i) {
       const QString spec = keyboard.at(i);
       int colon = spec.indexOf(QLatin1Char(':'));

@@ -1,28 +1,26 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
 
+#include <qpair.h>
 #include <qthreadpool.h>
 #include <qthreadpool_p.h>
 #include <qelapsedtimer.h>
@@ -33,6 +31,7 @@ inline bool operator<(int priority, const QPair<QRunnable *, int> &p)
 {
    return p.second < priority;
 }
+
 inline bool operator<(const QPair<QRunnable *, int> &p, int priority)
 {
    return priority < p.second;
@@ -41,13 +40,13 @@ inline bool operator<(const QPair<QRunnable *, int> &p, int priority)
 Q_GLOBAL_STATIC(QThreadPool, theInstance)
 
 /*
-    QThread wrapper, provides synchronization against a ThreadPool
+    QThread wrapper provides synchronization against a ThreadPool
 */
 class QThreadPoolThread : public QThread
 {
  public:
    QThreadPoolThread(QThreadPoolPrivate *manager);
-   void run();
+   void run() override;
    void registerThreadInactive();
 
    QWaitCondition runnableReady;
@@ -203,8 +202,7 @@ void QThreadPoolPrivate::enqueueTask(QRunnable *runnable, int priority)
    }
 
    // put it on the queue
-   QList<QPair<QRunnable *, int> >::iterator at =
-      qUpperBound(queue.begin(), queue.end(), priority);
+   QList<QPair<QRunnable *, int> >::iterator at = std::upper_bound(queue.begin(), queue.end(), priority);
    queue.insert(at, qMakePair(runnable, priority));
 }
 
@@ -236,8 +234,9 @@ bool QThreadPoolPrivate::tooManyThreadsActive() const
 void QThreadPoolPrivate::startThread(QRunnable *runnable)
 {
    QScopedPointer <QThreadPoolThread> thread(new QThreadPoolThread(this));
-   thread->setObjectName(QLatin1String("Thread (pooled)"));
+   thread->setObjectName("Thread (pooled)");
    allThreads.insert(thread.data());
+
    ++activeThreads;
 
    if (runnable->autoDelete()) {
@@ -262,7 +261,7 @@ void QThreadPoolPrivate::reset()
       allThreads.clear();
       locker.unlock();
 
-      foreach (QThreadPoolThread * thread, allThreadsCopy) {
+      for (QThreadPoolThread * thread : allThreadsCopy) {
          thread->runnableReady.wakeAll();
          thread->wait();
          delete thread;
@@ -363,60 +362,6 @@ void QThreadPoolPrivate::stealRunnable(QRunnable *runnable)
       delete runnable;
    }
 }
-
-/*!
-    \class QThreadPool
-    \brief The QThreadPool class manages a collection of QThreads.
-    \since 4.4
-    \threadsafe
-
-    \ingroup thread
-
-    QThreadPool manages and recyles individual QThread objects to help reduce
-    thread creation costs in programs that use threads. Each Qt application
-    has one global QThreadPool object, which can be accessed by calling
-    globalInstance().
-
-    To use one of the QThreadPool threads, subclass QRunnable and implement
-    the run() virtual function. Then create an object of that class and pass
-    it to QThreadPool::start().
-
-    \snippet doc/src/snippets/code/src_corelib_concurrent_qthreadpool.cpp 0
-
-    QThreadPool deletes the QRunnable automatically by default. Use
-    QRunnable::setAutoDelete() to change the auto-deletion flag.
-
-    QThreadPool supports executing the same QRunnable more than once
-    by calling tryStart(this) from within QRunnable::run().
-    If autoDelete is enabled the QRunnable will be deleted when
-    the last thread exits the run function. Calling start()
-    multiple times with the same QRunnable when autoDelete is enabled
-    creates a race condition and is not recommended.
-
-    Threads that are unused for a certain amount of time will expire. The
-    default expiry timeout is 30000 milliseconds (30 seconds). This can be
-    changed using setExpiryTimeout(). Setting a negative expiry timeout
-    disables the expiry mechanism.
-
-    Call maxThreadCount() to query the maximum number of threads to be used.
-    If needed, you can change the limit with setMaxThreadCount(). The default
-    maxThreadCount() is QThread::idealThreadCount(). The activeThreadCount()
-    function returns the number of threads currently doing work.
-
-    The reserveThread() function reserves a thread for external
-    use. Use releaseThread() when your are done with the thread, so
-    that it may be reused.  Essentially, these functions temporarily
-    increase or reduce the active thread count and are useful when
-    implementing time-consuming operations that are not visible to the
-    QThreadPool.
-
-    Note that QThreadPool is a low-level class for managing threads, see
-    QtConcurrent::run() or the other
-    \l {Concurrent Programming}{Qt Concurrent} APIs for higher
-    level alternatives.
-
-    \sa QRunnable
-*/
 
 /*!
     Constructs a thread pool with the given \a parent.

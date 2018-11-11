@@ -47,7 +47,11 @@ typedef hb_uint8 hb_bitfield;
 #endif
 
 typedef enum {
+        HB_Script_Unknown,
+        HB_Script_Inherited,
         HB_Script_Common,
+
+        HB_Script_Latin,
         HB_Script_Greek,
         HB_Script_Cyrillic,
         HB_Script_Armenian,
@@ -71,51 +75,132 @@ typedef enum {
         HB_Script_Myanmar,
         HB_Script_Georgian,
         HB_Script_Hangul,
+        HB_Script_Ethiopic,
+        HB_Script_Cherokee,
+        HB_Script_CanadianAboriginal,
         HB_Script_Ogham,
         HB_Script_Runic,
         HB_Script_Khmer,
+
+        HB_Script_Mongolian,
+        HB_Script_Hiragana,
+        HB_Script_Katakana,
+        HB_Script_Bopomofo,
+        HB_Script_Han,
+        HB_Script_Yi,
+        HB_Script_OldItalic,
+        HB_Script_Gothic,
+        HB_Script_Deseret,
+        HB_Script_Tagalog,
+        HB_Script_Hanunoo,
+        HB_Script_Buhid,
+        HB_Script_Tagbanwa,
+        HB_Script_Coptic,
+
+        // Unicode 4.0 additions
+        HB_Script_Limbu,
+        HB_Script_TaiLe,
+        HB_Script_LinearB,
+        HB_Script_Ugaritic,
+        HB_Script_Shavian,
+        HB_Script_Osmanya,
+        HB_Script_Cypriot,
+        HB_Script_Braille,
+
+        // Unicode 4.1 additions
+        HB_Script_Buginese,
+        HB_Script_NewTaiLue,
+        HB_Script_Glagolitic,
+        HB_Script_Tifinagh,
+        HB_Script_SylotiNagri,
+        HB_Script_OldPersian,
+        HB_Script_Kharoshthi,
+
+        // Unicode 5.0 additions
+        HB_Script_Balinese,
+        HB_Script_Cuneiform,
+        HB_Script_Phoenician,
+        HB_Script_PhagsPa,
         HB_Script_Nko,
-        HB_Script_Inherited,
-        HB_ScriptCount = HB_Script_Inherited
-        /*
-        HB_Script_Latin = Common,
-        HB_Script_Ethiopic = Common,
-        HB_Script_Cherokee = Common,
-        HB_Script_CanadianAboriginal = Common,
-        HB_Script_Mongolian = Common,
-        HB_Script_Hiragana = Common,
-        HB_Script_Katakana = Common,
-        HB_Script_Bopomofo = Common,
-        HB_Script_Han = Common,
-        HB_Script_Yi = Common,
-        HB_Script_OldItalic = Common,
-        HB_Script_Gothic = Common,
-        HB_Script_Deseret = Common,
-        HB_Script_Tagalog = Common,
-        HB_Script_Hanunoo = Common,
-        HB_Script_Buhid = Common,
-        HB_Script_Tagbanwa = Common,
-        HB_Script_Limbu = Common,
-        HB_Script_TaiLe = Common,
-        HB_Script_LinearB = Common,
-        HB_Script_Ugaritic = Common,
-        HB_Script_Shavian = Common,
-        HB_Script_Osmanya = Common,
-        HB_Script_Cypriot = Common,
-        HB_Script_Braille = Common,
-        HB_Script_Buginese = Common,
-        HB_Script_Coptic = Common,
-        HB_Script_NewTaiLue = Common,
-        HB_Script_Glagolitic = Common,
-        HB_Script_Tifinagh = Common,
-        HB_Script_SylotiNagri = Common,
-        HB_Script_OldPersian = Common,
-        HB_Script_Kharoshthi = Common,
-        HB_Script_Balinese = Common,
-        HB_Script_Cuneiform = Common,
-        HB_Script_Phoenician = Common,
-        HB_Script_PhagsPa = Common,
-        */
+
+        // Unicode 5.1 additions
+        HB_Script_Sundanese,
+        HB_Script_Lepcha,
+        HB_Script_OlChiki,
+        HB_Script_Vai,
+        HB_Script_Saurashtra,
+        HB_Script_KayahLi,
+        HB_Script_Rejang,
+        HB_Script_Lycian,
+        HB_Script_Carian,
+        HB_Script_Lydian,
+        HB_Script_Cham,
+
+        // Unicode 5.2 additions
+        HB_Script_TaiTham,
+        HB_Script_TaiViet,
+        HB_Script_Avestan,
+        HB_Script_EgyptianHieroglyphs,
+        HB_Script_Samaritan,
+        HB_Script_Lisu,
+        HB_Script_Bamum,
+        HB_Script_Javanese,
+        HB_Script_MeeteiMayek,
+        HB_Script_ImperialAramaic,
+        HB_Script_OldSouthArabian,
+        HB_Script_InscriptionalParthian,
+        HB_Script_InscriptionalPahlavi,
+        HB_Script_OldTurkic,
+        HB_Script_Kaithi,
+
+        // Unicode 6.0 additions
+        HB_Script_Batak,
+        HB_Script_Brahmi,
+        HB_Script_Mandaic,
+
+        // Unicode 6.1 additions
+        HB_Script_Chakma,
+        HB_Script_MeroiticCursive,
+        HB_Script_MeroiticHieroglyphs,
+        HB_Script_Miao,
+        HB_Script_Sharada,
+        HB_Script_SoraSompeng,
+        HB_Script_Takri,
+
+        // Unicode 7.0 additions
+        HB_Script_CaucasianAlbanian,
+        HB_Script_BassaVah,
+        HB_Script_Duployan,
+        HB_Script_Elbasan,
+        HB_Script_Grantha,
+        HB_Script_PahawhHmong,
+        HB_Script_Khojki,
+        HB_Script_LinearA,
+        HB_Script_Mahajani,
+        HB_Script_Manichaean,
+        HB_Script_MendeKikakui,
+        HB_Script_Modi,
+        HB_Script_Mro,
+        HB_Script_OldNorthArabian,
+        HB_Script_Nabataean,
+        HB_Script_Palmyrene,
+        HB_Script_PauCinHau,
+        HB_Script_OldPermic,
+        HB_Script_PsalterPahlavi,
+        HB_Script_Siddham,
+        HB_Script_Khudawadi,
+        HB_Script_Tirhuta,
+        HB_Script_WarangCiti,
+
+        // Unicode 8.0 additions
+        HB_Script_Ahom,
+        HB_Script_AnatolianHieroglyphs,
+        HB_Script_Hatran,
+        HB_Script_Multani,
+        HB_Script_OldHungarian,
+        HB_Script_SignWriting,
+
+        HB_ScriptCount = HB_Script_SignWriting
 } HB_Script;
 
 typedef struct
@@ -140,7 +225,7 @@ typedef struct {
     /*HB_Bool*/ hb_bitfield charStop                :1;     /* Valid cursor position (for left/right arrow) */
     /*HB_Bool*/ hb_bitfield wordBoundary            :1;
     /*HB_Bool*/ hb_bitfield sentenceBoundary        :1;
-    hb_bitfield unused                  :2;
+    hb_bitfield unused                              :2;
 } HB_CharAttributes;
 
 void HB_GetCharAttributes(const HB_UChar16 *string, hb_uint32 stringLength,
@@ -154,8 +239,8 @@ void HB_GetWordBoundaries(const HB_UChar16 *string, hb_uint32 stringLength,
 
 /* requires HB_GetCharAttributes to be called before */
 void HB_GetSentenceBoundaries(const HB_UChar16 *string, hb_uint32 stringLength,
-                              const HB_ScriptItem *items, hb_uint32 numItems,
-                              HB_CharAttributes *attributes);
+                          const HB_ScriptItem *items, hb_uint32 numItems,
+                          HB_CharAttributes *attributes);
 
 
 typedef enum {
@@ -169,7 +254,7 @@ typedef enum {
     HB_ShaperFlag_UseDesignMetrics = 2
 } HB_ShaperFlag;
 
-/* 
+/*
    highest value means highest priority for justification. Justification is done by first inserting kashidas
    starting with the highest priority positions, then stretching spaces, afterwards extending inter char
    spacing, and last spacing between arabic words.
@@ -189,7 +274,7 @@ typedef enum {
     HB_Arabic_Kashida = 13   /* Kashida(U+640) in middle of word */
 } HB_JustificationClass;
 
-// This structure is binary compatible with Uniscribe's SCRIPT_VISATTR. Would be nice to keep it like that 
+// This structure is binary compatible with Uniscribe's SCRIPT_VISATTR. Would be nice to keep it like that
 typedef struct {
     hb_bitfield justification   :4;  /* Justification class */
     hb_bitfield clusterStart    :1;  /* First glyph of representation of cluster */

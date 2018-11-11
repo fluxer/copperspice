@@ -1,33 +1,30 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
 
 #include <qhttpmultipart.h>
 #include <qhttpmultipart_p.h>
-#include <QtCore/qdatetime.h>       // for initializing the random number generator with QTime
-#include <QtCore/qmutex.h>
-#include <QtCore/qthreadstorage.h>
+#include <qdatetime.h>        // for initializing the random number generator with QTime
+#include <qmutex.h>
+#include <qthreadstorage.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -430,7 +427,8 @@ qint64 QHttpMultiPartIODevice::readData(char *data, qint64 maxSize)
    // skip the parts we have already read
    while (index < multiPart->parts.count() &&
           readPointer >= partOffsets.at(index) + multiPart->parts.at(index).d->size()
-          + multiPart->boundary.count() + 6) { // 6 == 2 boundary dashes, \r\n after boundary, \r\n after multipart
+          + multiPart->boundary.count() + 6) {
+      // 6 == 2 boundary dashes, \r\n after boundary, \r\n after multipart
       index++;
    }
 
@@ -450,9 +448,9 @@ qint64 QHttpMultiPartIODevice::readData(char *data, qint64 maxSize)
       }
 
       // check whether we need to read the data of the current part
-      if (bytesRead < maxSize && partIndex >= boundaryCount &&
-            partIndex < boundaryCount + multiPart->parts.at(index).d->size()) {
+      if (bytesRead < maxSize && partIndex >= boundaryCount && partIndex < boundaryCount + multiPart->parts.at(index).d->size()) {
          qint64 dataBytesRead = multiPart->parts[index].d->readData(data + bytesRead, maxSize - bytesRead);
+
          if (dataBytesRead == -1) {
             return -1;
          }

@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -32,101 +29,6 @@
 #include <qmap.h>
 #include <qhash.h>
 
-QT_BEGIN_NAMESPACE
-
-/*!
-    \class QTextLength
-    \reentrant
-
-    \brief The QTextLength class encapsulates the different types of length
-    used in a QTextDocument.
-
-    \ingroup richtext-processing
-
-    When we specify a value for the length of an element in a text document,
-    we often need to provide some other information so that the length is
-    used in the way we expect. For example, when we specify a table width,
-    the value can represent a fixed number of pixels, or it can be a percentage
-    value. This information changes both the meaning of the value and the way
-    it is used.
-
-    Generally, this class is used to specify table widths. These can be
-    specified either as a fixed amount of pixels, as a percentage of the
-    containing frame's width, or by a variable width that allows it to take
-    up just the space it requires.
-
-    \sa QTextTable
-*/
-
-/*!
-    \fn explicit QTextLength::QTextLength()
-
-    Constructs a new length object which represents a variable size.
-*/
-
-/*!
-    \fn QTextLength::QTextLength(Type type, qreal value)
-
-    Constructs a new length object of the given \a type and \a value.
-*/
-
-/*!
-    \fn Type QTextLength::type() const
-
-    Returns the type of this length object.
-
-    \sa QTextLength::Type
-*/
-
-/*!
-    \fn qreal QTextLength::value(qreal maximumLength) const
-
-    Returns the effective length, constrained by the type of the length object
-    and the specified \a maximumLength.
-
-    \sa type()
-*/
-
-/*!
-    \fn qreal QTextLength::rawValue() const
-
-    Returns the constraint value that is specific for the type of the length.
-    If the length is QTextLength::PercentageLength then the raw value is in
-    percent, in the range of 0 to 100. If the length is QTextLength::FixedLength
-    then that fixed amount is returned. For variable lengths, zero is returned.
-*/
-
-/*!
-    \fn bool QTextLength::operator==(const QTextLength &other) const
-
-    Returns true if this text length is the same as the \a other text
-    length.
-*/
-
-/*!
-    \fn bool QTextLength::operator!=(const QTextLength &other) const
-
-    Returns true if this text length is different from the \a other text
-    length.
-*/
-
-/*!
-    \enum QTextLength::Type
-
-    This enum describes the different types a length object can
-    have.
-
-    \value VariableLength The width of the object is variable
-    \value FixedLength The width of the object is fixed
-    \value PercentageLength The width of the object is in
-                            percentage of the maximum width
-
-    \sa type()
-*/
-
-/*!
-   Returns the text length as a QVariant
-*/
 QTextLength::operator QVariant() const
 {
    return QVariant(QVariant::TextLength, this);
@@ -325,7 +227,7 @@ static inline int getHash(const QTextFormatPrivate *d, int format)
 uint QTextFormatPrivate::recalcHash() const
 {
    hashValue = 0;
-   for (QVector<Property>::ConstIterator it = props.constBegin(); it != props.constEnd(); ++it) {
+   for (QVector<Property>::const_iterator it = props.constBegin(); it != props.constEnd(); ++it) {
       hashValue += (it->key << 16) + variantHash(it->value);
    }
 
@@ -454,7 +356,7 @@ Q_GUI_EXPORT QDataStream &operator>>(QDataStream &stream, QTextFormat &fmt)
       fmt.d = new QTextFormatPrivate();
    }
 
-   for (QMap<qint32, QVariant>::ConstIterator it = properties.constBegin();
+   for (QMap<qint32, QVariant>::const_iterator it = properties.constBegin();
          it != properties.constEnd(); ++it) {
       fmt.d->insertProperty(it.key(), it.value());
    }
@@ -2003,7 +1905,7 @@ QTextBlockFormat::QTextBlockFormat(const QTextFormat &fmt)
 void QTextBlockFormat::setTabPositions(const QList<QTextOption::Tab> &tabs)
 {
    QList<QVariant> list;
-   QList<QTextOption::Tab>::ConstIterator iter = tabs.constBegin();
+   QList<QTextOption::Tab>::const_iterator iter = tabs.constBegin();
    while (iter != tabs.constEnd()) {
       QVariant v;
       v.setValue<QTextOption::Tab>(*iter);
@@ -2027,7 +1929,7 @@ QList<QTextOption::Tab> QTextBlockFormat::tabPositions() const
    }
    QList<QTextOption::Tab> answer;
    QList<QVariant> variantsList = qvariant_cast<QList<QVariant> >(variant);
-   QList<QVariant>::Iterator iter = variantsList.begin();
+   QList<QVariant>::iterator iter = variantsList.begin();
    while (iter != variantsList.end()) {
       answer.append( qvariant_cast<QTextOption::Tab>(*iter));
       ++iter;
@@ -3021,215 +2923,6 @@ QTextImageFormat::QTextImageFormat(const QTextFormat &fmt)
 {
 }
 
-/*!
-    \fn bool QTextImageFormat::isValid() const
-
-    Returns true if this image format is valid; otherwise returns false.
-*/
-
-
-/*!
-    \fn void QTextImageFormat::setName(const QString &name)
-
-    Sets the \a name of the image. The \a name is used to locate the image
-    in the application's resources.
-
-    \sa name()
-*/
-
-
-/*!
-    \fn QString QTextImageFormat::name() const
-
-    Returns the name of the image. The name refers to an entry in the
-    application's resources file.
-
-    \sa setName()
-*/
-
-/*!
-    \fn void QTextImageFormat::setWidth(qreal width)
-
-    Sets the \a width of the rectangle occupied by the image.
-
-    \sa width() setHeight()
-*/
-
-
-// ### Qt5/qreal replace with a QTextLength
-/*!
-    \fn qreal QTextImageFormat::width() const
-
-    Returns the width of the rectangle occupied by the image.
-
-    \sa height() setWidth()
-*/
-
-
-/*!
-    \fn void QTextImageFormat::setHeight(qreal height)
-
-    Sets the \a height of the rectangle occupied by the image.
-
-    \sa height() setWidth()
-*/
-
-
-// ### Qt5/qreal replace with a QTextLength
-/*!
-    \fn qreal QTextImageFormat::height() const
-
-    Returns the height of the rectangle occupied by the image.
-
-    \sa width() setHeight()
-*/
-
-/*!
-    \fn void QTextCharFormat::setFontCapitalization(QFont::Capitalization capitalization)
-    \since 4.4
-
-    Sets the capitalization of the text that apppears in this font to \a capitalization.
-
-    A font's capitalization makes the text appear in the selected capitalization mode.
-
-    \sa fontCapitalization()
-*/
-
-/*!
-    \fn Capitalization QTextCharFormat::fontCapitalization() const
-    \since 4.4
-
-    Returns the current capitalization type of the font.
-*/
-
-/*!
-    \fn void QTextCharFormat::setFontLetterSpacing(qreal spacing)
-    \since 4.4
-
-    Sets the letter spacing of this format to the given \a spacing, in percent.
-    A value of 100 indicates default spacing; a value of 200 doubles the amount
-    of space a letter takes.
-
-    \sa fontLetterSpacing()
-*/
-
-/*!
-    \fn qreal QTextCharFormat::fontLetterSpacing() const
-    \since 4.4
-
-    Returns the current letter spacing percentage.
-*/
-
-/*!
-    \fn void QTextCharFormat::setFontWordSpacing(qreal spacing)
-    \since 4.4
-
-    Sets the word spacing of this format to the given \a spacing, in pixels.
-
-    \sa fontWordSpacing()
-*/
-
-/*!
-    \fn qreal QTextCharFormat::fontWordSpacing() const
-    \since 4.4
-
-    Returns the current word spacing value.
-*/
-
-/*!
-   \fn qreal QTextTableCellFormat::topPadding() const
-    \since 4.4
-
-   Gets the top padding of the table cell.
-
-   \sa setTopPadding(), leftPadding(), rightPadding(), bottomPadding()
-*/
-
-/*!
-   \fn qreal QTextTableCellFormat::bottomPadding() const
-    \since 4.4
-
-   Gets the bottom padding of the table cell.
-
-   \sa setBottomPadding(), leftPadding(), rightPadding(), topPadding()
-*/
-
-/*!
-   \fn qreal QTextTableCellFormat::leftPadding() const
-    \since 4.4
-
-   Gets the left padding of the table cell.
-
-   \sa setLeftPadding(), rightPadding(), topPadding(), bottomPadding()
-*/
-
-/*!
-   \fn qreal QTextTableCellFormat::rightPadding() const
-    \since 4.4
-
-   Gets the right padding of the table cell.
-
-   \sa setRightPadding(), leftPadding(), topPadding(), bottomPadding()
-*/
-
-/*!
-   \fn void QTextTableCellFormat::setTopPadding(qreal padding)
-    \since 4.4
-
-   Sets the top \a padding of the table cell.
-
-   \sa topPadding(), setLeftPadding(), setRightPadding(), setBottomPadding()
-*/
-
-/*!
-   \fn void QTextTableCellFormat::setBottomPadding(qreal padding)
-    \since 4.4
-
-   Sets the bottom \a padding of the table cell.
-
-   \sa bottomPadding(), setLeftPadding(), setRightPadding(), setTopPadding()
-*/
-
-/*!
-   \fn void QTextTableCellFormat::setLeftPadding(qreal padding)
-    \since 4.4
-
-   Sets the left \a padding of the table cell.
-
-   \sa leftPadding(), setRightPadding(), setTopPadding(), setBottomPadding()
-*/
-
-/*!
-   \fn void QTextTableCellFormat::setRightPadding(qreal padding)
-    \since 4.4
-
-   Sets the right \a padding of the table cell.
-
-   \sa rightPadding(), setLeftPadding(), setTopPadding(), setBottomPadding()
-*/
-
-/*!
-   \fn void QTextTableCellFormat::setPadding(qreal padding)
-    \since 4.4
-
-   Sets the left, right, top, and bottom \a padding of the table cell.
-
-   \sa setLeftPadding(), setRightPadding(), setTopPadding(), setBottomPadding()
-*/
-
-/*!
-    \fn bool QTextTableCellFormat::isValid() const
-    \since 4.4
-
-    Returns true if this table cell format is valid; otherwise returns false.
-*/
-
-/*!
-    \fn QTextTableCellFormat::QTextTableCellFormat()
-    \since 4.4
-
-    Constructs a new table cell format object.
-*/
 QTextTableCellFormat::QTextTableCellFormat()
    : QTextCharFormat()
 {
@@ -3387,4 +3080,3 @@ void QTextFormatCollection::setDefaultFont(const QFont &f)
       }
 }
 
-QT_END_NAMESPACE

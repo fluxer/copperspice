@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -54,8 +51,8 @@ class Q_GUI_EXPORT QSplitter : public QFrame
    GUI_CS_PROPERTY_WRITE(childrenCollapsible, setChildrenCollapsible)
 
  public:
-   explicit QSplitter(QWidget *parent = 0);
-   explicit QSplitter(Qt::Orientation, QWidget *parent = 0);
+   explicit QSplitter(QWidget *parent = nullptr);
+   explicit QSplitter(Qt::Orientation, QWidget *parent = nullptr);
    ~QSplitter();
 
    void addWidget(QWidget *widget);
@@ -73,8 +70,8 @@ class Q_GUI_EXPORT QSplitter : public QFrame
    bool opaqueResize() const;
    void refresh();
 
-   QSize sizeHint() const;
-   QSize minimumSizeHint() const;
+   QSize sizeHint() const override;
+   QSize minimumSizeHint() const override;
 
    QList<int> sizes() const;
    void setSizes(const QList<int> &list);
@@ -100,12 +97,12 @@ class Q_GUI_EXPORT QSplitter : public QFrame
  protected:
    virtual QSplitterHandle *createHandle();
 
-   void childEvent(QChildEvent *);
+   void childEvent(QChildEvent *) override;
 
-   bool event(QEvent *);
-   void resizeEvent(QResizeEvent *);
+   bool event(QEvent *) override;
+   void resizeEvent(QResizeEvent *) override;
 
-   void changeEvent(QEvent *);
+   void changeEvent(QEvent *) override;
    void moveSplitter(int pos, int index);
    void setRubberBand(int position);
    int closestLegalPosition(int, int);
@@ -131,15 +128,15 @@ class Q_GUI_EXPORT QSplitterHandle : public QWidget
    bool opaqueResize() const;
    QSplitter *splitter() const;
 
-   QSize sizeHint() const;
+   QSize sizeHint() const override;
 
  protected:
-   void paintEvent(QPaintEvent *);
-   void mouseMoveEvent(QMouseEvent *);
-   void mousePressEvent(QMouseEvent *);
-   void mouseReleaseEvent(QMouseEvent *);
-   void resizeEvent(QResizeEvent *);
-   bool event(QEvent *);
+   void paintEvent(QPaintEvent *) override;
+   void mouseMoveEvent(QMouseEvent *) override;
+   void mousePressEvent(QMouseEvent *) override;
+   void mouseReleaseEvent(QMouseEvent *) override;
+   void resizeEvent(QResizeEvent *) override;
+   bool event(QEvent *) override;
 
    void moveSplitter(int p);
    int closestLegalPosition(int p);

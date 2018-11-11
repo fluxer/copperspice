@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -55,13 +52,14 @@ class QColumnViewPreviewColumn : public QAbstractItemView
       setMinimumWidth(previewWidget->minimumWidth());
    }
 
-   void resizeEvent(QResizeEvent *event) {
-      if (!previewWidget) {
+   void resizeEvent(QResizeEvent *event) override {
+      if (! previewWidget) {
          return;
       }
-      previewWidget->resize(
-         qMax(previewWidget->minimumWidth(), event->size().width()),
+
+      previewWidget->resize( qMax(previewWidget->minimumWidth(), event->size().width()),
          previewWidget->height());
+
       QSize p = viewport()->size();
       QSize v = previewWidget->size();
       horizontalScrollBar()->setRange(0, v.width() - p.width());
@@ -72,31 +70,38 @@ class QColumnViewPreviewColumn : public QAbstractItemView
       QAbstractScrollArea::resizeEvent(event);
    }
 
-   QRect visualRect(const QModelIndex &) const {
+   QRect visualRect(const QModelIndex &) const override {
       return QRect();
    }
-   void scrollTo(const QModelIndex &, ScrollHint) {
+
+   void scrollTo(const QModelIndex &, ScrollHint)  override{
    }
-   QModelIndex indexAt(const QPoint &) const {
+
+   QModelIndex indexAt(const QPoint &) const override{
       return QModelIndex();
    }
-   QModelIndex moveCursor(CursorAction, Qt::KeyboardModifiers) {
+
+   QModelIndex moveCursor(CursorAction, Qt::KeyboardModifiers) override{
       return QModelIndex();
    }
-   int horizontalOffset () const {
+
+   int horizontalOffset () const override{
       return 0;
    }
-   int verticalOffset () const {
+   int verticalOffset () const override {
       return 0;
    }
-   QRegion visualRegionForSelection(const QItemSelection &) const {
+
+   QRegion visualRegionForSelection(const QItemSelection &) const override {
       return QRegion();
    }
-   bool isIndexHidden(const QModelIndex &) const {
+
+   bool isIndexHidden(const QModelIndex &) const override {
       return false;
    }
-   void setSelection(const QRect &, QItemSelectionModel::SelectionFlags) {
-   }
+
+   void setSelection(const QRect &, QItemSelectionModel::SelectionFlags) override { }
+
  private:
    QWidget *previewWidget;
 };
@@ -108,6 +113,7 @@ class QColumnViewPrivate : public QAbstractItemViewPrivate
  public:
    QColumnViewPrivate();
    ~QColumnViewPrivate();
+
    void initialize();
 
    QAbstractItemView *createColumn(const QModelIndex &index, bool show);
@@ -118,11 +124,10 @@ class QColumnViewPrivate : public QAbstractItemViewPrivate
    void setPreviewWidget(QWidget *widget);
    void checkColumnCreation(const QModelIndex &parent);
 
-
    void _q_gripMoved(int offset);
    void _q_changeCurrentColumn();
    void _q_clicked(const QModelIndex &index);
-   void _q_columnsInserted(const QModelIndex &parent, int start, int end);
+   void _q_columnsInserted(const QModelIndex &parent, int start, int end) override;
 
    QList<QAbstractItemView *> columns;
    QVector<int> columnSizes; // used during init and corner moving
@@ -137,17 +142,14 @@ class QColumnViewPrivate : public QAbstractItemViewPrivate
    QAbstractItemView *previewColumn;
 };
 
-/*!
- * This is a delegate that will paint the triangle
- */
 class QColumnViewDelegate : public QItemDelegate
 {
 
  public:
-   explicit QColumnViewDelegate(QObject *parent = 0) : QItemDelegate(parent) {}
+   explicit QColumnViewDelegate(QObject *parent = nullptr) : QItemDelegate(parent) {}
    ~QColumnViewDelegate() {}
 
-   void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const;
+   void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const override;
 };
 #endif // QT_NO_QCOLUMNVIEW
 

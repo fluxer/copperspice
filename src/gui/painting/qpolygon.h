@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -55,7 +52,7 @@ class Q_GUI_EXPORT QPolygon : public QVector<QPoint>
    operator QVariant() const;
 
    void translate(int dx, int dy);
-   void translate(const QPoint &offset);
+   inline void translate(const QPoint &offset);
 
    QPolygon translated(int dx, int dy) const;
    inline QPolygon translated(const QPoint &offset) const;
@@ -63,9 +60,9 @@ class Q_GUI_EXPORT QPolygon : public QVector<QPoint>
    QRect boundingRect() const;
 
    void point(int i, int *x, int *y) const;
-   QPoint point(int i) const;
-   void setPoint(int index, int x, int y);
-   void setPoint(int index, const QPoint &p);
+   inline QPoint point(int i) const;
+   inline void setPoint(int index, int x, int y);
+   inline void setPoint(int index, const QPoint &p);
    void setPoints(int nPoints, const int *points);
    void setPoints(int nPoints, int firstx, int firsty, ...);
    void putPoints(int index, int nPoints, const int *points);
@@ -83,10 +80,8 @@ inline QPolygon::QPolygon(int asize) : QVector<QPoint>(asize) {}
 
 Q_GUI_EXPORT QDebug operator<<(QDebug, const QPolygon &);
 
-#ifndef QT_NO_DATASTREAM
 Q_GUI_EXPORT QDataStream &operator<<(QDataStream &stream, const QPolygon &polygon);
 Q_GUI_EXPORT QDataStream &operator>>(QDataStream &stream, QPolygon &polygon);
-#endif
 
 inline void QPolygon::setPoint(int index, const QPoint &pt)
 {

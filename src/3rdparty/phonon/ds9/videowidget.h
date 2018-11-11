@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -28,7 +25,7 @@
 
 #include <QtGui/QWidget>
 #include <phonon/videowidgetinterface.h>
-#include "backendnode.h"
+#include <backendnode.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -52,25 +49,25 @@ namespace Phonon
             DS9_CS_OBJECT(VideoWidget)
                 CS_INTERFACES(Phonon::VideoWidgetInterface)
         public:
-            VideoWidget(QWidget *parent = 0);
+            VideoWidget(QWidget *parent = nullptr);
             ~VideoWidget();
 
-            Phonon::VideoWidget::AspectRatio aspectRatio() const;
-            void setAspectRatio(Phonon::VideoWidget::AspectRatio aspectRatio);
-            Phonon::VideoWidget::ScaleMode scaleMode() const;
-            void setScaleMode(Phonon::VideoWidget::ScaleMode);
-            qreal brightness() const;
-            void setBrightness(qreal);
-            qreal contrast() const;
-            void setContrast(qreal);
-            qreal hue() const;
-            void setHue(qreal);
-            qreal saturation() const;
-            void setSaturation(qreal);
+            Phonon::VideoWidget::AspectRatio aspectRatio() const override;
+            void setAspectRatio(Phonon::VideoWidget::AspectRatio aspectRatio) override;
+            Phonon::VideoWidget::ScaleMode scaleMode() const override;
+            void setScaleMode(Phonon::VideoWidget::ScaleMode) override;
+            qreal brightness() const override;
+            void setBrightness(qreal) override;
+            qreal contrast() const override;
+            void setContrast(qreal) override;
+            qreal hue() const override;
+            void setHue(qreal) override;
+            qreal saturation() const override;
+            void setSaturation(qreal) override;
 
             void setCurrentGraph(int index);
 
-            QWidget *widget();
+            QWidget *widget() override;
 
             void notifyVideoLoaded();
             AbstractVideoRenderer *switchRendering(AbstractVideoRenderer *current);
@@ -81,7 +78,7 @@ namespace Phonon
             void updateVideoSize() const;
 
         protected:
-            virtual void connected(BackendNode *, const InputPin& inpin);
+            void connected(BackendNode *, const InputPin& inpin) override;
 
         private:
             AbstractVideoRenderer *getRenderer(int graphIndex, RendererType type, bool autoCreate = false);

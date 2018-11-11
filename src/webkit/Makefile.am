@@ -2,11 +2,11 @@ WEBKIT_CXXFLAGS:=$(CXXFLAGS)
 
 CXXFLAGS:=$(patsubst -O%,,@CXXFLAGS@)
 
-# for objective c, used to turn on c++11
-OBJCXXFLAGS=$(CXXFLAGS)
+# for objective c
+OBJCXX=$(CXX)
+OBJCXXFLAGS = $(CXXFLAGS)
 
 AUTOMAKE_OPTIONS = subdir-objects
-AM_CFLAGS = -DQT_SHARED
 AM_CXXFLAGS = $(AM_CFLAGS)
 AM_LDFLAGS =
 BUILT_SOURCES =
@@ -17,32 +17,57 @@ lib_LTLIBRARIES =
 EXTRA_LTLIBRARIES =
 EXTRA_DIST=
 
-
 ## Do not alter lines above this comment
 
-if WEBKIT
-lib_LTLIBRARIES += ../../lib/libCsWebKit1.la
+if OSTYPE_LINUX
+AM_LDFLAGS += -avoid-version
 endif
 
-______lib_libCsWebKit1_la_SOURCES =
-______lib_libCsWebKit1_la_CXXFLAGS := $(AM_CXXFLAGS) -Iinclude  -DBUILD_DATE=\"`date +%Y-%m-%d`\"  -DBUILDING_WEBKIT -O2
-______lib_libCsWebKit1_la_CFLAGS = $(______lib_libCsWebKit1_la_CXXFLAGS) -Iinclude/QtCore
-______lib_libCsWebKit1_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined
-______lib_libCsWebKit1_la_LIBADD = ../../lib/libCsCore1.la ../../lib/libCsGui1.la ../../lib/libCsNetwork1.la
-
-
-if ! SSL
-______lib_libCsWebKit1_la_CXXFLAGS += -DQT_NO_OPENSSL
+if OSTYPE_BSD
+AM_LDFLAGS += -avoid-version
 endif
 
 if OSTYPE_WIN
-______lib_libCsWebKit1_la_CXXFLAGS += -DQT_MAKEDLL
-______lib_libCsWebKit1_la_LDFLAGS += -lgdi32 -lwinmm -lshlwapi -lversion
-______lib_libCsWebKit1_la_LDFLAGS += -Wl,-s
+AM_LDFLAGS += -avoid-version
 endif
 
 if OSTYPE_DARWIN
-______lib_libCsWebKit1_la_OBJCXXFLAGS = $(______lib_libCsWebKit1_la_CXXFLAGS)
+AM_LDFLAGS += -avoid-version
+endif
+
+if WEBKIT
+lib_LTLIBRARIES += ../../lib/libCsWebKit@BUILD_ABI@.la
+endif
+
+______lib_libCsWebKit@BUILD_ABI@_la_SOURCES =
+______lib_libCsWebKit@BUILD_ABI@_la_CXXFLAGS := $(AM_CXXFLAGS) -Iinclude  -DBUILD_DATE=\"`date +%Y-%m-%d`\"  -DBUILDING_WEBKIT -O2
+______lib_libCsWebKit@BUILD_ABI@_la_CFLAGS = $(______lib_libCsWebKit@BUILD_ABI@_la_CXXFLAGS) -Iinclude/QtCore
+______lib_libCsWebKit@BUILD_ABI@_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined
+______lib_libCsWebKit@BUILD_ABI@_la_LIBADD = ../../lib/libCsCore@BUILD_ABI@.la ../../lib/libCsGui@BUILD_ABI@.la ../../lib/libCsNetwork@BUILD_ABI@.la
+
+
+if SECURETRANSPORT_FOUND
+______lib_libCsWebKit@BUILD_ABI@_la_CXXFLAGS += -DQT_SSL
+______lib_libCsWebKit@BUILD_ABI@_la_CXXFLAGS += -DQT_SECURETRANSPORT
+
+else
+
+if OPENSSL_FOUND
+______lib_libCsWebKit@BUILD_ABI@_la_CXXFLAGS += -DQT_SSL
+______lib_libCsWebKit@BUILD_ABI@_la_CXXFLAGS += -DQT_OPENSSL
+______lib_libCsWebKit@BUILD_ABI@_la_CXXFLAGS += $(SSL_CFLAGS)
+______lib_libCsWebKit@BUILD_ABI@_la_LDFLAGS += $(SSL_LIBS)
+endif
+
+endif
+
+if OSTYPE_WIN
+______lib_libCsWebKit@BUILD_ABI@_la_LDFLAGS += -lgdi32 -lwinmm -lshlwapi -lversion
+______lib_libCsWebKit@BUILD_ABI@_la_LDFLAGS += -Wl,-s
+endif
+
+if OSTYPE_DARWIN
+______lib_libCsWebKit@BUILD_ABI@_la_OBJCXXFLAGS = $(______lib_libCsWebKit@BUILD_ABI@_la_CXXFLAGS)
 endif
 
 
@@ -109,9 +134,9 @@ WEBKIT_PRIVATE_INCLUDES =
 
 WEBKIT_DIRS = . ../3rdparty/webkit/Source/WebKit/qt/Api
 
-______lib_libCsWebKit1_la_CXXFLAGS += \
+______lib_libCsWebKit@BUILD_ABI@_la_CXXFLAGS += \
 	-UHAVE_CONFIG_H \
-	-DBUILDING_QT__=1 \
+	-DBUILDING_CS=1 \
 	-DWTF_PLATFORM_QT=1 \
 	-DENABLE_WORKERS=1 \
 	-DENABLE_JAVASCRIPT_DEBUGGER=1 \
@@ -138,6 +163,7 @@ ______lib_libCsWebKit1_la_CXXFLAGS += \
 	-I../../include/QtCore \
 	-I../../include/QtGui \
 	-I../../include/QtNetwork \
+	-I../../privateinclude/QtNetwork/private \
 	-I$(top_srcdir)/src/3rdparty/webkit/include/WebCore \
 	-I$(top_srcdir)/src/3rdparty/webkit/include \
 	-I$(top_srcdir)/src/3rdparty/webkit/Source/JavaScriptCore \
@@ -252,10 +278,10 @@ EXTRA_LTLIBRARIES+=../../lib/webkit/libwebkitA.la \
 endif
 
 # need one C++ source file to work around funny linkers
-______lib_libCsWebKit1_la_SOURCES+= \
+______lib_libCsWebKit@BUILD_ABI@_la_SOURCES+= \
 	../3rdparty/webkit/Source/WebKit/qt/Api/qwebframe.cpp
 
-______lib_libCsWebKit1_la_LIBADD+=../../lib/webkit/libwebkitA.la \
+______lib_libCsWebKit@BUILD_ABI@_la_LIBADD+=../../lib/webkit/libwebkitA.la \
 	../../lib/webkit/libwebkitB.la \
 	../../lib/webkit/libwebkitC.la \
 	../../lib/webkit/libwebkitD.la \
@@ -2744,7 +2770,6 @@ WEBKIT_INTERNAL_INCLUDES= \
 	../3rdparty/webkit/Source/JavaScriptCore/wtf/unicode/UnicodeMacrosFromICU.h \
 	../3rdparty/webkit/Source/JavaScriptCore/wtf/unicode/brew/UnicodeBrew.h \
 	../3rdparty/webkit/Source/JavaScriptCore/wtf/unicode/glib/UnicodeGLib.h \
-	../3rdparty/webkit/Source/JavaScriptCore/wtf/unicode/icu/UnicodeIcu.h \
 	../3rdparty/webkit/Source/JavaScriptCore/wtf/unicode/qt4/UnicodeQt4.h \
 	../3rdparty/webkit/Source/JavaScriptCore/wtf/url/api/ParsedURL.h \
 	../3rdparty/webkit/Source/JavaScriptCore/wtf/url/api/URLString.h \
@@ -5217,15 +5242,15 @@ WEBKIT_INTERNAL_INCLUDES= \
 	../3rdparty/webkit/include/WebCore/npapi.h \
 	../3rdparty/webkit/include/WebCore/npfunctions.h \
 	../3rdparty/webkit/include/WebCore/npruntime.h \
-	../3rdparty/webkit/include/WebCore/npruntime_internal.h 
+	../3rdparty/webkit/include/WebCore/npruntime_internal.h
 
 
 
 if OSTYPE_WIN
-______lib_libCsWebKit1_la_CXXFLAGS += \
+______lib_libCsWebKit@BUILD_ABI@_la_CXXFLAGS += \
 	-I$(top_srcdir)/src/3rdparty/webkit/Source/WebCore/platform/graphics/win \
 	-DUNICODE
-______lib_libCsWebKit1_la_SOURCES+= \
+______lib_libCsWebKit@BUILD_ABI@_la_SOURCES+= \
 	../3rdparty/webkit/Source/JavaScriptCore/wtf/OSAllocatorWin.cpp \
 	../3rdparty/webkit/Source/WebCore/platform/win/SystemInfo.cpp \
 	../3rdparty/webkit/Source/WebCore/platform/win/SystemTimeWin.cpp \
@@ -5239,11 +5264,11 @@ ______lib_libCsWebKit1_la_SOURCES+= \
 endif
 
 if OSTYPE_LINUX
-______lib_libCsWebKit1_la_CXXFLAGS += \
+______lib_libCsWebKit@BUILD_ABI@_la_CXXFLAGS += \
 	-DXP_UNIX \
 	-DENABLE_NETSCAPE_PLUGIN_METADATA_CACHE=1 \
 	-DENABLE_NETSCAPE_PLUGIN_API=1
-______lib_libCsWebKit1_la_SOURCES+= \
+______lib_libCsWebKit@BUILD_ABI@_la_SOURCES+= \
 	../3rdparty/webkit/Source/JavaScriptCore/wtf/OSAllocatorPosix.cpp \
 	../3rdparty/webkit/Source/WebCore/plugins/qt/PluginPackageQt.cpp \
 	../3rdparty/webkit/Source/WebCore/plugins/qt/PluginContainerQt.cpp \
@@ -5251,11 +5276,11 @@ ______lib_libCsWebKit1_la_SOURCES+= \
 endif
 
 if OSTYPE_BSD
-______lib_libCsWebKit1_la_CXXFLAGS += \
+______lib_libCsWebKit@BUILD_ABI@_la_CXXFLAGS += \
         -DXP_UNIX \
         -DENABLE_NETSCAPE_PLUGIN_METADATA_CACHE=1 \
         -DENABLE_NETSCAPE_PLUGIN_API=1
-______lib_libCsWebKit1_la_SOURCES+= \
+______lib_libCsWebKit@BUILD_ABI@_la_SOURCES+= \
         ../3rdparty/webkit/Source/JavaScriptCore/wtf/OSAllocatorPosix.cpp \
         ../3rdparty/webkit/Source/WebCore/plugins/qt/PluginPackageQt.cpp \
         ../3rdparty/webkit/Source/WebCore/plugins/qt/PluginContainerQt.cpp \
@@ -5264,11 +5289,11 @@ endif
 
 
 if OSTYPE_DARWIN
-______lib_libCsWebKit1_la_CXXFLAGS += \
+______lib_libCsWebKit@BUILD_ABI@_la_CXXFLAGS += \
 	-I$(top_srcdir)/src/3rdparty/webkit/Source/WebCore/platform/mac
 
 #	-DENABLE_NETSCAPE_PLUGIN_API=1
-______lib_libCsWebKit1_la_SOURCES+= \
+______lib_libCsWebKit@BUILD_ABI@_la_SOURCES+= \
 	../3rdparty/webkit/Source/JavaScriptCore/wtf/OSAllocatorPosix.cpp \
 	../3rdparty/webkit/Source/WebCore/platform/text/cf/StringCF.cpp \
 	../3rdparty/webkit/Source/WebCore/platform/text/cf/StringImplCF.cpp \
@@ -5294,7 +5319,7 @@ create-webkit-headers: \
 
 BUILT_SOURCES+=.webkit-header-deps.mk create-webkit-headers
 
-#$(lib_CsWebKit1_la_SOURCES): create-core-headers create-gui-headers create-webkit-headers 
+#$(lib_CsWebKit1_la_SOURCES): create-core-headers create-gui-headers create-webkit-headers
 
 -include .webkit-header-deps.mk
 
@@ -5377,25 +5402,25 @@ distdir: $(DISTFILES) DISTFILES.list
 	-rm -f DISTFILES.list
 
 
-______lib_webkit_libwebkitA_la_CXXFLAGS := $(______lib_libCsWebKit1_la_CXXFLAGS)
-______lib_webkit_libwebkitA_la_OBJCXXFLAGS := $(______lib_libCsWebKit1_la_OBJCXXFLAGS)
-______lib_webkit_libwebkitA_la_CFLAGS := $(______lib_libCsWebKit1_la_CFLAGS)
+______lib_webkit_libwebkitA_la_CXXFLAGS := $(______lib_libCsWebKit@BUILD_ABI@_la_CXXFLAGS)
+______lib_webkit_libwebkitA_la_OBJCXXFLAGS := $(______lib_libCsWebKit@BUILD_ABI@_la_OBJCXXFLAGS)
+______lib_webkit_libwebkitA_la_CFLAGS := $(______lib_libCsWebKit@BUILD_ABI@_la_CFLAGS)
 
-______lib_webkit_libwebkitB_la_CXXFLAGS := $(______lib_libCsWebKit1_la_CXXFLAGS)
-______lib_webkit_libwebkitB_la_OBJCXXFLAGS := $(______lib_libCsWebKit1_la_OBJCXXFLAGS)
-______lib_webkit_libwebkitB_la_CFLAGS := $(______lib_libCsWebKit1_la_CFLAGS)
+______lib_webkit_libwebkitB_la_CXXFLAGS := $(______lib_libCsWebKit@BUILD_ABI@_la_CXXFLAGS)
+______lib_webkit_libwebkitB_la_OBJCXXFLAGS := $(______lib_libCsWebKit@BUILD_ABI@_la_OBJCXXFLAGS)
+______lib_webkit_libwebkitB_la_CFLAGS := $(______lib_libCsWebKit@BUILD_ABI@_la_CFLAGS)
 
-______lib_webkit_libwebkitC_la_CXXFLAGS := $(______lib_libCsWebKit1_la_CXXFLAGS)
-______lib_webkit_libwebkitC_la_OBJCXXFLAGS := $(______lib_libCsWebKit1_la_OBJCXXFLAGS)
-______lib_webkit_libwebkitC_la_CFLAGS := $(______lib_libCsWebKit1_la_CFLAGS)
+______lib_webkit_libwebkitC_la_CXXFLAGS := $(______lib_libCsWebKit@BUILD_ABI@_la_CXXFLAGS)
+______lib_webkit_libwebkitC_la_OBJCXXFLAGS := $(______lib_libCsWebKit@BUILD_ABI@_la_OBJCXXFLAGS)
+______lib_webkit_libwebkitC_la_CFLAGS := $(______lib_libCsWebKit@BUILD_ABI@_la_CFLAGS)
 
-______lib_webkit_libwebkitD_la_CXXFLAGS := $(______lib_libCsWebKit1_la_CXXFLAGS)
-______lib_webkit_libwebkitD_la_OBJCXXFLAGS := $(______lib_libCsWebKit1_la_OBJCXXFLAGS)
-______lib_webkit_libwebkitD_la_CFLAGS := $(______lib_libCsWebKit1_la_CFLAGS)
+______lib_webkit_libwebkitD_la_CXXFLAGS := $(______lib_libCsWebKit@BUILD_ABI@_la_CXXFLAGS)
+______lib_webkit_libwebkitD_la_OBJCXXFLAGS := $(______lib_libCsWebKit@BUILD_ABI@_la_OBJCXXFLAGS)
+______lib_webkit_libwebkitD_la_CFLAGS := $(______lib_libCsWebKit@BUILD_ABI@_la_CFLAGS)
 
-______lib_webkit_libwebkitE_la_CXXFLAGS := $(______lib_libCsWebKit1_la_CXXFLAGS) -O0
-______lib_webkit_libwebkitE_la_OBJCXXFLAGS := $(______lib_libCsWebKit1_la_OBJCXXFLAGS)
-______lib_webkit_libwebkitE_la_CFLAGS := $(______lib_libCsWebKit1_la_CFLAGS)
+______lib_webkit_libwebkitE_la_CXXFLAGS := $(______lib_libCsWebKit@BUILD_ABI@_la_CXXFLAGS) -O0
+______lib_webkit_libwebkitE_la_OBJCXXFLAGS := $(______lib_libCsWebKit@BUILD_ABI@_la_OBJCXXFLAGS)
+______lib_webkit_libwebkitE_la_CFLAGS := $(______lib_libCsWebKit@BUILD_ABI@_la_CFLAGS)
 
 
 #CXXFLAGS:=

@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -44,39 +41,38 @@ class ContextItem : public EmptyContainer
    inline ContextItem(const Expression::Ptr &expr = Expression::Ptr()) : m_expr(expr) {
    }
 
-   virtual Item evaluateSingleton(const DynamicContext::Ptr &context) const;
-   virtual SequenceType::Ptr staticType() const;
+   Item evaluateSingleton(const DynamicContext::Ptr &context) const override;
+   SequenceType::Ptr staticType() const override;
 
    /**
     * @returns always DisableElimination and RequiresContextItem
     */
-   virtual Expression::Properties properties() const;
+   Expression::Properties properties() const override;
 
-   virtual ExpressionVisitorResult::Ptr accept(const ExpressionVisitor::Ptr &visitor) const;
-
-   /**
-    * Overridden to store a pointer to StaticContext::contextItemType().
-    */
-   virtual Expression::Ptr compress(const StaticContext::Ptr &context);
+   ExpressionVisitorResult::Ptr accept(const ExpressionVisitor::Ptr &visitor) const override;
 
    /**
     * Overridden to store a pointer to StaticContext::contextItemType().
     */
-   virtual Expression::Ptr typeCheck(const StaticContext::Ptr &context,
-                                     const SequenceType::Ptr &reqType);
+   Expression::Ptr compress(const StaticContext::Ptr &context) override;
+
+   /**
+    * Overridden to store a pointer to StaticContext::contextItemType().
+    */
+   Expression::Ptr typeCheck(const StaticContext::Ptr &context, const SequenceType::Ptr &reqType) override;
 
    /**
     * @returns always IDContextItem
     */
-   virtual ID id() const;
+   ID id() const override;
 
    /**
     * @returns always BuiltinTypes::item;
     */
-   virtual ItemType::Ptr expectedContextItemType() const;
+   ItemType::Ptr expectedContextItemType() const override;
 
-   virtual const SourceLocationReflection *actualReflection() const;
-   virtual void announceFocusType(const ItemType::Ptr &type);
+   const SourceLocationReflection *actualReflection() const override;
+   void announceFocusType(const ItemType::Ptr &type) override;
 
  private:
    ItemType::Ptr           m_itemType;

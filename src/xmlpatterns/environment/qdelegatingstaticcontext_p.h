@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -38,70 +35,68 @@ namespace QPatternist {
 class DelegatingStaticContext : public StaticContext
 {
  public:
-   virtual NamespaceResolver::Ptr namespaceBindings() const;
-   virtual void setNamespaceBindings(const NamespaceResolver::Ptr &);
+   NamespaceResolver::Ptr namespaceBindings() const override;
+   void setNamespaceBindings(const NamespaceResolver::Ptr &) override;
 
-   virtual FunctionFactory::Ptr functionSignatures() const;
-   virtual SchemaTypeFactory::Ptr schemaDefinitions() const;
-   virtual DynamicContext::Ptr dynamicContext() const;
+   FunctionFactory::Ptr functionSignatures() const override;
+   SchemaTypeFactory::Ptr schemaDefinitions() const override;
+   DynamicContext::Ptr dynamicContext() const override;
 
-   virtual QUrl baseURI() const;
-   virtual void setBaseURI(const QUrl &uri);
+   QUrl baseURI() const override;
+   void setBaseURI(const QUrl &uri) override;
 
-   virtual bool compatModeEnabled() const;
-   virtual void setCompatModeEnabled(const bool newVal);
+   bool compatModeEnabled() const override;
+   void setCompatModeEnabled(const bool newVal) override;
 
-   virtual QUrl defaultCollation() const;
+   QUrl defaultCollation() const override;
 
-   virtual QAbstractMessageHandler *messageHandler() const;
+   QAbstractMessageHandler *messageHandler() const override;
+   void setDefaultCollation(const QUrl &uri) override;
 
-   virtual void setDefaultCollation(const QUrl &uri);
+   BoundarySpacePolicy boundarySpacePolicy() const override;
+   void setBoundarySpacePolicy(const BoundarySpacePolicy policy) override;
 
-   virtual BoundarySpacePolicy boundarySpacePolicy() const;
-   virtual void setBoundarySpacePolicy(const BoundarySpacePolicy policy);
+   ConstructionMode constructionMode() const override;
+   void setConstructionMode(const ConstructionMode mode) override;
 
-   virtual ConstructionMode constructionMode() const;
-   virtual void setConstructionMode(const ConstructionMode mode);
+   OrderingMode orderingMode() const override;
+   void setOrderingMode(const OrderingMode mode) override;
+   OrderingEmptySequence orderingEmptySequence() const override;
+   void setOrderingEmptySequence(const OrderingEmptySequence ordering) override;
 
-   virtual OrderingMode orderingMode() const;
-   virtual void setOrderingMode(const OrderingMode mode);
-   virtual OrderingEmptySequence orderingEmptySequence() const;
-   virtual void setOrderingEmptySequence(const OrderingEmptySequence ordering);
+   QString defaultFunctionNamespace() const override;
+   void setDefaultFunctionNamespace(const QString &ns) override;
 
-   virtual QString defaultFunctionNamespace() const;
-   virtual void setDefaultFunctionNamespace(const QString &ns);
+   QString defaultElementNamespace() const override;
+   void setDefaultElementNamespace(const QString &ns) override;
 
-   virtual QString defaultElementNamespace() const;
-   virtual void setDefaultElementNamespace(const QString &ns);
+   InheritMode inheritMode() const override;
+   void setInheritMode(const InheritMode mode) override;
 
-   virtual InheritMode inheritMode() const;
-   virtual void setInheritMode(const InheritMode mode);
+   PreserveMode preserveMode() const override;
+   void setPreserveMode(const PreserveMode mode) override;
 
-   virtual PreserveMode preserveMode() const;
-   virtual void setPreserveMode(const PreserveMode mode);
+   ItemType::Ptr contextItemType() const override;
+   ItemType::Ptr currentItemType() const override;
 
-   virtual ItemType::Ptr contextItemType() const;
-   virtual ItemType::Ptr currentItemType() const;
+   StaticContext::Ptr copy() const override;
 
-   virtual StaticContext::Ptr copy() const;
+   ExternalVariableLoader::Ptr externalVariableLoader() const override;
+   ResourceLoader::Ptr resourceLoader() const override;
+   NamePool::Ptr namePool() const override;
+   void addLocation(const SourceLocationReflection *const reflection, const QSourceLocation &location) override;
+   LocationHash sourceLocations() const override;
+   QSourceLocation locationFor(const SourceLocationReflection *const reflection) const override;
+   const QAbstractUriResolver *uriResolver() const override;
 
-   virtual ExternalVariableLoader::Ptr externalVariableLoader() const;
-   virtual ResourceLoader::Ptr resourceLoader() const;
-   virtual NamePool::Ptr namePool() const;
-   virtual void addLocation(const SourceLocationReflection *const reflection,
-                            const QSourceLocation &location);
-   virtual LocationHash sourceLocations() const;
-   virtual QSourceLocation locationFor(const SourceLocationReflection *const reflection) const;
-   virtual const QAbstractUriResolver *uriResolver() const;
-
-   virtual VariableSlotID currentRangeSlot() const;
-   virtual VariableSlotID allocateRangeSlot();
+   VariableSlotID currentRangeSlot() const override;
+   VariableSlotID allocateRangeSlot() override;
 
  protected:
    DelegatingStaticContext(const StaticContext::Ptr &context);
 
  private:
-   const StaticContext::Ptr    m_context;
+   const StaticContext::Ptr m_context;
 };
 }
 

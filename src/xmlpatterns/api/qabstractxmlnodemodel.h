@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -39,19 +36,28 @@ class QSourceLocation;
 class QUrl;
 class QXmlName;
 class QXmlNodeModelIndex;
-template<typename T> class QAbstractXmlForwardIterator;
-template<typename T> class QVector;
+
+template<typename T>
+class QAbstractXmlForwardIterator;
+
+template<typename T>
+class QVector;
 
 /* The members in the namespace QPatternist are internal, not part of the public API, and
  * unsupported. Using them leads to undefined behavior. */
 namespace QPatternist {
+
 class DynamicContext;
 class Item;
 class ItemType;
 class XsdValidatedXmlNodeModel;
-template<typename TResult, typename TSource, typename TMapper, typename Context> class ItemMappingIterator;
-template<typename TResult, typename TSource, typename TMapper> class SequenceMappingIterator;
-typedef QExplicitlySharedDataPointer<ItemType> ItemTypePtr;
+
+template<typename TResult, typename TSource, typename TMapper, typename Context>
+class ItemMappingIterator;
+
+template<typename TResult, typename TSource, typename TMapper>
+class SequenceMappingIterator;
+
 typedef QExplicitlySharedDataPointer<QAbstractXmlForwardIterator<Item> > ItemIteratorPtr;
 typedef QVector<QXmlName> QXmlNameVector;
 
@@ -60,25 +66,21 @@ class NodeIndexStorage
  public:
    typedef qint64 Data;
 
-   /*!
-     \note Changing merely the order of these two members, ptr and data,
-           is a binary incompatible change on Mac Power PC.
-    */
+   //  ** Changing the order of these two members, ptr and data is a binary incompatible on Mac Power PC.
    union {
-      void *ptr; // Do not use ptr directy, use pointer() instead.
+      void *ptr;    // Do not use ptr directly, use pointer() instead.
       Data data;
    };
+
    void *pointer() const {
-      /* Constructing to qptrdiff means we avoid the warning "cast to pointer
-       * from integer of different size."
-       */
+      // Constructing to qptrdiff means we avoid the warning "cast to pointer  from integer of different size.
       return (void *)qptrdiff(data);
    }
 
    Data additionalData;
    const QAbstractXmlNodeModel *model;
 
-   /* Implementation is in qabstractxmlnodemodel.cpp. */
+   // Implementation is in qabstractxmlnodemodel.cpp.
    inline bool operator!=(const NodeIndexStorage &other) const;
 
    void reset() {
@@ -163,16 +165,18 @@ class Q_XMLPATTERNS_EXPORT QXmlNodeModelIndex
    }
 
    inline bool isNull() const {
-      return !m_storage.model;
+      return ! m_storage.model;
    }
 
-   /* The members below are internal, not part of the public API, and
-    * unsupported. Using them leads to undefined behavior. */
+   // The members below are internal and not part of the public API. They are unsupported.
+   // using them in your application can lead to undefined behavior.
 
    inline QXmlName name() const;
    inline QXmlNodeModelIndex root() const;
-   inline QExplicitlySharedDataPointer<QAbstractXmlForwardIterator<QXmlNodeModelIndex> > iterate(const Axis axis) const;
+
+   inline QExplicitlySharedDataPointer<QAbstractXmlForwardIterator<QXmlNodeModelIndex>> iterate(const Axis axis) const;
    inline QExplicitlySharedDataPointer<QAbstractXmlForwardIterator<QPatternist::Item> > sequencedTypedValue() const;
+
    inline QUrl documentUri() const;
    inline QUrl baseUri() const;
    inline NodeKind kind() const;
@@ -182,7 +186,8 @@ class Q_XMLPATTERNS_EXPORT QXmlNodeModelIndex
    inline QVector<QXmlName> namespaceBindings() const;
    inline QXmlName::NamespaceCode namespaceForPrefix(const QXmlName::PrefixCode prefix) const;
    inline QString stringValue() const;
-   inline QPatternist::ItemTypePtr type() const;
+
+   inline QExplicitlySharedDataPointer<QPatternist::ItemType> type() const;
    inline bool is(const QXmlNodeModelIndex &other) const;
 
    inline void reset() {
@@ -190,8 +195,7 @@ class Q_XMLPATTERNS_EXPORT QXmlNodeModelIndex
    }
 
  private:
-   static inline QXmlNodeModelIndex create(const qint64 d,
-                                           const QAbstractXmlNodeModel *const nm) {
+   static inline QXmlNodeModelIndex create(const qint64 d, const QAbstractXmlNodeModel *const nm) {
       QXmlNodeModelIndex n;
       n.m_storage.data = d;
       n.m_storage.model = nm;
@@ -257,16 +261,16 @@ class Q_XMLPATTERNS_EXPORT QAbstractXmlNodeModel : public QSharedData
     * unsupported. Using them leads to undefined behavior. */
    virtual QExplicitlySharedDataPointer<QAbstractXmlForwardIterator<QXmlNodeModelIndex> > iterate(
       const QXmlNodeModelIndex &ni, QXmlNodeModelIndex::Axis axis) const;
-   virtual QPatternist::ItemIteratorPtr sequencedTypedValue(const QXmlNodeModelIndex &ni) const;
-   virtual QPatternist::ItemTypePtr type(const QXmlNodeModelIndex &ni) const;
-   virtual QXmlName::NamespaceCode namespaceForPrefix(const QXmlNodeModelIndex &ni,
-         const QXmlName::PrefixCode prefix) const;
-   virtual bool isDeepEqual(const QXmlNodeModelIndex &ni1,
-                            const QXmlNodeModelIndex &ni2) const;
-   virtual void sendNamespaces(const QXmlNodeModelIndex &n,
-                               QAbstractXmlReceiver *const receiver) const;
-   virtual QVector<QXmlName> namespaceBindings(const QXmlNodeModelIndex &n) const = 0;
 
+   virtual QPatternist::ItemIteratorPtr sequencedTypedValue(const QXmlNodeModelIndex &ni) const;
+   virtual QExplicitlySharedDataPointer<QPatternist::ItemType> type(const QXmlNodeModelIndex &ni) const;
+
+   virtual QXmlName::NamespaceCode namespaceForPrefix(const QXmlNodeModelIndex &ni,
+                  const QXmlName::PrefixCode prefix) const;
+
+   virtual bool isDeepEqual(const QXmlNodeModelIndex &ni1, const QXmlNodeModelIndex &ni2) const;
+   virtual void sendNamespaces(const QXmlNodeModelIndex &n, QAbstractXmlReceiver *const receiver) const;
+   virtual QVector<QXmlName> namespaceBindings(const QXmlNodeModelIndex &n) const = 0;
 
    virtual QXmlNodeModelIndex elementById(const QXmlName &NCName) const = 0;
    virtual QVector<QXmlNodeModelIndex> nodesByIdref(const QXmlName &NCName) const = 0;

@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -97,7 +94,7 @@ namespace Phonon
             WorkerThread();
             ~WorkerThread();
 
-            virtual void run();
+            void run() override;
 
             //wants to know as soon as the state is set
             void addStateChangeRequest(Graph graph, OAFilterState, QList<Filter> = QList<Filter>());
@@ -188,39 +185,40 @@ namespace Phonon
         public:
             MediaObject(QObject *parent);
             ~MediaObject();
-            Phonon::State state() const;
-            bool hasVideo() const;
-            bool isSeekable() const;
-            qint64 currentTime() const;
-            qint32 tickInterval() const;
 
-            void setTickInterval(qint32 newTickInterval);
-            void play();
-            void pause();
-            void stop();
+            Phonon::State state() const override;
+            bool hasVideo() const override;
+            bool isSeekable() const override;
+            qint64 currentTime() const override;
+            qint32 tickInterval() const override;
+
+            void setTickInterval(qint32 newTickInterval) override;
+            void play() override;
+            void pause() override;
+            void stop() override;
             void ensureStopped();
-            void seek(qint64 time);
+            void seek(qint64 time) override;
 
-            QString errorString() const;
-            Phonon::ErrorType errorType() const;
+            QString errorString() const override;
+            Phonon::ErrorType errorType() const override;
 
 #ifndef QT_NO_PHONON_ABSTRACTMEDIASTREAM
-            bool hasInterface(Interface) const;
-            QVariant interfaceCall(Interface iface, int command, const QList<QVariant> &params);
+            bool hasInterface(Interface) const override;
+            QVariant interfaceCall(Interface iface, int command, const QList<QVariant> &params) override;
 #endif
 
-            qint64 totalTime() const;
-            qint32 prefinishMark() const;
-            void setPrefinishMark(qint32 newPrefinishMark);
+            qint64 totalTime() const override;
+            qint32 prefinishMark() const override;
+            void setPrefinishMark(qint32 newPrefinishMark) override;
 
-            qint32 transitionTime() const;
-            void setTransitionTime(qint32);
+            qint32 transitionTime() const override;
+            void setTransitionTime(qint32) override;
 
-            qint64 remainingTime() const;
+            qint64 remainingTime() const override;
 
-            MediaSource source() const;
-            void setSource(const MediaSource &source);
-            void setNextSource(const MediaSource &source);
+            MediaSource source() const override;
+            void setSource(const MediaSource &source) override;
+            void setNextSource(const MediaSource &source) override;
 
             //COM error management
             bool catchComError(HRESULT hr);
@@ -310,7 +308,7 @@ namespace Phonon
 
         protected:
             void setState(Phonon::State);
-            void timerEvent(QTimerEvent *e);
+            void timerEvent(QTimerEvent *e) override;
 
         private:
 #ifndef QT_NO_PHONON_VIDEO
@@ -335,7 +333,7 @@ namespace Phonon
             qint32 m_tickInterval;
 
             //the graph(s)
-            MediaGraph* m_graphs[FILTER_COUNT];
+            MediaGraph *m_graphs[FILTER_COUNT];
 
             //...the videowidgets in the graph
             QList<VideoWidget*> m_videoWidgets;

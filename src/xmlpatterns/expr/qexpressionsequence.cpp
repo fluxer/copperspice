@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -74,6 +71,7 @@ Expression::Ptr ExpressionSequence::compress(const StaticContext::Ptr &context)
 
    Expression::List::const_iterator it(m_operands.constBegin());
    const Expression::List::const_iterator end(m_operands.constEnd());
+
    Expression::List result;
 
    for (; it != end; ++it) {
@@ -85,18 +83,24 @@ Expression::Ptr ExpressionSequence::compress(const StaticContext::Ptr &context)
        *
        * User function call sites that are of type empty-sequence() must be avoided since
        * they may contain calls to fn:error(), which we would rewrite away otherwise. */
+
       if (Id != IDUserFunctionCallsite && (*it)->staticType()->cardinality().isEmpty()) {
          /* Rewrite "(1, (), 2)" into "(1, 2)" by not
           * adding (*it) to result. */
          continue;
+
       } else if (Id == IDExpressionSequence) {
          /* Rewrite "(1, (2, 3), 4)" into "(1, 2, 3, 4)" */
-         Expression::List::const_iterator seqIt((*it)->operands().constBegin());
-         const Expression::List::const_iterator seqEnd((*it)->operands().constEnd());
+
+         auto list = (*it)->operands();
+
+         Expression::List::const_iterator seqIt(list.constBegin());
+         const Expression::List::const_iterator seqEnd(list.constEnd());
 
          for (; seqIt != seqEnd; ++seqIt) {
             result.append(*seqIt);
          }
+
       } else {
          result.append(*it);
       }
@@ -112,8 +116,7 @@ Expression::Ptr ExpressionSequence::compress(const StaticContext::Ptr &context)
    }
 }
 
-Expression::Ptr ExpressionSequence::typeCheck(const StaticContext::Ptr &context,
-      const SequenceType::Ptr &reqType)
+Expression::Ptr ExpressionSequence::typeCheck(const StaticContext::Ptr &context, const SequenceType::Ptr &reqType)
 {
    Q_ASSERT(reqType);
    Expression::List::iterator it(m_operands.begin());

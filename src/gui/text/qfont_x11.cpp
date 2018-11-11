@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -85,11 +82,12 @@ static QByteArray qt_fixXLFD(const QByteArray &xlfd)
 {
    QByteArray ret = xlfd;
    int count = 0;
-   char **fontNames =
-      XListFonts(QX11Info::display(), xlfd, 32768, &count);
+   char **fontNames = XListFonts(QX11Info::display(), xlfd.constData(), 32768, &count);
+
    if (count > 0) {
       ret = fontNames[0];
    }
+
    XFreeFontNames(fontNames);
    return ret ;
 }
@@ -198,7 +196,7 @@ void QFont::x11SetScreen(int screen)
 
 Qt::HANDLE QFont::handle() const
 {
-   QFontEngine *engine = d->engineForScript(QUnicodeTables::Common);
+   QFontEngine *engine = d->engineForScript(QChar::Script_Common);
    Q_ASSERT(engine != 0);
    if (engine->type() == QFontEngine::Multi) {
       engine = static_cast<QFontEngineMulti *>(engine)->engine(0);
@@ -213,34 +211,41 @@ Qt::HANDLE QFont::handle() const
 FT_Face QFont::freetypeFace() const
 {
 #ifndef QT_NO_FREETYPE
-   QFontEngine *engine = d->engineForScript(QUnicodeTables::Common);
+   QFontEngine *engine = d->engineForScript(QChar::Script_Common);
+
    if (engine->type() == QFontEngine::Multi) {
       engine = static_cast<QFontEngineMulti *>(engine)->engine(0);
    }
-#ifndef QT_NO_FONTCONFIG
+
    if (engine->type() == QFontEngine::Freetype) {
       const QFontEngineFT *ft = static_cast<const QFontEngineFT *>(engine);
       return ft->non_locked_face();
-   } else
-#endif
+
+   } else {
       if (engine->type() == QFontEngine::XLFD) {
          const QFontEngineXLFD *xlfd = static_cast<const QFontEngineXLFD *>(engine);
          return xlfd->non_locked_face();
       }
+
+   }
 #endif
+
    return 0;
 }
 
 QString QFont::rawName() const
 {
-   QFontEngine *engine = d->engineForScript(QUnicodeTables::Common);
+   QFontEngine *engine = d->engineForScript(QChar::Script_Common);
    Q_ASSERT(engine != 0);
+
    if (engine->type() == QFontEngine::Multi) {
       engine = static_cast<QFontEngineMulti *>(engine)->engine(0);
    }
+
    if (engine->type() == QFontEngine::XLFD) {
-      return QString::fromLatin1(engine->name());
+      return engine->fontEngineName();
    }
+
    return QString();
 }
 struct QtFontDesc;
@@ -252,11 +257,12 @@ void QFont::setRawName(const QString &name)
    // from qfontdatabase_x11.cpp
    extern bool qt_fillFontDef(const QByteArray & xlfd, QFontDef * fd, int dpi, QtFontDesc * desc);
 
-   if (!qt_fillFontDef(qt_fixXLFD(name.toLatin1()), &d->request, d->dpi, 0)) {
-      qWarning("QFont::setRawName: Invalid XLFD: \"%s\"", name.toLatin1().constData());
+   if (! qt_fillFontDef(qt_fixXLFD(name.toLatin1()), &d->request, d->dpi, 0)) {
+      qWarning("QFont::setRawName: Invalid XLFD: \"%s\"", csPrintable(name));
 
       setFamily(name);
       setRawMode(true);
+
    } else {
       resolve_mask = QFont::AllPropertiesResolved;
    }
@@ -329,6 +335,7 @@ static bool fontExists(const QString &fontName)
 {
    int count;
    char **fontNames = XListFonts(QX11Info::display(), (char *)fontName.toLatin1().constData(), 32768, &count);
+
    if (fontNames) {
       XFreeFontNames(fontNames);
    }
@@ -341,7 +348,7 @@ QString QFont::lastResortFont() const
    static QString last;
 
    // already found
-   if (! last.isNull()) {
+   if (! last.empty()) {
       return last;
    }
 

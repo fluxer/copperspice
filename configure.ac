@@ -1,8 +1,10 @@
-AC_INIT([copperspice], [1.2.2], [ansel@copperspice.com])
+AC_INIT([copperspice], [1.5.1], [info@copperspice.com])
 
-# derive CS hex version from "@PACKAGE_VERSION@"
+# derive CS hex version from "@PACKAGE_VERSION@" for cs_build_info.h.in
 HEX_VERSION=$(printf "0x%02x%02x%02x" `echo $PACKAGE_VERSION | tr '.' ' '`)
+BUILD_ABI=$(echo $PACKAGE_VERSION | cut -d. -f1-2)
 AC_SUBST([HEX_VERSION])
+AC_SUBST([BUILD_ABI])
 
 AC_CONFIG_AUX_DIR([autotools/build-aux])
 
@@ -15,15 +17,17 @@ AC_CONFIG_SRCDIR([src/core/kernel/qobject.cpp])
 AM_INIT_AUTOMAKE([foreign tar-pax 1.12.1])
 
 LT_INIT([win32-dll disable-static])
+LT_PROG_RC
 
 AC_PROG_INSTALL
 AC_PROG_CC_C99
 AM_PROG_CC_C_O
 AC_PROG_CXX
+AC_PROG_OBJCXX
 
-# set flags for c++11
+# set flags for c++14
 AC_LANG([C++])
-AX_CXX_COMPILE_STDCXX_11([noext])
+AX_CXX_COMPILE_STDCXX(14,[noext])
 
 AC_CONFIG_HEADERS(include/qt-acconfig.h)
 
@@ -34,7 +38,7 @@ case "$target" in
 	OSTYPE=LINUX ;;
 *-*-darwin*)
 	OSTYPE=DARWIN ;;
-*-*-*bsd*)
+*-*-*bsd*|*-*-dragonfly*)
 	OSTYPE=BSD ;;
 esac
 
@@ -51,9 +55,9 @@ esac
 
 AC_PROG_OBJCXX
 
-# not mandatory
+# optional packages
 echo ""
-PKG_CHECK_MODULES(SSL, openssl, SSL="yes", true)
+PKG_CHECK_MODULES(OPENSSL, openssl >= 1.0.0, OPENSSL="yes", true)
 PKG_CHECK_MODULES(ZLIB, zlib, ZLIB="yes", true)
 
 AC_CHECK_HEADERS([cups/cups.h])
@@ -90,12 +94,18 @@ if test "$OSTYPE" == LINUX -o "$OSTYPE" == BSD; then
 PKG_CHECK_MODULES(FONTCONFIG, fontconfig, FONTCONFIG="yes", missing="$missing FontConfig")
 PKG_CHECK_MODULES(FREETYPE, freetype2, FREETYPE="yes", missing="$missing FreeType")
 PKG_CHECK_MODULES(GLIB, glib-2.0, GLIB="yes", missing="$missing GLIB")
+
+if test "x$enable_phonon" != "xno"; then
 PKG_CHECK_MODULES(GSTREAMER, gstreamer-0.10, GSTREAMER="yes", missing="$missing Gstreamer")
 PKG_CHECK_MODULES(GSTREAMER_AUDIO, gstreamer-audio-0.10, GSTREAMER_AUDIO="yes", missing="$missing Gstreamer-Plugins")
+fi
 
 # not mandatory
 PKG_CHECK_MODULES(GTK, gtk+-2.0, GTK="yes", true)
 PKG_CHECK_MODULES(ALSA, alsa, ALSA="yes", true)
+PKG_CHECK_MODULES(PULSEAUDIO, libpulse >= 0.9.15, PULSEAUDIO="yes", true)
+PKG_CHECK_MODULES(PULSEAUDIO_DEVICE_MANAGER, libpulse >= 0.9.21, PULSEAUDIO_DEVICE_MANAGER="yes", true)
+PKG_CHECK_MODULES(PULSEAUDIO_MAINLOOP_GLIB, libpulse-mainloop-glib, PULSEAUDIO_MAINLOOP_GLIB="yes", true)
 
 # verify dependencies
 AC_SEARCH_LIBS([IceOpenConnection], [ICE], [], missing="$missing ICE")
@@ -131,7 +141,6 @@ if test "x$missing" != "x"; then
    exit
 fi
 
-
 AM_CONDITIONAL(OSTYPE_WIN, test "$OSTYPE" == WIN)
 AM_CONDITIONAL(OSTYPE_LINUX, test "$OSTYPE" == LINUX)
 AM_CONDITIONAL(OSTYPE_DARWIN, test "$OSTYPE" == DARWIN)
@@ -141,19 +150,28 @@ AM_CONDITIONAL(X11, test "$OSTYPE" == LINUX -o "$OSTYPE" == BSD)
 AM_CONDITIONAL(COCOA, test "$OSTYPE" == DARWIN)
 
 AM_CONDITIONAL(CUPS, test "x$ac_cv_header_cups_cups_h" = x""yes)
-AM_CONDITIONAL(QPA, false)
-
 AM_CONDITIONAL(GTK, test "x$GTK" = x""yes -a "$OSTYPE" != DARWIN)
+
 #AM_CONDITIONAL(GLIB, test "x$GLIB" = x""yes)
 #AM_CONDITIONAL(FREETYPE, test "x$FREETYPE" = x""yes)
+
 AM_CONDITIONAL(GLIB, test "x$OSTYPE" = x""LINUX -o "x$OSTYPE" = x""BSD)
 AM_CONDITIONAL(FREETYPE, test "x$OSTYPE" = x""LINUX -o "x$OSTYPE" = x""BSD)
+AM_CONDITIONAL(ALSA, test "$ALSA" = "yes")
+AM_CONDITIONAL(PULSEAUDIO, test "$PULSEAUDIO" = "yes")
+AM_CONDITIONAL(PULSEAUDIO_DEVICE_MANAGER, test "$PULSEAUDIO_DEVICE_MANAGER" = "yes")
+AM_CONDITIONAL(PULSEAUDIO_MAINLOOP_GLIB, test "$PULSEAUDIO_MAINLOOP_GLIB" = "yes")
 
 # turns zlib off always
 AM_CONDITIONAL(ZLIB, test "x" = x""yes)
-AM_CONDITIONAL(ALSA, test "x$ALSA" = x""yes)
 
-AC_ARG_ENABLE([webkit],	AS_HELP_STRING([--disable-webkit], [Do not build WebKit]))
+AC_ARG_ENABLE([openssl],    AS_HELP_STRING([--disable-openssl],    [Do not include OpenSSL in CsNetwork]))
+AC_ARG_ENABLE([multimedia], AS_HELP_STRING([--disable-multimedia], [Do not build CsMultimedia]))
+AC_ARG_ENABLE([phonon],	    AS_HELP_STRING([--disable-phonon],     [Do not build CsPhonon]))
+AC_ARG_ENABLE([webkit],	    AS_HELP_STRING([--disable-webkit],     [Do not build CsWebKit]))
+
+AM_CONDITIONAL(MULTIMEDIA, test "x$enable_multimedia" != "xno")
+AM_CONDITIONAL(PHONON, test "x$enable_phonon" != "xno")
 AM_CONDITIONAL(WEBKIT, test "x$enable_webkit" != "xno")
 
 
@@ -190,8 +208,8 @@ else
    echo "MySQL client library not found, client drivers will not be built"
 fi
 
-AM_CONDITIONAL(SSL, test "x$SSL" = x""yes)
-if test "x$SSL" = x""yes; then
+AM_CONDITIONAL(OPENSSL_FOUND, test "x$OPENSSL" = x""yes -a "x$enable_openssl" != "xno")
+if test "x$OPENSSL" = x""yes -a "x$enable_openssl" != "xno"; then
    echo "Building with OpenSSL"
 
    if ! pkg-config openssl --atleast-version=1.0.1g; then
@@ -202,8 +220,11 @@ if test "x$SSL" = x""yes; then
       echo "------------------------------------------------------------"
    fi
 else
-   echo "OpenSSL libraries not found, HTTPS support will not be built"
+   echo "OpenSSL not found or disabled, HTTPS support will not be built into CsNetwork"
 fi
+
+# secure_transport is always installed for all supportedversions
+AM_CONDITIONAL(SECURETRANSPORT_FOUND, test "$OSTYPE" == DARWIN -a "x$enable_securetransport" != "xno")
 
 echo
 echo "CopperSpice configured to run on:     " $OSTYPE_DISPLAY

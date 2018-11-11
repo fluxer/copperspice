@@ -1,27 +1,26 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
+
+#include <algorithm>
 
 #include <qstyle.h>
 #include <qapplication.h>
@@ -41,8 +40,6 @@
 #endif
 
 #include <limits.h>
-
-QT_BEGIN_NAMESPACE
 
 static const int MaxBits = 8 * sizeof(QSizePolicy::ControlType);
 
@@ -442,10 +439,7 @@ int QStyle::layoutSpacingImplementation(QSizePolicy::ControlType /* control1 */,
    return -1;
 }
 
-QT_BEGIN_INCLUDE_NAMESPACE
 #include <QDebug>
-QT_END_INCLUDE_NAMESPACE
-
 
 QDebug operator<<(QDebug debug, QStyle::State state)
 {
@@ -526,7 +520,8 @@ QDebug operator<<(QDebug debug, QStyle::State state)
       states << QLatin1String("UpArrow");
    }
 
-   qSort(states);
+   std::sort(states.begin(), states.end());
+
    debug << states.join(QLatin1String(" | "));
    debug << ')';
 #else
@@ -553,4 +548,3 @@ void QStyle::setProxy(QStyle *style)
    d->proxyStyle = style;
 }
 
-QT_END_NAMESPACE

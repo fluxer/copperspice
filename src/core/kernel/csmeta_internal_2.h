@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -87,9 +84,9 @@ std::pair<T, bool> convertFromQVariant(QVariant data)
       if (obj.isValid()) {
 
          if (obj.isFlag()) {
-            temp = obj.keysToValue( data.toString().toLatin1().constData() );
+            temp = obj.keysToValue(data.toString());
          } else {
-            temp = obj.keyToValue( data.toString().toLatin1().constData() );
+            temp = obj.keyToValue(data.toString());
          }
 
       } else {
@@ -114,49 +111,51 @@ std::pair<T, bool> convertFromQVariant(QVariant data)
    return std::make_pair( static_cast<T>(temp), retval);
 }
 
-// classes for these 2 methods, located in csmeta.h around line 330
+// classes for these 2 methods, located in csmeta.h around line 405
 template<class E>
-inline const char *cs_typeName_internal<E, typename std::enable_if<std::is_enum<E>::value>::type  >::typeName()
+const QString &cs_typeName_internal<E, typename std::enable_if<std::is_enum<E>::value>::type  >::typeName()
 {
    static QMetaEnum obj = QMetaObject::findEnum<E>();
 
    if (obj.isValid()) {
-      static QByteArray temp = obj.scope() + QByteArray("::") + obj.name();
-      return temp.constData();
+      static QString tmp = obj.scope() + "::" + obj.name();
+      return tmp;
 
    } else {
-      return "Unknown_Enum";
+      static QString retval("Unknown_Enum");
+      return retval;
 
    }
 }
 
 template<class E>
-inline const char *cs_typeName_internal< QFlags<E> >::typeName()
+const QString &cs_typeName_internal< QFlags<E> >::typeName()
 {
    static QMetaEnum obj = QMetaObject::findEnum<QFlags<E>>();
 
    if (obj.isValid()) {
-      static QByteArray temp = obj.scope() + QByteArray("::") + obj.name();
-      return temp.constData();
+      static QString tmp = obj.scope() + "::" + obj.name();
+      return tmp;
 
    } else {
-      return "Unknown_Enum";
-
+      static QString retval("Unknown_Enum");
+      return retval;
    }
 }
 
 template<class T>
 void cs_namespace_register_enum(const char *name, std::type_index id, const char *scope)
 {
-   const_cast<QMetaObject_T<T>&>(T::staticMetaObject()).register_enum(name, id, scope);
+   const_cast<QMetaObject_T<T>&>(T::staticMetaObject()).register_enum(QString::fromUtf8(name), id, QString::fromUtf8(scope));
 }
 
-  
+
 // ** flags
 template<class T>
 void cs_namespace_register_flag(const char *enumName, const char *scope, const char *flagName, std::type_index id)
 {
-   const_cast<QMetaObject_T<T>&> (T::staticMetaObject()).register_flag(enumName, scope, flagName, id); 
+   const_cast<QMetaObject_T<T>&> (T::staticMetaObject()).register_flag(QString::fromUtf8(enumName),
+                  QString::fromUtf8(scope), QString::fromUtf8(flagName), id);
 }
 
 #endif

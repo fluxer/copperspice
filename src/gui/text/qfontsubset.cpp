@@ -1,27 +1,26 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
+
+#include <algorithm>
 
 #include <qdebug.h>
 #include <qfontsubset_p.h>
@@ -281,18 +280,19 @@ QByteArray QFontSubset::glyphName(unsigned short unicode, bool symbol)
 #ifndef QT_NO_FREETYPE
 static FT_Face ft_face(const QFontEngine *engine)
 {
+
 #ifdef Q_WS_X11
-#ifndef QT_NO_FONTCONFIG
    if (engine->type() == QFontEngine::Freetype) {
       const QFontEngineFT *ft = static_cast<const QFontEngineFT *>(engine);
       return ft->non_locked_face();
    } else
-#endif
+
       if (engine->type() == QFontEngine::XLFD) {
          const QFontEngineXLFD *xlfd = static_cast<const QFontEngineXLFD *>(engine);
          return xlfd->non_locked_face();
       }
 #endif
+
 #ifdef Q_WS_QWS
    if (engine->type() == QFontEngine::Freetype) {
       const QFontEngineFT *ft = static_cast<const QFontEngineFT *>(engine);
@@ -313,12 +313,14 @@ QByteArray QFontSubset::glyphName(unsigned int glyph, const QVector<int> reverse
 
    QByteArray ba;
    QPdf::ByteStream s(&ba);
+
 #ifndef QT_NO_FREETYPE
    FT_Face face = ft_face(fontEngine);
 
    char name[32];
    name[0] = 0;
    if (face && FT_HAS_GLYPH_NAMES(face)) {
+
 #if defined(Q_WS_X11)
       if (fontEngine->type() == QFontEngine::XLFD) {
          glyphIndex = static_cast<QFontEngineXLFD *>(fontEngine)->glyphIndexToFreetypeGlyphIndex(glyphIndex);
@@ -333,6 +335,7 @@ QByteArray QFontSubset::glyphName(unsigned int glyph, const QVector<int> reverse
       s << '/' << name;
    } else
 #endif
+
 #if defined(Q_WS_X11)
       if (fontEngine->type() == QFontEngine::XLFD) {
          uint uc = static_cast<QFontEngineXLFD *>(fontEngine)->toUnicode(glyphIndex);
@@ -414,8 +417,7 @@ QByteArray QFontSubset::widthArray() const
 static void checkRanges(QPdf::ByteStream &ts, QByteArray &ranges, int &nranges)
 {
    if (++nranges > 100) {
-      ts << nranges << "beginbfrange\n"
-         << ranges << "endbfrange\n";
+      ts << nranges << "beginbfrange\n" << ranges << "endbfrange\n";
       ranges = QByteArray();
       nranges = 0;
    }
@@ -425,19 +427,26 @@ QVector<int> QFontSubset::getReverseMap() const
 {
    QVector<int> reverseMap;
    reverseMap.resize(0x10000);
+
    for (uint i = 0; i < 0x10000; ++i) {
       reverseMap[i] = 0;
    }
+
    QGlyphLayoutArray<10> glyphs;
+
    for (uint uc = 0; uc < 0x10000; ++uc) {
-      QChar ch(uc);
+      QChar ch = QChar(char32_t(uc));
+
       int nglyphs = 10;
-      fontEngine->stringToCMap(&ch, 1, &glyphs, &nglyphs, QTextEngine::GlyphIndicesOnly);
+      fontEngine->stringToCMap(QString(ch), &glyphs, &nglyphs, QTextEngine::GlyphIndicesOnly);
+
       int idx = glyph_indices.indexOf(glyphs.glyphs[0]);
-      if (idx >= 0 && !reverseMap.at(idx)) {
+
+      if (idx >= 0 && ! reverseMap.at(idx)) {
          reverseMap[idx] = uc;
       }
    }
+
    return reverseMap;
 }
 
@@ -447,6 +456,7 @@ QByteArray QFontSubset::createToUnicodeMap() const
 
    QByteArray touc;
    QPdf::ByteStream ts(&touc);
+
    ts << "/CIDInit /ProcSet findresource begin\n"
       "12 dict begin\n"
       "begincmap\n"
@@ -930,12 +940,15 @@ static QTtfTable generateName(const QList<QTtfNameRecord> &name)
 
    const int name_size = 6 + 12 * name.size();
    int string_size = 0;
+
    for (int i = 0; i < name.size(); ++i) {
       string_size += name.at(i).value.length() * char_size;
    }
+
    t.data.resize(name_size + string_size);
 
    QTtfStream s(t.data);
+
    // quint16  format  Format selector (=0).
    s << quint16(0)
      // quint16  count  Number of name records.
@@ -948,9 +961,11 @@ static QTtfTable generateName(const QList<QTtfNameRecord> &name)
    int off = 0;
    for (int i = 0; i < name.size(); ++i) {
       int len = name.at(i).value.length() * char_size;
+
       // quint16  platformID  Platform ID.
       // quint16  encodingID  Platform-specific encoding ID.
       // quint16  languageID  Language ID.
+
       s << quint16(3)
         << quint16(1)
         << quint16(0x0409) // en_US
@@ -962,17 +977,19 @@ static QTtfTable generateName(const QList<QTtfNameRecord> &name)
         << quint16(off);
       off += len;
    }
-   for (int i = 0; i < name.size(); ++i) {
-      const QString &n = name.at(i).value;
-      const ushort *uc = n.utf16();
-      for (int i = 0; i < n.length(); ++i) {
+
+   for (const auto &item : name) {
+      const QString16 &n = item.value.toUtf16();
+      const char16_t *uc = n.constData();
+
+      for (int i = 0; i < n.size_storage(); ++i) {
          s << quint16(*uc);
          ++uc;
       }
    }
+
    return t;
 }
-
 
 enum Flags {
    OffCurve = 0,
@@ -1271,7 +1288,7 @@ static QTtfGlyph generateGlyph(int index, const QPainterPath &path, qreal advanc
    return glyph;
 }
 
-Q_STATIC_GLOBAL_OPERATOR bool operator <(const QTtfGlyph &g1, const QTtfGlyph &g2)
+static bool operator <(const QTtfGlyph &g1, const QTtfGlyph &g2)
 {
    return g1.index < g2.index;
 }
@@ -1279,8 +1296,9 @@ Q_STATIC_GLOBAL_OPERATOR bool operator <(const QTtfGlyph &g1, const QTtfGlyph &g
 static QList<QTtfTable> generateGlyphTables(qttf_font_tables &tables, const QList<QTtfGlyph> &_glyphs)
 {
    const int max_size_small = 65536 * 2;
+
    QList<QTtfGlyph> glyphs = _glyphs;
-   qSort(glyphs);
+   std::sort(glyphs.begin(), glyphs.end());
 
    Q_ASSERT(tables.maxp.numGlyphs == glyphs.at(glyphs.size() - 1).index + 1);
    int nGlyphs = tables.maxp.numGlyphs;
@@ -1351,7 +1369,7 @@ static QList<QTtfTable> generateGlyphTables(qttf_font_tables &tables, const QLis
    return list;
 }
 
-Q_STATIC_GLOBAL_OPERATOR bool operator <(const QTtfTable &t1, const QTtfTable &t2)
+static bool operator <(const QTtfTable &t1, const QTtfTable &t2)
 {
    return t1.tag < t2.tag;
 }
@@ -1360,7 +1378,7 @@ static QByteArray bindFont(const QList<QTtfTable> &_tables)
 {
    QList<QTtfTable> tables = _tables;
 
-   qSort(tables);
+   std::sort(tables.begin(), tables.end());
 
    QByteArray font;
    const int header_size = sizeof(qint32) + 4 * sizeof(quint16);
@@ -1701,12 +1719,14 @@ static const char *helvetica_styles[4] = {
    "Helvetica-Oblique",
    "Helvetica-BoldOblique"
 };
+
 static const char *times_styles[4] = {
    "Times-Regular",
    "Times-Bold",
    "Times-Italic",
    "Times-BoldItalic"
 };
+
 static const char *courier_styles[4] = {
    "Courier",
    "Courier-Bold",
@@ -1723,43 +1743,55 @@ QByteArray QFontSubset::toType1() const
    QByteArray font;
    QPdf::ByteStream s(&font);
 
-   QByteArray id = QByteArray::number(object_id);
-   QByteArray psname = properties.postscriptName;
+   QByteArray id  = QByteArray::number(object_id);
+
+   QString psname = properties.postscriptName;
    psname.replace(' ', "");
 
    standard_font = false;
 
 #ifndef QT_NO_FREETYPE
    FT_Face face = ft_face(fontEngine);
+
    if (face && !FT_IS_SCALABLE(face)) {
       int style = 0;
+
       if (fontEngine->fontDef.style) {
          style += 2;
       }
+
       if (fontEngine->fontDef.weight >= QFont::Bold) {
          style++;
       }
-      if (fontEngine->fontDef.family.contains(QLatin1String("Helvetica"))) {
-         psname = helvetica_styles[style];
+
+      if (fontEngine->fontDef.family.contains("Helvetica")) {
+         psname = QString::fromLatin1(helvetica_styles[style]);
          standard_font = true;
-      } else if (fontEngine->fontDef.family.contains(QLatin1String("Times"))) {
-         psname = times_styles[style];
+
+      } else if (fontEngine->fontDef.family.contains("Times")) {
+         psname = QString::fromLatin1(times_styles[style]);
          standard_font = true;
-      } else if (fontEngine->fontDef.family.contains(QLatin1String("Courier"))) {
-         psname = courier_styles[style];
+
+      } else if (fontEngine->fontDef.family.contains("Courier")) {
+         psname = QString::fromLatin1(courier_styles[style]);
          standard_font = true;
       }
    }
+
 #endif
    s << "/F" << id << "-Base\n";
+
    if (standard_font) {
-      s << '/' << psname << " findfont\n"
+      s << '/' << psname.toUtf8() << " findfont\n"
         "0 dict copy dup /NumGlyphs 0 put dup /CMap 256 array put def\n";
+
    } else {
       s << "<<\n";
-      if (!psname.isEmpty()) {
-         s << "/FontName /" << psname << '\n';
+
+      if (! psname.isEmpty()) {
+         s << "/FontName /" << psname.toUtf8() << '\n';
       }
+
       s << "/FontInfo <</FsType " << (int)fontEngine->fsType << ">>\n"
         "/FontType 1\n"
         "/PaintType 0\n"
@@ -1776,6 +1808,7 @@ QByteArray QFontSubset::toType1() const
         "/CMap 256 array\n"
         ">> def\n";
    }
+
    s << type1AddedGlyphs();
    downloaded_glyphs = glyph_indices.size();
 

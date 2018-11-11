@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -243,17 +240,21 @@ bool QFontDatabasePrivate::loadFromCache(const QString &fontPath)
 
 static QString qwsFontPath()
 {
-   QString fontpath = QString::fromLocal8Bit(qgetenv("QT_QWS_FONTDIR"));
+   QString fontpath = QString::fromUtf8(qgetenv("QT_QWS_FONTDIR"));
+
    if (fontpath.isEmpty()) {
+
 #ifdef QT_FONTS_ARE_RESOURCES
       fontpath = QLatin1String(":/qt/fonts");
 #else
+
 #ifndef QT_NO_SETTINGS
       fontpath = QLibraryInfo::location(QLibraryInfo::LibrariesPath);
       fontpath += QLatin1String("/fonts");
 #else
       fontpath = QLatin1String("/lib/fonts");
 #endif
+
 #endif //QT_FONTS_ARE_RESOURCES
    }
 
@@ -291,7 +292,7 @@ static void initializeDb()
 
    if (!QFile::exists(fontpath)) {
       qFatal("QFontDatabase: Cannot find font directory %s - is Qt installed correctly?",
-             fontpath.toLocal8Bit().constData());
+             fontpath.toUtf8().constData());
    }
 
    const bool loaded = db->loadFromCache(fontpath);
@@ -317,7 +318,7 @@ static void initializeDb()
    //    qDebug() << "creating binary database at" << binaryDb.fileName();
 
    // Load in font definition file
-   FILE *fontdef = fopen(fontDirFile.toLocal8Bit().constData(), "r");
+   FILE *fontdef = fopen(fontDirFile.toUtf8().constData(), "r");
    if (fontdef) {
       char buf[200] = "";
       char name[200] = "";
@@ -605,7 +606,8 @@ QFontEngine *loadSingleEngine(int script, const QFontPrivate *fp,
 #endif
    } else
 #endif
-      if ( foundry->name != QLatin1String("qt") ) { ///#### is this the best way????
+      if ( foundry->name != "qt" ) {
+         ///#### is this the best way?
          QString file = QFile::decodeName(size->fileName);
 
          QFontDef def = request;
@@ -646,7 +648,7 @@ QFontEngine *loadSingleEngine(int script, const QFontPrivate *fp,
 
          if ((engine.isNull() && !file.isEmpty() && QFile::exists(file)) || privateDb()->isApplicationFont(file)) {
             QFontEngine::FaceId faceId;
-            faceId.filename = file.toLocal8Bit();
+            faceId.filename = file.toUtf8();
             faceId.index = size->fileIndex;
 
 #ifndef QT_NO_FREETYPE
@@ -710,7 +712,7 @@ QFontEngine *loadEngine(int script, const QFontPrivate *fp,
                                       style, size));
 #ifndef QT_NO_QWS_QPF
    if (!engine.isNull()
-         && script == QUnicodeTables::Common
+         && script == QChar::Script_Common
          && !(request.styleStrategy & QFont::NoFontMerging) && !engine->symbol) {
 
       QStringList fallbacks = privateDb()->fallbackFamilies;
@@ -955,7 +957,7 @@ void QFontDatabase::load(const QFontPrivate *d, int script)
 
       // append the substitute list for each family in family_list
       QStringList subs_list;
-      QStringList::ConstIterator it = family_list.constBegin(), end = family_list.constEnd();
+      QStringList::const_iterator it = family_list.constBegin(), end = family_list.constEnd();
       for (; it != end; ++it) {
          subs_list += QFont::substitutes(*it);
       }
@@ -980,7 +982,8 @@ void QFontDatabase::load(const QFontPrivate *d, int script)
 
    // load the font
    QFontEngine *engine = 0;
-   QStringList::ConstIterator it = family_list.constBegin(), end = family_list.constEnd();
+   QStringList::const_iterator it = family_list.constBegin(), end = family_list.constEnd();
+
    for (; !engine && it != end; ++it) {
       req.family = *it;
 

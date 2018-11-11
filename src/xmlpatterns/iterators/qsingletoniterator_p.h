@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -48,7 +45,7 @@ class SingletonIterator : public QAbstractXmlForwardIterator<T>
       Q_ASSERT(!qIsForwardIteratorEnd(item));
    }
 
-   virtual T next() {
+   T next() override {
       switch (m_position) {
          case 0: {
             ++m_position;
@@ -65,7 +62,7 @@ class SingletonIterator : public QAbstractXmlForwardIterator<T>
       }
    }
 
-   virtual T current() const {
+   T current() const override {
       if (m_position == 1) {
          return m_item;
       } else {
@@ -73,25 +70,25 @@ class SingletonIterator : public QAbstractXmlForwardIterator<T>
       }
    }
 
-   virtual xsInteger position() const {
+   xsInteger position() const override {
       return m_position;
    }
 
    /**
     * @returns a copy of this instance, rewinded to the beginning.
     */
-   virtual typename QAbstractXmlForwardIterator<T>::Ptr toReversed() {
+   typename QAbstractXmlForwardIterator<T>::Ptr toReversed() override {
       return typename QAbstractXmlForwardIterator<T>::Ptr(new SingletonIterator<T>(m_item));
    }
 
    /**
     * @returns always 1
     */
-   virtual xsInteger count() {
+   xsInteger count() override {
       return 1;
    }
 
-   virtual typename QAbstractXmlForwardIterator<T>::Ptr copy() const {
+   typename QAbstractXmlForwardIterator<T>::Ptr copy() const  override {
       return typename QAbstractXmlForwardIterator<T>::Ptr(new SingletonIterator(m_item));
    }
 
@@ -110,9 +107,7 @@ class SingletonIterator : public QAbstractXmlForwardIterator<T>
  * @relates SingletonIterator
  */
 template<typename T>
-inline
-typename SingletonIterator<T>::Ptr
-makeSingletonIterator(const T &item)
+inline typename SingletonIterator<T>::Ptr makeSingletonIterator(const T &item)
 {
    return typename SingletonIterator<T>::Ptr(new SingletonIterator<T>(item));
 }

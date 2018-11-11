@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -142,8 +139,10 @@ QLock::QLock(const QString &filename, char id, bool create)
 {
    data = new QLockData;
    data->count = 0;
+
 #if defined(QT_NO_SEMAPHORE)
-   data->file = filename.toLocal8Bit() + id;
+   data->file = filename.toUtf8() + id;
+
    for (int x = 0; x < 2; ++x) {
       data->id = QT_OPEN(data->file.constData(), O_RDWR | (x ? O_CREAT : 0), S_IRWXU);
       if (data->id != -1 || !create) {
@@ -151,27 +150,32 @@ QLock::QLock(const QString &filename, char id, bool create)
          break;
       }
    }
+
 #elif !defined(QT_POSIX_IPC)
-   key_t semkey = ftok(filename.toLocal8Bit().constData(), id);
+   key_t semkey = ftok(filename.toUtf8().constData(), id);
    data->id = semget(semkey, 0, 0);
    data->owned = create;
+
    if (create) {
       qt_semun arg;
       arg.val = 0;
+
       if (data->id != -1) {
          semctl(data->id, 0, IPC_RMID, arg);
       }
+
       data->id = semget(semkey, 1, IPC_CREAT | 0600);
       arg.val = MAX_LOCKS;
       semctl(data->id, 0, SETVAL, arg);
    }
 #else
-   data->file = filename.toLocal8Bit() + id;
+   data->file = filename.toUtf8() + id;
    data->owned = create;
 
    char ids[3] = { 'c', 'r', 'w' };
    sem_t **sems[3] = { &data->id, &data->rsem, &data->wsem };
    unsigned short initialValues[3] = { MAX_LOCKS, 1, 1 };
+
    for (int i = 0; i < 3; ++i) {
       QByteArray file = data->file + ids[i];
       do {

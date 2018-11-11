@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -45,18 +42,18 @@ class Q_GUI_EXPORT QColumnView : public QAbstractItemView
    GUI_CS_SIGNAL_1(Public, void updatePreviewWidget(const QModelIndex &index))
    GUI_CS_SIGNAL_2(updatePreviewWidget, index)
 
-   explicit QColumnView(QWidget *parent = 0);
+   explicit QColumnView(QWidget *parent = nullptr);
    ~QColumnView();
 
    // QAbstractItemView overloads
-   QModelIndex indexAt(const QPoint &point) const;
-   void scrollTo(const QModelIndex &index, ScrollHint hint = EnsureVisible);
-   QSize sizeHint() const;
-   QRect visualRect(const QModelIndex &index) const;
-   void setModel(QAbstractItemModel *model);
-   void setSelectionModel(QItemSelectionModel *selectionModel);
-   void setRootIndex(const QModelIndex &index);
-   void selectAll();
+   QModelIndex indexAt(const QPoint &point) const override;
+   void scrollTo(const QModelIndex &index, ScrollHint hint = EnsureVisible) override;
+   QSize sizeHint() const override;
+   QRect visualRect(const QModelIndex &index) const override;
+   void setModel(QAbstractItemModel *model) override;
+   void setSelectionModel(QItemSelectionModel *selectionModel) override;
+   void setRootIndex(const QModelIndex &index) override;
+   void selectAll() override;
 
    // QColumnView functions
    void setResizeGripsVisible(bool visible);
@@ -69,21 +66,21 @@ class Q_GUI_EXPORT QColumnView : public QAbstractItemView
    QList<int> columnWidths() const;
 
  protected:
-   QColumnView(QColumnViewPrivate &dd, QWidget *parent = 0);
+   QColumnView(QColumnViewPrivate &dd, QWidget *parent = nullptr);
 
    // QAbstractItemView overloads
-   bool isIndexHidden(const QModelIndex &index) const;
-   QModelIndex moveCursor(CursorAction cursorAction, Qt::KeyboardModifiers modifiers);
-   void resizeEvent(QResizeEvent *event);
-   void setSelection(const QRect &rect, QItemSelectionModel::SelectionFlags command);
-   QRegion visualRegionForSelection(const QItemSelection &selection) const;
-   int horizontalOffset() const;
-   int verticalOffset() const;
-   void rowsInserted(const QModelIndex &parent, int start, int end);
-   void currentChanged(const QModelIndex &current, const QModelIndex &previous);
+   bool isIndexHidden(const QModelIndex &index) const override;
+   QModelIndex moveCursor(CursorAction cursorAction, Qt::KeyboardModifiers modifiers) override;
+   void resizeEvent(QResizeEvent *event) override;
+   void setSelection(const QRect &rect, QItemSelectionModel::SelectionFlags command) override;
+   QRegion visualRegionForSelection(const QItemSelection &selection) const override;
+   int horizontalOffset() const override;
+   int verticalOffset() const override;
+   void rowsInserted(const QModelIndex &parent, int start, int end) override;
+   void currentChanged(const QModelIndex &current, const QModelIndex &previous) override;
 
    // QColumnView functions
-   void scrollContentsBy(int dx, int dy);
+   void scrollContentsBy(int dx, int dy) override;
    virtual QAbstractItemView *createColumn(const QModelIndex &rootIndex);
    void initializeColumn(QAbstractItemView *column) const;
 

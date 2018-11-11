@@ -265,8 +265,6 @@ GUI_KERNEL_PRIVATE_INCLUDES = \
 	qmacgesturerecognizer_mac_p.h \
 	qmultitouch_mac_p.h \
 	qshortcutmap_p.h \
-	qsoftkeymanager_common_p.h \
-	qsoftkeymanager_p.h \
 	qsound_p.h \
 	qstandardgestures_p.h \
 	qt_cocoa_helpers_mac_p.h \
@@ -285,7 +283,7 @@ GUI_PRIVATE_INCLUDES += $(GUI_KERNEL_PRIVATE_INCLUDES)
 noinst_HEADERS+=$(patsubst %,src/gui/kernel/%,$(GUI_KERNEL_INCLUDES)) \
 		$(patsubst %,src/gui/kernel/%,$(GUI_KERNEL_PRIVATE_INCLUDES))
 
-lib_libCsGui1_la_SOURCES += \
+lib_libCsGui@BUILD_ABI@_la_SOURCES += \
 	src/gui/kernel/qaction.cpp \
 	src/gui/kernel/qactiongroup.cpp \
 	src/gui/kernel/qapplication.cpp \
@@ -316,10 +314,9 @@ lib_libCsGui1_la_SOURCES += \
 	src/gui/kernel/qstandardgestures.cpp \
 	src/gui/kernel/qgesturerecognizer.cpp \
 	src/gui/kernel/qgesturemanager.cpp \
-	src/gui/kernel/qsoftkeymanager.cpp \
 	src/gui/kernel/qdesktopwidget.cpp \
-	src/gui/kernel/qguiplatformplugin.cpp
-
+	src/gui/kernel/qguiplatformplugin.cpp \
+	src/gui/kernel/qsound.cpp
 
 EXTRA_DIST+= \
 	src/3rdparty/wintab/wintab.h \
@@ -328,7 +325,7 @@ EXTRA_DIST+= \
 	src/gui/kernel/qkeymapper_x11_p.cpp
 
 if OSTYPE_WIN
-lib_libCsGui1_la_SOURCES += \
+lib_libCsGui@BUILD_ABI@_la_SOURCES += \
 	src/gui/kernel/qapplication_win.cpp \
 	src/gui/kernel/qclipboard_win.cpp \
 	src/gui/kernel/qcursor_win.cpp \
@@ -340,11 +337,11 @@ lib_libCsGui1_la_SOURCES += \
 	src/gui/kernel/qole_win.cpp \
 	src/gui/kernel/qkeymapper_win.cpp \
 	src/gui/kernel/qwinnativepangesturerecognizer_win.cpp
-lib_libCsGui1_la_CXXFLAGS += -DQT_NO_DIRECTDRAW
+lib_libCsGui@BUILD_ABI@_la_CXXFLAGS += -DQT_NO_DIRECTDRAW
 endif
 
 if X11
-lib_libCsGui1_la_SOURCES += \
+lib_libCsGui@BUILD_ABI@_la_SOURCES += \
 	src/gui/kernel/qapplication_x11.cpp \
 	src/gui/kernel/qclipboard_x11.cpp \
 	src/gui/kernel/qcursor_x11.cpp \
@@ -363,7 +360,7 @@ lib_libCsGui1_la_SOURCES += \
 endif
 
 if COCOA
-lib_libCsGui1_la_SOURCES += \
+lib_libCsGui@BUILD_ABI@_la_SOURCES += \
 	src/gui/kernel/qclipboard_mac.cpp \
 	src/gui/kernel/qmime_mac.cpp \
 	src/gui/kernel/qt_mac.cpp \
@@ -389,36 +386,5 @@ lib_libCsGui1_la_SOURCES += \
 	src/gui/kernel/qcocoaintrospection_mac.mm \
 	src/gui/kernel/cs_carbon_wrapper.mm
 
-lib_libCsGui1_la_LDFLAGS += -framework AppKit
-endif
-
-if QPA
-lib_libCsGui1_la_SOURCES += \
-	src/gui/kernel/qapplication_qpa.cpp \
-	src/gui/kernel/qclipboard_qpa.cpp  \
-	src/gui/kernel/qcursor_qpa.cpp  \
-	src/gui/kernel/qdnd_qws.cpp  \
-	src/gui/kernel/qdesktopwidget_qpa.cpp  \
-	src/gui/kernel/qgenericpluginfactory_qpa.cpp  \
-	src/gui/kernel/qgenericplugin_qpa.cpp  \
-	src/gui/kernel/qkeymapper_qws.cpp  \
-	src/gui/kernel/qwidget_qpa.cpp  \
-	src/gui/kernel/qeventdispatcher_qpa.cpp  \
-	src/gui/kernel/qwindowsysteminterface_qpa.cpp  \
-	src/gui/kernel/qplatformintegration_qpa.cpp  \
-	src/gui/kernel/qplatformscreen_qpa.cpp  \
-	src/gui/kernel/qplatformintegrationfactory_qpa.cpp \
-	src/gui/kernel/qplatformintegrationplugin_qpa.cpp \
-	src/gui/kernel/qplatformwindow_qpa.cpp \
-	src/gui/kernel/qplatformwindowformat_qpa.cpp \
-	src/gui/kernel/qplatformeventloopintegration_qpa.cpp \
-	src/gui/kernel/qplatformglcontext_qpa.cpp \
-	src/gui/kernel/qplatformcursor_qpa.cpp \
-	src/gui/kernel/qplatformclipboard_qpa.cpp \
-	src/gui/kernel/qplatformnativeinterface_qpa.cpp \
-	src/gui/kernel/qsessionmanager_qpa.cpp \
-	src/gui/kernel/qeventdispatcher_glib_qpa.cpp
-else
-lib_libCsGui1_la_SOURCES += \
-	src/gui/kernel/qsound.cpp
+lib_libCsGui@BUILD_ABI@_la_LDFLAGS += -framework AppKit
 endif

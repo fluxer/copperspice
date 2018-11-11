@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,16 +23,23 @@
 #ifndef QLINE_H
 #define QLINE_H
 
-#include <QtCore/qpoint.h>
+#include <qpoint.h>
 
-QT_BEGIN_NAMESPACE
+class QDataStream;
+class QDebug;
 
 class Q_CORE_EXPORT QLine
 {
  public:
-   inline QLine();
-   inline QLine(const QPoint &pt1, const QPoint &pt2);
-   inline QLine(int x1, int y1, int x2, int y2);
+   QLine() = default;
+
+   QLine(const QPoint &point1, const QPoint &point2)
+      : pt1(point1), pt2(point2)
+   { }
+
+   QLine(int x1, int y1, int x2, int y2)
+      : pt1(QPoint(x1, y1)), pt2(QPoint(x2, y2))
+   { }
 
    inline bool isNull() const;
 
@@ -71,16 +75,6 @@ class Q_CORE_EXPORT QLine
    QPoint pt1, pt2;
 };
 Q_DECLARE_TYPEINFO(QLine, Q_MOVABLE_TYPE);
-
-
-inline QLine::QLine()
-{ }
-
-inline QLine::QLine(const QPoint &pt1_, const QPoint &pt2_) : pt1(pt1_), pt2(pt2_)
-{ }
-
-inline QLine::QLine(int x1pos, int y1pos, int x2pos, int y2pos) : pt1(QPoint(x1pos, y1pos)), pt2(QPoint(x2pos, y2pos))
-{ }
 
 inline bool QLine::isNull() const
 {
@@ -177,11 +171,8 @@ inline bool QLine::operator==(const QLine &d) const
 
 Q_CORE_EXPORT QDebug operator<<(QDebug d, const QLine &p);
 
-#ifndef QT_NO_DATASTREAM
 Q_CORE_EXPORT QDataStream &operator<<(QDataStream &, const QLine &);
 Q_CORE_EXPORT QDataStream &operator>>(QDataStream &, QLine &);
-#endif
-
 
 class Q_CORE_EXPORT QLineF
 {
@@ -189,10 +180,19 @@ class Q_CORE_EXPORT QLineF
 
    enum IntersectType { NoIntersection, BoundedIntersection, UnboundedIntersection };
 
-   inline QLineF();
-   inline QLineF(const QPointF &pt1, const QPointF &pt2);
-   inline QLineF(qreal x1, qreal y1, qreal x2, qreal y2);
-   inline QLineF(const QLine &line) : pt1(line.p1()), pt2(line.p2()) { }
+   QLineF() = default;
+
+   QLineF(const QPointF &point1, const QPointF &point2)
+      : pt1(point1), pt2(point2)
+   { }
+
+   QLineF(qreal x1, qreal y1, qreal x2, qreal y2)
+      : pt1(x1, y1), pt2(x2, y2)
+   { }
+
+   QLineF(const QLine &line)
+      : pt1(line.p1()), pt2(line.p2())
+   { }
 
    static QLineF fromPolar(qreal length, qreal angle);
 
@@ -211,7 +211,7 @@ class Q_CORE_EXPORT QLineF
    inline qreal dy() const;
 
    qreal length() const;
-   void setLength(qreal len);
+   inline void setLength(qreal len);
 
    qreal angle() const;
    void setAngle(qreal angle);
@@ -219,14 +219,14 @@ class Q_CORE_EXPORT QLineF
    qreal angleTo(const QLineF &l) const;
 
    QLineF unitVector() const;
-   QLineF normalVector() const;
+   inline QLineF normalVector() const;
 
    // ### Qt5/rename intersects() or intersection() and rename IntersectType IntersectionType
    IntersectType intersect(const QLineF &l, QPointF *intersectionPoint) const;
 
    qreal angle(const QLineF &l) const;
 
-   QPointF pointAt(qreal t) const;
+   inline QPointF pointAt(qreal t) const;
    inline void translate(const QPointF &p);
    inline void translate(qreal dx, qreal dy);
 
@@ -243,26 +243,12 @@ class Q_CORE_EXPORT QLineF
       return !(*this == d);
    }
 
-   QLine toLine() const;
+   inline QLine toLine() const;
 
  private:
    QPointF pt1, pt2;
 };
 Q_DECLARE_TYPEINFO(QLineF, Q_MOVABLE_TYPE);
-
-inline QLineF::QLineF()
-{
-}
-
-inline QLineF::QLineF(const QPointF &apt1, const QPointF &apt2)
-   : pt1(apt1), pt2(apt2)
-{
-}
-
-inline QLineF::QLineF(qreal x1pos, qreal y1pos, qreal x2pos, qreal y2pos)
-   : pt1(x1pos, y1pos), pt2(x2pos, y2pos)
-{
-}
 
 inline qreal QLineF::x1() const
 {
@@ -381,11 +367,7 @@ inline bool QLineF::operator==(const QLineF &d) const
 
 Q_CORE_EXPORT QDebug operator<<(QDebug d, const QLineF &p);
 
-#ifndef QT_NO_DATASTREAM
 Q_CORE_EXPORT QDataStream &operator<<(QDataStream &, const QLineF &);
 Q_CORE_EXPORT QDataStream &operator>>(QDataStream &, QLineF &);
+
 #endif
-
-QT_END_NAMESPACE
-
-#endif // QLINE_H

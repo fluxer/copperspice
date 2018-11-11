@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,15 +23,13 @@
 #ifndef QMETATYPE_H
 #define QMETATYPE_H
 
-#include <QtCore/qglobal.h>
-#include <QtCore/qatomic.h>
-#include <QMap>
+#include <qglobal.h>
+#include <qatomic.h>
+#include <qcontainerfwd.h>
+#include <qstringfwd.h>
 
-#ifdef Bool
-#error qmetatype.h must be included before any header file that defines Bool
-#endif
-
-QT_BEGIN_NAMESPACE
+// can not include qstring.h since it includes qstringparser.h, which then includes qlocale.h (circular dependency)
+#include <qstring8.h>
 
 class QDataStream;
 struct QMetaTypeGuiHelper;
@@ -44,23 +39,28 @@ class Q_CORE_EXPORT QMetaType
 
  public:
    enum Type {
-
       UnknownType = 0,
 
-      Bool = 1, Int = 2, UInt = 3, LongLong = 4, ULongLong = 5, Double = 6, 
+      Bool = 1, Int = 2, UInt = 3, LongLong = 4, ULongLong = 5, Double = 6,
 
-      QChar = 7, QVariantMap = 8, QVariantList = 9,
+      QByteArray = 7, QBitArray = 8, QChar = 9, QString = 10, QString16 = 11,
+      QRegularExpression = 12,  QStringView = 13,
 
-      QString = 10, QStringList = 11, QByteArray = 12, QBitArray = 13, 
+      QChar32  = QChar,
+      QString8 = QString,
 
-      QDate = 14, QTime = 15, QDateTime = 16, QUrl = 17,
-      QLocale = 18, QRect = 19, QRectF = 20, QSize = 21, QSizeF = 22,
-      QLine = 23, QLineF = 24, QPoint = 25, QPointF = 26, QRegExp = 27,
-      QVariantHash = 28, QEasingCurve = 29, QUuid = 32, QModelIndex = 33,
+      QStringList  = 14,
+      QVariantList = 15, QVariantHash = 16, QVariantMultiHash = 17, QVariantMap = 18, QVariantMultiMap = 19,
+
+      QDate = 20, QTime = 21, QDateTime = 22, QUrl = 23, QLocale = 24,
+      QRect = 25, QRectF = 26, QSize = 27, QSizeF = 28,
+      QLine = 29, QLineF = 30, QPoint = 31, QPointF = 32,
+
+      QEasingCurve = 33, QUuid = 34, QModelIndex = 35,
 
       // not part of QVariant::Type
-      Void = 30, SChar = 31,    
-      QJsonValue = 45, QJsonObject = 46, QJsonArray = 47, QJsonDocument = 48,
+      Void = 37, SChar = 38,
+      QJsonValue = 39, QJsonObject = 40, QJsonArray = 41, QJsonDocument = 42,
 
       //
       QFont = 64, QPixmap = 65, QBrush = 66, QColor = 67, QPalette = 68,
@@ -90,26 +90,31 @@ class Q_CORE_EXPORT QMetaType
    typedef void (*Destructor)(void *);
    typedef void *(*Constructor)(const void *);
 
-#ifndef QT_NO_DATASTREAM
-   typedef void (*SaveOperator)(QDataStream &, const void *);
-   typedef void (*LoadOperator)(QDataStream &, void *);
-   static void registerStreamOperators(const char *typeName, SaveOperator saveOp, LoadOperator loadOp);
-   static void registerStreamOperators(int type, SaveOperator saveOp, LoadOperator loadOp);
+   using SaveOperator = void (*)(QDataStream &, const void *);
+   using LoadOperator = void (*)(QDataStream &, void *);
+
+#if ! defined (CS_DOXYPRESS)
+// required so QString is used as a data type and not an enum value
+#define QString ::QString
 #endif
 
-   static int registerType(const char *typeName, Destructor destructor, Constructor constructor);
-   static int registerTypedef(const char *typeName, int aliasId);
-   static int type(const char *typeName);
-   static const char *typeName(int type);
-   static bool isRegistered(int type);
-   static void *construct(int type, const void *copy = 0);
-   static void destroy(int type, void *data);
-   static void unregisterType(const char *typeName);
+   static void registerStreamOperators(const QString &typeName, SaveOperator saveOp, LoadOperator loadOp);
+   static void registerStreamOperators(int type, SaveOperator saveOp, LoadOperator loadOp);
 
-#ifndef QT_NO_DATASTREAM
+   static int registerType(const QString &typeName, Destructor destructor, Constructor constructor);
+   static int registerTypedef(const QString &typeName, int aliasId);
+   static int type(const QString &typeName);
+   static const QString &typeName(int type);
+   static bool isRegistered(int type);
+   static void *construct(int type, const void *original = nullptr);
+   static void destroy(int type, void *data);
+
+#if ! defined (CS_DOXYPRESS)
+#undef QString
+#endif
+
    static bool save(QDataStream &stream, int type, const void *data);
    static bool load(QDataStream &stream, int type, void *data);
-#endif
 
  private:
    // global array containing the Gui data types
@@ -121,11 +126,8 @@ struct QMetaTypeGuiHelper {
    QMetaType::Type typeId;
    QMetaType::Constructor constr;
    QMetaType::Destructor destr;
-
-#ifndef QT_NO_DATASTREAM
    QMetaType::SaveOperator saveOp;
    QMetaType::LoadOperator loadOp;
-#endif
 
 };
 
@@ -145,8 +147,6 @@ void *qMetaTypeConstructHelper(const T *v)
    return new T(*static_cast<const T *>(v));
 }
 
-
-#ifndef QT_NO_DATASTREAM
 template <typename T>
 void qMetaTypeSaveHelper(QDataStream &stream, const T *v)
 {
@@ -158,7 +158,6 @@ void qMetaTypeLoadHelper(QDataStream &stream, T *v)
 {
    stream >> *v;
 }
-#endif
 
 template <typename T>
 struct QMetaTypeId {
@@ -192,7 +191,7 @@ struct QMetaTypeIdHelper<T, false> {
 }
 
 template <typename T>
-int qRegisterMetaType(const char *typeName, T *dummy = nullptr)
+int qRegisterMetaType(const QString &typeName, T *dummy = nullptr)
 {
    if (! dummy) {
       int typedefOf = QtPrivate::QMetaTypeIdHelper<T>::qt_metatype_id();
@@ -205,18 +204,17 @@ int qRegisterMetaType(const char *typeName, T *dummy = nullptr)
    typedef void(*DeletePtr)(T *);
    DeletePtr dptr = qMetaTypeDeleteHelper<T>;
 
-   return QMetaType::registerType(typeName, reinterpret_cast<QMetaType::Destructor>(dptr),
-                                  reinterpret_cast<QMetaType::Constructor>(cptr));
+   return QMetaType::registerType(typeName, reinterpret_cast<QMetaType::Destructor>(dptr), reinterpret_cast<QMetaType::Constructor>(cptr));
 }
 
 template <typename T>
-inline int qMetaTypeId(T * = 0)
+inline int qMetaTypeId(T * = nullptr)
 {
    return QMetaTypeId2<T>::qt_metatype_id();
 }
 
 template <typename T>
-inline int qRegisterMetaType(T *v = 0)
+inline int qRegisterMetaType(T *v = nullptr)
 {
    return qMetaTypeId(v);
 }
@@ -241,38 +239,37 @@ inline int qMetaTypeId_Query()
    return csTypeQuery<T>::query();
 }
 
-#ifndef QT_NO_DATASTREAM
-
 template <typename T>
-void qRegisterMetaTypeStreamOperators(const char *typeName, T * = 0 )
+void qRegisterMetaTypeStreamOperators(const QString &typeName, T * = nullptr )
 {
-   typedef void(*SavePtr)(QDataStream &, const T *);
-   typedef void(*LoadPtr)(QDataStream &, T *);
+   using SavePtr = void (*)(QDataStream &, const T *);
+   using LoadPtr = void (*)(QDataStream &, T *);
+
    SavePtr sptr = qMetaTypeSaveHelper<T>;
    LoadPtr lptr = qMetaTypeLoadHelper<T>;
 
    qRegisterMetaType<T>(typeName);
    QMetaType::registerStreamOperators(typeName, reinterpret_cast<QMetaType::SaveOperator>(sptr),
-                                      reinterpret_cast<QMetaType::LoadOperator>(lptr));
+                  reinterpret_cast<QMetaType::LoadOperator>(lptr));
 }
 
 template <typename T>
 inline int qRegisterMetaTypeStreamOperators()
 {
-   typedef void(*SavePtr)(QDataStream &, const T *);
-   typedef void(*LoadPtr)(QDataStream &, T *);
+   using SavePtr = void (*)(QDataStream &, const T *);
+   using LoadPtr = void (*)(QDataStream &, T *);
+
    SavePtr sptr = qMetaTypeSaveHelper<T>;
    LoadPtr lptr = qMetaTypeLoadHelper<T>;
 
    int id = qMetaTypeId<T>();
-   QMetaType::registerStreamOperators(id, reinterpret_cast<QMetaType::SaveOperator>(sptr), reinterpret_cast<QMetaType::LoadOperator>(lptr));
+   QMetaType::registerStreamOperators(id, reinterpret_cast<QMetaType::SaveOperator>(sptr),
+                  reinterpret_cast<QMetaType::LoadOperator>(lptr));
 
    return id;
 }
-#endif
 
 #define Q_DECLARE_METATYPE(TYPE)                                      \
-   QT_BEGIN_NAMESPACE                                                 \
    template <>                                                        \
    struct QMetaTypeId<TYPE>                                           \
    {                                                                  \
@@ -281,28 +278,29 @@ inline int qRegisterMetaTypeStreamOperators()
        {                                                              \
           static QAtomicInt metatype_id = QAtomicInt{ 0 };            \
           if (! metatype_id.load()) {                                 \
-             metatype_id.storeRelease(qRegisterMetaType< TYPE >(#TYPE,reinterpret_cast< TYPE *>(quintptr(-1)))); \
+             metatype_id.storeRelease(qRegisterMetaType< TYPE >(QString(#TYPE),reinterpret_cast< TYPE *>(quintptr(-1)))); \
           }                                                           \
           return metatype_id.loadAcquire();                           \
        }                                                              \
-   };                                                                 \
-   QT_END_NAMESPACE
+   };
 
 #define Q_DECLARE_BUILTIN_METATYPE(TYPE, NAME)                        \
-   QT_BEGIN_NAMESPACE                                                 \
    template<> struct QMetaTypeId2<TYPE>                               \
    {                                                                  \
       enum { Defined = 1, MetaType = QMetaType::NAME };               \
       static inline int qt_metatype_id() { return QMetaType::NAME; }  \
-   };                                                                 \
-   QT_END_NAMESPACE
+   };
 
-
-class QString;
 class QByteArray;
-class QChar;
 class QStringList;
 class QBitArray;
+
+class QChar32;
+class QString8;
+class QString16;
+
+class QStringList;
+
 class QDate;
 class QTime;
 class QDateTime;
@@ -323,10 +321,6 @@ class QJsonValue;
 class QJsonObject;
 class QJsonArray;
 class QJsonDocument;
-
-#ifndef QT_NO_REGEXP
-class QRegExp;
-#endif
 
 class QEasingCurve;
 class QWidget;
@@ -357,15 +351,10 @@ class QVector4D;
 class QQuaternion;
 class QVariant;
 
-QT_END_NAMESPACE
-
-Q_DECLARE_BUILTIN_METATYPE(QString, QString)
 Q_DECLARE_BUILTIN_METATYPE(int, Int)
 Q_DECLARE_BUILTIN_METATYPE(uint, UInt)
 Q_DECLARE_BUILTIN_METATYPE(bool, Bool)
 Q_DECLARE_BUILTIN_METATYPE(double, Double)
-Q_DECLARE_BUILTIN_METATYPE(QByteArray, QByteArray)
-Q_DECLARE_BUILTIN_METATYPE(QChar, QChar)
 Q_DECLARE_BUILTIN_METATYPE(long, Long)
 Q_DECLARE_BUILTIN_METATYPE(short, Short)
 Q_DECLARE_BUILTIN_METATYPE(char, Char)
@@ -373,13 +362,24 @@ Q_DECLARE_BUILTIN_METATYPE(ulong, ULong)
 Q_DECLARE_BUILTIN_METATYPE(ushort, UShort)
 Q_DECLARE_BUILTIN_METATYPE(uchar, UChar)
 Q_DECLARE_BUILTIN_METATYPE(float, Float)
-Q_DECLARE_BUILTIN_METATYPE(QObject *, QObjectStar)
-Q_DECLARE_BUILTIN_METATYPE(QWidget *, QWidgetStar)
-Q_DECLARE_BUILTIN_METATYPE(void *, VoidStar)
-Q_DECLARE_BUILTIN_METATYPE(qlonglong, LongLong)
-Q_DECLARE_BUILTIN_METATYPE(qulonglong, ULongLong)
-Q_DECLARE_BUILTIN_METATYPE(QStringList, QStringList)
-Q_DECLARE_BUILTIN_METATYPE(QBitArray, QBitArray)
+Q_DECLARE_BUILTIN_METATYPE(qint64, LongLong)
+Q_DECLARE_BUILTIN_METATYPE(quint64, ULongLong)
+
+Q_DECLARE_BUILTIN_METATYPE(QByteArray,   QByteArray)
+Q_DECLARE_BUILTIN_METATYPE(QBitArray,    QBitArray)
+Q_DECLARE_BUILTIN_METATYPE(QChar32,      QChar32)
+Q_DECLARE_BUILTIN_METATYPE(QString8,     QString8)
+Q_DECLARE_BUILTIN_METATYPE(QString16,    QString16)
+
+Q_DECLARE_BUILTIN_METATYPE(QRegularExpression,    QRegularExpression)
+
+Q_DECLARE_BUILTIN_METATYPE(QStringView8, QStringView)
+Q_DECLARE_BUILTIN_METATYPE(QStringList,  QStringList)
+
+Q_DECLARE_BUILTIN_METATYPE(QObject *,    QObjectStar)
+Q_DECLARE_BUILTIN_METATYPE(QWidget *,    QWidgetStar)
+Q_DECLARE_BUILTIN_METATYPE(void *,       VoidStar)
+
 Q_DECLARE_BUILTIN_METATYPE(QDate, QDate)
 Q_DECLARE_BUILTIN_METATYPE(QTime, QTime)
 Q_DECLARE_BUILTIN_METATYPE(QDateTime, QDateTime)
@@ -397,14 +397,11 @@ Q_DECLARE_BUILTIN_METATYPE(QPointF, QPointF)
 Q_DECLARE_BUILTIN_METATYPE(signed char, SChar);
 Q_DECLARE_BUILTIN_METATYPE(QUuid, QUuid);
 Q_DECLARE_BUILTIN_METATYPE(QModelIndex, QModelIndex);
-Q_DECLARE_BUILTIN_METATYPE(QJsonValue, QJsonValue);
-Q_DECLARE_BUILTIN_METATYPE(QJsonObject, QJsonObject);
-Q_DECLARE_BUILTIN_METATYPE(QJsonArray, QJsonArray);
-Q_DECLARE_BUILTIN_METATYPE(QJsonDocument, QJsonDocument);
 
-#ifndef QT_NO_REGEXP
-Q_DECLARE_BUILTIN_METATYPE(QRegExp, QRegExp)
-#endif
+Q_DECLARE_BUILTIN_METATYPE(QJsonValue,    QJsonValue);
+Q_DECLARE_BUILTIN_METATYPE(QJsonObject,   QJsonObject);
+Q_DECLARE_BUILTIN_METATYPE(QJsonArray,    QJsonArray);
+Q_DECLARE_BUILTIN_METATYPE(QJsonDocument, QJsonDocument);
 
 Q_DECLARE_BUILTIN_METATYPE(QEasingCurve, QEasingCurve)
 Q_DECLARE_BUILTIN_METATYPE(QFont, QFont)

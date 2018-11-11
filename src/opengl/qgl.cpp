@@ -1,31 +1,28 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
 
 #include "qapplication.h"
 #include "qplatformdefs.h"
-#include "qgl.h"
+#include <qgl.h>
 #include <qdebug.h>
 
 #if defined(Q_WS_X11)
@@ -80,18 +77,28 @@
 #include <qpixmapdata_gl_p.h>
 #include <qglpixelbuffer_p.h>
 #include <qimagepixmapcleanuphooks_p.h>
-#include "qcolormap.h"
-#include "qfile.h"
-#include "qlibrary.h"
+#include <qcolormap.h>
+#include <qfile.h>
+#include <qlibrary.h>
 #include <qmutex.h>
 
 #if defined(QT_OPENGL_ES) && !defined(QT_NO_EGL)
 #include <EGL/egl.h>
 #endif
 
-// #define QT_GL_CONTEXT_RESOURCE_DEBUG
+using qt_glGetStringi = const GLubyte * (APIENTRY *)(GLenum, GLuint);
 
-QT_BEGIN_NAMESPACE
+#ifndef GL_NUM_EXTENSIONS
+#define GL_NUM_EXTENSIONS 0x821D
+#endif
+
+typedef void (*_qt_pixmap_cleanup_hook_64)(qint64);
+typedef void (*_qt_image_cleanup_hook_64)(qint64);
+
+extern Q_GUI_EXPORT _qt_pixmap_cleanup_hook_64 qt_pixmap_cleanup_hook_64;
+extern Q_GUI_EXPORT _qt_image_cleanup_hook_64 qt_image_cleanup_hook_64;
+
+Q_GLOBAL_STATIC(QGLTextureCache, qt_gl_texture_cache)
 
 #if defined(Q_WS_X11) || defined(Q_OS_MAC) || defined(Q_WS_QWS) || defined(Q_WS_QPA)
 QGLExtensionFuncs QGLContextPrivate::qt_extensionFuncs;
@@ -102,11 +109,13 @@ extern const QX11Info *qt_x11Info(const QPaintDevice *pd);
 #endif
 
 struct QGLThreadContext {
+
    ~QGLThreadContext() {
       if (context) {
          context->doneCurrent();
       }
    }
+
    QGLContext *context;
 };
 
@@ -1147,79 +1156,23 @@ int QGLFormat::majorVersion() const
    return d->majorVersion;
 }
 
-/*!
-    \since 4.7
-
-    Returns the OpenGL minor version.
-
-    \sa setVersion(), majorVersion()
-*/
 int QGLFormat::minorVersion() const
 {
    return d->minorVersion;
 }
 
-/*!
-    \enum QGLFormat::OpenGLContextProfile
-    \since 4.7
 
-    This enum describes the OpenGL context profiles that can be
-    specified for contexts implementing OpenGL version 3.2 or
-    higher. These profiles are different from OpenGL ES profiles.
-
-    \value NoProfile            OpenGL version is lower than 3.2.
-    \value CoreProfile          Functionality deprecated in OpenGL version 3.0 is not available.
-    \value CompatibilityProfile Functionality from earlier OpenGL versions is available.
-*/
-
-/*!
-    \since 4.7
-
-    Set the OpenGL context profile to \a profile. The \a profile is
-    ignored if the requested OpenGL version is less than 3.2.
-
-    \sa profile()
-*/
 void QGLFormat::setProfile(OpenGLContextProfile profile)
 {
    detach();
    d->profile = profile;
 }
 
-/*!
-    \since 4.7
-
-    Returns the OpenGL context profile.
-
-    \sa setProfile()
-*/
 QGLFormat::OpenGLContextProfile QGLFormat::profile() const
 {
    return d->profile;
 }
 
-
-/*!
-    \fn bool QGLFormat::hasOpenGL()
-
-    Returns true if the window system has any OpenGL support;
-    otherwise returns false.
-
-    \warning This function must not be called until the QApplication
-    object has been created.
-*/
-
-
-
-/*!
-    \fn bool QGLFormat::hasOpenGLOverlays()
-
-    Returns true if the window system supports OpenGL overlays;
-    otherwise returns false.
-
-    \warning This function must not be called until the QApplication
-    object has been created.
-*/
 
 QGLFormat::OpenGLVersionFlags qOpenGLVersionFlagsFromString(const QString &versionString)
 {
@@ -1253,7 +1206,7 @@ QGLFormat::OpenGLVersionFlags qOpenGLVersionFlagsFromString(const QString &versi
    } else {
       // not ES, regular OpenGL, the version numbers are first in the string
       if (versionString.startsWith(QLatin1String("1."))) {
-         switch (versionString[2].toAscii()) {
+         switch (versionString[2].toLatin1()) {
             case '5':
                versionFlags |= QGLFormat::OpenGL_Version_1_5;
             case '4':
@@ -1274,9 +1227,11 @@ QGLFormat::OpenGLVersionFlags qOpenGLVersionFlagsFromString(const QString &versi
                          QGLFormat::OpenGL_Version_1_4 |
                          QGLFormat::OpenGL_Version_1_5 |
                          QGLFormat::OpenGL_Version_2_0;
-         if (versionString[2].toAscii() == '1') {
+
+         if (versionString[2].toLatin1() == '1') {
             versionFlags |= QGLFormat::OpenGL_Version_2_1;
          }
+
       } else if (versionString.startsWith(QLatin1String("3."))) {
          versionFlags |= QGLFormat::OpenGL_Version_1_1 |
                          QGLFormat::OpenGL_Version_1_2 |
@@ -1286,7 +1241,8 @@ QGLFormat::OpenGLVersionFlags qOpenGLVersionFlagsFromString(const QString &versi
                          QGLFormat::OpenGL_Version_2_0 |
                          QGLFormat::OpenGL_Version_2_1 |
                          QGLFormat::OpenGL_Version_3_0;
-         switch (versionString[2].toAscii()) {
+
+         switch (versionString[2].toLatin1()) {
             case '3':
                versionFlags |= QGLFormat::OpenGL_Version_3_3;
             case '2':
@@ -1332,85 +1288,11 @@ QGLFormat::OpenGLVersionFlags qOpenGLVersionFlagsFromString(const QString &versi
    return versionFlags;
 }
 
-/*!
-    \enum QGLFormat::OpenGLVersionFlag
-    \since 4.2
-
-    This enum describes the various OpenGL versions that are
-    recognized by Qt. Use the QGLFormat::openGLVersionFlags() function
-    to identify which versions that are supported at runtime.
-
-    \value OpenGL_Version_None  If no OpenGL is present or if no OpenGL context is current.
-
-    \value OpenGL_Version_1_1  OpenGL version 1.1 or higher is present.
-
-    \value OpenGL_Version_1_2  OpenGL version 1.2 or higher is present.
-
-    \value OpenGL_Version_1_3  OpenGL version 1.3 or higher is present.
-
-    \value OpenGL_Version_1_4  OpenGL version 1.4 or higher is present.
-
-    \value OpenGL_Version_1_5  OpenGL version 1.5 or higher is present.
-
-    \value OpenGL_Version_2_0  OpenGL version 2.0 or higher is present.
-    Note that version 2.0 supports all the functionality of version 1.5.
-
-    \value OpenGL_Version_2_1  OpenGL version 2.1 or higher is present.
-
-    \value OpenGL_Version_3_0  OpenGL version 3.0 or higher is present.
-
-    \value OpenGL_Version_3_1  OpenGL version 3.1 or higher is present.
-    Note that OpenGL version 3.1 or higher does not necessarily support all the features of
-    version 3.0 and lower.
-
-    \value OpenGL_Version_3_2  OpenGL version 3.2 or higher is present.
-
-    \value OpenGL_Version_3_3  OpenGL version 3.3 or higher is present.
-
-    \value OpenGL_Version_4_0  OpenGL version 4.0 or higher is present.
-
-    \value OpenGL_ES_CommonLite_Version_1_0  OpenGL ES version 1.0 Common Lite or higher is present.
-
-    \value OpenGL_ES_Common_Version_1_0  OpenGL ES version 1.0 Common or higher is present.
-    The Common profile supports all the features of Common Lite.
-
-    \value OpenGL_ES_CommonLite_Version_1_1  OpenGL ES version 1.1 Common Lite or higher is present.
-
-    \value OpenGL_ES_Common_Version_1_1  OpenGL ES version 1.1 Common or higher is present.
-    The Common profile supports all the features of Common Lite.
-
-    \value OpenGL_ES_Version_2_0  OpenGL ES version 2.0 or higher is present.
-    Note that OpenGL ES version 2.0 does not support all the features of OpenGL ES 1.x.
-    So if OpenGL_ES_Version_2_0 is returned, none of the ES 1.x flags are returned.
-
-    See also \l{http://www.opengl.org} for more information about the different
-    revisions of OpenGL.
-
-    \sa openGLVersionFlags()
-*/
-
-/*!
-    \since 4.2
-
-    Identifies, at runtime, which OpenGL versions that are supported
-    by the current platform.
-
-    Note that if OpenGL version 1.5 is supported, its predecessors
-    (i.e., version 1.4 and lower) are also supported. To identify the
-    support of a particular feature, like multi texturing, test for
-    the version in which the feature was first introduced (i.e.,
-    version 1.3 in the case of multi texturing) to adapt to the largest
-    possible group of runtime platforms.
-
-    This function needs a valid current OpenGL context to work;
-    otherwise it will return OpenGL_Version_None.
-
-    \sa hasOpenGL(), hasOpenGLOverlays()
-*/
 QGLFormat::OpenGLVersionFlags QGLFormat::openGLVersionFlags()
 {
    static bool cachedDefault = false;
    static OpenGLVersionFlags defaultVersionFlags = OpenGL_Version_None;
+
    QGLContext *currentCtx = const_cast<QGLContext *>(QGLContext::currentContext());
    QGLTemporaryContext *tmpContext = 0;
 
@@ -1430,12 +1312,14 @@ QGLFormat::OpenGLVersionFlags QGLFormat::openGLVersionFlags()
       }
    }
 
-   QString versionString(QLatin1String(reinterpret_cast<const char *>(glGetString(GL_VERSION))));
-   OpenGLVersionFlags versionFlags = qOpenGLVersionFlagsFromString(versionString);
+   const QString &versionStr = cs_glGetString(GL_VERSION);
+   OpenGLVersionFlags versionFlags = qOpenGLVersionFlagsFromString(versionStr);
+
    if (currentCtx) {
       currentCtx->d_func()->version_flags_cached = true;
       currentCtx->d_func()->version_flags = versionFlags;
    }
+
    if (tmpContext) {
       defaultVersionFlags = versionFlags;
       delete tmpContext;
@@ -1842,15 +1726,6 @@ int qt_next_power_of_two(int v)
    return v;
 }
 
-typedef void (*_qt_pixmap_cleanup_hook_64)(qint64);
-typedef void (*_qt_image_cleanup_hook_64)(qint64);
-
-extern Q_GUI_EXPORT _qt_pixmap_cleanup_hook_64 qt_pixmap_cleanup_hook_64;
-extern Q_GUI_EXPORT _qt_image_cleanup_hook_64 qt_image_cleanup_hook_64;
-
-
-Q_GLOBAL_STATIC(QGLTextureCache, qt_gl_texture_cache)
-
 QGLTextureCache::QGLTextureCache()
    : m_cache(64 * 1024) // cache ~64 MB worth of textures - this is not accurate though
 {
@@ -2120,7 +1995,8 @@ QGLContext::~QGLContext()
 
 void QGLContextPrivate::cleanup()
 {
-   QHash<QGLContextResourceBase *, void *>::ConstIterator it;
+   QHash<QGLContextResourceBase *, void *>::const_iterator it;
+
    for (it = m_resources.begin(); it != m_resources.end(); ++it) {
       it.key()->freeResource(it.value());
    }
@@ -2131,6 +2007,7 @@ void QGLContextPrivate::cleanup()
 void QGLContextPrivate::setVertexAttribArrayEnabled(int arrayIndex, bool enabled)
 {
    Q_ASSERT(arrayIndex < QT_GL_VERTEX_ARRAY_TRACKED_COUNT);
+
 #ifdef glEnableVertexAttribArray
    Q_ASSERT(glEnableVertexAttribArray);
 #endif
@@ -2640,17 +2517,17 @@ QGLTexture *QGLContextPrivate::bindTexture(const QPixmap &pixmap, GLenum target,
    // Try to use texture_from_pixmap
    const QX11Info *xinfo = qt_x11Info(paintDevice);
    if (pd->classId() == QPixmapData::X11Class && pd->pixelType() == QPixmapData::PixmapType
-         && xinfo && xinfo->screen() == pixmap.x11Info().screen()
-         && target == GL_TEXTURE_2D
+         && xinfo && xinfo->screen() == pixmap.x11Info().screen() && target == GL_TEXTURE_2D
          && QApplication::instance()->thread() == QThread::currentThread()) {
-      if (!workaround_brokenTextureFromPixmap_init) {
+
+      if (! workaround_brokenTextureFromPixmap_init) {
          workaround_brokenTextureFromPixmap_init = true;
 
-         const QByteArray versionString(reinterpret_cast<const char *>(glGetString(GL_VERSION)));
-         const int pos = versionString.indexOf("NVIDIA ");
+         const QString &versionStr = cs_glGetString(GL_VERSION);
+         const int pos = versionStr.indexOf("NVIDIA ");
 
          if (pos >= 0) {
-            const QByteArray nvidiaVersionString = versionString.mid(pos + strlen("NVIDIA "));
+            const QString nvidiaVersionString = versionStr.mid(pos + strlen("NVIDIA "));
 
             if (nvidiaVersionString.startsWith("195") || nvidiaVersionString.startsWith("256")) {
                workaround_brokenTextureFromPixmap = true;
@@ -2660,6 +2537,7 @@ QGLTexture *QGLContextPrivate::bindTexture(const QPixmap &pixmap, GLenum target,
 
       if (!workaround_brokenTextureFromPixmap) {
          texture = bindTextureFromNativePixmap(const_cast<QPixmap *>(&pixmap), key, options);
+
          if (texture) {
             texture->options |= QGLContext::MemoryManagedBindOption;
             texture->boundPixmap = pd;
@@ -4756,42 +4634,53 @@ int QGLWidget::fontDisplayListBase(const QFont &font, int listBase)
    Q_D(QGLWidget);
    int base;
 
-   if (!d->glcx) { // this can't happen unless we run out of mem
+   if (! d->glcx) {
+      // this can not happen unless we run out of mem
       return 0;
    }
 
    // always regenerate font disp. lists for pixmaps - hw accelerated
    // contexts can't handle this otherwise
    bool regenerate = d->glcx->deviceIsPixmap();
+
 #ifndef QT_NO_FONTCONFIG
-   // font color needs to be part of the font cache key when using
-   // antialiased fonts since one set of glyphs needs to be generated
-   // for each font color
+   // font color needs to be part of the font cache key when using antialiased fonts since one
+   // set of glyphs needs to be generated for each font color
+
    QString color_key;
+
    if (font.styleStrategy() != QFont::NoAntialias) {
       GLfloat color[4];
       glGetFloatv(GL_CURRENT_COLOR, color);
-      color_key.sprintf("%f_%f_%f", color[0], color[1], color[2]);
+
+      color_key = QString("%1_%2_%3").formatArg(color[0], 0, 'f').formatArg(color[1], 0, 'f').formatArg(color[2], 0, 'f');
    }
+
    QString key = font.key() + color_key + QString::number((int) regenerate);
+
 #else
    QString key = font.key() + QString::number((int) regenerate);
 #endif
-   if (!regenerate && (d->displayListCache.find(key) != d->displayListCache.end())) {
+
+   if (! regenerate && (d->displayListCache.find(key) != d->displayListCache.end())) {
       base = d->displayListCache[key];
+
    } else {
       int maxBase = listBase - 256;
-      QMap<QString, int>::ConstIterator it;
+      QMap<QString, int>::const_iterator it;
+
       for (it = d->displayListCache.constBegin(); it != d->displayListCache.constEnd(); ++it) {
          if (maxBase < it.value()) {
             maxBase = it.value();
          }
       }
+
       maxBase += 256;
       d->glcx->generateFontDisplayLists(font, maxBase);
       d->displayListCache[key] = maxBase;
       base = maxBase;
    }
+
    return base;
 #else // QT_OPENGL_ES
    Q_UNUSED(font);
@@ -4886,7 +4775,7 @@ static void qt_gl_draw_text(QPainter *p, int x, int y, const QString &str,
    \l{Overpainting Example}{Overpaint} with QPainter::drawText() instead.
 */
 
-void QGLWidget::renderText(int x, int y, const QString &str, const QFont &font, int)
+void QGLWidget::renderText(int x, int y, const QString &str, const QFont &font)
 {
 #ifndef QT_OPENGL_ES
    Q_D(QGLWidget);
@@ -4985,7 +4874,7 @@ void QGLWidget::renderText(int x, int y, const QString &str, const QFont &font, 
 
     \l{Overpainting Example}{Overpaint} with QPainter::drawText() instead.
 */
-void QGLWidget::renderText(double x, double y, double z, const QString &str, const QFont &font, int)
+void QGLWidget::renderText(double x, double y, double z, const QString &str, const QFont &font)
 {
 #ifndef QT_OPENGL_ES
    Q_D(QGLWidget);
@@ -5313,79 +5202,93 @@ Q_OPENGL_EXPORT QPaintEngine *qt_qgl_paint_engine()
 #endif
 }
 
-/*!
-    \internal
-
-    Returns the GL widget's paint engine. This is normally a
-    QOpenGLPaintEngine.
-*/
 QPaintEngine *QGLWidget::paintEngine() const
 {
    return qt_qgl_paint_engine();
 }
 
-typedef const GLubyte *(APIENTRY *qt_glGetStringi)(GLenum, GLuint);
-
-#ifndef GL_NUM_EXTENSIONS
-#define GL_NUM_EXTENSIONS 0x821D
-#endif
-
-QGLExtensionMatcher::QGLExtensionMatcher(const char *str)
+QGLExtensionMatcher::QGLExtensionMatcher(const QString &str)
 {
    init(str);
 }
 
+QString cs_glGetString(GLenum data)
+{
+   const GLubyte *begin = glGetString(data);
+
+   if (begin == nullptr) {
+      return QString();
+
+   } else {
+      const GLubyte *end = begin;
+
+      while (*end) {
+         ++end;
+      }
+
+      return QString(begin, end);
+   }
+}
+
+QString cs_glGetStringI(GLenum data, GLuint index)
+{
+   static qt_glGetStringi funcPtr = nullptr;
+
+   if (funcPtr == nullptr) {
+      const QGLContext *ctx = QGLContext::currentContext();
+
+      if (ctx == nullptr) {
+         return QString();
+      }
+
+      funcPtr = (qt_glGetStringi)ctx->getProcAddress("glGetStringi");
+   }
+
+   const GLubyte *begin = funcPtr(data, index);
+
+   if (begin == nullptr) {
+      return QString();
+
+   } else {
+      const GLubyte *end = begin;
+
+      while (*end) {
+         ++end;
+      }
+
+      return QString(begin, end);
+   }
+}
+
 QGLExtensionMatcher::QGLExtensionMatcher()
 {
-   const char *extensionStr = reinterpret_cast<const char *>(glGetString(GL_EXTENSIONS));
+   const QString &extensionStr = cs_glGetString(GL_EXTENSIONS);
 
-   if (extensionStr) {
+   if (! extensionStr.isEmpty()) {
       init(extensionStr);
+
    } else {
       // clear error state
       while (glGetError()) {}
 
-      const QGLContext *ctx = QGLContext::currentContext();
-      if (ctx) {
-         qt_glGetStringi glGetStringi = (qt_glGetStringi)ctx->getProcAddress(QLatin1String("glGetStringi"));
+      GLint numExtensions;
+      glGetIntegerv(GL_NUM_EXTENSIONS, &numExtensions);
 
-         GLint numExtensions;
-         glGetIntegerv(GL_NUM_EXTENSIONS, &numExtensions);
+      for (int i = 0; i < numExtensions; ++i) {
+         const QString &extStr = cs_glGetStringI(GL_EXTENSIONS, i);
 
-         for (int i = 0; i < numExtensions; ++i) {
-            const char *str = reinterpret_cast<const char *>(glGetStringi(GL_EXTENSIONS, i));
-
-            m_offsets << m_extensions.size();
-
-            while (*str != 0) {
-               m_extensions.append(*str++);
-            }
-            m_extensions.append(' ');
+         if (! extStr.isEmpty()) {
+            m_extensions.append(extStr);
          }
       }
    }
 }
 
-void QGLExtensionMatcher::init(const char *str)
+void QGLExtensionMatcher::init(const QString &str)
 {
-   m_extensions = str;
-
-   // make sure extension string ends with a space
-   if (!m_extensions.endsWith(' ')) {
-      m_extensions.append(' ');
-   }
-
-   int index = 0;
-   int next = 0;
-   while ((next = m_extensions.indexOf(' ', index)) >= 0) {
-      m_offsets << index;
-      index = next + 1;
-   }
+   m_extensions = str.split(' ');
 }
 
-/*
-    Returns the GL extensions for the current context.
-*/
 QGLExtensions::Extensions QGLExtensions::currentContextExtensions()
 {
    QGLExtensionMatcher extensions;
@@ -5394,68 +5297,88 @@ QGLExtensions::Extensions QGLExtensions::currentContextExtensions()
    if (extensions.match("GL_ARB_texture_rectangle")) {
       glExtensions |= TextureRectangle;
    }
+
    if (extensions.match("GL_ARB_multisample")) {
       glExtensions |= SampleBuffers;
    }
+
    if (extensions.match("GL_SGIS_generate_mipmap")) {
       glExtensions |= GenerateMipmap;
    }
+
    if (extensions.match("GL_ARB_texture_compression")) {
       glExtensions |= TextureCompression;
    }
+
    if (extensions.match("GL_EXT_texture_compression_s3tc")) {
       glExtensions |= DDSTextureCompression;
    }
+
    if (extensions.match("GL_OES_compressed_ETC1_RGB8_texture")) {
       glExtensions |= ETC1TextureCompression;
    }
+
    if (extensions.match("GL_IMG_texture_compression_pvrtc")) {
       glExtensions |= PVRTCTextureCompression;
    }
+
    if (extensions.match("GL_ARB_fragment_program")) {
       glExtensions |= FragmentProgram;
    }
+
    if (extensions.match("GL_ARB_fragment_shader")) {
       glExtensions |= FragmentShader;
    }
+
    if (extensions.match("GL_ARB_shader_objects")) {
       glExtensions |= FragmentShader;
    }
+
    if (extensions.match("GL_ARB_texture_mirrored_repeat")) {
       glExtensions |= MirroredRepeat;
    }
+
    if (extensions.match("GL_EXT_framebuffer_object")) {
       glExtensions |= FramebufferObject;
    }
+
    if (extensions.match("GL_EXT_stencil_two_side")) {
       glExtensions |= StencilTwoSide;
    }
+
    if (extensions.match("GL_EXT_stencil_wrap")) {
       glExtensions |= StencilWrap;
    }
+
    if (extensions.match("GL_EXT_packed_depth_stencil")) {
       glExtensions |= PackedDepthStencil;
    }
+
    if (extensions.match("GL_NV_float_buffer")) {
       glExtensions |= NVFloatBuffer;
    }
+
    if (extensions.match("GL_ARB_pixel_buffer_object")) {
       glExtensions |= PixelBufferObject;
    }
+
    if (extensions.match("GL_IMG_texture_format_BGRA8888")
          || extensions.match("GL_EXT_texture_format_BGRA8888")) {
       glExtensions |= BGRATextureFormat;
    }
+
 #if defined(QT_OPENGL_ES_2)
    glExtensions |= FramebufferObject;
    glExtensions |= GenerateMipmap;
    glExtensions |= FragmentShader;
 #endif
+
 #if defined(QT_OPENGL_ES_1)
    if (extensions.match("GL_OES_framebuffer_object")) {
       glExtensions |= FramebufferObject;
    }
 #endif
+
 #if defined(QT_OPENGL_ES)
    if (extensions.match("GL_OES_packed_depth_stencil")) {
       glExtensions |= PackedDepthStencil;
@@ -5469,6 +5392,7 @@ QGLExtensions::Extensions QGLExtensions::currentContextExtensions()
 #else
    glExtensions |= ElementIndexUint;
 #endif
+
    if (extensions.match("GL_ARB_framebuffer_object")) {
       // ARB_framebuffer_object also includes EXT_framebuffer_blit.
       glExtensions |= FramebufferObject;
@@ -5571,11 +5495,11 @@ Q_OPENGL_EXPORT void qt_set_gl_library_name(const QString &name)
 
 Q_OPENGL_EXPORT const QString qt_gl_library_name()
 {
-   if (qt_gl_lib_name()->isNull()) {
+   if (qt_gl_lib_name()->isEmpty()) {
 
-#ifdef Q_OS_MAC
+#ifdef Q_OS_DARWIN
       // BROOM (can wait) consider changing the path
-      return QLatin1String("/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib");
+      return "/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib";
 #else
 
 # if defined(QT_OPENGL_ES_1)
@@ -5720,7 +5644,7 @@ void QGLContextGroupResourceBase::cleanup(const QGLContext *ctx, void *value)
 void QGLContextGroup::cleanupResources(const QGLContext *context)
 {
    // Notify all resources that a context has been deleted
-   QHash<QGLContextGroupResourceBase *, void *>::ConstIterator it;
+   QHash<QGLContextGroupResourceBase *, void *>::const_iterator it;
    for (it = m_resources.begin(); it != m_resources.end(); ++it) {
       it.key()->contextDeleted(context);
    }
@@ -6134,4 +6058,3 @@ void QGLTextureDestroyer::freeTexture_slot(QGLContext *context, QPixmapData *bou
    glDeleteTextures(1, &id);
 }
 
-QT_END_NAMESPACE

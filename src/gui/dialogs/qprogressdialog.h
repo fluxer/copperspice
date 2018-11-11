@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -68,10 +65,10 @@ class Q_GUI_EXPORT QProgressDialog : public QDialog
    GUI_CS_PROPERTY_WRITE(labelText, setLabelText)
 
  public:
-   explicit QProgressDialog(QWidget *parent = 0, Qt::WindowFlags flags = 0);
+   explicit QProgressDialog(QWidget *parent = nullptr, Qt::WindowFlags flags = 0);
 
    QProgressDialog(const QString &labelText, const QString &cancelButtonText, int minimum, int maximum,
-                   QWidget *parent = 0, Qt::WindowFlags flags = 0);
+                   QWidget *parent = nullptr, Qt::WindowFlags flags = 0);
 
    ~QProgressDialog();
 
@@ -83,7 +80,7 @@ class Q_GUI_EXPORT QProgressDialog : public QDialog
    void setCancelButton(QPushButton *button);
    void setCancelButtonCentered(bool value = true);
 
-   QSize sizeHint() const;
+   QSize sizeHint() const override;
 
    int minimum() const;
    int maximum() const;
@@ -97,7 +94,7 @@ class Q_GUI_EXPORT QProgressDialog : public QDialog
    bool wasCanceled() const;
 
    using QDialog::open;
-   void open(QObject *receiver, const char *member);
+   void open(QObject *receiver, const QString &member);
 
    GUI_CS_SLOT_1(Public, void cancel())
    GUI_CS_SLOT_2(cancel)
@@ -130,9 +127,9 @@ class Q_GUI_EXPORT QProgressDialog : public QDialog
    GUI_CS_SIGNAL_2(canceled)
 
  protected:
-   void closeEvent(QCloseEvent *event);
-   void changeEvent(QEvent *event);
-   void showEvent(QShowEvent *event);
+   void closeEvent(QCloseEvent *event) override;
+   void changeEvent(QEvent *event) override;
+   void showEvent(QShowEvent *event) override;
 
    GUI_CS_SLOT_1(Protected, void forceShow())
    GUI_CS_SLOT_2(forceShow)
@@ -163,10 +160,6 @@ class Q_GUI_EXPORT QProgressDialog : public QDialog
    QShortcut *escapeShortcut;
 #endif
 
-#ifdef QT_SOFTKEYS_ENABLED
-   QAction *cancelAction;
-#endif
-
    int  showTime;
 
    bool shown_once;
@@ -179,7 +172,7 @@ class Q_GUI_EXPORT QProgressDialog : public QDialog
    bool m_centerCancelPB;
 
    QPointer<QObject> receiverToDisconnectOnClose;
-   QByteArray memberToDisconnectOnClose;
+   QString memberToDisconnectOnClose;
 };
 
 #endif // QT_NO_PROGRESSDIALOG

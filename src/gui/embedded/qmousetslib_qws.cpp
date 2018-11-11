@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -27,7 +24,7 @@
 
 #if !defined(QT_NO_QWS_MOUSE_TSLIB) || defined(QT_PLUGIN)
 
-#include <QtCore/qregexp.h>
+#include <QtCore/QRegularExpression.h>
 #include <QtCore/qstringlist.h>
 #include <qsocketnotifier.h>
 #include <qscreen_qws.h>
@@ -121,8 +118,8 @@ class QWSTslibMouseHandlerPrivate : public QObject
 QWSTslibMouseHandlerPrivate::QWSTslibMouseHandlerPrivate(QWSTslibMouseHandler *h, const QString &device)
    : handler(h), dev(0), mouseNotifier(0), jitter_limit(3)
 {
-   QStringList args = device.split(QLatin1Char(':'), QString::SkipEmptyParts);
-   QRegExp jitterRegex(QLatin1String("^jitter_limit=(\\d+)$"));
+   QStringList args = device.split(QLatin1Char(':'), QStringParser::SkipEmptyParts);
+   QRegularExpression jitterRegex(QLatin1String("^jitter_limit=(\\d+)$"));
    int index = args.indexOf(jitterRegex);
    if (index >= 0) {
       jitter_limit = jitterRegex.cap(1).toInt();
@@ -134,12 +131,12 @@ QWSTslibMouseHandlerPrivate::QWSTslibMouseHandlerPrivate(QWSTslibMouseHandler *h
    if (devName.isNull()) {
       const char *str = getenv("TSLIB_TSDEVICE");
       if (str) {
-         devName = QString::fromLocal8Bit(str);
+         devName = QString::fromUtf8(str);
       }
    }
 
    if (devName.isNull()) {
-      devName = QLatin1String("/dev/ts");
+      devName = "/dev/ts";
    }
 
    if (!open()) {
@@ -161,7 +158,7 @@ QWSTslibMouseHandlerPrivate::~QWSTslibMouseHandlerPrivate()
 
 bool QWSTslibMouseHandlerPrivate::open()
 {
-   dev = ts_open(devName.toLocal8Bit().constData(), 1);
+   dev = ts_open(devName.toUtf8().constData(), 1);
    if (!dev) {
       qCritical("QWSTslibMouseHandlerPrivate: ts_open() failed"
                 " with error: '%s'", strerror(errno));

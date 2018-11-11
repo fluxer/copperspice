@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -28,18 +25,18 @@
 #ifndef QT_NO_NETWORKPROXY
 
 #include <qnetworkproxy_p.h>
+#include <qnetworkrequest_p.h>
 #include <qsocks5socketengine_p.h>
 #include <qhttpsocketengine_p.h>
 #include <qauthenticator.h>
-#include <qhash.h>
+#include <qdebug.h>
 #include <qmutex.h>
+#include <qstringlist.h>
 #include <qurl.h>
 
 #ifndef QT_NO_BEARERMANAGEMENT
 #include <QtNetwork/QNetworkConfiguration>
 #endif
-
-QT_BEGIN_NAMESPACE
 
 class QSocks5SocketEngineHandler;
 class QHttpSocketEngineHandler;
@@ -57,13 +54,13 @@ class QGlobalNetworkProxy
       setApplicationProxyFactory(new QSystemConfigurationProxyFactory);
 #endif
 
-#ifndef QT_NO_SOCKS5
-      socks5SocketEngineHandler = new QSocks5SocketEngineHandler();
-#endif
 
-#ifndef QT_NO_HTTP
+      socks5SocketEngineHandler = new QSocks5SocketEngineHandler();
+
+
+
       httpSocketEngineHandler = new QHttpSocketEngineHandler();
-#endif
+
    }
 
    ~QGlobalNetworkProxy() {
@@ -85,9 +82,15 @@ class QGlobalNetworkProxy
 
    void setApplicationProxyFactory(QNetworkProxyFactory *factory) {
       QMutexLocker lock(&mutex);
+
+      if (factory == applicationLevelProxyFactory) {
+         return;
+      }
+
       if (applicationLevelProxy) {
          *applicationLevelProxy = QNetworkProxy();
       }
+
       delete applicationLevelProxyFactory;
       applicationLevelProxyFactory = factory;
    }
@@ -118,8 +121,8 @@ QList<QNetworkProxy> QGlobalNetworkProxy::proxyForQuery(const QNetworkProxyQuery
    if (hostname == QLatin1String("localhost")
          || hostname.startsWith(QLatin1String("localhost."))
          || (parsed.setAddress(hostname)
-             && (parsed == QHostAddress::LocalHost
-                 || parsed == QHostAddress::LocalHostIPv6))) {
+             && (parsed.isLoopback()))) {
+
       result << QNetworkProxy(QNetworkProxy::NoProxy);
       return result;
    }
@@ -160,31 +163,32 @@ static QNetworkProxy::Capabilities defaultCapabilitiesForType(QNetworkProxy::Pro
 {
    q_static_assert(int(QNetworkProxy::DefaultProxy) == 0);
    q_static_assert(int(QNetworkProxy::FtpCachingProxy) == 5);
+
    static const int defaults[] = {
       /* [QNetworkProxy::DefaultProxy] = */
       (int(QNetworkProxy::ListeningCapability) |
-      int(QNetworkProxy::TunnelingCapability) |
-      int(QNetworkProxy::UdpTunnelingCapability)),
+       int(QNetworkProxy::TunnelingCapability) |
+       int(QNetworkProxy::UdpTunnelingCapability)),
       /* [QNetworkProxy::Socks5Proxy] = */
       (int(QNetworkProxy::TunnelingCapability) |
-      int(QNetworkProxy::ListeningCapability) |
-      int(QNetworkProxy::UdpTunnelingCapability) |
-      int(QNetworkProxy::HostNameLookupCapability)),
+       int(QNetworkProxy::ListeningCapability) |
+       int(QNetworkProxy::UdpTunnelingCapability) |
+       int(QNetworkProxy::HostNameLookupCapability)),
       // it's weird to talk about the proxy capabilities of a "not proxy"...
       /* [QNetworkProxy::NoProxy] = */
       (int(QNetworkProxy::ListeningCapability) |
-      int(QNetworkProxy::TunnelingCapability) |
-      int(QNetworkProxy::UdpTunnelingCapability)),
+       int(QNetworkProxy::TunnelingCapability) |
+       int(QNetworkProxy::UdpTunnelingCapability)),
       /* [QNetworkProxy::HttpProxy] = */
       (int(QNetworkProxy::TunnelingCapability) |
-      int(QNetworkProxy::CachingCapability) |
-      int(QNetworkProxy::HostNameLookupCapability)),
+       int(QNetworkProxy::CachingCapability) |
+       int(QNetworkProxy::HostNameLookupCapability)),
       /* [QNetworkProxy::HttpCachingProxy] = */
       (int(QNetworkProxy::CachingCapability) |
-      int(QNetworkProxy::HostNameLookupCapability)),
+       int(QNetworkProxy::HostNameLookupCapability)),
       /* [QNetworkProxy::FtpCachingProxy] = */
       (int(QNetworkProxy::CachingCapability) |
-      int(QNetworkProxy::HostNameLookupCapability)),
+       int(QNetworkProxy::HostNameLookupCapability)),
    };
 
    if (int(type) < 0 || int(type) > int(QNetworkProxy::FtpCachingProxy)) {
@@ -203,10 +207,11 @@ class QNetworkProxyPrivate: public QSharedData
    quint16 port;
    QNetworkProxy::ProxyType type;
    bool capabilitiesSet;
+   QNetworkHeadersPrivate headers;
 
-   inline QNetworkProxyPrivate(QNetworkProxy::ProxyType t = QNetworkProxy::DefaultProxy,
-                               const QString &h = QString(), quint16 p = 0,
-                               const QString &u = QString(), const QString &pw = QString())
+   inline QNetworkProxyPrivate(QNetworkProxy::ProxyType t = QNetworkProxy::DefaultProxy, const QString &h = QString(),
+                               quint16 p = 0, const QString &u = QString(), const QString &pw = QString())
+
       : hostName(h),
         user(u),
         password(pw),
@@ -217,12 +222,9 @@ class QNetworkProxyPrivate: public QSharedData
    }
 
    inline bool operator==(const QNetworkProxyPrivate &other) const {
-      return type == other.type &&
-             port == other.port &&
-             hostName == other.hostName &&
-             user == other.user &&
-             password == other.password &&
-             capabilities == other.capabilities;
+      return type == other.type && port == other.port &&
+             hostName == other.hostName && user == other.user &&
+             password == other.password && capabilities == other.capabilities;
    }
 };
 
@@ -240,12 +242,6 @@ template<> void QSharedDataPointer<QNetworkProxyPrivate>::detach()
    d = x;
 }
 
-/*!
-    Constructs a QNetworkProxy with DefaultProxy type; the proxy type is
-    determined by applicationProxy(), which defaults to NoProxy.
-
-    \sa setType(), setApplicationProxy()
-*/
 QNetworkProxy::QNetworkProxy()
    : d(0)
 {
@@ -267,9 +263,8 @@ QNetworkProxy::QNetworkProxy(ProxyType type, const QString &hostName, quint16 po
                              const QString &user, const QString &password)
    : d(new QNetworkProxyPrivate(type, hostName, port, user, password))
 {
-   // make sure we have QGlobalNetworkProxy singleton created, otherwise
-   // you don't have any socket engine handler created when directly setting
-   // a proxy to a socket
+   // make sure we have QGlobalNetworkProxy singleton created, otherwise you don't have
+   // any socket engine handler created when directly setting a proxy to a socket
    globalNetworkProxy();
 }
 
@@ -281,9 +276,6 @@ QNetworkProxy::QNetworkProxy(const QNetworkProxy &other)
 {
 }
 
-/*!
-    Destroys the QNetworkProxy object.
-*/
 QNetworkProxy::~QNetworkProxy()
 {
    // QSharedDataPointer takes care of deleting for us
@@ -486,20 +478,6 @@ quint16 QNetworkProxy::port() const
    return d ? d->port : 0;
 }
 
-/*!
-    Sets the application level network proxying to be \a networkProxy.
-
-    If a QAbstractSocket or QTcpSocket has the
-    QNetworkProxy::DefaultProxy type, then the QNetworkProxy set with
-    this function is used. If you want more flexibility in determining
-    which the proxy, use the QNetworkProxyFactory class.
-
-    Setting a default proxy value with this function will override the
-    application proxy factory set with
-    QNetworkProxyFactory::setApplicationProxyFactory.
-
-    \sa QNetworkProxyFactory, applicationProxy(), QAbstractSocket::setProxy(), QTcpServer::setProxy()
-*/
 void QNetworkProxy::setApplicationProxy(const QNetworkProxy &networkProxy)
 {
    if (globalNetworkProxy()) {
@@ -512,21 +490,64 @@ void QNetworkProxy::setApplicationProxy(const QNetworkProxy &networkProxy)
    }
 }
 
-/*!
-    Returns the application level network proxying.
-
-    If a QAbstractSocket or QTcpSocket has the
-    QNetworkProxy::DefaultProxy type, then the QNetworkProxy returned
-    by this function is used.
-
-    \sa QNetworkProxyFactory, setApplicationProxy(), QAbstractSocket::proxy(), QTcpServer::proxy()
-*/
 QNetworkProxy QNetworkProxy::applicationProxy()
 {
    if (globalNetworkProxy()) {
       return globalNetworkProxy()->applicationProxy();
    }
    return QNetworkProxy();
+}
+
+QVariant QNetworkProxy::header(QNetworkRequest::KnownHeaders header) const
+{
+   if (d->type != HttpProxy && d->type != HttpCachingProxy) {
+      return QVariant();
+   }
+
+   return d->headers.cookedHeaders.value(header);
+}
+
+void QNetworkProxy::setHeader(QNetworkRequest::KnownHeaders header, const QVariant &value)
+{
+   if (d->type == HttpProxy || d->type == HttpCachingProxy) {
+      d->headers.setCookedHeader(header, value);
+   }
+}
+
+bool QNetworkProxy::hasRawHeader(const QByteArray &headerName) const
+{
+   if (d->type != HttpProxy && d->type != HttpCachingProxy) {
+      return false;
+   }
+
+   return d->headers.findRawHeader(headerName) != d->headers.rawHeaders.constEnd();
+}
+
+QByteArray QNetworkProxy::rawHeader(const QByteArray &headerName) const
+{
+   if (d->type != HttpProxy && d->type != HttpCachingProxy) {
+      return QByteArray();
+   }
+   QNetworkHeadersPrivate::RawHeadersList::const_iterator it = d->headers.findRawHeader(headerName);
+   if (it != d->headers.rawHeaders.constEnd()) {
+      return it->second;
+   }
+   return QByteArray();
+}
+
+QList<QByteArray> QNetworkProxy::rawHeaderList() const
+{
+   if (d->type != HttpProxy && d->type != HttpCachingProxy) {
+      return QList<QByteArray>();
+   }
+   return d->headers.rawHeadersKeys();
+}
+
+void QNetworkProxy::setRawHeader(const QByteArray &headerName, const QByteArray &headerValue)
+{
+   if (d->type == HttpProxy || d->type == HttpCachingProxy) {
+      d->headers.setRawHeader(headerName, headerValue);
+   }
 }
 
 class QNetworkProxyQueryPrivate: public QSharedData
@@ -564,130 +585,6 @@ template<> void QSharedDataPointer<QNetworkProxyQueryPrivate>::detach()
    d = x;
 }
 
-/*!
-    \class QNetworkProxyQuery
-    \since 4.5
-    \inmodule QtNetwork
-    \brief The QNetworkProxyQuery class is used to query the proxy
-    settings for a socket
-
-    QNetworkProxyQuery holds the details of a socket being created or
-    request being made. It is used by QNetworkProxy and
-    QNetworkProxyFactory to allow applications to have a more
-    fine-grained control over which proxy servers are used, depending
-    on the details of the query. This allows an application to apply
-    different settings, according to the protocol or destination
-    hostname, for instance.
-
-    QNetworkProxyQuery supports the following criteria for selecting
-    the proxy:
-
-    \list
-      \o the type of query
-      \o the local port number to use
-      \o the destination host name
-      \o the destination port number
-      \o the protocol name, such as "http" or "ftp"
-      \o the URL being requested
-    \endlist
-
-    The destination host name is the host in the connection in the
-    case of outgoing connection sockets. It is the \c hostName
-    parameter passed to QTcpSocket::connectToHost() or the host
-    component of a URL requested with QNetworkRequest.
-
-    The destination port number is the requested port to connect to in
-    the case of outgoing sockets, while the local port number is the
-    port the socket wishes to use locally before attempting the
-    external connection. In most cases, the local port number is used
-    by listening sockets only (QTcpSocket) or by datagram sockets
-    (QUdpSocket).
-
-    The protocol name is an arbitrary string that indicates the type
-    of connection being attempted. For example, it can match the
-    scheme of a URL, like "http", "https" and "ftp". In most cases,
-    the proxy selection will not change depending on the protocol, but
-    this information is provided in case a better choice can be made,
-    like choosing an caching HTTP proxy for HTTP-based connections,
-    but a more powerful SOCKSv5 proxy for all others.
-
-    The network configuration specifies which configuration to use,
-    when bearer management is used. For example on a mobile phone
-    the proxy settings are likely to be different for the cellular
-    network vs WLAN.
-
-    Some of the criteria may not make sense in all of the types of
-    query. The following table lists the criteria that are most
-    commonly used, according to the type of query.
-
-    \table
-    \header
-      \o Query type
-      \o Description
-
-    \row
-      \o TcpSocket
-      \o Normal sockets requesting a connection to a remote server,
-         like QTcpSocket. The peer hostname and peer port match the
-         values passed to QTcpSocket::connectToHost(). The local port
-         is usually -1, indicating the socket has no preference in
-         which port should be used. The URL component is not used.
-
-    \row
-      \o UdpSocket
-      \o Datagram-based sockets, which can both send and
-         receive. The local port, remote host or remote port fields
-         can all be used or be left unused, depending on the
-         characteristics of the socket. The URL component is not used.
-
-    \row
-      \o TcpServer
-      \o Passive server sockets that listen on a port and await
-         incoming connections from the network. Normally, only the
-         local port is used, but the remote address could be used in
-         specific circumstances, for example to indicate which remote
-         host a connection is expected from. The URL component is not used.
-
-    \row
-      \o UrlRequest
-      \o A more high-level request, such as those coming from
-         QNetworkAccessManager. These requests will inevitably use an
-         outgoing TCP socket, but the this query type is provided to
-         indicate that more detailed information is present in the URL
-         component. For ease of implementation, the URL's host and
-         port are set as the destination address.
-    \endtable
-
-    It should be noted that any of the criteria may be missing or
-    unknown (an empty QString for the hostname or protocol name, -1
-    for the port numbers). If that happens, the functions executing
-    the query should make their best guess or apply some
-    implementation-defined default values.
-
-    \sa QNetworkProxy, QNetworkProxyFactory, QNetworkAccessManager,
-        QAbstractSocket::setProxy()
-*/
-
-/*!
-    \enum QNetworkProxyQuery::QueryType
-
-    Describes the type of one QNetworkProxyQuery query.
-
-    \value TcpSocket    a normal, outgoing TCP socket
-    \value UdpSocket    a datagram-based UDP socket, which could send
-                        to multiple destinations
-    \value TcpServer    a TCP server that listens for incoming
-                        connections from the network
-    \value UrlRequest   a more complex request which involves loading
-                        of a URL
-
-    \sa queryType(), setQueryType()
-*/
-
-/*!
-    Constructs a default QNetworkProxyQuery object. By default, the
-    query type will be QNetworkProxyQuery::TcpSocket.
-*/
 QNetworkProxyQuery::QNetworkProxyQuery()
 {
 }
@@ -704,16 +601,9 @@ QNetworkProxyQuery::QNetworkProxyQuery(const QUrl &requestUrl, QueryType queryTy
    d->type = queryType;
 }
 
-/*!
-    Constructs a QNetworkProxyQuery of type \a queryType and sets the
-    protocol tag to be \a protocolTag. This constructor is suitable
-    for QNetworkProxyQuery::TcpSocket queries, because it sets the
-    peer hostname to \a hostname and the peer's port number to \a
-    port.
-*/
+
 QNetworkProxyQuery::QNetworkProxyQuery(const QString &hostname, int port,
-                                       const QString &protocolTag,
-                                       QueryType queryType)
+                                       const QString &protocolTag, QueryType queryType)
 {
    d->remote.setScheme(protocolTag);
    d->remote.setHost(hostname);
@@ -721,20 +611,7 @@ QNetworkProxyQuery::QNetworkProxyQuery(const QString &hostname, int port,
    d->type = queryType;
 }
 
-/*!
-    Constructs a QNetworkProxyQuery of type \a queryType and sets the
-    protocol tag to be \a protocolTag. This constructor is suitable
-    for QNetworkProxyQuery::TcpSocket queries because it sets the
-    local port number to \a bindPort.
-
-    Note that \a bindPort is of type quint16 to indicate the exact
-    port number that is requested. The value of -1 (unknown) is not
-    allowed in this context.
-
-    \sa localPort()
-*/
-QNetworkProxyQuery::QNetworkProxyQuery(quint16 bindPort, const QString &protocolTag,
-                                       QueryType queryType)
+QNetworkProxyQuery::QNetworkProxyQuery(quint16 bindPort, const QString &protocolTag, QueryType queryType)
 {
    d->remote.setScheme(protocolTag);
    d->localPort = bindPort;
@@ -742,15 +619,7 @@ QNetworkProxyQuery::QNetworkProxyQuery(quint16 bindPort, const QString &protocol
 }
 
 #ifndef QT_NO_BEARERMANAGEMENT
-/*!
-    \since 4.8
 
-    Constructs a QNetworkProxyQuery with the URL \a requestUrl and
-    sets the query type to \a queryType. The specified \a networkConfiguration
-    is used to resolve the proxy settings.
-
-    \sa protocolTag(), peerHostName(), peerPort(), networkConfiguration()
-*/
 QNetworkProxyQuery::QNetworkProxyQuery(const QNetworkConfiguration &networkConfiguration,
                                        const QUrl &requestUrl, QueryType queryType)
 {
@@ -759,22 +628,8 @@ QNetworkProxyQuery::QNetworkProxyQuery(const QNetworkConfiguration &networkConfi
    d->type = queryType;
 }
 
-/*!
-    \since 4.8
-
-    Constructs a QNetworkProxyQuery of type \a queryType and sets the
-    protocol tag to be \a protocolTag. This constructor is suitable
-    for QNetworkProxyQuery::TcpSocket queries, because it sets the
-    peer hostname to \a hostname and the peer's port number to \a
-    port. The specified \a networkConfiguration
-    is used to resolve the proxy settings.
-
-    \sa networkConfiguration()
-*/
 QNetworkProxyQuery::QNetworkProxyQuery(const QNetworkConfiguration &networkConfiguration,
-                                       const QString &hostname, int port,
-                                       const QString &protocolTag,
-                                       QueryType queryType)
+                                       const QString &hostname, int port, const QString &protocolTag, QueryType queryType)
 {
    d->config = networkConfiguration;
    d->remote.setScheme(protocolTag);
@@ -783,24 +638,8 @@ QNetworkProxyQuery::QNetworkProxyQuery(const QNetworkConfiguration &networkConfi
    d->type = queryType;
 }
 
-/*!
-    \since 4.8
-
-    Constructs a QNetworkProxyQuery of type \a queryType and sets the
-    protocol tag to be \a protocolTag. This constructor is suitable
-    for QNetworkProxyQuery::TcpSocket queries because it sets the
-    local port number to \a bindPort. The specified \a networkConfiguration
-    is used to resolve the proxy settings.
-
-    Note that \a bindPort is of type quint16 to indicate the exact
-    port number that is requested. The value of -1 (unknown) is not
-    allowed in this context.
-
-    \sa localPort(), networkConfiguration()
-*/
 QNetworkProxyQuery::QNetworkProxyQuery(const QNetworkConfiguration &networkConfiguration,
-                                       quint16 bindPort, const QString &protocolTag,
-                                       QueryType queryType)
+                                       quint16 bindPort, const QString &protocolTag, QueryType queryType)
 {
    d->config = networkConfiguration;
    d->remote.setScheme(protocolTag);
@@ -809,325 +648,109 @@ QNetworkProxyQuery::QNetworkProxyQuery(const QNetworkConfiguration &networkConfi
 }
 #endif
 
-/*!
-    Constructs a QNetworkProxyQuery object that is a copy of \a other.
-*/
 QNetworkProxyQuery::QNetworkProxyQuery(const QNetworkProxyQuery &other)
    : d(other.d)
 {
 }
 
-/*!
-    Destroys this QNetworkProxyQuery object.
-*/
 QNetworkProxyQuery::~QNetworkProxyQuery()
 {
    // QSharedDataPointer automatically deletes
 }
 
-/*!
-    Copies the contents of \a other.
-*/
 QNetworkProxyQuery &QNetworkProxyQuery::operator=(const QNetworkProxyQuery &other)
 {
    d = other.d;
    return *this;
 }
 
-/*!
-    Returns true if this QNetworkProxyQuery object contains the same
-    data as \a other.
-*/
 bool QNetworkProxyQuery::operator==(const QNetworkProxyQuery &other) const
 {
    return d == other.d || (d && other.d && *d == *other.d);
 }
 
-/*!
-    \fn bool QNetworkProxyQuery::operator!=(const QNetworkProxyQuery &other) const
-
-    Returns true if this QNetworkProxyQuery object does not contain
-    the same data as \a other.
-*/
-
-/*!
-    Returns the query type.
-*/
 QNetworkProxyQuery::QueryType QNetworkProxyQuery::queryType() const
 {
    return d ? d->type : TcpSocket;
 }
 
-/*!
-    Sets the query type of this object to be \a type.
-*/
 void QNetworkProxyQuery::setQueryType(QueryType type)
 {
    d->type = type;
 }
 
-/*!
-    Returns the port number for the outgoing request or -1 if the port
-    number is not known.
-
-    If the query type is QNetworkProxyQuery::UrlRequest, this function
-    returns the port number of the URL being requested. In general,
-    frameworks will fill in the port number from their default values.
-
-    \sa peerHostName(), localPort(), setPeerPort()
-*/
 int QNetworkProxyQuery::peerPort() const
 {
    return d ? d->remote.port() : -1;
 }
 
-/*!
-    Sets the requested port number for the outgoing connection to be
-    \a port. Valid values are 1 to 65535, or -1 to indicate that the
-    remote port number is unknown.
-
-    The peer port number can also be used to indicate the expected
-    port number of an incoming connection in the case of
-    QNetworkProxyQuery::UdpSocket or QNetworkProxyQuery::TcpServer
-    query types.
-
-    \sa peerPort(), setPeerHostName(), setLocalPort()
-*/
 void QNetworkProxyQuery::setPeerPort(int port)
 {
    d->remote.setPort(port);
 }
 
-/*!
-    Returns the host name or IP address being of the outgoing
-    connection being requested, or an empty string if the remote
-    hostname is not known.
-
-    If the query type is QNetworkProxyQuery::UrlRequest, this function
-    returns the host component of the URL being requested.
-
-    \sa peerPort(), localPort(), setPeerHostName()
-*/
 QString QNetworkProxyQuery::peerHostName() const
 {
    return d ? d->remote.host() : QString();
 }
 
-/*!
-    Sets the hostname of the outgoing connection being requested to \a
-    hostname.  An empty hostname can be used to indicate that the
-    remote host is unknown.
-
-    The peer host name can also be used to indicate the expected
-    source address of an incoming connection in the case of
-    QNetworkProxyQuery::UdpSocket or QNetworkProxyQuery::TcpServer
-    query types.
-
-    \sa peerHostName(), setPeerPort(), setLocalPort()
-*/
 void QNetworkProxyQuery::setPeerHostName(const QString &hostname)
 {
    d->remote.setHost(hostname);
 }
 
-/*!
-    Returns the port number of the socket that will accept incoming
-    packets from remote servers or -1 if the port is not known.
-
-    \sa peerPort(), peerHostName(), setLocalPort()
-*/
 int QNetworkProxyQuery::localPort() const
 {
    return d ? d->localPort : -1;
 }
 
-/*!
-    Sets the port number that the socket wishes to use locally to
-    accept incoming packets from remote servers to \a port. The local
-    port is most often used with the QNetworkProxyQuery::TcpServer
-    and QNetworkProxyQuery::UdpSocket query types.
-
-    Valid values are 0 to 65535 (with 0 indicating that any port
-    number will be acceptable) or -1, which means the local port
-    number is unknown or not applicable.
-
-    In some circumstances, for special protocols, it's the local port
-    number can also be used with a query of type
-    QNetworkProxyQuery::TcpSocket. When that happens, the socket is
-    indicating it wishes to use the port number \a port when
-    connecting to a remote host.
-
-    \sa localPort(), setPeerPort(), setPeerHostName()
-*/
 void QNetworkProxyQuery::setLocalPort(int port)
 {
    d->localPort = port;
 }
 
-/*!
-    Returns the protocol tag for this QNetworkProxyQuery object, or an
-    empty QString in case the protocol tag is unknown.
-
-    In the case of queries of type QNetworkProxyQuery::UrlRequest,
-    this function returns the value of the scheme component of the
-    URL.
-
-    \sa setProtocolTag(), url()
-*/
 QString QNetworkProxyQuery::protocolTag() const
 {
    return d ? d->remote.scheme() : QString();
 }
 
-/*!
-    Sets the protocol tag for this QNetworkProxyQuery object to be \a
-    protocolTag.
-
-    The protocol tag is an arbitrary string that indicates which
-    protocol is being talked over the socket, such as "http", "xmpp",
-    "telnet", etc. The protocol tag is used by the backend to
-    return a request that is more specific to the protocol in
-    question: for example, a HTTP connection could be use a caching
-    HTTP proxy server, while all other connections use a more powerful
-    SOCKSv5 proxy server.
-
-    \sa protocolTag()
-*/
 void QNetworkProxyQuery::setProtocolTag(const QString &protocolTag)
 {
    d->remote.setScheme(protocolTag);
 }
 
-/*!
-    Returns the URL component of this QNetworkProxyQuery object in
-    case of a query of type QNetworkProxyQuery::UrlRequest.
-
-    \sa setUrl()
-*/
 QUrl QNetworkProxyQuery::url() const
 {
    return d ? d->remote : QUrl();
 }
 
-/*!
-    Sets the URL component of this QNetworkProxyQuery object to be \a
-    url. Setting the URL will also set the protocol tag, the remote
-    host name and port number. This is done so as to facilitate the
-    implementation of the code that determines the proxy server to be
-    used.
-
-    \sa url(), peerHostName(), peerPort()
-*/
 void QNetworkProxyQuery::setUrl(const QUrl &url)
 {
    d->remote = url;
 }
 
 #ifndef QT_NO_BEARERMANAGEMENT
-/*!
-    Returns the network configuration of the proxy query.
 
-    \sa setNetworkConfiguration()
-*/
 QNetworkConfiguration QNetworkProxyQuery::networkConfiguration() const
 {
    return d ? d->config : QNetworkConfiguration();
 }
 
-/*!
-    \since 4.8
-
-    Sets the network configuration component of this QNetworkProxyQuery
-    object to be \a networkConfiguration. The network configuration can
-    be used to return different proxy settings based on the network in
-    use, for example WLAN vs cellular networks on a mobile phone.
-
-    In the case of "user choice" or "service network" configurations,
-    you should first start the QNetworkSession and obtain the active
-    configuration from its properties.
-
-    \sa networkConfiguration()
-*/
 void QNetworkProxyQuery::setNetworkConfiguration(const QNetworkConfiguration &networkConfiguration)
 {
    d->config = networkConfiguration;
 }
 #endif
 
-/*!
-    \class QNetworkProxyFactory
-    \brief The QNetworkProxyFactory class provides fine-grained proxy selection.
-    \since 4.5
 
-    \ingroup network
-    \inmodule QtNetwork
-
-    QNetworkProxyFactory is an extension to QNetworkProxy, allowing
-    applications to have a more fine-grained control over which proxy
-    servers are used, depending on the socket requesting the
-    proxy. This allows an application to apply different settings,
-    according to the protocol or destination hostname, for instance.
-
-    QNetworkProxyFactory can be set globally for an application, in
-    which case it will override any global proxies set with
-    QNetworkProxy::setApplicationProxy(). If set globally, any sockets
-    created with Qt will query the factory to determine the proxy to
-    be used.
-
-    A factory can also be set in certain frameworks that support
-    multiple connections, such as QNetworkAccessManager. When set on
-    such object, the factory will be queried for sockets created by
-    that framework only.
-
-    \section1 System Proxies
-
-    You can configure a factory to use the system proxy's settings.
-    Call the setUseSystemConfiguration() function with true to enable
-    this behavior, or false to disable it.
-
-    Similarly, you can use a factory to make queries directly to the
-    system proxy by calling its systemProxyForQuery() function.
-
-    \warning Depending on the configuration of the user's system, the
-    use of system proxy features on certain platforms may be subject
-    to limitations. The systemProxyForQuery() documentation contains a
-    list of these limitations for those platforms that are affected.
-*/
-
-/*!
-    Creates a QNetworkProxyFactory object.
-
-    Since QNetworkProxyFactory is an abstract class, you cannot create
-    objects of type QNetworkProxyFactory directly.
-*/
 QNetworkProxyFactory::QNetworkProxyFactory()
 {
 }
 
-/*!
-    Destroys the QNetworkProxyFactory object.
-*/
 QNetworkProxyFactory::~QNetworkProxyFactory()
 {
 }
 
-
-/*!
-    \since 4.6
-
-    Enables the use of the platform-specific proxy settings, and only those.
-    See systemProxyForQuery() for more information.
-
-    Internally, this method (when called with \a enable set to true)
-    sets an application-wide proxy factory. For this reason, this method
-    is mutually exclusive with setApplicationProxyFactory(): calling
-    setApplicationProxyFactory() overrides the use of the system-wide proxy,
-    and calling setUseSystemConfiguration() overrides any
-    application proxy or proxy factory that was previously set.
-
-    \note See the systemProxyForQuery() documentation for a list of
-    limitations related to the use of system proxies.
-*/
 void QNetworkProxyFactory::setUseSystemConfiguration(bool enable)
 {
    if (enable) {
@@ -1137,24 +760,6 @@ void QNetworkProxyFactory::setUseSystemConfiguration(bool enable)
    }
 }
 
-/*!
-    Sets the application-wide proxy factory to be \a factory. This
-    function will take ownership of that object and will delete it
-    when necessary.
-
-    The application-wide proxy is used as a last-resort when all other
-    proxy selection requests returned QNetworkProxy::DefaultProxy. For
-    example, QTcpSocket objects can have a proxy set with
-    QTcpSocket::setProxy, but if none is set, the proxy factory class
-    set with this function will be queried.
-
-    If you set a proxy factory with this function, any application
-    level proxies set with QNetworkProxy::setApplicationProxy will be
-    overridden.
-
-    \sa QNetworkProxy::setApplicationProxy(),
-        QAbstractSocket::proxy(), QAbstractSocket::setProxy()
-*/
 void QNetworkProxyFactory::setApplicationProxyFactory(QNetworkProxyFactory *factory)
 {
    if (globalNetworkProxy()) {
@@ -1162,81 +767,6 @@ void QNetworkProxyFactory::setApplicationProxyFactory(QNetworkProxyFactory *fact
    }
 }
 
-/*!
-    \fn QList<QNetworkProxy> QNetworkProxyFactory::queryProxy(const QNetworkProxyQuery &query)
-
-    This function takes the query request, \a query,
-    examines the details of the type of socket or request and returns
-    a list of QNetworkProxy objects that indicate the proxy servers to
-    be used, in order of preference.
-
-    When reimplementing this class, take care to return at least one
-    element.
-
-    If you cannot determine a better proxy alternative, use
-    QNetworkProxy::DefaultProxy, which tells the code querying for a
-    proxy to use a higher alternative. For example, if this factory is
-    set to a QNetworkAccessManager object, DefaultProxy will tell it
-    to query the application-level proxy settings.
-
-    If this factory is set as the application proxy factory,
-    DefaultProxy and NoProxy will have the same meaning.
-*/
-
-/*!
-    \fn QList<QNetworkProxy> QNetworkProxyFactory::systemProxyForQuery(const QNetworkProxyQuery &query)
-
-    This function takes the query request, \a query,
-    examines the details of the type of socket or request and returns
-    a list of QNetworkProxy objects that indicate the proxy servers to
-    be used, in order of preference.
-
-    This function can be used to determine the platform-specific proxy
-    settings. This function will use the libraries provided by the
-    operating system to determine the proxy for a given connection, if
-    such libraries exist. If they don't, this function will just return a
-    QNetworkProxy of type QNetworkProxy::NoProxy.
-
-    On Windows, this function will use the WinHTTP DLL functions. Despite
-    its name, Microsoft suggests using it for all applications that
-    require network connections, not just HTTP. This will respect the
-    proxy settings set on the registry with the proxycfg.exe tool. If
-    those settings are not found, this function will attempt to obtain
-    Internet Explorer's settings and use them.
-
-    On MacOS X, this function will obtain the proxy settings using the
-    SystemConfiguration framework from Apple. It will apply the FTP,
-    HTTP and HTTPS proxy configurations for queries that contain the
-    protocol tag "ftp", "http" and "https", respectively. If the SOCKS
-    proxy is enabled in that configuration, this function will use the
-    SOCKS server for all queries. If SOCKS isn't enabled, it will use
-    the HTTPS proxy for all TcpSocket and UrlRequest queries.
-
-    On other systems, this function will pick up proxy settings from
-    the "http_proxy" environment variable. This variable must be a URL
-    using one of the following schemes: "http", "socks5" or "socks5h".
-
-    \section1 Limitations
-
-    These are the limitations for the current version of this
-    function. Future versions of Qt may lift some of the limitations
-    listed here.
-
-    \list
-    \o On MacOS X, this function will ignore the Proxy Auto Configuration
-    settings, since it cannot execute the associated ECMAScript code.
-
-    \o On Windows platforms, this function may take several seconds to
-    execute depending on the configuration of the user's system.
-    \endlist
-*/
-
-/*!
-    This function takes the query request, \a query,
-    examines the details of the type of socket or request and returns
-    a list of QNetworkProxy objects that indicate the proxy servers to
-    be used, in order of preference.
-*/
 QList<QNetworkProxy> QNetworkProxyFactory::proxyForQuery(const QNetworkProxyQuery &query)
 {
    if (!globalNetworkProxy()) {
@@ -1245,6 +775,63 @@ QList<QNetworkProxy> QNetworkProxyFactory::proxyForQuery(const QNetworkProxyQuer
    return globalNetworkProxy()->proxyForQuery(query);
 }
 
-QT_END_NAMESPACE
+QDebug operator<<(QDebug debug, const QNetworkProxy &proxy)
+{
+   // QDebugStateSaver saver(debug);
+   // debug.resetFormat().nospace();
+
+   QNetworkProxy::ProxyType type = proxy.type();
+
+   switch (type) {
+      case QNetworkProxy::NoProxy:
+         debug << "NoProxy ";
+         break;
+      case QNetworkProxy::DefaultProxy:
+         debug << "DefaultProxy ";
+         break;
+      case QNetworkProxy::Socks5Proxy:
+         debug << "Socks5Proxy ";
+         break;
+      case QNetworkProxy::HttpProxy:
+         debug << "HttpProxy ";
+         break;
+      case QNetworkProxy::HttpCachingProxy:
+         debug << "HttpCachingProxy ";
+         break;
+      case QNetworkProxy::FtpCachingProxy:
+         debug << "FtpCachingProxy ";
+         break;
+      default:
+         debug << "Unknown proxy " << int(type);
+         break;
+   }
+   debug << '"' << proxy.hostName() << ':' << proxy.port() << "\" ";
+   QNetworkProxy::Capabilities caps = proxy.capabilities();
+   QStringList scaps;
+
+   if (caps & QNetworkProxy::TunnelingCapability) {
+      scaps << "Tunnel";
+   }
+
+   if (caps & QNetworkProxy::ListeningCapability) {
+      scaps << "Listen";
+   }
+
+   if (caps & QNetworkProxy::UdpTunnelingCapability) {
+      scaps << "UDP";
+   }
+
+   if (caps & QNetworkProxy::CachingCapability) {
+      scaps << "Caching";
+   }
+
+   if (caps & QNetworkProxy::HostNameLookupCapability) {
+      scaps << "NameLookup";
+   }
+
+   debug << '[' << scaps.join(" ") << ']';
+   return debug;
+}
+
 
 #endif // QT_NO_NETWORKPROXY

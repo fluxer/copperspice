@@ -1,256 +1,250 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
 
+#include <cmath>
+
 #include <qjsonwriter_p.h>
-#include <qjson_p.h>
+#include <qjson.h>
+#include <qstringparser.h>
 
-QT_BEGIN_NAMESPACE
+static void cs_internal_objectToStr(const QJsonObject &data, QString &retval, int indent, bool compact);
+static void cs_internal_arrayToStr(const QJsonArray &data,   QString &retval, int indent, bool compact);
 
-using namespace QJsonPrivate;
-
-static void objectContentToJson(const QJsonPrivate::Object *o, QByteArray &json, int indent, bool compact);
-static void arrayContentToJson(const QJsonPrivate::Array *a, QByteArray &json, int indent, bool compact);
-
-static inline uchar hexdig(uint u)
+static uchar hexdig(uint u)
 {
    return (u < 0xa ? '0' + u : 'a' + u - 0xa);
 }
 
-static QByteArray escapedString(const QString &s)
+static QString escapedString(const QString &s)
 {
+   QString retval;
+
    const uchar replacement = '?';
-   QByteArray ba(s.length(), Qt::Uninitialized);
 
-   uchar *cursor = (uchar *)ba.data();
-   const uchar *ba_end = cursor + ba.length();
+   QString::const_iterator iter = s.begin();
+   QString::const_iterator end  = s.begin();
 
-   const QChar *ch = (const QChar *)s.constData();
-   const QChar *end = ch + s.length();
+   for (QChar c : s) {
+      char32_t uc = c.unicode();
 
-   int surrogate_high = -1;
-
-   while (ch < end) {
-      if (cursor >= ba_end - 6) {
-         // ensure we have enough space
-         int pos = cursor - (const uchar *)ba.constData();
-         ba.resize(ba.size() * 2);
-         cursor = (uchar *)ba.data() + pos;
-         ba_end = (const uchar *)ba.constData() + ba.length();
-      }
-
-      uint u = ch->unicode();
-      if (surrogate_high >= 0) {
-         if (ch->isLowSurrogate()) {
-            u = QChar::surrogateToUcs4(surrogate_high, u);
-            surrogate_high = -1;
-         } else {
-            // high surrogate without low
-            *cursor = replacement;
-            ++ch;
-            surrogate_high = -1;
-            continue;
-         }
-      } else if (ch->isLowSurrogate()) {
-         // low surrogate without high
-         *cursor = replacement;
-         ++ch;
-         continue;
-      } else if (ch->isHighSurrogate()) {
-         surrogate_high = u;
-         ++ch;
+      if (uc >= 0xD800 && uc <= 0xDFFF) {
+         retval.append(replacement);
          continue;
       }
 
-      if (u < 0x80) {
-         if (u < 0x20 || u == 0x22 || u == 0x5c) {
-            *cursor++ = '\\';
-            switch (u) {
+      if (uc < 0x80) {
+
+         if (uc < 0x20 || uc == 0x22 || uc == 0x5c) {
+            retval.append('\\');
+
+            switch (uc) {
                case 0x22:
-                  *cursor++ = '"';
+                  retval.append('"');
                   break;
-               case 0x5c:
-                  *cursor++ = '\\';
-                  break;
-               case 0x8:
-                  *cursor++ = 'b';
-                  break;
-               case 0xc:
-                  *cursor++ = 'f';
-                  break;
-               case 0xa:
-                  *cursor++ = 'n';
-                  break;
-               case 0xd:
-                  *cursor++ = 'r';
-                  break;
-               case 0x9:
-                  *cursor++ = 't';
-                  break;
-               default:
-                  *cursor++ = 'u';
-                  *cursor++ = '0';
-                  *cursor++ = '0';
-                  *cursor++ = hexdig(u >> 4);
-                  *cursor++ = hexdig(u & 0xf);
-            }
-         } else {
-            *cursor++ = (uchar)u;
-         }
-      } else {
-         if (u < 0x0800) {
-            *cursor++ = 0xc0 | ((uchar) (u >> 6));
-         } else {
-            /* Qt 5 Beta 1
-            // is it one of the Unicode non-characters?
-            if (QChar::isNonCharacter(u)) {
-                *cursor++ = replacement;
-                ++ch;
-                continue;
-            }
-            */
 
-            if (QChar::requiresSurrogates(u)) {
-               *cursor++ = 0xf0 | ((uchar) (u >> 18));
-               *cursor++ = 0x80 | (((uchar) (u >> 12)) & 0x3f);
-            } else {
-               *cursor++ = 0xe0 | (((uchar) (u >> 12)) & 0x3f);
+               case 0x5c:
+                  retval.append('\\');
+                  break;
+
+               case 0x8:
+                  retval.append('b');
+                  break;
+
+               case 0xc:
+                  retval.append('f');
+                  break;
+
+               case 0xa:
+                  retval.append('n');
+                  break;
+
+               case 0xd:
+                  retval.append('r');
+                  break;
+
+               case 0x9:
+                  retval.append('t');
+                  break;
+
+               default:
+                  retval.append("u00");
+
+                  retval.append(hexdig(uc >> 4));
+                  retval.append(hexdig(uc & 0xf));
             }
-            *cursor++ = 0x80 | (((uchar) (u >> 6)) & 0x3f);
+
+         } else {
+            retval.append(uc);
          }
-         *cursor++ = 0x80 | ((uchar) (u & 0x3f));
+
+      } else {
+         if (uc < 0x0800) {
+            retval.append(0xc0 | (uc >> 6));
+
+         } else {
+
+            if (uc >= 0x10000) {
+               retval.append(0xf0 | (uc >> 18));
+               retval.append(0x80 | ((uc >> 12) & 0x3f));
+
+            } else {
+               retval.append(0xe0 | ((uc >> 12) & 0x3f));
+
+            }
+
+            retval.append(0x80 | ((uc >> 6) & 0x3f));
+         }
+
+         retval.append(0x80 | (uc & 0x3f));
       }
-      ++ch;
+
    }
 
-   ba.resize(cursor - (const uchar *)ba.constData());
-   return ba;
+   return retval;
 }
 
-static void valueToJson(const QJsonPrivate::Base *b, const QJsonPrivate::Value &v, QByteArray &json, int indent,
-                        bool compact)
+static void valueToJson(const QJsonValue &value, QString &retval, int indent, bool compact)
 {
-   QJsonValue::Type type = (QJsonValue::Type)(uint)v.type;
+   QJsonValue::Type type = value.type();
+
    switch (type) {
+
       case QJsonValue::Bool:
-         json += v.toBoolean() ? "true" : "false";
+         retval += value.toBool() ? QString("true") : QString("false");
          break;
-      case QJsonValue::Double:
-         json += QByteArray::number(v.toDouble(b), 'g', 17);
-         break;
+
+      case QJsonValue::Double: {
+            const double d = value.toDouble();
+
+            if (std::isfinite(d)) {
+               retval += QString::number(d, 'g', std::numeric_limits<double>::digits10 + 2);
+
+            } else {
+               retval += "null";
+            }
+
+            break;
+         }
+
       case QJsonValue::String:
-         json += '"';
-         json += escapedString(v.toString(b));
-         json += '"';
+         retval += '"' + escapedString(value.toString()) + '"';
          break;
+
       case QJsonValue::Array:
-         json += compact ? "[" : "[\n";
-         arrayContentToJson(static_cast<QJsonPrivate::Array *>(v.base(b)), json, indent + (compact ? 0 : 1), compact);
-         json += QByteArray(4 * indent, ' ');
-         json += "]";
+         retval += compact ? "[" : "[\n";
+         cs_internal_arrayToStr(value.toArray(), retval, indent + (compact ? 0 : 1), compact);
+         retval += QString(4 * indent, ' ') + "]";
          break;
+
       case QJsonValue::Object:
-         json += compact ? "{" : "{\n";
-         objectContentToJson(static_cast<QJsonPrivate::Object *>(v.base(b)), json, indent + (compact ? 0 : 1), compact);
-         json += QByteArray(4 * indent, ' ');
-         json += "}";
+         retval += compact ? "{" : "{\n";
+         cs_internal_objectToStr(value.toObject(), retval, indent + (compact ? 0 : 1), compact);
+         retval += QString(4 * indent, ' ') + "}";
          break;
+
       case QJsonValue::Null:
       default:
-         json += "null";
+         retval += "null";
    }
 }
 
-static void arrayContentToJson(const QJsonPrivate::Array *a, QByteArray &json, int indent, bool compact)
+static void cs_internal_arrayToStr(const QJsonArray &data, QString &retval, int indent, bool compact)
 {
-   if (!a || !a->length) {
+   if (data.isEmpty()) {
       return;
    }
 
-   QByteArray indentString(4 * indent, ' ');
-
+   QString indentString(4 * indent, ' ');
    uint i = 0;
-   while (1) {
-      json += indentString;
-      valueToJson(a, a->at(i), json, indent, compact);
 
-      if (++i == a->length) {
-         if (!compact) {
-            json += '\n';
+   while (true) {
+      retval += indentString;
+      valueToJson(data.at(i), retval, indent, compact);
+
+      if (++i == data.size()) {
+         if (! compact) {
+            retval += '\n';
          }
+
          break;
       }
 
-      json += compact ? "," : ",\n";
+      retval += compact ? "," : ",\n";
    }
 }
 
-
-static void objectContentToJson(const QJsonPrivate::Object *o, QByteArray &json, int indent, bool compact)
+static void cs_internal_objectToStr(const QJsonObject &data, QString  &retval, int indent, bool compact)
 {
-   if (!o || !o->length) {
+   if (data.isEmpty()) {
       return;
    }
 
-   QByteArray indentString(4 * indent, ' ');
+   QString indentString(4 * indent, ' ');
+   QJsonObject::const_iterator iter = data.begin();
 
-   uint i = 0;
-   while (1) {
-      QJsonPrivate::Entry *e = o->entryAt(i);
-      json += indentString;
-      json += '"';
-      json += escapedString(e->key());
-      json += "\": ";
-      valueToJson(o, e->value, json, indent, compact);
+   while (iter != data.end()) {
+      retval += indentString + '"' + escapedString(iter.key()) + "\": ";
 
-      if (++i == o->length) {
-         if (!compact) {
-            json += '\n';
+      valueToJson(iter.value(), retval, indent, compact);
+
+      if (++iter == data.end()) {
+         if (! compact) {
+            retval += '\n';
          }
+
          break;
       }
 
-      json += compact ? "," : ",\n";
+      retval += compact ? "," : ",\n";
    }
 }
 
-void Writer::objectToJson(const QJsonPrivate::Object *o, QByteArray &json, int indent, bool compact)
+QString QJsonWriter::arrayToString(const QJsonArray &data, int indent, QJsonDocument::JsonFormat format)
 {
-   json.reserve(json.size() + (o ? (int)o->size : 16));
-   json += compact ? "{" : "{\n";
-   objectContentToJson(o, json, indent + (compact ? 0 : 1), compact);
-   json += QByteArray(4 * indent, ' ');
-   json += compact ? "}" : "}\n";
+   bool compact = (format == QJsonDocument::Compact);
+
+   QString retval;
+   retval += compact ? QString("[") : QString("[\n");
+
+   cs_internal_arrayToStr(data, retval, indent + (compact ? 0 : 1), compact);
+
+   retval += QString(4 * indent, ' ');
+   retval += compact ? QString("]") : QString("]\n");
+
+   return retval;
 }
 
-void Writer::arrayToJson(const QJsonPrivate::Array *a, QByteArray &json, int indent, bool compact)
+QString QJsonWriter::objectToString(const QJsonObject &data,  int indent, QJsonDocument::JsonFormat format)
 {
-   json.reserve(json.size() + (a ? (int)a->size : 16));
-   json += compact ? "[" : "[\n";
-   arrayContentToJson(a, json, indent + (compact ? 0 : 1), compact);
-   json += QByteArray(4 * indent, ' ');
-   json += compact ? "]" : "]\n";
+   bool compact = (format == QJsonDocument::Compact);
+
+   QString retval;
+   retval += compact ? QString("{") : QString("{\n");
+
+   cs_internal_objectToStr(data, retval, indent + (compact ? 0 : 1), compact);
+
+   retval += QString(4 * indent, ' ');
+   retval += compact ? QString("}") : QString("}\n");
+
+   return retval;
 }
 
-QT_END_NAMESPACE

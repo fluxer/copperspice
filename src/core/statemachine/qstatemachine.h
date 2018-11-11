@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -116,7 +113,7 @@ class Q_CORE_EXPORT QStateMachine : public QState
 
    CORE_CS_ENUM(RestorePolicy)
 
-   QStateMachine(QObject *parent = 0);
+   QStateMachine(QObject *parent = nullptr);
    ~QStateMachine();
 
    void addState(QAbstractState *state);
@@ -147,7 +144,7 @@ class Q_CORE_EXPORT QStateMachine : public QState
    QSet<QAbstractState *> configuration() const;
 
 #ifndef QT_NO_STATEMACHINE_EVENTFILTER
-   bool eventFilter(QObject *watched, QEvent *event);
+   bool eventFilter(QObject *watched, QEvent *event) override;
 #endif
 
    CORE_CS_SLOT_1(Public, void start())
@@ -163,8 +160,8 @@ class Q_CORE_EXPORT QStateMachine : public QState
    CORE_CS_SIGNAL_2(stopped)
 
  protected:
-   void onEntry(QEvent *event);
-   void onExit(QEvent *event);
+   void onEntry(QEvent *event) override;
+   void onExit(QEvent *event) override;
 
    virtual void beginSelectTransitions(QEvent *event);
    virtual void endSelectTransitions(QEvent *event);
@@ -172,7 +169,7 @@ class Q_CORE_EXPORT QStateMachine : public QState
    virtual void beginMicrostep(QEvent *event);
    virtual void endMicrostep(QEvent *event);
 
-   bool event(QEvent *e);
+   bool event(QEvent *e) override;
 
    QStateMachine(QStateMachinePrivate &dd, QObject *parent);
 

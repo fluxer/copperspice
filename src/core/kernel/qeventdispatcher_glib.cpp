@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -30,6 +27,7 @@
 #include <qcoreapplication.h>
 #include <qsocketnotifier.h>
 
+#include <qalgorithms.h>
 #include <qhash.h>
 #include <qlist.h>
 #include <qpair.h>
@@ -67,8 +65,10 @@ static gboolean socketNotifierSourceCheck(GSource *source)
       if (p->pollfd.revents & G_IO_NVAL) {
          // disable the invalid socket notifier
          static const char *t[] = { "Read", "Write", "Exception" };
+
          qWarning("QSocketNotifier: Invalid socket %d and type '%s', disabling...",
                   p->pollfd.fd, t[int(p->socketNotifier->type())]);
+
          // ### note, modifies src->pollfds!
          p->socketNotifier->setEnabled(false);
       }
@@ -113,9 +113,10 @@ struct GTimerSource {
 
 static gboolean timerSourcePrepareHelper(GTimerSource *src, gint *timeout)
 {
-   timeval tv = { 0l, 0l };
+   timespec tv = { 0l, 0l };
+
    if (!(src->processEventsFlags & QEventLoop::X11ExcludeTimers) && src->timerList.timerWait(tv)) {
-      *timeout = (tv.tv_sec * 1000) + (tv.tv_usec / 1000);
+      *timeout = (tv.tv_sec * 1000) + ((tv.tv_nsec + 999999) / 1000 / 1000);
    } else {
       *timeout = -1;
    }
@@ -284,16 +285,22 @@ static GSourceFuncs postEventSourceFuncs = {
 QEventDispatcherGlibPrivate::QEventDispatcherGlibPrivate(GMainContext *context)
    : mainContext(context)
 {
+#if GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION < 32
    if (qgetenv("QT_NO_THREADED_GLIB").isEmpty()) {
-      static int dummyValue = 0; // only used for its address
+      static int dummyValue = 0;
+
       QMutexLocker locker(QMutexPool::instance()->get(&dummyValue));
-      if (!g_thread_supported()) {
+
+      if (! g_thread_supported()) {
          g_thread_init(NULL);
       }
    }
+#endif
+
 
    if (mainContext) {
       g_main_context_ref(mainContext);
+
    } else {
       QCoreApplication *app = QCoreApplication::instance();
       if (app && QThread::currentThread() == app->thread()) {
@@ -309,24 +316,22 @@ QEventDispatcherGlibPrivate::QEventDispatcherGlibPrivate(GMainContext *context)
 #endif
 
    // setup post event source
-   postEventSource = reinterpret_cast<GPostEventSource *>(g_source_new(&postEventSourceFuncs,
-                     sizeof(GPostEventSource)));
+   postEventSource = reinterpret_cast<GPostEventSource *>(g_source_new(&postEventSourceFuncs, sizeof(GPostEventSource)));
    postEventSource->serialNumber = 1;
    postEventSource->d = this;
    g_source_set_can_recurse(&postEventSource->source, true);
    g_source_attach(&postEventSource->source, mainContext);
 
    // setup socketNotifierSource
-   socketNotifierSource =
-      reinterpret_cast<GSocketNotifierSource *>(g_source_new(&socketNotifierSourceFuncs,
+   socketNotifierSource = reinterpret_cast<GSocketNotifierSource *>(g_source_new(&socketNotifierSourceFuncs,
             sizeof(GSocketNotifierSource)));
+
    (void) new (&socketNotifierSource->pollfds) QList<GPollFDWithQSocketNotifier *>();
    g_source_set_can_recurse(&socketNotifierSource->source, true);
    g_source_attach(&socketNotifierSource->source, mainContext);
 
    // setup normal and idle timer sources
-   timerSource = reinterpret_cast<GTimerSource *>(g_source_new(&timerSourceFuncs,
-                 sizeof(GTimerSource)));
+   timerSource = reinterpret_cast<GTimerSource *>(g_source_new(&timerSourceFuncs, sizeof(GTimerSource)));
    (void) new (&timerSource->timerList) QTimerInfoList();
    timerSource->processEventsFlags = QEventLoop::AllEvents;
    timerSource->runWithIdlePriority = false;

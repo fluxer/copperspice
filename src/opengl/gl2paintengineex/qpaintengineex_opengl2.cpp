@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -1461,11 +1458,12 @@ void QGL2PaintEngineEx::drawStaticTextItem(QStaticTextItem *textItem)
    // don't try to cache huge fonts or vastly transformed fonts
    QFontEngine *fontEngine = textItem->fontEngine();
    const qreal pixelSize = fontEngine->fontDef.pixelSize;
-   if (pixelSize * pixelSize * qAbs(det) < QT_MAX_CACHED_GLYPH_SIZE * QT_MAX_CACHED_GLYPH_SIZE && det >= 0.25f &&
-         det <= 4.f) {
+
+   if (pixelSize * pixelSize * qAbs(det) < QT_MAX_CACHED_GLYPH_SIZE * QT_MAX_CACHED_GLYPH_SIZE && det >= 0.25f && det <= 4.f) {
+
       QFontEngineGlyphCache::Type glyphType = fontEngine->glyphFormat >= 0
-                                              ? QFontEngineGlyphCache::Type(textItem->fontEngine()->glyphFormat)
-                                              : d->glyphCacheType;
+                  ? QFontEngineGlyphCache::Type(textItem->fontEngine()->glyphFormat) : d->glyphCacheType;
+
       if (glyphType == QFontEngineGlyphCache::Raster_RGBMask) {
          if (!QGLFramebufferObject::hasOpenGLFramebufferObjects()
                || d->device->alphaRequested() || s->matrix.type() > QTransform::TxTranslate
@@ -1476,6 +1474,7 @@ void QGL2PaintEngineEx::drawStaticTextItem(QStaticTextItem *textItem)
       }
 
       d->drawCachedGlyphs(glyphType, textItem);
+
    } else {
       QPaintEngineEx::drawStaticTextItem(textItem);
    }
@@ -1519,20 +1518,19 @@ void QGL2PaintEngineEx::drawTextItem(const QPointF &p, const QTextItem &textItem
    float det = s->matrix.determinant();
    bool drawCached = txtype < QTransform::TxProject;
 
-   // don't try to cache huge fonts or vastly transformed fonts
+   // do not try to cache huge fonts or vastly transformed fonts
    const qreal pixelSize = ti.fontEngine->fontDef.pixelSize;
+
    if (pixelSize * pixelSize * qAbs(det) >= QT_MAX_CACHED_GLYPH_SIZE * QT_MAX_CACHED_GLYPH_SIZE ||
-         det < 0.25f || det > 4.f) {
+                  det < 0.25f || det > 4.f) {
       drawCached = false;
    }
 
    QFontEngineGlyphCache::Type glyphType = ti.fontEngine->glyphFormat >= 0
-                                           ? QFontEngineGlyphCache::Type(ti.fontEngine->glyphFormat)
-                                           : d->glyphCacheType;
-
+                  ? QFontEngineGlyphCache::Type(ti.fontEngine->glyphFormat) : d->glyphCacheType;
 
    if (glyphType == QFontEngineGlyphCache::Raster_RGBMask) {
-      if (!QGLFramebufferObject::hasOpenGLFramebufferObjects()
+      if (! QGLFramebufferObject::hasOpenGLFramebufferObjects()
             || d->device->alphaRequested() || txtype > QTransform::TxTranslate
             || (state()->composition_mode != QPainter::CompositionMode_Source
                 && state()->composition_mode != QPainter::CompositionMode_SourceOver)) {
@@ -1544,15 +1542,15 @@ void QGL2PaintEngineEx::drawTextItem(const QPointF &p, const QTextItem &textItem
       QVarLengthArray<QFixedPoint> positions;
       QVarLengthArray<glyph_t> glyphs;
       QTransform matrix = QTransform::fromTranslate(p.x(), p.y());
+
       ti.fontEngine->getGlyphPositions(ti.glyphs, matrix, ti.flags, glyphs, positions);
 
       {
          QStaticTextItem staticTextItem;
-         staticTextItem.chars = const_cast<QChar *>(ti.chars);
+
          staticTextItem.setFontEngine(ti.fontEngine);
-         staticTextItem.glyphs = glyphs.data();
-         staticTextItem.numChars = ti.num_chars;
-         staticTextItem.numGlyphs = glyphs.size();
+         staticTextItem.glyphs         = glyphs.data();
+         staticTextItem.numGlyphs      = glyphs.size();
          staticTextItem.glyphPositions = positions.data();
 
          d->drawCachedGlyphs(glyphType, &staticTextItem);
@@ -1599,8 +1597,7 @@ static inline qreal qt_sRGB_to_linear_RGB(qreal f)
 
 // #define QT_OPENGL_DRAWCACHEDGLYPHS_INDEX_ARRAY_VBO
 
-void QGL2PaintEngineExPrivate::drawCachedGlyphs(QFontEngineGlyphCache::Type glyphType,
-      QStaticTextItem *staticTextItem)
+void QGL2PaintEngineExPrivate::drawCachedGlyphs(QFontEngineGlyphCache::Type glyphType, QStaticTextItem *staticTextItem)
 {
    Q_Q(QGL2PaintEngineEx);
 
@@ -1609,9 +1606,9 @@ void QGL2PaintEngineExPrivate::drawCachedGlyphs(QFontEngineGlyphCache::Type glyp
    void *cacheKey = const_cast<QGLContext *>(QGLContextPrivate::contextGroup(ctx)->context());
    bool recreateVertexArrays = false;
 
-   QGLTextureGlyphCache *cache =
-      (QGLTextureGlyphCache *) staticTextItem->fontEngine()->glyphCache(cacheKey, glyphType, QTransform());
-   if (!cache || cache->cacheType() != glyphType || cache->context() == 0) {
+   QGLTextureGlyphCache *cache = (QGLTextureGlyphCache *) staticTextItem->fontEngine()->glyphCache(cacheKey, glyphType, QTransform());
+
+   if (! cache || cache->cacheType() != glyphType || cache->context() == 0) {
       cache = new QGLTextureGlyphCache(ctx, glyphType, QTransform());
       staticTextItem->fontEngine()->setGlyphCache(cacheKey, cache);
       cache->insert(ctx, cache);
@@ -1620,12 +1617,16 @@ void QGL2PaintEngineExPrivate::drawCachedGlyphs(QFontEngineGlyphCache::Type glyp
 
    if (staticTextItem->userDataNeedsUpdate) {
       recreateVertexArrays = true;
+
    } else if (staticTextItem->userData() == 0) {
       recreateVertexArrays = true;
+
    } else if (staticTextItem->userData()->type != QStaticTextUserData::OpenGLUserData) {
       recreateVertexArrays = true;
+
    } else {
       QOpenGLStaticTextUserData *userData = static_cast<QOpenGLStaticTextUserData *>(staticTextItem->userData());
+
       if (userData->glyphType != glyphType) {
          recreateVertexArrays = true;
       } else if (userData->cacheSerialNumber != cache->serialNumber()) {
@@ -1638,13 +1639,16 @@ void QGL2PaintEngineExPrivate::drawCachedGlyphs(QFontEngineGlyphCache::Type glyp
    // cache so this text is performed before we test if the cache size has changed.
    if (recreateVertexArrays) {
       cache->setPaintEnginePrivate(this);
+
       if (!cache->populate(staticTextItem->fontEngine(), staticTextItem->numGlyphs,
                            staticTextItem->glyphs, staticTextItem->glyphPositions)) {
          // No space for glyphs in cache. We need to reset it and try again.
          cache->clear();
+
          cache->populate(staticTextItem->fontEngine(), staticTextItem->numGlyphs,
                          staticTextItem->glyphs, staticTextItem->glyphPositions);
       }
+
       cache->fillInPendingGlyphs();
    }
 

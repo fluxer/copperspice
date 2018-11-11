@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -186,7 +183,7 @@ void QMotifStyle::timerEvent(QTimerEvent *event)
    if (event->timerId() == d->animateTimer) {
       Q_ASSERT(d->animationFps > 0);
       d->animateStep = d->startTime.elapsed() / (1000 / d->animationFps);
-      foreach (QProgressBar * bar, d->bars) {
+      for (QProgressBar * bar : d->bars) {
          if ((bar->minimum() == 0 && bar->maximum() == 0)) {
             bar->update();
          }
@@ -1184,9 +1181,9 @@ void QMotifStyle::drawControl(ControlElement element, const QStyleOption *opt, Q
                if (!menuitem->icon.isNull())
                   qDrawShadePanel(p, xvis, y + motifItemFrame, maxpmw, h - 2 * motifItemFrame,
                                   opt->palette, true, 1, &opt->palette.brush(QPalette::Midlight));
+
             } else if (!(opt->state & State_Selected)) {
-               p->fillRect(xvis, y + motifItemFrame, maxpmw, h - 2 * motifItemFrame,
-                           opt->palette.brush(QPalette::Button));
+               p->fillRect(xvis, y + motifItemFrame, maxpmw, h - 2 * motifItemFrame, opt->palette.brush(QPalette::Button));
             }
 
             if (!menuitem->icon.isNull()) {             // draw icon
@@ -1239,18 +1236,20 @@ void QMotifStyle::drawControl(ControlElement element, const QStyleOption *opt, Q
             int xm = motifItemFrame + maxpmw + motifItemHMargin;
 
             vrect = visualRect(opt->direction, opt->rect,
-                               QRect(x + xm, y + motifItemVMargin, w - xm - menuitem->tabWidth,
-                                     h - 2 * motifItemVMargin));
+                               QRect(x + xm, y + motifItemVMargin, w - xm - menuitem->tabWidth, h - 2 * motifItemVMargin));
             xvis = vrect.x();
 
             QString s = menuitem->text;
-            if (!s.isNull()) {                        // draw text
-               int t = s.indexOf(QLatin1Char('\t'));
+            if (! s.isEmpty()) {                        // draw text
+               int t = s.indexOf('\t');
                int m = motifItemVMargin;
+
                int text_flags = Qt::AlignVCenter | Qt::TextShowMnemonic | Qt::TextDontClip | Qt::TextSingleLine;
                text_flags |= Qt::AlignLeft;
+
                QFont oldFont = p->font();
                p->setFont(menuitem->font);
+
                if (t >= 0) {                         // draw tab text
                   QRect vr = visualRect(opt->direction, opt->rect,
                                         QRect(x + w - menuitem->tabWidth - motifItemHMargin - motifItemFrame,
@@ -1969,8 +1968,8 @@ QMotifStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt,
       case CT_PushButton:
          if (const QStyleOptionButton *btn = qstyleoption_cast<const QStyleOptionButton *>(opt)) {
             sz = QCommonStyle::sizeFromContents(ct, opt, contentsSize, widget);
-            if (!btn->text.isEmpty() &&
-                  (btn->features & (QStyleOptionButton::AutoDefaultButton | QStyleOptionButton::DefaultButton))) {
+
+            if (! btn->text.isEmpty() && (btn->features & (QStyleOptionButton::AutoDefaultButton | QStyleOptionButton::DefaultButton))) {
                sz.setWidth(qMax(75, sz.width()));
             }
             sz += QSize(0, 1); // magical extra pixel
@@ -1997,7 +1996,7 @@ QMotifStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt,
             // a little bit of border can never harm
             w += 2 * motifItemHMargin + 2 * motifItemFrame;
 
-            if (!mi->text.isNull() && mi->text.indexOf(QLatin1Char('\t')) >= 0)
+            if (! mi->text.isEmpty() && mi->text.indexOf(QLatin1Char('\t')) >= 0)
                // string contains tab
             {
                w += motifTabSpacing;

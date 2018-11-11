@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -62,41 +59,32 @@ namespace Phonon
         class StreamReader : public QAsyncReader, public Phonon::StreamInterface
         {
         public:
-            StreamReader(QBaseFilter *parent, const Phonon::MediaSource &source, const MediaGraph *mg) : 
-              QAsyncReader(parent, getMediaTypes()),
-                  m_seekable(false), m_pos(0), m_size(-1), m_mediaGraph(mg)
+            StreamReader(QBaseFilter *parent, const Phonon::MediaSource &source, const MediaGraph *mg) 
+                  :  QAsyncReader(parent, getMediaTypes()), m_seekable(false), m_pos(0), m_size(-1), m_mediaGraph(mg)
               {
                   connectToSource(source);
               }
 
-              //for Phonon::StreamInterface
-              void writeData(const QByteArray &data)
-              {
+              // for Phonon::StreamInterface
+              void writeData(const QByteArray &data) override               {
                   m_pos += data.size();
                   m_buffer += data;
               }
 
-              void endOfData()
-              {
-              }
+              void endOfData() override { }
 
-              void setStreamSize(qint64 newSize)
-              {
+              void setStreamSize(qint64 newSize) override {
                   QMutexLocker locker(&m_mutex);
                   m_size = newSize;
               }
-
-              void setStreamSeekable(bool s)
-              {
+ 
+              void setStreamSeekable(bool s) override {
                   QMutexLocker locker(&m_mutex);
                   m_seekable = s;
               }
-
-              //virtual pure members
-
-              //implementation from IAsyncReader
-              STDMETHODIMP Length(LONGLONG *total, LONGLONG *available)
-              {
+   
+              // implementation from IAsyncReader
+              STDMETHODIMP Length(LONGLONG *total, LONGLONG *available) override {
                   QMutexLocker locker(&m_mutex);
                   if (total) {
                       *total = m_size;
@@ -109,9 +97,7 @@ namespace Phonon
                   return S_OK;
               }
 
-
-              HRESULT read(LONGLONG pos, LONG length, BYTE *buffer, LONG *actual)
-              {
+              HRESULT read(LONGLONG pos, LONG length, BYTE *buffer, LONG *actual) override {
                   Q_ASSERT(!m_mutex.tryLock());
                   if (m_mediaGraph->isStopping()) {
                       return VFW_E_WRONG_STATE;

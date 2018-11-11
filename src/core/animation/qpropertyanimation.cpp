@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -35,29 +32,32 @@ QT_BEGIN_NAMESPACE
 
 void QPropertyAnimationPrivate::updateMetaProperty()
 {
-   if (!target || propertyName.isEmpty()) {
+   if (! target || propertyName.isEmpty()) {
       propertyType = QVariant::Invalid;
       propertyIndex = -1;
       return;
    }
 
-   //propertyType will be set to a valid type only if there is a Q_PROPERTY
-   //otherwise it will be set to QVariant::Invalid at the end of this function
-   propertyType = targetValue->property(propertyName).userType();
+   // propertyType will be set to a valid type only if there is a Q_PROPERTY
+   // otherwise it will be set to QVariant::Invalid at the end of this function
+
+   propertyType  = targetValue->property(propertyName).userType();
    propertyIndex = targetValue->metaObject()->indexOfProperty(propertyName);
 
    if (propertyType != QVariant::Invalid) {
       convertValues(propertyType);
    }
+
    if (propertyIndex == -1) {
       //there is no Q_PROPERTY on the object
       propertyType = QVariant::Invalid;
       if (!targetValue->dynamicPropertyNames().contains(propertyName)) {
-         qWarning("QPropertyAnimation: you're trying to animate a non-existing property %s of your QObject",
+         qWarning("QPropertyAnimation: Trying to animate a non-existant property %s",
                   propertyName.constData());
       }
+
    } else if (!targetValue->metaObject()->property(propertyIndex).isWritable()) {
-      qWarning("QPropertyAnimation: you're trying to animate the non-writable property %s of your QObject",
+      qWarning("QPropertyAnimation: Trying to animate a read only property %s",
                propertyName.constData());
    }
 }
@@ -73,7 +73,7 @@ void QPropertyAnimationPrivate::updateProperty(const QVariant &newValue)
       return;
    }
 
-   targetValue->setProperty(propertyName.constData(), newValue);
+   targetValue->setProperty(propertyName, newValue);
 }
 
 /*!
@@ -219,19 +219,21 @@ void QPropertyAnimation::updateState(QAbstractAnimation::State newState, QAbstra
 
          // update the default start value
          if (oldState == Stopped) {
-            d->setDefaultStartEndValue(d->targetValue->property(d->propertyName.constData()));
+            d->setDefaultStartEndValue(d->targetValue->property(d->propertyName));
 
-            //let's check if we have a start value and an end value
-            if (!startValue().isValid() && (d->direction == Backward || !d->defaultStartEndValue.isValid())) {
+            // check if we have a start value and an end value
+            if (! startValue().isValid() && (d->direction == Backward || !d->defaultStartEndValue.isValid())) {
+
                qWarning("QPropertyAnimation::updateState (%s, %s, %s): starting an animation without start value",
-                        d->propertyName.constData(), d->target.data()->metaObject()->className(),
-                        qPrintable(d->target.data()->objectName()));
+                        d->propertyName.constData(), csPrintable(d->target.data()->metaObject()->className()),
+                        csPrintable(d->target.data()->objectName()));
             }
 
             if (!endValue().isValid() && (d->direction == Forward || !d->defaultStartEndValue.isValid())) {
+
                qWarning("QPropertyAnimation::updateState (%s, %s, %s): starting an animation without end value",
-                        d->propertyName.constData(), d->target.data()->metaObject()->className(),
-                        qPrintable(d->target.data()->objectName()));
+                        d->propertyName.constData(), csPrintable(d->target.data()->metaObject()->className()),
+                        csPrintable(d->target.data()->objectName()));
             }
          }
       } else if (hash.value(key) == this) {

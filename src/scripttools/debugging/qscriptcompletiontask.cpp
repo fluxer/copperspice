@@ -1,27 +1,26 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
+
+#include <algorithm>
 
 #include "qscriptcompletiontask_p.h"
 #include "qscriptcompletiontaskinterface_p_p.h"
@@ -33,8 +32,8 @@
 #include "qscriptdebuggerjobschedulerinterface_p.h"
 #include "qscriptdebuggerresponse_p.h"
 
-#include <QtCore/qset.h>
-#include <QtCore/qdebug.h>
+#include <qset.h>
+#include <qdebug.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -264,6 +263,7 @@ void QScriptCompletionTask::start()
                d->type = CommandArgumentCompletion;
                QScriptDebuggerJob *job = new QScriptCompleteScriptsJob(arg, d, d->commandScheduler);
                d->jobScheduler->scheduleJob(job);
+
             } else if (argType == QLatin1String("subcommand-name")) {
                for (int i = 0; i < cmd->subCommands().size(); ++i) {
                   QString name = cmd->subCommands().at(i);
@@ -271,12 +271,14 @@ void QScriptCompletionTask::start()
                      d->results.append(name);
                   }
                }
-               qStableSort(d->results);
+               std::stable_sort(d->results);
+
             } else if (argType == QLatin1String("script")) {
                d->completeScriptExpression();
             } else {
                emit finished();
             }
+
             if ((d->type == NoCompletion) && !d->results.isEmpty()) {
                d->position = pos;
                d->length = arg.length();

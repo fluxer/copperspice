@@ -1,19 +1,33 @@
-lib_LTLIBRARIES += lib/libCsPhonon1.la
-lib_libCsPhonon1_la_SOURCES =
+if PHONON
+lib_LTLIBRARIES += lib/libCsPhonon@BUILD_ABI@.la
+endif
 
-lib_libCsPhonon1_la_CXXFLAGS = $(AM_CXXFLAGS) -Iinclude  -Iinclude/phonon -Iprivateinclude/phonon -Iinclude/QtCore \
+lib_libCsPhonon@BUILD_ABI@_la_SOURCES =
+
+lib_libCsPhonon@BUILD_ABI@_la_CXXFLAGS = $(AM_CXXFLAGS) -Iinclude  -Iinclude/phonon -Iprivateinclude/phonon -Iinclude/QtCore \
    -Iinclude/QtGui  -Iinclude/QtNetwork \
    -Iprivateinclude/QtCore -Iprivateinclude -Iprivateinclude/phonon/private  \
    -Isrc/3rdparty/phonon/phonon       \
    -DBUILD_DATE=\"`date +%Y-%m-%d`\"   \
    -DMAKE_PHONON_LIB  \
    -DQT_NO_DBUS  \
-	-DQT_BUILD_PHONON_LIB \
-	-DQT_SHARED   \
-	-DQT_MAKEDLL
+	-DQT_BUILD_PHONON_LIB
 
-lib_libCsPhonon1_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined
-lib_libCsPhonon1_la_LIBADD = lib/libCsCore1.la lib/libCsGui1.la lib/libCsNetwork1.la
+lib_libCsPhonon@BUILD_ABI@_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined
+lib_libCsPhonon@BUILD_ABI@_la_LIBADD = lib/libCsCore@BUILD_ABI@.la lib/libCsGui@BUILD_ABI@.la lib/libCsNetwork@BUILD_ABI@.la
+
+EXTRA_DIST += \
+	src/phonon/CMakeLists.txt
+
+if GLIB
+if PULSEAUDIO_MAINLOOP_GLIB
+lib_libCsPhonon@BUILD_ABI@_la_CXXFLAGS += -DHAVE_PULSEAUDIO $(PULSEAUDIO_MAINLOOP_GLIB_CFLAGS) $(PULSEAUDIO_CFLAGS)
+lib_libCsPhonon@BUILD_ABI@_la_LDFLAGS += $(PULSEAUDIO_LIBS) $(PULSEAUDIO_MAINLOOP_GLIB_LIBS)
+if PULSEAUDIO_DEVICE_MANAGER
+lib_libCsPhonon@BUILD_ABI@_la_CXXFLAGS += -DHAVE_PULSEAUDIO_DEVICE_MANAGER
+endif
+endif
+endif
 
 PHONON_PUBLIC_INCLUDES = \
 	AbstractAudioOutput \
@@ -163,7 +177,7 @@ PHONON_PRIVATE_INCLUDES = \
 
 PHONON_DIRS = src/phonon src/3rdparty/phonon/phonon
 
-lib_libCsPhonon1_la_SOURCES+= \
+lib_libCsPhonon@BUILD_ABI@_la_SOURCES+= \
 	src/3rdparty/phonon/phonon/abstractaudiooutput.cpp \
 	src/3rdparty/phonon/phonon/abstractaudiooutput_p.cpp \
 	src/3rdparty/phonon/phonon/abstractmediastream.cpp \
@@ -207,7 +221,7 @@ PHONON_HEADERS_INSTALLED= \
 
 BUILT_SOURCES+=.phonon-header-deps.mk
 
-$(lib_libCsPhonon1_la_SOURCES) : $(CORE_HEADERS_INSTALLED) $(GUI_HEADERS_INSTALLED) $(NETWORK_HEADERS_INSTALLED) $(PHONON_HEADERS_INSTALLED)
+$(lib_libCsPhonon@BUILD_ABI@_la_SOURCES) : $(CORE_HEADERS_INSTALLED) $(GUI_HEADERS_INSTALLED) $(NETWORK_HEADERS_INSTALLED) $(PHONON_HEADERS_INSTALLED)
 
 -include .phonon-header-deps.mk
 
@@ -305,7 +319,10 @@ noinst_HEADERS+= \
 	$(patsubst %,src/3rdparty/phonon/phonon/%,$(PHONON_3RDPARTY_INCLUDES))
 
 if OSTYPE_WIN
+
+if PHONON
 lib_LTLIBRARIES += lib/phonon_ds9.la
+endif
 
 lib_phonon_ds9_la_SOURCES= \
 	src/3rdparty/phonon/ds9/abstractvideorenderer.cpp \
@@ -329,18 +346,21 @@ lib_phonon_ds9_la_SOURCES= \
 	src/3rdparty/phonon/ds9/videorenderer_vmr9.cpp
 
 lib_phonon_ds9_la_CXXFLAGS=$(AM_CXXFLAGS) -I$(top_srcdir)/src/3rdparty/phonon/ds9/ -Iinclude -Iinclude/QtCore -Iinclude/QtGui \
-      -Isrc/3rdparty/phonon/ds9  -DQT_BUILD_DS9_LIB -DQT_SHARED  -DQT_MAKEDLL
+      -Isrc/3rdparty/phonon/ds9  -DQT_BUILD_DS9_LIB
 
 lib_phonon_ds9_la_LDFLAGS=$(AM_LDFLAGS) -no-undefined -module -lopengl32 -Wl,-lstrmiids -Wl,-ldmoguids -Wl,-luuid -lmsdmo \
       -lole32 -loleaut32 -lgdi32
 
-lib_phonon_ds9_la_LIBADD=lib/libCsCore1.la lib/libCsGui1.la lib/libCsPhonon1.la
+lib_phonon_ds9_la_LIBADD=lib/libCsCore@BUILD_ABI@.la lib/libCsGui@BUILD_ABI@.la lib/libCsPhonon@BUILD_ABI@.la
 
 endif
 
 
 if OSTYPE_LINUX
+
+if PHONON
 lib_LTLIBRARIES += lib/phonon_gstreamer.la
+endif
 
 lib_phonon_gstreamer_la_SOURCES= \
 	src/3rdparty/phonon/gstreamer/abstractrenderer.cpp \
@@ -368,16 +388,19 @@ lib_phonon_gstreamer_la_SOURCES= \
 
 lib_phonon_gstreamer_la_CXXFLAGS=$(AM_CXXFLAGS) -DQT_NO_OPENGL $(GSTREAMER_CFLAGS) $(GSTREAMER_AUDIO_CFLAGS) \
       -I$(top_srcdir)/src/3rdparty/phonon/gstreamer -Iinclude -Iinclude/QtCore -Iinclude/QtGui -Iinclude/phonon \
-      -Isrc/3rdparty/phonon/gstreamer -DQT_BUILD_GSTREAMER_LIB -DQT_SHARED  -DQT_MAKEDLL
+      -Isrc/3rdparty/phonon/gstreamer -DQT_BUILD_GSTREAMER_LIB
 
 lib_phonon_gstreamer_la_LDFLAGS=$(AM_LDFLAGS) -avoid-version -no-undefined -module $(GSTREAMER_LIBS) $(GSTREAMER_AUDIO_LIBS)
-lib_phonon_gstreamer_la_LIBADD=lib/libCsCore1.la lib/libCsGui1.la lib/libCsPhonon1.la
+lib_phonon_gstreamer_la_LIBADD=lib/libCsCore@BUILD_ABI@.la lib/libCsGui@BUILD_ABI@.la lib/libCsPhonon@BUILD_ABI@.la
 
 endif
 
 if OSTYPE_BSD
+
+if PHONON
 lib_LTLIBRARIES += lib/phonon_gstreamer.la
-        
+endif
+
 lib_phonon_gstreamer_la_SOURCES= \
         src/3rdparty/phonon/gstreamer/abstractrenderer.cpp \
         src/3rdparty/phonon/gstreamer/artssink.cpp \
@@ -401,13 +424,13 @@ lib_phonon_gstreamer_la_SOURCES= \
         src/3rdparty/phonon/gstreamer/volumefadereffect.cpp \
         src/3rdparty/phonon/gstreamer/widgetrenderer.cpp \
         src/3rdparty/phonon/gstreamer/x11renderer.cpp
-        
+
 lib_phonon_gstreamer_la_CXXFLAGS=$(AM_CXXFLAGS) -DQT_NO_OPENGL $(GSTREAMER_CFLAGS) $(GSTREAMER_AUDIO_CFLAGS) \
       -I$(top_srcdir)/src/3rdparty/phonon/gstreamer -Iinclude -Iinclude/QtCore -Iinclude/QtGui -Iinclude/phonon \
-      -Isrc/3rdparty/phonon/gstreamer -DQT_BUILD_GSTREAMER_LIB -DQT_SHARED  -DQT_MAKEDLL
+      -Isrc/3rdparty/phonon/gstreamer -DQT_BUILD_GSTREAMER_LIB
 
 lib_phonon_gstreamer_la_LDFLAGS=$(AM_LDFLAGS) -avoid-version -no-undefined -module $(GSTREAMER_LIBS) $(GSTREAMER_AUDIO_LIBS)
-lib_phonon_gstreamer_la_LIBADD=lib/libCsCore1.la lib/libCsGui1.la lib/libCsPhonon1.la
+lib_phonon_gstreamer_la_LIBADD=lib/libCsCore@BUILD_ABI@.la lib/libCsGui@BUILD_ABI@.la lib/libCsPhonon@BUILD_ABI@.la
 
 endif
 
@@ -416,7 +439,10 @@ EXTRA_DIST+= \
 	src/3rdparty/phonon/qt7/videoeffect.h
 
 if OSTYPE_DARWIN
+
+if PHONON
 lib_LTLIBRARIES += lib/phonon_qt7.la
+endif
 
 lib_phonon_qt7_la_SOURCES= \
 	src/3rdparty/phonon/qt7/quicktimevideoplayer.mm \
@@ -444,12 +470,12 @@ lib_phonon_qt7_la_SOURCES= \
 
 lib_phonon_qt7_la_OBJCXXFLAGS=$(AM_CXXFLAGS) -DQT_NO_OPENGL -I$(top_srcdir)/src/3rdparty/phonon/qt7 -Iinclude -Iinclude/QtCore \
       -Iinclude/QtGui -Iinclude/phonon -Isrc/3rdparty/phonon/qt7/ -Iprivateinclude -IprivateInclude/OpenGL \
-      -DQT_BUILD_QT7_LIB  -DQT_SHARED  -DQT_MAKEDLL
+      -DQT_BUILD_QT7_LIB
 
 lib_phonon_qt7_la_LDFLAGS=$(AM_LDFLAGS) -no-undefined -module \
 	-Xarch_i386 -framework QuickTime -Xarch_x86_64 -framework QTKit -framework AppKit  -framework AudioUnit \
    -framework AudioToolbox 	-framework CoreAudio  -framework QuartzCore
 
-lib_phonon_qt7_la_LIBADD=lib/libCsCore1.la lib/libCsGui1.la lib/libCsPhonon1.la lib/libCsOpenGL1.la
+lib_phonon_qt7_la_LIBADD=lib/libCsCore@BUILD_ABI@.la lib/libCsGui@BUILD_ABI@.la lib/libCsPhonon@BUILD_ABI@.la lib/libCsOpenGL@BUILD_ABI@.la
 
 endif

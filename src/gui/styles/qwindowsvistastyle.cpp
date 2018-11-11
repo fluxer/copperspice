@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -785,8 +782,8 @@ void QWindowsVistaStyle::drawPrimitive(PrimitiveElement element, const QStyleOpt
 
             if (hover || selected) {
                if (sectionSize.width() > 0 && sectionSize.height() > 0) {
-                  QString key = QString::fromLatin1("qvdelegate-%1-%2-%3-%4-%5").arg(sectionSize.width())
-                                .arg(sectionSize.height()).arg(selected).arg(active).arg(hover);
+                  QString key = QString::fromLatin1("qvdelegate-%1-%2-%3-%4-%5").formatArg(sectionSize.width())
+                                .formatArg(sectionSize.height()).formatArg(selected).formatArg(active).formatArg(hover);
                   if (!QPixmapCache::find(key, pixmap)) {
                      pixmap = QPixmap(sectionSize);
                      pixmap.fill(Qt::transparent);
@@ -1146,7 +1143,7 @@ void QWindowsVistaStyle::drawControl(ControlElement element, const QStyleOption 
                                                    option->rect, animRect);
                      pixmapSize.setWidth(animRect.width());
                   }
-                  QString name = QString::fromLatin1("qiprogress-%1-%2").arg(pixmapSize.width()).arg(pixmapSize.height());
+                  QString name = QString::fromLatin1("qiprogress-%1-%2").formatArg(pixmapSize.width()).formatArg(pixmapSize.height());
                   QPixmap pixmap;
                   if (!QPixmapCache::find(name, pixmap)) {
                      QImage image(pixmapSize, QImage::Format_ARGB32);
@@ -1171,7 +1168,7 @@ void QWindowsVistaStyle::drawControl(ControlElement element, const QStyleOption 
                   painter->restore();
                }
             } else {
-               qint64 progress = qMax<qint64>(bar->progress, bar->minimum); // workaround for bug in QProgressBar
+               qint64 progress = qMax(bar->progress, bar->minimum); // workaround for bug in QProgressBar
 
                if (vertical) {
                   int maxHeight = option->rect.height();
@@ -1993,7 +1990,7 @@ QSize QWindowsVistaStyle::sizeFromContents(ContentsType type, const QStyleOption
             XPThemeData theme(widget, 0, QLatin1String("MENU"), MENU_POPUPCHECKBACKGROUND, MBI_HOT);
             pGetThemePartSize(theme.handle(), NULL, MENU_POPUPCHECK, 0, NULL, TS_TRUE, &size);
             pGetThemeMargins(theme.handle(), NULL, MENU_POPUPCHECK, 0, TMT_CONTENTMARGINS, NULL, &margins);
-            minimumHeight = qMax<qint32>(size.cy + margins.cyBottomHeight + margins.cyTopHeight, sz.height());
+            minimumHeight = qMax(size.cy + margins.cyBottomHeight + margins.cyTopHeight, sz.height());
             sz.rwidth() += size.cx + margins.cxLeftWidth + margins.cxRightWidth;
          }
 
@@ -2637,7 +2634,8 @@ QWindowsVistaAnimation *QWindowsVistaStylePrivate::widgetAnimation(const QWidget
    if (!widget) {
       return 0;
    }
-   foreach (QWindowsVistaAnimation * a, animations) {
+
+   for (QWindowsVistaAnimation * a : animations) {
       if (a->widget() == widget) {
          return a;
       }

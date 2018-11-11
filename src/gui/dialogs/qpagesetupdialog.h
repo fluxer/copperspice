@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -52,8 +49,8 @@ class Q_GUI_EXPORT QPageSetupDialog : public QAbstractPageSetupDialog
 
    using PageSetupDialogOptions = QFlags<PageSetupDialogOption>;
 
-   explicit QPageSetupDialog(QPrinter *printer, QWidget *parent = 0);
-   explicit QPageSetupDialog(QWidget *parent = 0);
+   explicit QPageSetupDialog(QPrinter *printer, QWidget *parent = nullptr);
+   explicit QPageSetupDialog(QWidget *parent = nullptr);
 
    // obsolete
    void addEnabledOption(PageSetupDialogOption option);
@@ -67,17 +64,21 @@ class Q_GUI_EXPORT QPageSetupDialog : public QAbstractPageSetupDialog
    PageSetupDialogOptions options() const;
 
 #if defined(Q_OS_MAC) || defined(Q_OS_WIN)
-   virtual void setVisible(bool visible);
+   void setVisible(bool visible) override;
 #endif
 
-   virtual int exec();
-   using QDialog::open;
+   int exec() override;
 
-   void open(QObject *receiver, const char *member);
+   using QDialog::open;
+   void open(QObject *receiver, const QString &member);
+
+   QPrinter *printer() {
+      return QAbstractPageSetupDialog::printer();
+   }
 };
 
-#endif // QT_NO_PRINTDIALOG
+#endif
 
 QT_END_NAMESPACE
 
-#endif // QPAGESETUPDIALOG_H
+#endif

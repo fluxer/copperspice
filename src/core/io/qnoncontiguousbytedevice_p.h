@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -44,10 +41,12 @@ class Q_CORE_EXPORT QNonContiguousByteDevice : public QObject
    virtual bool advanceReadPointer(qint64 amount) = 0;
    virtual bool atEnd() = 0;
    virtual bool reset() = 0;
+
    void disableReset();
    bool isResetDisabled() {
       return resetDisabled;
    }
+
    virtual qint64 size() = 0;
    virtual qint64 pos() {
        return -1;
@@ -63,7 +62,7 @@ class Q_CORE_EXPORT QNonContiguousByteDevice : public QObject
  protected:
    QNonContiguousByteDevice();
 
-   bool resetDisabled;  
+   bool resetDisabled;
 };
 
 class Q_CORE_EXPORT QNonContiguousByteDeviceFactory
@@ -72,23 +71,28 @@ class Q_CORE_EXPORT QNonContiguousByteDeviceFactory
    static QNonContiguousByteDevice *create(QIODevice *device);
    static QNonContiguousByteDevice *create(QByteArray *byteArray);
    static QNonContiguousByteDevice *create(QSharedPointer<QRingBuffer> ringBuffer);
+
+   static QSharedPointer<QNonContiguousByteDevice> createShared(QIODevice *device);
+   static QSharedPointer<QNonContiguousByteDevice> createShared(QByteArray *byteArray);
+   static QSharedPointer<QNonContiguousByteDevice> createShared(QSharedPointer<QRingBuffer> ringBuffer);
+
    static QIODevice *wrap(QNonContiguousByteDevice *byteDevice);
 };
 
 // the actual implementations
-//
 
 class QNonContiguousByteDeviceByteArrayImpl : public QNonContiguousByteDevice
 {
  public:
    QNonContiguousByteDeviceByteArrayImpl(QByteArray *ba);
    ~QNonContiguousByteDeviceByteArrayImpl();
-   const char *readPointer(qint64 maximumLength, qint64 &len);
-   bool advanceReadPointer(qint64 amount);
-   bool atEnd();
-   bool reset();
-   qint64 size();
-   qint64 pos();
+
+   const char *readPointer(qint64 maximumLength, qint64 &len) override;
+   bool advanceReadPointer(qint64 amount) override;
+   bool atEnd() override;
+   bool reset() override;
+   qint64 size() override;
+   qint64 pos() override;
 
  protected:
    QByteArray *byteArray;
@@ -100,12 +104,13 @@ class QNonContiguousByteDeviceRingBufferImpl : public QNonContiguousByteDevice
  public:
    QNonContiguousByteDeviceRingBufferImpl(QSharedPointer<QRingBuffer> rb);
    ~QNonContiguousByteDeviceRingBufferImpl();
-   const char *readPointer(qint64 maximumLength, qint64 &len);
-   bool advanceReadPointer(qint64 amount);
-   bool atEnd();
-   bool reset();
-   qint64 size();
-   qint64 pos();
+
+   const char *readPointer(qint64 maximumLength, qint64 &len) override;
+   bool advanceReadPointer(qint64 amount) override;
+   bool atEnd() override;
+   bool reset() override;
+   qint64 size() override;
+   qint64 pos() override;
 
  protected:
    QSharedPointer<QRingBuffer> ringBuffer;
@@ -120,12 +125,13 @@ class QNonContiguousByteDeviceIoDeviceImpl : public QNonContiguousByteDevice
  public:
    QNonContiguousByteDeviceIoDeviceImpl(QIODevice *d);
    ~QNonContiguousByteDeviceIoDeviceImpl();
-   const char *readPointer(qint64 maximumLength, qint64 &len);
-   bool advanceReadPointer(qint64 amount);
-   bool atEnd();
-   bool reset();
-   qint64 size();
-   qint64 pos();
+
+   const char *readPointer(qint64 maximumLength, qint64 &len) override;
+   bool advanceReadPointer(qint64 amount) override;
+   bool atEnd() override;
+   bool reset() override;
+   qint64 size() override;
+   qint64 pos() override;
 
  protected:
    QIODevice *device;
@@ -145,11 +151,12 @@ class QNonContiguousByteDeviceBufferImpl : public QNonContiguousByteDevice
  public:
    QNonContiguousByteDeviceBufferImpl(QBuffer *b);
    ~QNonContiguousByteDeviceBufferImpl();
-   const char *readPointer(qint64 maximumLength, qint64 &len);
-   bool advanceReadPointer(qint64 amount);
-   bool atEnd();
-   bool reset();
-   qint64 size();
+
+   const char *readPointer(qint64 maximumLength, qint64 &len) override;
+   bool advanceReadPointer(qint64 amount) override;
+   bool atEnd() override;
+   bool reset() override;
+   qint64 size() override;
 
  protected:
    QBuffer *buffer;
@@ -163,14 +170,15 @@ class QByteDeviceWrappingIoDevice : public QIODevice
  public:
    QByteDeviceWrappingIoDevice (QNonContiguousByteDevice *bd);
    ~QByteDeviceWrappingIoDevice ();
-   virtual bool isSequential () const;
-   virtual bool atEnd () const;
-   virtual bool reset ();
-   virtual qint64 size () const;
+
+   bool isSequential () const override;
+   bool atEnd () const override;
+   bool reset () override;
+   qint64 size () const override;
 
  protected:
-   virtual qint64 readData ( char *data, qint64 maxSize );
-   virtual qint64 writeData ( const char *data, qint64 maxSize );
+   qint64 readData ( char *data, qint64 maxSize ) override;
+   qint64 writeData ( const char *data, qint64 maxSize ) override;
 
    QNonContiguousByteDevice *byteDevice;
 };

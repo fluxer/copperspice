@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -48,7 +45,7 @@ class MultiItemType : public ItemType
     * and <tt>xs:anyAtomicType</tt>, the display name is
     * "document() | xs:integer | xs:anyAtomicType".
     */
-   virtual QString displayName(const NamePool::Ptr &np) const;
+   QString displayName(const NamePool::Ptr &np) const override;
 
    /**
     * If any of the types this MultiItemType represents matches @p item, it is
@@ -56,7 +53,7 @@ class MultiItemType : public ItemType
     *
     * @returns @c true if any of the housed ItemType instances matches @p item, otherwise @c false
     */
-   virtual bool itemMatches(const Item &item) const;
+   bool itemMatches(const Item &item) const override;
 
    /**
     * If any of the types this MultiItemType represents matches @p other, it is
@@ -64,24 +61,24 @@ class MultiItemType : public ItemType
     *
     * @returns @c true if any of the housed ItemType instances matches @p other, otherwise @c false
     */
-   virtual bool xdtTypeMatches(const ItemType::Ptr &other) const;
+   bool xdtTypeMatches(const ItemType::Ptr &other) const override;
 
    /**
     * @returns @c true if any of the represented types is a node type.
     */
-   virtual bool isNodeType() const;
+   bool isNodeType() const override;
 
    /**
     * @returns @c true if any of the represented types is an atomic type.
     */
-   virtual bool isAtomicType() const;
+   bool isAtomicType() const override;
 
    /**
     * Determines the union type of all the represented types super types. For example,
     * if the represented types are <tt>xs:integer</tt>, <tt>document()</tt>
     * and <tt>xs:string</tt>, <tt>item()</tt> is returned.
     */
-   virtual ItemType::Ptr xdtSuperType() const;
+   ItemType::Ptr xdtSuperType() const override;
 
    /**
     * Determines the union type of all the represented types atomized types. For example,
@@ -89,7 +86,7 @@ class MultiItemType : public ItemType
     * <tt>xs:anyAtomicType</tt> is returned, because that's the super type of <tt>xs:integer</tt>
     * and <tt>xs:untypedAtomic</tt>.
     */
-   virtual ItemType::Ptr atomizedType() const;
+   ItemType::Ptr atomizedType() const override;
 
  private:
    const ItemType::List m_types;

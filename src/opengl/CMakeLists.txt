@@ -1,12 +1,10 @@
 add_definitions(
     -DQT_NO_EGL
     -DQT_BUILD_OPENGL_LIB
-    -DQT_SHARED
-    -DQT_MAKEDLL
 )
 set(EXTRA_OPENGL_LIBS
-    CsCore${BUILD_MAJOR}
-    CsGui${BUILD_MAJOR}
+    CsCore${BUILD_ABI}
+    CsGui${BUILD_ABI}
     ${OPENGL_LIBRARIES}
 )
 set(EXTRA_OPENGL_CXXFLAGS)
@@ -58,7 +56,7 @@ set(OPENGL_INCLUDES
     ${CMAKE_CURRENT_SOURCE_DIR}/qglcolormap.h
     ${CMAKE_CURRENT_SOURCE_DIR}/qglcontext.h
     ${CMAKE_CURRENT_SOURCE_DIR}/qglformat.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/qglframebufferobject.h 
+    ${CMAKE_CURRENT_SOURCE_DIR}/qglframebufferobject.h
     ${CMAKE_CURRENT_SOURCE_DIR}/qglframebufferobjectformat.h
     ${CMAKE_CURRENT_SOURCE_DIR}/qglfunctions.h
     ${CMAKE_CURRENT_SOURCE_DIR}/qglfunctionsprivate.h
@@ -76,10 +74,10 @@ set(OPENGL_INCLUDES
 set(OPENGL_PRIVATE_INCLUDES
     ${CMAKE_CURRENT_SOURCE_DIR}/qgl_p.h
     ${CMAKE_CURRENT_SOURCE_DIR}/qglextensions_p.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/qglframebufferobject_p.h 
+    ${CMAKE_CURRENT_SOURCE_DIR}/qglframebufferobject_p.h
     ${CMAKE_CURRENT_SOURCE_DIR}/qglpaintdevice_p.h
     ${CMAKE_CURRENT_SOURCE_DIR}/qglpixelbuffer_p.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/qglpixmapfilter_p.h 
+    ${CMAKE_CURRENT_SOURCE_DIR}/qglpixmapfilter_p.h
     ${CMAKE_CURRENT_SOURCE_DIR}/qgraphicsshadereffect_p.h
     ${CMAKE_CURRENT_SOURCE_DIR}/qgraphicssystem_gl_p.h
     ${CMAKE_CURRENT_SOURCE_DIR}/qpaintengine_opengl_p.h
@@ -141,6 +139,7 @@ endif()
 
 # TODO: if ${OPENGL_LIBRARIES} is sufficient for all platforms drop
 # hardcoded additions to ${EXTRA_OPENGL_LIBS} and ${EXTRA_OPENGL_LDFLAGS}
+
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
     set(OPENGL_SOURCES
         ${OPENGL_SOURCES}
@@ -157,9 +156,9 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
     add_definitions(
         -DQT_NO_STYLE_GTK
         -DQT_NO_STYLE_WINDOWSVISTA
-        -DQT_MAKEDLL
         -DQT_BUILD_OPENGL_LIB)
-# FIXME: check for COCOA instead?
+
+# TODO: check for COCOA instead?
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     set(OPENGL_SOURCES
         ${OPENGL_SOURCES}
@@ -177,9 +176,15 @@ endif()
 function_variable_fixup("${EXTRA_OPENGL_CXXFLAGS}" EXTRA_OPENGL_CXXFLAGS)
 function_variable_fixup("${EXTRA_OPENGL_LDFLAGS}" EXTRA_OPENGL_LDFLAGS)
 
-add_library(CsOpenGL${BUILD_MAJOR} SHARED ${OPENGL_SOURCES} ${OPENGL_INCLUDES})
-target_link_libraries(CsOpenGL${BUILD_MAJOR} ${EXTRA_OPENGL_LIBS})
-set_target_properties(CsOpenGL${BUILD_MAJOR} PROPERTIES
+add_library(CsOpenGL${BUILD_ABI} SHARED ${OPENGL_SOURCES} ${OPENGL_INCLUDES})
+target_link_libraries(CsOpenGL${BUILD_ABI} ${EXTRA_OPENGL_LIBS})
+
+target_include_directories(CsOpenGL${BUILD_ABI}
+   PUBLIC
+   $<INSTALL_INTERFACE:include/QtOpenGL>
+)
+
+set_target_properties(CsOpenGL${BUILD_ABI} PROPERTIES
     VERSION "0" # for compat
     SOVERSION "0.0.0" # for compat
     COMPILE_FLAGS ${EXTRA_OPENGL_CXXFLAGS}
@@ -188,17 +193,18 @@ set_target_properties(CsOpenGL${BUILD_MAJOR} PROPERTIES
 
 macro_generate_resources("${OPENGL_SOURCES}")
 macro_generate_package(
-    CsOpenGL${BUILD_MAJOR}
+    CsOpenGL${BUILD_ABI}
     QtOpenGL
     "${EXTRA_CORE_CXXFLAGS}"
-    "${EXTRA_CORE_LIBS}"
-    "CsCore${BUILD_MAJOR} CsGui${BUILD_MAJOR}"
+    "CsCore${BUILD_ABI} CsGui${BUILD_ABI}"
 )
 
 install(
-    TARGETS CsOpenGL${BUILD_MAJOR}
+    TARGETS CsOpenGL${BUILD_ABI}
     EXPORT CopperSpiceLibraryTargets ${INSTALL_TARGETS_DEFAULT_ARGS}
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
 install(

@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -53,23 +50,23 @@ class QDateTimeEditPrivate : public QAbstractSpinBoxPrivate, public QDateTimePar
    void init(const QVariant &var);
    void readLocaleSettings();
 
-   void emitSignals(EmitPolicy ep, const QVariant &old);
-   QString textFromValue(const QVariant &f) const;
-   QVariant valueFromText(const QString &f) const;
-   virtual void _q_editorCursorPositionChanged(int oldpos, int newpos);
-   virtual void interpret(EmitPolicy ep);
-   virtual void clearCache() const;
+   void emitSignals(EmitPolicy ep, const QVariant &old) override;
+   QString textFromValue(const QVariant &f) const override;
+   QVariant valueFromText(const QString &f) const override;
+   void _q_editorCursorPositionChanged(int oldpos, int newpos) override;
+   void interpret(EmitPolicy ep) override;
+   void clearCache() const override;
 
-   QDateTime validateAndInterpret(QString &input, int &, QValidator::State &state,
-                                  bool fixup = false) const;
+   QDateTime validateAndInterpret(QString &input, int &, QValidator::State &state, bool fixup = false) const;
    void clearSection(int index);
-   virtual QString displayText() const {
+
+   QString displayText() const override {
       return edit->text();   // this is from QDateTimeParser
    }
 
    int absoluteIndex(QDateTimeEdit::Section s, int index) const;
    int absoluteIndex(const SectionNode &s) const;
-   void updateEdit();
+   void updateEdit() override;
    QDateTime stepBy(int index, int steps, bool test = false) const;
    int sectionAt(int pos) const;
    int closestSection(int index, bool forward) const;
@@ -79,15 +76,15 @@ class QDateTimeEditPrivate : public QAbstractSpinBoxPrivate, public QDateTimePar
    void updateCache(const QVariant &val, const QString &str) const;
 
    void updateTimeSpec();
-   virtual QDateTime getMinimum() const {
+   QDateTime getMinimum() const override {
       return minimum.toDateTime();
    }
 
-   virtual QDateTime getMaximum() const {
+   QDateTime getMaximum() const override {
       return maximum.toDateTime();
    }
  
-   virtual QLocale locale() const {
+   QLocale locale() const override {
       return q_func()->locale();
    }
 
@@ -95,15 +92,15 @@ class QDateTimeEditPrivate : public QAbstractSpinBoxPrivate, public QDateTimePar
       return textFromValue(var);
    }
   
-   QString getAmPmText(AmPm ap, Case cs) const;
-   int cursorPosition() const {
+   QString getAmPmText(AmPm ap, Case cs) const override;
+   int cursorPosition() const override {
       return edit ? edit->cursorPosition() : -1;
    }
 
-   virtual QStyle::SubControl newHoverControl(const QPoint &pos);
-   virtual void updateEditFieldGeometry();
-   virtual QVariant getZeroVariant() const;
-   virtual void setRange(const QVariant &min, const QVariant &max);
+   QStyle::SubControl newHoverControl(const QPoint &pos) override;
+   void updateEditFieldGeometry() override;
+   QVariant getZeroVariant() const override;
+   void setRange(const QVariant &min, const QVariant &max) override;
 
    void _q_resetButton();
    void updateArrow(QStyle::StateFlag state);
@@ -138,7 +135,7 @@ class QCalendarPopup : public QWidget
    GUI_CS_OBJECT(QCalendarPopup)
 
  public:
-   QCalendarPopup(QWidget *parent = 0, QCalendarWidget *cw = 0);
+   QCalendarPopup(QWidget *parent = nullptr, QCalendarWidget *cw = 0);
    QDate selectedDate() {
       return verifyCalendarInstance()->selectedDate();
    }
@@ -165,10 +162,10 @@ class QCalendarPopup : public QWidget
    GUI_CS_SIGNAL_2(resetButton)
 
  protected:
-   void hideEvent(QHideEvent *);
-   void mousePressEvent(QMouseEvent *e);
-   void mouseReleaseEvent(QMouseEvent *);
-   bool event(QEvent *e);
+   void hideEvent(QHideEvent *) override;
+   void mousePressEvent(QMouseEvent *e) override;
+   void mouseReleaseEvent(QMouseEvent *) override;
+   bool event(QEvent *e) override;
 
  private :
    GUI_CS_SLOT_1(Private, void dateSelected(const QDate &date))

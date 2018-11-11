@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -45,8 +42,6 @@
 #if defined(Q_WS_QPA)
 #include <QtGui/QPlatformGLContext>
 #endif
-
-QT_BEGIN_NAMESPACE
 
 class QGLContext;
 class QGLOverlayWidget;
@@ -76,9 +71,10 @@ class QWSGLWindowSurface;
 class QEglContext;
 #endif
 
-QT_BEGIN_INCLUDE_NAMESPACE
 #include <qglextensions_p.h>
-QT_END_INCLUDE_NAMESPACE
+
+QString cs_glGetString(GLenum data);
+QString cs_glGetStringI(GLenum data, GLuint index);
 
 class QGLFormatPrivate
 {
@@ -152,7 +148,8 @@ class QGLWidgetPrivate : public QWidgetPrivate
    void initContext(QGLContext *context, const QGLWidget *shareWidget);
    bool renderCxPm(QPixmap *pixmap);
    void cleanupColormaps();
-   void aboutToDestroy() {
+
+   void aboutToDestroy() override{
       if (glcx) {
          glcx->reset();
       }
@@ -287,7 +284,7 @@ class QGLTemporaryContextPrivate;
 class QGLTemporaryContext
 {
  public:
-   QGLTemporaryContext(bool directRendering = true, QWidget *parent = 0);
+   QGLTemporaryContext(bool directRendering = true, QWidget *parent = nullptr);
    ~QGLTemporaryContext();
 
  private:
@@ -711,7 +708,7 @@ class QGLContextGroupResource : public QGLContextGroupResourceBase
    }
 
  protected:
-   void freeResource(void *resource) {
+   void freeResource(void *resource) override {
       delete reinterpret_cast<T *>(resource);
    }
 };
@@ -821,34 +818,19 @@ class Q_OPENGL_EXPORT QGLSharedResourceGuard
    friend class QGLContextGroup;
 };
 
-
 class QGLExtensionMatcher
 {
  public:
-   QGLExtensionMatcher(const char *str);
+   QGLExtensionMatcher(const QString &str);
    QGLExtensionMatcher();
 
-   bool match(const char *str) const {
-      int str_length = qstrlen(str);
-
-      Q_ASSERT(str);
-      Q_ASSERT(str_length > 0);
-      Q_ASSERT(str[str_length - 1] != ' ');
-
-      for (int i = 0; i < m_offsets.size(); ++i) {
-         const char *extension = m_extensions.constData() + m_offsets.at(i);
-         if (qstrncmp(extension, str, str_length) == 0 && extension[str_length] == ' ') {
-            return true;
-         }
-      }
-      return false;
+   bool match(const QString &str) const {
+      return m_extensions.contains(str);
    }
 
  private:
-   void init(const char *str);
-
-   QByteArray m_extensions;
-   QVector<int> m_offsets;
+   void init(const QString &str);
+   QStringList m_extensions;
 };
 
 
@@ -870,6 +852,5 @@ class QGLEngineThreadStorage
  private:
    QThreadStorage<QPaintEngine *> storage;
 };
-QT_END_NAMESPACE
 
 #endif // QGL_P_H

@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -101,11 +98,13 @@ static int qt_accAmpIndex(const QString &text)
 
    int fa = 0;
    QChar ac;
-   while ((fa = text.indexOf(QLatin1Char('&'), fa)) != -1) {
+
+   while ((fa = text.indexOf('&', fa)) != -1) {
       ++fa;
+
       if (fa < text.length()) {
          // ignore "&&"
-         if (text.at(fa) == QLatin1Char('&')) {
+         if (text.at(fa) == '&') {
             ++fa;
             continue;
          } else {
@@ -136,8 +135,9 @@ QString Q_GUI_EXPORT qt_accStripAmp(const QString &text)
 QString Q_GUI_EXPORT qt_accHotKey(const QString &text)
 {
    int ampIndex = qt_accAmpIndex(text);
+
    if (ampIndex != -1) {
-      return (QString)QKeySequence(Qt::ALT) + text.at(ampIndex + 1);
+      return QKeySequence(Qt::ALT).toString() + text.at(ampIndex + 1);
    }
 
    return QString();
@@ -160,31 +160,6 @@ class QAccessibleWidgetPrivate : public QAccessible
    const QAccessibleInterface *asking;
 };
 
-/*!
-    \class QAccessibleWidget
-    \brief The QAccessibleWidget class implements the QAccessibleInterface for QWidgets.
-
-    \ingroup accessibility
-
-    This class is convenient to use as a base class for custom
-    implementations of QAccessibleInterfaces that provide information
-    about widget objects.
-
-    The class provides functions to retrieve the parentObject() (the
-    widget's parent widget), and the associated widget(). Controlling
-    signals can be added with addControllingSignal(), and setters are
-    provided for various aspects of the interface implementation, for
-    example setValue(), setDescription(), setAccelerator(), and
-    setHelp().
-
-    \sa QAccessible, QAccessibleObject
-*/
-
-/*!
-    Creates a QAccessibleWidget object for widget \a w.
-    \a role and \a name are optional parameters that set the object's
-    role and name properties.
-*/
 QAccessibleWidget::QAccessibleWidget(QWidget *w, Role role, const QString &name)
    : QAccessibleObject(w)
 {
@@ -224,7 +199,6 @@ QObject *QAccessibleWidget::parentObject() const
    return parent;
 }
 
-/*! \reimp */
 int QAccessibleWidget::childAt(int x, int y) const
 {
    QWidget *w = widget();
@@ -259,18 +233,19 @@ int QAccessibleWidget::childAt(int x, int y) const
    return 0;
 }
 
-/*! \reimp */
 QRect QAccessibleWidget::rect(int child) const
 {
    if (child) {
       qWarning("QAccessibleWidget::rect: This implementation does not support subelements! "
-               "(ID %d unknown for %s)", child, widget()->metaObject()->className());
+               "(ID %d unknown for %s)", child, csPrintable(widget()->metaObject()->className()));
    }
 
    QWidget *w = widget();
+
    if (!w->isVisible()) {
       return QRect();
    }
+
    QPoint wpos = w->mapToGlobal(QPoint(0, 0));
 
    return QRect(wpos.x(), wpos.y(), w->width(), w->height());
@@ -280,76 +255,45 @@ QRect QAccessibleWidget::rect(int child) const
 class QACConnectionObject : public QObject
 {
  public:
-   inline bool isSender(const QObject *receiver, const char *signal) const {
+   bool isSender(const QObject *receiver, const QString &signal) const {
       return CSInternalSender::isSender(this, receiver, signal);
    }
 
-   inline QObjectList receiverList(const char *signal) const {
+   QObjectList receiverList(const QString &signal) const {
       return CSInternalSender::receiverList(this, signal);
    }
 
-   inline QObjectList senderList() const {
+   QObjectList senderList() const {
       return CSInternalSender::senderList(this);
    }
 };
 
-
 void QAccessibleWidget::addControllingSignal(const QString &signal)
 {
-   QByteArray s = QMetaObject::normalizedSignature(signal.toAscii());
+   QString s = QMetaObject::normalizedSignature(signal);
+
    if (object()->metaObject()->indexOfSignal(s) < 0) {
-      qWarning("Signal %s unknown in %s", s.constData(), object()->metaObject()->className());
+      qWarning("Signal %s unknown in %s", csPrintable(s), csPrintable(object()->metaObject()->className()));
    }
-   d->primarySignals << QLatin1String(s);
+
+   d->primarySignals << s;
 }
 
-/*!
-    Sets the value of this interface implementation to \a value.
-
-    The default implementation of text() returns the set value for
-    the Value text.
-
-    Note that the object wrapped by this interface is not modified.
-*/
 void QAccessibleWidget::setValue(const QString &value)
 {
    d->value = value;
 }
 
-/*!
-    Sets the description of this interface implementation to \a desc.
-
-    The default implementation of text() returns the set value for
-    the Description text.
-
-    Note that the object wrapped by this interface is not modified.
-*/
 void QAccessibleWidget::setDescription(const QString &desc)
 {
    d->description = desc;
 }
 
-/*!
-    Sets the help of this interface implementation to \a help.
-
-    The default implementation of text() returns the set value for
-    the Help text.
-
-    Note that the object wrapped by this interface is not modified.
-*/
 void QAccessibleWidget::setHelp(const QString &help)
 {
    d->help = help;
 }
 
-/*!
-    Sets the accelerator of this interface implementation to \a accel.
-
-    The default implementation of text() returns the set value for
-    the Accelerator text.
-
-    Note that the object wrapped by this interface is not modified.
-*/
 void QAccessibleWidget::setAccelerator(const QString &accel)
 {
    d->accelerator = accel;
@@ -361,43 +305,48 @@ static inline bool isAncestor(const QObject *obj, const QObject *child)
       if (child == obj) {
          return true;
       }
+
       child = child->parent();
    }
+
    return false;
 }
 
-
-/*! \reimp */
 QAccessible::Relation QAccessibleWidget::relationTo(int child,
-      const QAccessibleInterface *other, int otherChild) const
+                  const QAccessibleInterface *other, int otherChild) const
 {
    Relation relation = Unrelated;
-   if (d->asking == this) { // recursive call
+
+   if (d->asking == this) {
+      // recursive call
       return relation;
    }
 
-   QObject *o = other ? other->object() : 0;
-   if (!o) {
+   QObject *obj = other ? other->object() : nullptr;
+   if (! obj) {
       return relation;
    }
 
    QWidget *focus = widget()->focusWidget();
-   if (object() == focus && isAncestor(o, focus)) {
+   if (object() == focus && isAncestor(obj, focus)) {
       relation |= FocusChild;
    }
 
    QACConnectionObject *connectionObject = (QACConnectionObject *)object();
+
    for (int sig = 0; sig < d->primarySignals.count(); ++sig) {
-      if (connectionObject->isSender(o, d->primarySignals.at(sig).toAscii())) {
+      if (connectionObject->isSender(obj, d->primarySignals.at(sig))) {
          relation |= Controller;
          break;
       }
    }
-   // test for passive relationships.
-   // d->asking protects from endless recursion.
+
+   // test for passive relationships
+   // d->asking protects from endless recursion
+
    d->asking = this;
    int inverse = other->relationTo(otherChild, this, child);
-   d->asking = 0;
+   d->asking = nullptr;
 
    if (inverse & Controller) {
       relation |= Controlled;
@@ -406,75 +355,86 @@ QAccessible::Relation QAccessibleWidget::relationTo(int child,
       relation |= Labelled;
    }
 
-   if (o == object()) {
-      if (child && !otherChild) {
+   if (obj == object()) {
+      if (child && ! otherChild) {
          return relation | Child;
       }
-      if (!child && otherChild) {
+
+      if (! child && otherChild) {
          return relation | Ancestor;
       }
-      if (!child && !otherChild) {
+
+      if (! child && ! otherChild) {
          return relation | Self;
       }
    }
 
    QObject *parent = object()->parent();
-   if (o == parent) {
+   if (obj == parent) {
       return relation | Child;
    }
 
-   if (o->parent() == parent) {
+   if (obj->parent() == parent) {
       relation |= Sibling;
-      QAccessibleInterface *sibIface = QAccessible::queryAccessibleInterface(o);
+      QAccessibleInterface *sibIface = QAccessible::queryAccessibleInterface(obj);
       Q_ASSERT(sibIface);
+
       QRect wg = rect(0);
       QRect sg = sibIface->rect(0);
+
       if (wg.intersects(sg)) {
-         QAccessibleInterface *pIface = 0;
+         QAccessibleInterface *pIface = nullptr;
          sibIface->navigate(Ancestor, 1, &pIface);
+
          if (pIface && !((sibIface->state(0) | state(0)) & Invisible)) {
             int wi = pIface->indexOfChild(this);
             int si = pIface->indexOfChild(sibIface);
 
             if (wi > si) {
                relation |= QAccessible::Covers;
+
             } else {
                relation |= QAccessible::Covered;
             }
          }
          delete pIface;
+
       } else {
          QPoint wc = wg.center();
          QPoint sc = sg.center();
+
          if (wc.x() < sc.x()) {
             relation |= QAccessible::Left;
+
          } else if (wc.x() > sc.x()) {
             relation |= QAccessible::Right;
          }
+
          if (wc.y() < sc.y()) {
             relation |= QAccessible::Up;
+
          } else if (wc.y() > sc.y()) {
             relation |= QAccessible::Down;
          }
       }
+
       delete sibIface;
 
       return relation;
    }
 
-   if (isAncestor(o, object())) {
+   if (isAncestor(obj, object())) {
       return relation | Descendent;
    }
-   if (isAncestor(object(), o)) {
+
+   if (isAncestor(object(), obj)) {
       return relation | Ancestor;
    }
 
    return relation;
 }
 
-/*! \reimp */
-int QAccessibleWidget::navigate(RelationFlag relation, int entry,
-                                QAccessibleInterface **target) const
+int QAccessibleWidget::navigate(RelationFlag relation, int entry, QAccessibleInterface **target) const
 {
    if (!target) {
       return -1;
@@ -785,8 +745,10 @@ int QAccessibleWidget::navigate(RelationFlag relation, int entry,
             }
          }
          break;
+
       case Labelled: // only implemented in subclasses
          break;
+
       case Controller:
          if (entry > 0) {
             // check all senders we are connected to,
@@ -794,9 +756,11 @@ int QAccessibleWidget::navigate(RelationFlag relation, int entry,
             QACConnectionObject *connectionObject = (QACConnectionObject *)object();
             QObjectList allSenders = connectionObject->senderList();
             QObjectList senders;
+
             for (int s = 0; s < allSenders.size(); ++s) {
                QObject *sender = allSenders.at(s);
                QAccessibleInterface *candidate = QAccessible::queryAccessibleInterface(sender);
+
                if (!candidate) {
                   continue;
                }
@@ -810,19 +774,23 @@ int QAccessibleWidget::navigate(RelationFlag relation, int entry,
             }
          }
          break;
+
       case Controlled:
          if (entry > 0) {
             QObjectList allReceivers;
             QACConnectionObject *connectionObject = (QACConnectionObject *)object();
+
             for (int sig = 0; sig < d->primarySignals.count(); ++sig) {
-               QObjectList receivers = connectionObject->receiverList(d->primarySignals.at(sig).toAscii());
+               QObjectList receivers = connectionObject->receiverList(d->primarySignals.at(sig));
                allReceivers += receivers;
             }
+
             if (entry <= allReceivers.size()) {
                targetObject = allReceivers.at(entry - 1);
             }
          }
          break;
+
       default:
          break;
    }
@@ -831,14 +799,12 @@ int QAccessibleWidget::navigate(RelationFlag relation, int entry,
    return *target ? 0 : -1;
 }
 
-/*! \reimp */
 int QAccessibleWidget::childCount() const
 {
    QWidgetList cl = childWidgets(widget());
    return cl.size();
 }
 
-/*! \reimp */
 int QAccessibleWidget::indexOfChild(const QAccessibleInterface *child) const
 {
    QWidgetList cl = childWidgets(widget());
@@ -852,7 +818,6 @@ int QAccessibleWidget::indexOfChild(const QAccessibleInterface *child) const
 // from qwidget.cpp
 extern QString qt_setWindowTitle_helperHelper(const QString &, const QWidget *);
 
-/*! \reimp */
 QString QAccessibleWidget::text(Text t, int child) const
 {
    QString str;
@@ -913,7 +878,6 @@ QString QAccessibleWidget::text(Text t, int child) const
 
 #ifndef QT_NO_ACTION
 
-/*! \reimp */
 int QAccessibleWidget::userActionCount(int child) const
 {
    if (child) {
@@ -922,7 +886,6 @@ int QAccessibleWidget::userActionCount(int child) const
    return widget()->actions().count();
 }
 
-/*! \reimp */
 QString QAccessibleWidget::actionText(int action, Text t, int child) const
 {
    if (action == DefaultAction) {
@@ -950,7 +913,6 @@ QString QAccessibleWidget::actionText(int action, Text t, int child) const
    return QAccessibleObject::actionText(action, t, child);
 }
 
-/*! \reimp */
 bool QAccessibleWidget::doAction(int action, int child, const QVariantList &params)
 {
    if (action == SetFocus || action == DefaultAction) {
@@ -980,7 +942,6 @@ bool QAccessibleWidget::doAction(int action, int child, const QVariantList &para
 
 #endif // QT_NO_ACTION
 
-/*! \reimp */
 QAccessible::Role QAccessibleWidget::role(int child) const
 {
    if (!child) {
@@ -1001,7 +962,6 @@ QAccessible::Role QAccessibleWidget::role(int child) const
    return NoRole;
 }
 
-/*! \reimp */
 QAccessible::State QAccessibleWidget::state(int child) const
 {
    if (child) {
@@ -1035,7 +995,7 @@ QAccessible::State QAccessibleWidget::state(int child) const
    return state;
 }
 
-// ### Qt 5: remove me - binary compatibility hack
+// ### Qt5: remove me - binary compatibility hack
 QAccessibleWidgetEx::QAccessibleWidgetEx(QWidget *o, Role role, const QString &name)
    : QAccessibleObjectEx(o)
 {

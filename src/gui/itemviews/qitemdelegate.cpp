@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -74,12 +71,14 @@ class QItemDelegatePrivate
    }
 
    inline QIcon::Mode iconMode(QStyle::State state) const {
-      if (!(state & QStyle::State_Enabled)) {
+      if (! (state & QStyle::State_Enabled)) {
          return QIcon::Disabled;
       }
+
       if (state & QStyle::State_Selected) {
          return QIcon::Selected;
       }
+
       return QIcon::Normal;
    }
 
@@ -88,11 +87,9 @@ class QItemDelegatePrivate
    }
 
    inline static QString replaceNewLine(QString text) {
-      const QChar nl = QLatin1Char('\n');
-      for (int i = 0; i < text.count(); ++i)
-         if (text.at(i) == nl) {
-            text[i] = QChar::LineSeparator;
-         }
+      const QChar ch = QChar::LineSeparator;
+      text.replace('\n', ch);
+
       return text;
    }
 
@@ -410,9 +407,9 @@ void QItemDelegate::setEditorData(QWidget *editor, const QModelIndex &index) con
    Q_D(const QItemDelegate);
 
    QVariant v = index.data(Qt::EditRole);
-   QByteArray n = editor->metaObject()->userProperty().name();
+   QString n  = editor->metaObject()->userProperty().name();
 
-   // ### Qt 5: remove
+   // ### Qt5: remove
    // A work-around for missing "USER true" in qdatetimeedit.h for
    // QTimeEdit's time property and QDateEdit's date property.
    // It only triggers if the default user property "dateTime" is
@@ -426,14 +423,13 @@ void QItemDelegate::setEditorData(QWidget *editor, const QModelIndex &index) con
       }
    }
 
-   // ### Qt 5: give QComboBox a USER property
+   // ### Qt5: give QComboBox a USER property
    if (n.isEmpty() && editor->inherits("QComboBox"))  {
       n = d->editorFactory()->valuePropertyName(static_cast<QVariant::Type>(v.userType()));
    }
 
    if (n.isEmpty()) {
-      qWarning("QItemDelegate::setEditorData() No userProperty found for %s",
-               editor->metaObject()->className() );
+      qWarning("QItemDelegate::setEditorData() No userProperty found for %s", csPrintable(editor->metaObject()->className()) );
 
    } else {
       if (! v.isValid())  {
@@ -445,17 +441,6 @@ void QItemDelegate::setEditorData(QWidget *editor, const QModelIndex &index) con
 
 #endif
 }
-
-/*!
-    Gets data from the \a editor widget and stores it in the specified
-    \a model at the item \a index.
-
-    The default implementation gets the value to be stored in the data
-    model from the \a editor widget's \l {Qt's Property System} {user
-    property}.
-
-    \sa QMetaProperty::isUser()
-*/
 
 void QItemDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const
 {
@@ -469,7 +454,7 @@ void QItemDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, con
    Q_ASSERT(model);
    Q_ASSERT(editor);
 
-   QByteArray n = editor->metaObject()->userProperty().name();
+   QString n = editor->metaObject()->userProperty().name();
 
    if (n.isEmpty()) {
       n = d->editorFactory()->valuePropertyName(static_cast<QVariant::Type>(model->data(index, Qt::EditRole).userType()));
@@ -488,7 +473,7 @@ void QItemDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, con
 
 void QItemDelegate::updateEditorGeometry(QWidget *editor, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
-   if (!editor) {
+   if (! editor) {
       return;
    }
 
@@ -541,11 +526,12 @@ void QItemDelegate::drawDisplay(QPainter *painter, const QStyleOptionViewItem &o
 {
    Q_D(const QItemDelegate);
 
-   QPalette::ColorGroup cg = option.state & QStyle::State_Enabled
-                             ? QPalette::Normal : QPalette::Disabled;
+   QPalette::ColorGroup cg = option.state & QStyle::State_Enabled ? QPalette::Normal : QPalette::Disabled;
+
    if (cg == QPalette::Normal && !(option.state & QStyle::State_Active)) {
       cg = QPalette::Inactive;
    }
+
    if (option.state & QStyle::State_Selected) {
       painter->fillRect(rect, option.palette.brush(cg, QPalette::Highlight));
       painter->setPen(option.palette.color(cg, QPalette::HighlightedText));
@@ -568,8 +554,10 @@ void QItemDelegate::drawDisplay(QPainter *painter, const QStyleOptionViewItem &o
 
    const QWidget *widget = d->widget(option);
    QStyle *style = widget ? widget->style() : QApplication::style();
+
    const int textMargin = style->pixelMetric(QStyle::PM_FocusFrameHMargin, 0, widget) + 1;
    QRect textRect = rect.adjusted(textMargin, 0, -textMargin, 0); // remove width padding
+
    const bool wrapText = opt.features & QStyleOptionViewItemV2::WrapText;
    d->textOption.setWrapMode(wrapText ? QTextOption::WordWrap : QTextOption::ManualWrap);
    d->textOption.setTextDirection(option.direction);
@@ -580,39 +568,40 @@ void QItemDelegate::drawDisplay(QPainter *painter, const QStyleOptionViewItem &o
 
    QSizeF textLayoutSize = d->doTextLayout(textRect.width());
 
-   if (textRect.width() < textLayoutSize.width()
-         || textRect.height() < textLayoutSize.height()) {
+   if (textRect.width() < textLayoutSize.width() || textRect.height() < textLayoutSize.height()) {
       QString elided;
       int start = 0;
-      int end = text.indexOf(QChar::LineSeparator, start);
+      int end   = text.indexOf(QChar(QChar::LineSeparator), start);
+
       if (end == -1) {
          elided += option.fontMetrics.elidedText(text, option.textElideMode, textRect.width());
+
       } else {
          while (end != -1) {
-            elided += option.fontMetrics.elidedText(text.mid(start, end - start),
-                                                    option.textElideMode, textRect.width());
+            elided += option.fontMetrics.elidedText(text.mid(start, end - start), option.textElideMode, textRect.width());
             elided += QChar::LineSeparator;
             start = end + 1;
-            end = text.indexOf(QChar::LineSeparator, start);
+            end = text.indexOf(QChar(QChar::LineSeparator), start);
          }
-         //let's add the last line (after the last QChar::LineSeparator)
-         elided += option.fontMetrics.elidedText(text.mid(start),
-                                                 option.textElideMode, textRect.width());
+
+         // add the last line (after the last QChar::LineSeparator)
+         elided += option.fontMetrics.elidedText(text.mid(start), option.textElideMode, textRect.width());
       }
+
       d->textLayout.setText(elided);
       textLayoutSize = d->doTextLayout(textRect.width());
    }
 
    const QSize layoutSize(textRect.width(), int(textLayoutSize.height()));
-   const QRect layoutRect = QStyle::alignedRect(option.direction, option.displayAlignment,
-                            layoutSize, textRect);
+   const QRect layoutRect = QStyle::alignedRect(option.direction, option.displayAlignment, layoutSize, textRect);
+
    // if we still overflow even after eliding the text, enable clipping
-   if (!hasClipping() && (textRect.width() < textLayoutSize.width()
-                          || textRect.height() < textLayoutSize.height())) {
+   if (!hasClipping() && (textRect.width() < textLayoutSize.width() || textRect.height() < textLayoutSize.height())) {
       painter->save();
       painter->setClipRect(layoutRect);
       d->textLayout.draw(painter, layoutRect.topLeft(), QVector<QTextLayout::FormatRange>(), layoutRect);
       painter->restore();
+
    } else {
       d->textLayout.draw(painter, layoutRect.topLeft(), QVector<QTextLayout::FormatRange>(), layoutRect);
    }
@@ -626,18 +615,18 @@ void QItemDelegate::drawDecoration(QPainter *painter, const QStyleOptionViewItem
                                    const QRect &rect, const QPixmap &pixmap) const
 {
    Q_D(const QItemDelegate);
+
    // if we have an icon, we ignore the pixmap
    if (!d->tmp.icon.isNull()) {
-      d->tmp.icon.paint(painter, rect, option.decorationAlignment,
-                        d->tmp.mode, d->tmp.state);
+      d->tmp.icon.paint(painter, rect, option.decorationAlignment, d->tmp.mode, d->tmp.state);
       return;
    }
 
    if (pixmap.isNull() || !rect.isValid()) {
       return;
    }
-   QPoint p = QStyle::alignedRect(option.direction, option.decorationAlignment,
-                                  pixmap.size(), rect).topLeft();
+   QPoint p = QStyle::alignedRect(option.direction, option.decorationAlignment, pixmap.size(), rect).topLeft();
+
    if (option.state & QStyle::State_Selected) {
       QPixmap *pm = selected(pixmap, option.palette, option.state & QStyle::State_Enabled);
       painter->drawPixmap(p, *pm);

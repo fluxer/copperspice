@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,11 +23,10 @@
 #ifndef QSQLDATABASE_H
 #define QSQLDATABASE_H
 
-#include <QtCore/qstring.h>
-#include <QtSql/qsql.h>
+#include <qstring.h>
+#include <qsql.h>
 
-QT_BEGIN_NAMESPACE
-
+class QDebug;
 class QSqlError;
 class QSqlDriver;
 class QSqlIndex;
@@ -100,15 +96,15 @@ class Q_SQL_EXPORT QSqlDatabase
 
    QSqlDriver *driver() const;
 
-   static const char *defaultConnection;
+   static QString defaultConnection;
 
-   static QSqlDatabase addDatabase(const QString &type, const QString &connectionName = QLatin1String(defaultConnection));
-   static QSqlDatabase addDatabase(QSqlDriver *driver, const QString &connectionName = QLatin1String(defaultConnection));
+   static QSqlDatabase addDatabase(const QString &type, const QString &connectionName = defaultConnection);
+   static QSqlDatabase addDatabase(QSqlDriver *driver,  const QString &connectionName = defaultConnection);
    static QSqlDatabase cloneDatabase(const QSqlDatabase &other, const QString &connectionName);
-   static QSqlDatabase database(const QString &connectionName = QLatin1String(defaultConnection),bool open = true);
+   static QSqlDatabase database(const QString &connectionName = defaultConnection, bool open = true);
 
    static void removeDatabase(const QString &connectionName);
-   static bool contains(const QString &connectionName = QLatin1String(defaultConnection));
+   static bool contains(const QString &connectionName = defaultConnection);
    static QStringList drivers();
    static QStringList connectionNames();
    static void registerSqlDriver(const QString &name, QSqlDriverCreatorBase *creator);
@@ -124,7 +120,5 @@ class Q_SQL_EXPORT QSqlDatabase
 };
 
 Q_SQL_EXPORT QDebug operator<<(QDebug, const QSqlDatabase &);
-
-QT_END_NAMESPACE
 
 #endif // QSQLDATABASE_H

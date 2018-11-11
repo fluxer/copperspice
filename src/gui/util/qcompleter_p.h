@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -183,7 +180,7 @@ class QSortedModelEngine : public QCompletionEngine
 {
  public:
    QSortedModelEngine(QCompleterPrivate *c) : QCompletionEngine(c) { }
-   QMatchData filter(const QString &, const QModelIndex &, int);
+   QMatchData filter(const QString &, const QModelIndex &, int)  override;
    QIndexMapper indexHint(QString, const QModelIndex &, Qt::SortOrder);
    Qt::SortOrder sortOrder(const QModelIndex &) const;
 };
@@ -193,8 +190,8 @@ class QUnsortedModelEngine : public QCompletionEngine
  public:
    QUnsortedModelEngine(QCompleterPrivate *c) : QCompletionEngine(c) { }
 
-   void filterOnDemand(int);
-   QMatchData filter(const QString &, const QModelIndex &, int);
+   void filterOnDemand(int)  override;
+   QMatchData filter(const QString &, const QModelIndex &, int)  override;
 
  private:
    int buildIndices(const QString &str, const QModelIndex &parent, int n, const QIndexMapper &iv, QMatchData *m);
@@ -205,12 +202,15 @@ class QCompleterItemDelegate : public QItemDelegate
  public:
    QCompleterItemDelegate(QAbstractItemView *view)
       : QItemDelegate(view), view(view) { }
-   void paint(QPainter *p, const QStyleOptionViewItem &opt, const QModelIndex &idx) const {
+
+   void paint(QPainter *p, const QStyleOptionViewItem &opt, const QModelIndex &idx) const  override {
       QStyleOptionViewItem optCopy = opt;
       optCopy.showDecorationSelected = true;
+
       if (view->currentIndex() == idx) {
          optCopy.state |= QStyle::State_HasFocus;
       }
+
       QItemDelegate::paint(p, optCopy, idx);
    }
 
@@ -236,18 +236,20 @@ class QCompletionModel : public QAbstractProxyModel
    QModelIndex currentIndex(bool) const;
    void resetModel();
 
-   QModelIndex index(int row, int column, const QModelIndex & = QModelIndex()) const;
-   int rowCount(const QModelIndex &index = QModelIndex()) const;
-   int columnCount(const QModelIndex &index = QModelIndex()) const;
-   bool hasChildren(const QModelIndex &parent = QModelIndex()) const;
-   QModelIndex parent(const QModelIndex & = QModelIndex()) const {
+   QModelIndex index(int row, int column, const QModelIndex & = QModelIndex()) const override;
+   int rowCount(const QModelIndex &index = QModelIndex()) const override;
+   int columnCount(const QModelIndex &index = QModelIndex()) const override;
+   bool hasChildren(const QModelIndex &parent = QModelIndex()) const override;
+
+   QModelIndex parent(const QModelIndex & = QModelIndex()) const override {
       return QModelIndex();
    }
-   QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
 
-   void setSourceModel(QAbstractItemModel *sourceModel);
-   QModelIndex mapToSource(const QModelIndex &proxyIndex) const;
-   QModelIndex mapFromSource(const QModelIndex &sourceIndex) const;
+   QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
+
+   void setSourceModel(QAbstractItemModel *sourceModel) override;
+   QModelIndex mapToSource(const QModelIndex &proxyIndex) const override;
+   QModelIndex mapFromSource(const QModelIndex &sourceIndex) const override;
 
    QCompleterPrivate *c;
    QScopedPointer<QCompletionEngine> engine;

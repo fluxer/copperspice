@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -561,6 +558,7 @@ qint64 QFSFileEngine::read(char *data, qint64 maxlen)
    // On Windows' stdlib implementation, the results of calling fread and
    // fwrite are undefined if not called either in sequence, or if preceded
    // with a call to fflush().
+
    if (d->lastIOCommand != QFSFileEnginePrivate::IOReadCommand) {
       flush();
       d->lastIOCommand = QFSFileEnginePrivate::IOReadCommand;
@@ -592,10 +590,12 @@ qint64 QFSFileEnginePrivate::readFdFh(char *data, qint64 len)
       do {
          result = fread(data + readBytes, 1, size_t(len - readBytes), fh);
          eof = feof(fh);
+
          if (retry && eof && result == 0) {
             // On Mac OS, this is needed, e.g., if a file was written to
             // through another stream since our last read. See test
             // tst_QFile::appendAndRead
+
             QT_FSEEK(fh, QT_FTELL(fh), SEEK_SET); // re-sync stream.
             retry = false;
             continue;
@@ -613,8 +613,7 @@ qint64 QFSFileEnginePrivate::readFdFh(char *data, qint64 len)
 #endif
       do {
          result = QT_READ(fd, data + readBytes, size_t(len - readBytes));
-      } while ((result == -1 && errno == EINTR)
-               || (result > 0 && (readBytes += result) < len));
+      } while ((result == -1 && errno == EINTR) || (result > 0 && (readBytes += result) < len));
 
       eof = !(result == -1);
    }

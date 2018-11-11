@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -374,7 +371,6 @@ qint64 QByteDeviceWrappingIoDevice::size() const
    return byteDevice->size();
 }
 
-
 qint64 QByteDeviceWrappingIoDevice::readData( char *data, qint64 maxSize)
 {
    qint64 len;
@@ -395,28 +391,6 @@ qint64 QByteDeviceWrappingIoDevice::writeData( const char *data, qint64 maxSize)
    return -1;
 }
 
-/*!
-    \class QNonContiguousByteDeviceFactory
-    \since 4.6
-
-    \inmodule QtCore
-
-    Creates a QNonContiguousByteDevice out of a QIODevice,
-    QByteArray etc.
-
-    \sa QNonContiguousByteDevice
-
-    \internal
-*/
-
-/*!
-    \fn static QNonContiguousByteDevice* QNonContiguousByteDeviceFactory::create(QIODevice *device);
-
-    Create a QNonContiguousByteDevice out of a QIODevice.
-    For QFile, QBuffer and all other QIoDevice, sequential or not.
-
-    \internal
-*/
 QNonContiguousByteDevice *QNonContiguousByteDeviceFactory::create(QIODevice *device)
 {
    // shortcut if it is a QBuffer
@@ -431,40 +405,35 @@ QNonContiguousByteDevice *QNonContiguousByteDeviceFactory::create(QIODevice *dev
    return new QNonContiguousByteDeviceIoDeviceImpl(device); // FIXME
 }
 
-/*!
-    Create a QNonContiguousByteDevice out of a QRingBuffer.
-
-    \internal
-*/
-QNonContiguousByteDevice *QNonContiguousByteDeviceFactory::create(QSharedPointer<QRingBuffer> ringBuffer)
-{
-   return new QNonContiguousByteDeviceRingBufferImpl(ringBuffer);
-}
-
-/*!
-    \fn static QNonContiguousByteDevice* QNonContiguousByteDeviceFactory::create(QByteArray *byteArray);
-
-    Create a QNonContiguousByteDevice out of a QByteArray.
-
-    \internal
-*/
 QNonContiguousByteDevice *QNonContiguousByteDeviceFactory::create(QByteArray *byteArray)
 {
    return new QNonContiguousByteDeviceByteArrayImpl(byteArray);
 }
 
-/*!
-    \fn static QIODevice* QNonContiguousByteDeviceFactory::wrap(QNonContiguousByteDevice* byteDevice);
 
-    Wrap the \a byteDevice (possibly again) into a QIODevice.
+QNonContiguousByteDevice *QNonContiguousByteDeviceFactory::create(QSharedPointer<QRingBuffer> ringBuffer)
+{
+   return new QNonContiguousByteDeviceRingBufferImpl(ringBuffer);
+}
 
-    \internal
-*/
+QSharedPointer<QNonContiguousByteDevice> QNonContiguousByteDeviceFactory::createShared(QIODevice *device)
+{
+   return QSharedPointer<QNonContiguousByteDevice>(create(device));
+}
+
+QSharedPointer<QNonContiguousByteDevice> QNonContiguousByteDeviceFactory::createShared(QByteArray *byteArray)
+{
+   return QSharedPointer<QNonContiguousByteDevice>(create(byteArray));
+}
+
+QSharedPointer<QNonContiguousByteDevice> QNonContiguousByteDeviceFactory::createShared(QSharedPointer<QRingBuffer> ringBuffer)
+{
+   return QSharedPointer<QNonContiguousByteDevice>(create(ringBuffer));
+}
+
 QIODevice *QNonContiguousByteDeviceFactory::wrap(QNonContiguousByteDevice *byteDevice)
 {
-   // ### FIXME if it already has been based on QIoDevice, we could that one out again
-   // and save some calling
-
+   // ### FIXME if the parameter inherits from QIoDevice, we could just return it
    // needed for FTP backend
 
    return new QByteDeviceWrappingIoDevice(byteDevice);

@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -27,11 +24,10 @@
 #include <csmeta.h>
 #include <qmetaobject.h>
 
-QMetaProperty::QMetaProperty(const char *name, QMetaObject *obj)
+QMetaProperty::QMetaProperty(const QString &name, QMetaObject *obj)
+   :  m_name(name), m_metaObject(obj)
 {
-   m_name         = name;
-   m_metaObject   = obj;
-   m_typeName     = 0;
+   m_typeName     = QString();
 
    m_read_able    = false;
    m_write_able   = false;
@@ -178,18 +174,19 @@ bool QMetaProperty::isWritable() const
    return m_write_able;
 }
 
-const char *QMetaProperty::name() const
+const QString &QMetaProperty::name() const
 {
    return m_name;
 }
 
 QMetaMethod QMetaProperty::notifySignal() const
 {
+   static const QString str;
+
    int id = notifySignalIndex();
 
    if (id == -1) {
-      return QMetaMethod("", "", QList<QByteArray>(), QMetaMethod::Private, QMetaMethod::Slot,
-                         QMetaMethod::Attributes(), m_metaObject);
+      return QMetaMethod(str, str, std::vector<QString>(), QMetaMethod::Private, QMetaMethod::Slot, QMetaMethod::Attributes(), m_metaObject);
 
    } else  {
       return m_metaObject->method(id);
@@ -276,7 +273,7 @@ void QMetaProperty::setRevision(int value)
 }
 
 // internal
-void QMetaProperty::setTypeName(const char *typeName)
+void QMetaProperty::setTypeName(const QString &typeName)
 {
    m_typeName = typeName;
 }
@@ -288,7 +285,7 @@ QVariant::Type QMetaProperty::type() const
 
    if (enumObj.isValid()) {
       // process enum
-      QByteArray enumName = QByteArray(enumObj.scope()) + "::" + enumObj.name();
+      QString enumName = enumObj.scope() + "::" + enumObj.name();
 
       int enumMetaTypeId = QMetaType::type(enumName);
 
@@ -296,7 +293,7 @@ QVariant::Type QMetaProperty::type() const
          retval = QVariant::Int;
       }
 
-   } else if (m_typeName) {
+   } else if (! m_typeName.isEmpty()) {
       retval = QVariant::nameToType(m_typeName);
 
    }
@@ -304,7 +301,7 @@ QVariant::Type QMetaProperty::type() const
    return retval;
 }
 
-const char *QMetaProperty::typeName() const
+const QString &QMetaProperty::typeName() const
 {
    return m_typeName;
 }
@@ -316,10 +313,10 @@ int QMetaProperty::userType() const
 
    if (enumObj.isValid()) {
       // process enum
-      QByteArray enumName = QByteArray(enumObj.scope()) + "::" + enumObj.name();
+      QString enumName = enumObj.scope() + "::" + enumObj.name();
       retval = QMetaType::type(enumName);
 
-   } else if (m_typeName) {
+   } else if (! m_typeName.isEmpty()) {
       retval = QVariant::nameToType(m_typeName);
 
       if (retval == QVariant::UserType) {
@@ -340,7 +337,7 @@ bool QMetaProperty::write(QObject *object, const QVariant &value) const
 }
 
 // ** internal
-void QMetaProperty::setReadMethod(const char *typeName, JarReadAbstract *jarRead)
+void QMetaProperty::setReadMethod(const QString &typeName, JarReadAbstract *jarRead)
 {
    if (! jarRead) {
       return;

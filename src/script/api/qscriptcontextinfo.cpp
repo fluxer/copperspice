@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -30,62 +27,19 @@
 #include "qscriptengine.h"
 #include "qscriptengine_p.h"
 #include "../bridge/qscriptqobject_p.h"
-#include <QtCore/qdatastream.h>
-#include <QtCore/qmetaobject.h>
+#include <qdatastream.h>
+#include <qmetaobject.h>
 #include "CodeBlock.h"
 #include "JSFunction.h"
+
 #if ENABLE(JIT)
 #include "MacroAssemblerCodeRef.h"
 #endif
 
-QT_BEGIN_NAMESPACE
-
-/*!
-  \since 4.4
-  \class QScriptContextInfo
-
-  \brief The QScriptContextInfo class provides additional information about a QScriptContext.
-
-  \ingroup script
-
-
-  QScriptContextInfo is typically used for debugging purposes. It can
-  provide information about the code being executed, such as the type
-  of the called function, and the original source code location of the
-  current statement.
-
-  If the called function is executing Qt Script code, you can obtain
-  the script location with the functions fileName() and lineNumber().
-
-  You can obtain the starting line number and ending line number of a
-  Qt Script function definition with functionStartLineNumber() and
-  functionEndLineNumber(), respectively.
-
-  For Qt Script functions and Qt methods (e.g. slots), you can call
-  functionParameterNames() to get the names of the formal parameters of the
-  function.
-
-  For Qt methods and Qt property accessors, you can obtain the index
-  of the underlying QMetaMethod or QMetaProperty by calling
-  functionMetaIndex().
-
-  \sa QScriptContext, QScriptEngineAgent
-*/
-
-/*!
-    \enum QScriptContextInfo::FunctionType
-
-    This enum specifies the type of function being called.
-
-    \value ScriptFunction The function is a Qt Script function, i.e. it was defined through a call to QScriptEngine::evaluate().
-    \value QtFunction The function is a Qt function (a signal, slot or method).
-    \value QtPropertyFunction The function is a Qt property getter or setter.
-    \value NativeFunction The function is a built-in Qt Script function, or it was defined through a call to QScriptEngine::newFunction().
-*/
-
 class QScriptContextInfoPrivate
 {
    Q_DECLARE_PUBLIC(QScriptContextInfo)
+
  public:
    QScriptContextInfoPrivate();
    QScriptContextInfoPrivate(const QScriptContext *context);
@@ -94,6 +48,7 @@ class QScriptContextInfoPrivate
    qint64 scriptId;
    int lineNumber;
    int columnNumber;
+
    QString fileName;
 
    QString functionName;
@@ -106,7 +61,6 @@ class QScriptContextInfoPrivate
    QStringList parameterNames;
 
    QAtomicInt ref;
-
    QScriptContextInfo *q_ptr;
 };
 
@@ -146,10 +100,12 @@ QScriptContextInfoPrivate::QScriptContextInfoPrivate(const QScriptContext *conte
 
    //We need to know the context directly up in the backtrace, in order to get the line number, and adjust the global context
    JSC::CallFrame *rewindContext = QScriptEnginePrivate::get(context->engine())->currentFrame;
+
    if (QScriptEnginePrivate::contextForFrame(rewindContext) == context) {  //top context
       frame = rewindContext; //for retreiving the global context's "fake" frame
       // An agent might have provided the line number.
       lineNumber = QScript::scriptEngineFromExec(frame)->agentLineNumber;
+
    } else {
       // rewind the stack from the top in order to find the frame from the caller where the returnPC is stored
       while (rewindContext &&
@@ -161,6 +117,7 @@ QScriptContextInfoPrivate::QScriptContextInfoPrivate(const QScriptContext *conte
 
          JSC::Instruction *returnPC = rewindContext->returnPC();
          JSC::CodeBlock *codeBlock = frame->codeBlock();
+
          if (returnPC && codeBlock && QScriptEnginePrivate::hasValidCodeBlockRegister(frame)) {
 #if ENABLE(JIT)
             JSC::JITCode code = codeBlock->getJITCode();
@@ -193,36 +150,38 @@ QScriptContextInfoPrivate::QScriptContextInfoPrivate(const QScriptContext *conte
 
    // Get the others information:
    JSC::JSObject *callee = frame->callee();
-   if (callee && callee->inherits(&JSC::InternalFunction::info))
-   {
+   if (callee && callee->inherits(&JSC::InternalFunction::info)) {
       functionName = JSC::asInternalFunction(callee)->name(frame);
    }
-   if (callee && callee->inherits(&JSC::JSFunction::info)
-         && !JSC::asFunction(callee)->isHostFunction())
-   {
+
+   if (callee && callee->inherits(&JSC::JSFunction::info) && !JSC::asFunction(callee)->isHostFunction()) {
       functionType = QScriptContextInfo::ScriptFunction;
       JSC::FunctionExecutable *body = JSC::asFunction(callee)->jsExecutable();
       functionStartLineNumber = body->lineNo();
-      functionEndLineNumber = body->lastLine();
+      functionEndLineNumber   = body->lastLine();
+
       for (size_t i = 0; i < body->parameterCount(); ++i) {
          parameterNames.append(body->parameterName(i));
       }
+
       // ### get the function name from the AST
-   } else if (callee && callee->inherits(&QScript::QtFunction::info))
-   {
+   } else if (callee && callee->inherits(&QScript::QtFunction::info)) {
       functionType = QScriptContextInfo::QtFunction;
+
       // ### the slot can be overloaded -- need to get the particular overload from the context
       functionMetaIndex = static_cast<QScript::QtFunction *>(callee)->initialIndex();
       const QMetaObject *meta = static_cast<QScript::QtFunction *>(callee)->metaObject();
+
       if (meta != 0) {
-         QMetaMethod method = meta->method(functionMetaIndex);
-         QList<QByteArray> formals = method.parameterNames();
+         QMetaMethod method     = meta->method(functionMetaIndex);
+         QList<QString> formals = method.parameterNames();
+
          for (int i = 0; i < formals.count(); ++i) {
-            parameterNames.append(QLatin1String(formals.at(i)));
+            parameterNames.append(formals.at(i));
          }
       }
-   } else if (callee && callee->inherits(&QScript::QtPropertyFunction::info))
-   {
+
+   } else if (callee && callee->inherits(&QScript::QtPropertyFunction::info)) {
       functionType = QScriptContextInfo::QtPropertyFunction;
       functionMetaIndex = static_cast<QScript::QtPropertyFunction *>(callee)->propertyIndex();
    }
@@ -503,14 +462,6 @@ bool QScriptContextInfo::operator!=(const QScriptContextInfo &other) const
    return !(*this == other);
 }
 
-#ifndef QT_NO_DATASTREAM
-/*!
-  \fn QDataStream &operator<<(QDataStream &stream, const QScriptContextInfo &info)
-  \since 4.4
-  \relates QScriptContextInfo
-
-  Writes the given \a info to the specified \a stream.
-*/
 QDataStream &operator<<(QDataStream &out, const QScriptContextInfo &info)
 {
    out << info.scriptId();
@@ -529,14 +480,6 @@ QDataStream &operator<<(QDataStream &out, const QScriptContextInfo &info)
    return out;
 }
 
-/*!
-  \fn QDataStream &operator>>(QDataStream &stream, QScriptContextInfo &info)
-  \since 4.4
-  \relates QScriptContextInfo
-
-  Reads a QScriptContextInfo from the specified \a stream into the
-  given \a info.
-*/
 Q_SCRIPT_EXPORT QDataStream &operator>>(QDataStream &in, QScriptContextInfo &info)
 {
    if (!info.d_ptr) {
@@ -575,6 +518,3 @@ Q_SCRIPT_EXPORT QDataStream &operator>>(QDataStream &in, QScriptContextInfo &inf
 
    return in;
 }
-#endif
-
-QT_END_NAMESPACE

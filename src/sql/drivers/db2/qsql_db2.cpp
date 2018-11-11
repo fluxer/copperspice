@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -85,8 +82,7 @@ static QString qFromTChar(SQLTCHAR *str)
    return QString((const QChar *)str);
 }
 
-// dangerous!! (but fast). Don't use in functions that
-// require out parameters!
+// dangerous but fast, Don't use in functions that require out parameters!
 static SQLTCHAR *qToTChar(const QString &str)
 {
    return (SQLTCHAR *)str.utf16();
@@ -99,17 +95,15 @@ static QString qWarnDB2Handle(int handleType, SQLHANDLE handle)
    SQLRETURN r = SQL_ERROR;
    SQLTCHAR state[SQL_SQLSTATE_SIZE + 1];
    SQLTCHAR description[SQL_MAX_MESSAGE_LENGTH];
-   r = SQLGetDiagRec(handleType,
-                     handle,
-                     1,
-                     (SQLTCHAR *) state,
-                     &nativeCode,
-                     (SQLTCHAR *) description,
+
+   r = SQLGetDiagRec(handleType, handle, 1, (SQLTCHAR *) state, &nativeCode, (SQLTCHAR *) description,
                      SQL_MAX_MESSAGE_LENGTH - 1, /* in bytes, not in characters */
                      &msgLen);
+
    if (r == SQL_SUCCESS || r == SQL_SUCCESS_WITH_INFO) {
       return QString(qFromTChar(description));
    }
+
    return QString();
 }
 
@@ -138,8 +132,7 @@ static void qSqlWarning(const QString &message, const QDB2ResultPrivate *d)
             qDB2Warn(d).toLocal8Bit().constData());
 }
 
-static QSqlError qMakeError(const QString &err, QSqlError::ErrorType type,
-                            const QDB2DriverPrivate *p)
+static QSqlError qMakeError(const QString &err, QSqlError::ErrorType type, const QDB2DriverPrivate *p)
 {
    return QSqlError(QLatin1String("QDB2: ") + err, qDB2Warn(p), type);
 }
@@ -225,7 +218,7 @@ static QSqlField qMakeFieldInfo(const QDB2ResultPrivate *d, int i)
                       &nullable);
 
    if (r != SQL_SUCCESS) {
-      qSqlWarning(QString::fromLatin1("qMakeFieldInfo: Unable to describe column %1").arg(i), d);
+      qSqlWarning(QString::fromLatin1("qMakeFieldInfo: Unable to describe column %1").fromatArg(i), d);
       return QSqlField();
    }
    QSqlField f(qFromTChar(colName), qDecodeDB2Type(colType));
@@ -408,11 +401,14 @@ static void qSplitTableQualifier(const QString &qualifier, QString *catalog,
    if (l.count() > 3) {
       return;   // can't possibly be a valid table qualifier
    }
+
    int i = 0, n = l.count();
+
    if (n == 1) {
       *table = qualifier;
+
    } else {
-      for (QStringList::Iterator it = l.begin(); it != l.end(); ++it) {
+      for (QStringList::iterator it = l.begin(); it != l.end(); ++it) {
          if (n == 3) {
             if (i == 0) {
                *catalog = *it;
@@ -488,10 +484,11 @@ static bool qMakeStatement(QDB2ResultPrivate *d, bool forwardOnly, bool setForwa
                          (SQLPOINTER) SQL_CURSOR_STATIC,
                          SQL_IS_UINTEGER);
    }
+
    if (r != SQL_SUCCESS && r != SQL_SUCCESS_WITH_INFO) {
-      qSqlWarning(QString::fromLatin1("QDB2Result::reset: Unable to set %1 attribute.").arg(
-                     forwardOnly ? QLatin1String("SQL_CURSOR_FORWARD_ONLY")
-                     : QLatin1String("SQL_CURSOR_STATIC")), d);
+      qSqlWarning(QString::fromLatin1("QDB2Result::reset: Unable to set %1 attribute.")
+                  .fromatArg(forwardOnly ? QLatin1String("SQL_CURSOR_FORWARD_ONLY") : QLatin1String("SQL_CURSOR_STATIC")), d);
+
       return false;
    }
    return true;
@@ -757,7 +754,7 @@ bool QDB2Result::exec()
             break;
          }
          default: {
-            QByteArray ba = values.at(i).toString().toAscii();
+            QByteArray ba = values.at(i).toString().toLatin1();
             int len = ba.length() + 1;
             if (*ind != SQL_NULL_DATA) {
                *ind = ba.length();
@@ -840,7 +837,7 @@ bool QDB2Result::exec()
             }
             break;
          default: {
-            values[i] = QString::fromAscii(tmpStorage.takeFirst().constData());
+            values[i] = QString::fromLatin1(tmpStorage.takeFirst().constData());
             break;
          }
       }
@@ -879,7 +876,7 @@ bool QDB2Result::fetch(int i)
    }
    if (r != SQL_SUCCESS && r != SQL_SUCCESS_WITH_INFO && r != SQL_NO_DATA) {
       setLastError(qMakeError(QCoreApplication::translate("QDB2Result",
-                              "Unable to fetch record %1").arg(i), QSqlError::StatementError, d));
+                              "Unable to fetch record %1").fromatArg(i), QSqlError::StatementError, d));
       return false;
    } else if (r == SQL_NO_DATA) {
       return false;
@@ -1248,7 +1245,7 @@ bool QDB2Driver::open(const QString &db, const QString &user, const QString &pas
       }
       if (r != SQL_SUCCESS && r != SQL_SUCCESS_WITH_INFO)
          qSqlWarning(QString::fromLatin1("QDB2Driver::open: "
-                                         "Unable to set connection attribute '%1'").arg(opt), d);
+                                         "Unable to set connection attribute '%1'").fromatArg(opt), d);
    }
 
    if (protocol.isEmpty()) {

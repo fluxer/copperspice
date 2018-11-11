@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -246,14 +243,13 @@ void QGLCmap::detach()
 {
    if (d->count != 1) {
       d->deref();
+
       QGLCmapPrivate *newd = new QGLCmapPrivate;
-      newd->maxSize = d->maxSize;
-      newd->colorArray = d->colorArray;
-      newd->allocArray = d->allocArray;
+      newd->maxSize      = d->maxSize;
+      newd->colorArray   = d->colorArray;
+      newd->allocArray   = d->allocArray;
       newd->contextArray = d->contextArray;
-      newd->colorArray.detach();
-      newd->allocArray.detach();
-      newd->contextArray.detach();
+
       newd->colorMap = d->colorMap;
       d = newd;
    }
@@ -281,10 +277,12 @@ void QGLCmap::resize(int newSize)
 
 int QGLCmap::find(QRgb color) const
 {
-   QMap<uint, int>::ConstIterator it = d->colorMap.find(color);
+   QMap<uint, int>::const_iterator it = d->colorMap.find(color);
+
    if (it != d->colorMap.end()) {
       return *it;
    }
+
    return -1;
 }
 
@@ -673,21 +671,24 @@ QGLTemporaryContext::QGLTemporaryContext(bool directRendering, QWidget *parent)
    : d(new QGLTemporaryContextPrivate)
 {
    QString windowClassName = qt_getRegisteredWndClass();
-   if (parent && !parent->internalWinId()) {
+
+   if (parent && ! parent->internalWinId()) {
       parent = parent->nativeParentWidget();
    }
 
-   d->dmy_id = CreateWindow((const wchar_t *)windowClassName.utf16(),
-                            0, 0, 0, 0, 1, 1,
-                            parent ? parent->winId() : 0, 0, qWinAppInst(), 0);
+   d->dmy_id = CreateWindow(&windowClassName.toStdWString()[0], 0, 0, 0, 0, 1, 1,
+                  parent ? parent->winId() : 0, 0, qWinAppInst(), 0);
 
    d->dmy_pdc = GetDC(d->dmy_id);
+
    PIXELFORMATDESCRIPTOR dmy_pfd;
    memset(&dmy_pfd, 0, sizeof(PIXELFORMATDESCRIPTOR));
+
    dmy_pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
    dmy_pfd.nVersion = 1;
    dmy_pfd.dwFlags = PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW;
    dmy_pfd.iPixelType = PFD_TYPE_RGBA;
+
    if (!directRendering) {
       dmy_pfd.dwFlags |= PFD_GENERIC_FORMAT;
    }
@@ -779,11 +780,13 @@ void QGLContextPrivate::updateFormatVersion()
    const GLubyte *s = glGetString(GL_VERSION);
 
    if (!(s && s[0] >= '0' && s[0] <= '9' && s[1] == '.' && s[2] >= '0' && s[2] <= '9')) {
-      if (!s) {
+
+      if (! s) {
          qWarning("QGLContext::chooseContext(): OpenGL version string is null.");
       } else {
          qWarning("QGLContext::chooseContext(): Unexpected OpenGL version string format.");
       }
+
       glFormat.setVersion(0, 0);
       glFormat.setProfile(QGLFormat::NoProfile);
       glFormat.setOption(QGL::DeprecatedFunctions);
@@ -1455,7 +1458,7 @@ void QGLContext::generateFontDisplayLists(const QFont &fnt, int listBase)
 
 void *QGLContext::getProcAddress(const QString &proc) const
 {
-   return (void *)wglGetProcAddress(proc.toLatin1());
+   return (void *)wglGetProcAddress(proc.toLatin1().constData());
 }
 
 /*****************************************************************************

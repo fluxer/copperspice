@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -2337,9 +2334,10 @@ to make a dynamically loadable driver.
 
 Q_GUI_EXPORT QScreen *qt_get_screen(int display_id, const char *spec)
 {
-   QString displaySpec = QString::fromAscii(spec);
+   QString displaySpec = QString::fromLatin1(spec);
    QString driver = displaySpec;
    int colon = displaySpec.indexOf(QLatin1Char(':'));
+
    if (colon >= 0) {
       driver.truncate(colon);
    }
@@ -2619,44 +2617,25 @@ void QScreen::solidFill(const QColor &color, const QRegion &region)
    QWSDisplay::ungrab();
 }
 
-/*!
-    \since 4.2
-
-    Creates and returns a new window surface matching the given \a
-    key.
-
-    The server application will call this function whenever it needs
-    to create a server side representation of a window, e.g. when
-    copying the content of memory to the screen using the screen
-    driver.
-
-    Note that this function must be reimplemented when adding an
-    accelerated graphics driver. See the
-    \l{Adding an Accelerated Graphics Driver to Qt for Embedded Linux}
-    {Adding an Accelerated Graphics Driver} documentation for details.
-
-    \sa {Qt for Embedded Linux Architecture}
-*/
 QWSWindowSurface *QScreen::createSurface(const QString &key) const
 {
+
 #ifndef QT_NO_PAINTONSCREEN
    if (key == QLatin1String("OnScreen")) {
       return new QWSOnScreenSurface;
    } else
 #endif
+
       if (key == QLatin1String("mem")) {
          return new QWSLocalMemSurface;
       }
+
 #ifndef QT_NO_QWS_MULTIPROCESS
       else if (key == QLatin1String("shm")) {
          return new QWSSharedMemSurface;
       }
 #endif
-#ifndef QT_NO_PAINT_DEBUG
-      else if (key == QLatin1String("Yellow")) {
-         return new QWSYellowSurface;
-      }
-#endif
+
 #ifndef QT_NO_DIRECTPAINTER
       else if (key == QLatin1String("DirectPainter")) {
          return new QWSDirectPainterSurface;

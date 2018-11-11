@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -60,22 +57,22 @@ class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeEngineDebug : public QObject
 
    Status status() const;
 
-   QDeclarativeDebugPropertyWatch *addWatch(const QDeclarativeDebugPropertyReference &, QObject *parent = 0);
-   QDeclarativeDebugWatch *addWatch(const QDeclarativeDebugContextReference &, const QString &, QObject *parent = 0);
+   QDeclarativeDebugPropertyWatch *addWatch(const QDeclarativeDebugPropertyReference &, QObject *parent = nullptr);
+   QDeclarativeDebugWatch *addWatch(const QDeclarativeDebugContextReference &, const QString &, QObject *parent = nullptr);
    QDeclarativeDebugObjectExpressionWatch *addWatch(const QDeclarativeDebugObjectReference &, const QString &,
-         QObject *parent = 0);
-   QDeclarativeDebugWatch *addWatch(const QDeclarativeDebugObjectReference &, QObject *parent = 0);
-   QDeclarativeDebugWatch *addWatch(const QDeclarativeDebugFileReference &, QObject *parent = 0);
+         QObject *parent = nullptr);
+   QDeclarativeDebugWatch *addWatch(const QDeclarativeDebugObjectReference &, QObject *parent = nullptr);
+   QDeclarativeDebugWatch *addWatch(const QDeclarativeDebugFileReference &, QObject *parent = nullptr);
 
    void removeWatch(QDeclarativeDebugWatch *watch);
 
-   QDeclarativeDebugEnginesQuery *queryAvailableEngines(QObject *parent = 0);
+   QDeclarativeDebugEnginesQuery *queryAvailableEngines(QObject *parent = nullptr);
 
-   QDeclarativeDebugRootContextQuery *queryRootContexts(const QDeclarativeDebugEngineReference &, QObject *parent = 0);
-   QDeclarativeDebugObjectQuery *queryObject(const QDeclarativeDebugObjectReference &, QObject *parent = 0);
-   QDeclarativeDebugObjectQuery *queryObjectRecursive(const QDeclarativeDebugObjectReference &, QObject *parent = 0);
+   QDeclarativeDebugRootContextQuery *queryRootContexts(const QDeclarativeDebugEngineReference &, QObject *parent = nullptr);
+   QDeclarativeDebugObjectQuery *queryObject(const QDeclarativeDebugObjectReference &, QObject *parent = nullptr);
+   QDeclarativeDebugObjectQuery *queryObjectRecursive(const QDeclarativeDebugObjectReference &, QObject *parent = nullptr);
 
-   QDeclarativeDebugExpressionQuery *queryExpressionResult(int objectDebugId, const QString &expr, QObject *parent = 0);
+   QDeclarativeDebugExpressionQuery *queryExpressionResult(int objectDebugId, const QString &expr, QObject *parent = nullptr);
 
    bool setBindingForObject(int objectDebugId, const QString &propertyName,
                             const QVariant &bindingExpression, bool isLiteralValue,

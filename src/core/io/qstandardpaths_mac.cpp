@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -28,10 +25,7 @@
 #include <qcore_mac_p.h>
 #include <qcoreapplication.h>
 
-#include <CoreFoundation/CoreFoundation.h>
 #include <ApplicationServices/ApplicationServices.h>
-
-QT_BEGIN_NAMESPACE
 
 /*
     Translates a QStandardPaths::StandardLocation into the mac equivalent.
@@ -42,20 +36,27 @@ OSType translateLocation(QStandardPaths::StandardLocation type)
       case QStandardPaths::ConfigLocation:
       case QStandardPaths::GenericConfigLocation:
          return kPreferencesFolderType;
+
       case QStandardPaths::DesktopLocation:
          return kDesktopFolderType;
+
       case QStandardPaths::DownloadLocation: // needs NSSearchPathForDirectoriesInDomains with NSDownloadsDirectory
       // which needs an objective-C *.mm file...
+
       case QStandardPaths::DocumentsLocation:
          return kDocumentsFolderType;
+
       case QStandardPaths::FontsLocation:
          // There are at least two different font directories on the mac: /Library/Fonts and ~/Library/Fonts.
          // To select a specific one we have to specify a different first parameter when calling FSFindFolder.
          return kFontsFolderType;
+
       case QStandardPaths::ApplicationsLocation:
          return kApplicationsFolderType;
+
       case QStandardPaths::MusicLocation:
          return kMusicDocumentsFolderType;
+
       case QStandardPaths::MoviesLocation:
          return kMovieDocumentsFolderType;
       case QStandardPaths::PicturesLocation:
@@ -91,13 +92,13 @@ static void appendOrganizationAndApp(QString &path)
    const QString org = QCoreApplication::organizationName();
 
    if (!org.isEmpty()) {
-      path += QLatin1Char('/') + org;
+      path += '/' + org;
    }
 
    const QString appName = QCoreApplication::applicationName();
 
-   if (!appName.isEmpty()) {
-      path += QLatin1Char('/') + appName;
+   if (! appName.isEmpty()) {
+      path += '/' + appName;
    }
 }
 
@@ -105,6 +106,7 @@ static QString macLocation(QStandardPaths::StandardLocation type, short domain)
 {
    // http://developer.apple.com/documentation/Carbon/Reference/Folder_Manager/Reference/reference.html
    FSRef ref;
+
    OSErr err = FSFindFolder(domain, translateLocation(type), false, &ref);
    if (err) {
       return QString();
@@ -115,14 +117,16 @@ static QString macLocation(QStandardPaths::StandardLocation type, short domain)
    if (type == QStandardPaths::DataLocation || type == QStandardPaths::CacheLocation) {
       appendOrganizationAndApp(path);
    }
+
    return path;
 }
 
 QString QStandardPaths::writableLocation(StandardLocation type)
 {
    if (isTestModeEnabled()) {
-      const QString qttestDir = QDir::homePath() + QLatin1String("/.qttest");
+      const QString qttestDir = QDir::homePath() + "/.qttest";
       QString path;
+
       switch (type) {
          case GenericDataLocation:
          case DataLocation:
@@ -200,6 +204,7 @@ QStringList QStandardPaths::standardLocations(StandardLocation type)
    }
    const QString localDir = writableLocation(type);
    dirs.prepend(localDir);
+
    return dirs;
 }
 
@@ -224,5 +229,3 @@ QString QStandardPaths::displayName(StandardLocation type)
    return static_cast<QString>(displayName);
 }
 
-
-QT_END_NAMESPACE

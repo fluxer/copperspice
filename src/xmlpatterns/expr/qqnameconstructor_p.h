@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -38,16 +35,12 @@ class QNameConstructor : public SingleContainer
 {
  public:
 
-   QNameConstructor(const Expression::Ptr &source,
-                    const NamespaceResolver::Ptr &nsResolver);
+   QNameConstructor(const Expression::Ptr &source, const NamespaceResolver::Ptr &nsResolver);
 
-   virtual Item evaluateSingleton(const DynamicContext::Ptr &) const;
-
-   virtual SequenceType::List expectedOperandTypes() const;
-
-   virtual SequenceType::Ptr staticType() const;
-
-   virtual ExpressionVisitorResult::Ptr accept(const ExpressionVisitor::Ptr &visitor) const;
+   Item evaluateSingleton(const DynamicContext::Ptr &) const override;
+   SequenceType::List expectedOperandTypes() const override;
+   SequenceType::Ptr staticType() const override;
+   ExpressionVisitorResult::Ptr accept(const ExpressionVisitor::Ptr &visitor) const override;
 
    /**
     * Expands @p lexicalQName, which is a lexical representation of a QName such as "x:body", into
@@ -67,11 +60,10 @@ class QNameConstructor : public SingleContainer
     * @see QQNameValue
     * @see QXmlUtils
     */
-   template<typename TReportContext,
-            const ReportContext::ErrorCode InvalidQName,
+   template<typename TReportContext, const ReportContext::ErrorCode InvalidQName,
             const ReportContext::ErrorCode NoBinding>
-   static
-   QXmlName expandQName(const QString &lexicalQName,
+
+   static QXmlName expandQName(const QString &lexicalQName,
                         const TReportContext &context,
                         const NamespaceResolver::Ptr &nsResolver,
                         const SourceLocationReflection *const r,
@@ -87,7 +79,7 @@ class QNameConstructor : public SingleContainer
          const StaticContext::Ptr &context,
          const SourceLocationReflection *const r);
 
-   virtual const SourceLocationReflection *actualReflection() const;
+   const SourceLocationReflection *actualReflection() const override;
 
  private:
    const NamespaceResolver::Ptr m_nsResolver;
@@ -108,22 +100,25 @@ QXmlName QNameConstructor::expandQName(const QString &lexicalQName,
    if (XPathHelper::isQName(lexicalQName)) {
       QString prefix;
       QString local;
+
       XPathHelper::splitQName(lexicalQName, prefix, local);
+
       const QXmlName::NamespaceCode nsCode = asForAttribute &&
-                                             prefix.isEmpty() ? QXmlName::NamespaceCode(StandardNamespaces::empty)
-                                             : (nsResolver->lookupNamespaceURI(context->namePool()->allocatePrefix(prefix)));
+                  prefix.isEmpty() ? QXmlName::NamespaceCode(StandardNamespaces::empty)
+                  : (nsResolver->lookupNamespaceURI(context->namePool()->allocatePrefix(prefix)));
 
       if (nsCode == NamespaceResolver::NoBinding) {
-         context->error(QtXmlPatterns::tr("No namespace binding exists for "
-                                          "the prefix %1 in %2").arg(formatKeyword(prefix), formatKeyword(lexicalQName)), NoBinding, r);
+         context->error(QtXmlPatterns::tr("No namespace binding exists for the prefix %1 in %2")
+                  .formatArgs(formatKeyword(prefix), formatKeyword(lexicalQName)), NoBinding, r);
 
          return QXmlName(); /* Silence compiler warning. */
+
       } else {
          return context->namePool()->allocateQName(context->namePool()->stringForNamespace(nsCode), local, prefix);
       }
    } else {
       context->error(QtXmlPatterns::tr("%1 is an invalid %2")
-                     .arg(formatData(lexicalQName)).arg(formatType(context->namePool(), BuiltinTypes::xsQName)), InvalidQName, r);
+                     .formatArg(formatData(lexicalQName)).formatArg(formatType(context->namePool(), BuiltinTypes::xsQName)), InvalidQName, r);
 
       return QXmlName(); /* Silence compiler warning. */
    }

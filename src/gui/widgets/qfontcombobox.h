@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -52,7 +49,7 @@ class Q_GUI_EXPORT QFontComboBox : public QComboBox
    GUI_CS_PROPERTY_NOTIFY(currentFont, currentFontChanged)
 
  public:
-   explicit QFontComboBox(QWidget *parent = 0);
+   explicit QFontComboBox(QWidget *parent = nullptr);
    ~QFontComboBox();
 
    void setWritingSystem(QFontDatabase::WritingSystem);
@@ -71,7 +68,7 @@ class Q_GUI_EXPORT QFontComboBox : public QComboBox
    FontFilters fontFilters() const;
 
    QFont currentFont() const;
-   QSize sizeHint() const;
+   QSize sizeHint() const override;
 
    GUI_CS_SLOT_1(Public, void setCurrentFont(const QFont &f))
    GUI_CS_SLOT_2(setCurrentFont)
@@ -80,7 +77,7 @@ class Q_GUI_EXPORT QFontComboBox : public QComboBox
    GUI_CS_SIGNAL_2(currentFontChanged, f)
 
  protected:
-   bool event(QEvent *e);
+   bool event(QEvent *e) override;
 
  private:
    Q_DISABLE_COPY(QFontComboBox)

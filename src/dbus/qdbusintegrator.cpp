@@ -1,27 +1,26 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
+
+#include <algorithm>
 
 #include <qcoreapplication.h>
 #include <qdebug.h>
@@ -374,7 +373,8 @@ static void qDBusNewConnection(DBusServer *server, DBusConnection *connection, v
 
     QDBusConnectionPrivate *newConnection = new QDBusConnectionPrivate(serverConnection->parent());
     QMutexLocker locker(&QDBusConnectionManager::instance()->mutex);
-    QDBusConnectionManager::instance()->setConnection(QLatin1String("QDBusServer-") + QString::number(reinterpret_cast<qulonglong>(newConnection)), newConnection);
+    QDBusConnectionManager::instance()->setConnection(QLatin1String("QDBusServer-") +
+                  QString::number(reinterpret_cast<quint64>(newConnection)), newConnection);
     serverConnection->serverConnectionNames << newConnection->name;
 
     // setPeer does the error handling for us
@@ -440,10 +440,11 @@ static bool findObject(const QDBusConnectionPrivate::ObjectTreeNode *root,
             break;
         int end = fullpath.indexOf(QLatin1Char('/'), start);
         end = (end == -1 ? length : end);
-        QStringRef pathComponent(&fullpath, start, end - start);
+        QStringView pathComponent(&fullpath, start, end - start);
 
         QDBusConnectionPrivate::ObjectTreeNode::DataList::ConstIterator it =
-            qLowerBound(node->children.constBegin(), node->children.constEnd(), pathComponent);
+            std::lower_bound(node->children.constBegin(), node->children.constEnd(), pathComponent);
+
         if (it != node->children.constEnd() && it->name == pathComponent)
             // match
             node = it;
@@ -483,7 +484,7 @@ static QObject *findChildObject(const QDBusConnectionPrivate::ObjectTreeNode *ro
 
             int pos = fullpath.indexOf(QLatin1Char('/'), start);
             pos = (pos == -1 ? length : pos);
-            QStringRef pathComponent(&fullpath, start, pos - start);
+            QStringView pathComponent(&fullpath, start, pos - start);
 
             const QObjectList children = obj->children();
 
@@ -1405,8 +1406,8 @@ void QDBusConnectionPrivate::activateObject(ObjectTreeNode &node, const QDBusMes
         } else {
             // check if we have an interface matching the name that was asked:
             QDBusAdaptorConnector::AdaptorMap::ConstIterator it;
-            it = qLowerBound(connector->adaptors.constBegin(), connector->adaptors.constEnd(),
-                             msg.interface());
+            it = std::lower_bound(connector->adaptors.constBegin(), connector->adaptors.constEnd(), msg.interface());
+
             if (it != connector->adaptors.constEnd() && msg.interface() == QLatin1String(it->interface)) {
                 if (!activateCall(it->adaptor, newflags, msg))
                     sendError(msg, QDBusError::UnknownMethod);

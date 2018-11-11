@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -237,7 +234,8 @@ bool Translator::load(const QString &filename, ConversionData &cd, const QString
    cd.m_sourceFileName = filename;
 
    QFile file;
-   if (filename.isEmpty() || filename == QLatin1String("-")) {
+
+   if (filename.isEmpty() || filename == "-") {
 
 #ifdef Q_OS_WIN
       // QFile is broken for text files
@@ -245,34 +243,32 @@ bool Translator::load(const QString &filename, ConversionData &cd, const QString
 #endif
 
       if (!file.open(stdin, QIODevice::ReadOnly)) {
-         cd.appendError(QString::fromLatin1("Cannot open stdin!? (%1)")
-                        .arg(file.errorString()));
+         cd.appendError(QString::fromLatin1("Can not open stdin (%1)").formatArg(file.errorString()));
          return false;
       }
+
    } else {
       file.setFileName(filename);
       if (!file.open(QIODevice::ReadOnly)) {
-         cd.appendError(QString::fromLatin1("Cannot open %1: %2")
-                        .arg(filename, file.errorString()));
+         cd.appendError(QString::fromLatin1("Can not open %1: %2").formatArgs(filename, file.errorString()));
          return false;
       }
    }
 
    QString fmt = guessFormat(filename, format);
 
-   foreach (const FileFormat & format, registeredFileFormats()) {
+   for (const FileFormat & format : registeredFileFormats()) {
       if (fmt == format.extension) {
          if (format.loader) {
             return (*format.loader)(*this, file, cd);
          }
-         cd.appendError(QString(QLatin1String("No loader for format %1 found"))
-                        .arg(fmt));
+         cd.appendError(QString("No loader for format %1 found").formatArg(fmt));
          return false;
       }
    }
 
-   cd.appendError(QString(QLatin1String("Unknown format %1 for file %2"))
-                  .arg(format, filename));
+   cd.appendError(QString("Unknown format %1 for file %2").formatArgs(format, filename));
+
    return false;
 }
 
@@ -280,7 +276,8 @@ bool Translator::load(const QString &filename, ConversionData &cd, const QString
 bool Translator::save(const QString &filename, ConversionData &cd, const QString &format) const
 {
    QFile file;
-   if (filename.isEmpty() || filename == QLatin1String("-")) {
+
+   if (filename.isEmpty() || filename == "-") {
 
 #ifdef Q_OS_WIN
       // QFile is broken for text files
@@ -288,15 +285,14 @@ bool Translator::save(const QString &filename, ConversionData &cd, const QString
 #endif
 
       if (!file.open(stdout, QIODevice::WriteOnly)) {
-         cd.appendError(QString::fromLatin1("Cannot open stdout!? (%1)")
-                        .arg(file.errorString()));
+         cd.appendError(QString("Can not open stdout (%1)").formatArg(file.errorString()));
          return false;
       }
+
    } else {
       file.setFileName(filename);
       if (!file.open(QIODevice::WriteOnly)) {
-         cd.appendError(QString::fromLatin1("Cannot create %1: %2")
-                        .arg(filename, file.errorString()));
+         cd.appendError(QString("Can not create %1: %2").formatArgs(filename, file.errorString()));
          return false;
       }
    }
@@ -304,37 +300,41 @@ bool Translator::save(const QString &filename, ConversionData &cd, const QString
    QString fmt = guessFormat(filename, format);
    cd.m_targetDir = QFileInfo(filename).absoluteDir();
 
-   foreach (const FileFormat & format, registeredFileFormats()) {
+   for (const FileFormat & format : registeredFileFormats()) {
       if (fmt == format.extension) {
          if (format.saver) {
             return (*format.saver)(*this, file, cd);
          }
-         cd.appendError(QString(QLatin1String("Cannot save %1 files")).arg(fmt));
+
+         cd.appendError(QString("Can not save %1 files").formatArg(fmt));
+
          return false;
       }
    }
 
-   cd.appendError(QString(QLatin1String("Unknown format %1 for file %2"))
-                  .arg(format).arg(filename));
+   cd.appendError(QString("Unknown format %1 for file %2").formatArg(format).formatArg(filename));
+
    return false;
 }
 
 QString Translator::makeLanguageCode(QLocale::Language language, QLocale::Country country)
 {
    QLocale locale(language, country);
+
    if (country == QLocale::AnyCountry) {
       QString languageCode = locale.name().section(QLatin1Char('_'), 0, 0);
+
       if (languageCode.length() <= 3) {
          return languageCode;
       }
       return QString();
+
    } else {
       return locale.name();
    }
 }
 
-void Translator::languageAndCountry(const QString &languageCode,
-                                    QLocale::Language *lang, QLocale::Country *country)
+void Translator::languageAndCountry(const QString &languageCode, QLocale::Language *lang, QLocale::Country *country)
 {
    QLocale locale(languageCode);
    if (lang) {
@@ -365,11 +365,11 @@ int Translator::find(const TranslatorMessage &msg) const
    return i >= 0 && m_messages.at(i).id().isEmpty() ? i : -1;
 }
 
-int Translator::find(const QString &context,
-                     const QString &comment, const TranslatorMessage::References &refs) const
+int Translator::find(const QString &context, const QString &comment, const TranslatorMessage::References &refs) const
 {
    if (!refs.isEmpty()) {
-      for (TMM::ConstIterator it = m_messages.constBegin(); it != m_messages.constEnd(); ++it) {
+      for (TMM::const_iterator it = m_messages.constBegin(); it != m_messages.constEnd(); ++it) {
+
          if (it->context() == context && it->comment() == comment)
             foreach (const TranslatorMessage::Reference & itref, it->allReferences())
             foreach (const TranslatorMessage::Reference & ref, refs)
@@ -389,7 +389,7 @@ int Translator::find(const QString &context) const
 
 void Translator::stripObsoleteMessages()
 {
-   for (TMM::Iterator it = m_messages.begin(); it != m_messages.end(); )
+   for (TMM::iterator it = m_messages.begin(); it != m_messages.end(); )
       if (it->type() == TranslatorMessage::Obsolete) {
          it = m_messages.erase(it);
       } else {
@@ -400,7 +400,7 @@ void Translator::stripObsoleteMessages()
 
 void Translator::stripFinishedMessages()
 {
-   for (TMM::Iterator it = m_messages.begin(); it != m_messages.end(); )
+   for (TMM::iterator it = m_messages.begin(); it != m_messages.end(); )
       if (it->type() == TranslatorMessage::Finished) {
          it = m_messages.erase(it);
       } else {
@@ -411,7 +411,7 @@ void Translator::stripFinishedMessages()
 
 void Translator::stripEmptyContexts()
 {
-   for (TMM::Iterator it = m_messages.begin(); it != m_messages.end();)
+   for (TMM::iterator it = m_messages.begin(); it != m_messages.end();)
       if (it->sourceText() == QLatin1String(ContextComment)) {
          it = m_messages.erase(it);
       } else {
@@ -422,7 +422,7 @@ void Translator::stripEmptyContexts()
 
 void Translator::stripNonPluralForms()
 {
-   for (TMM::Iterator it = m_messages.begin(); it != m_messages.end(); )
+   for (TMM::iterator it = m_messages.begin(); it != m_messages.end(); )
       if (!it->isPlural()) {
          it = m_messages.erase(it);
       } else {
@@ -433,7 +433,7 @@ void Translator::stripNonPluralForms()
 
 void Translator::stripIdenticalSourceTranslations()
 {
-   for (TMM::Iterator it = m_messages.begin(); it != m_messages.end(); ) {
+   for (TMM::iterator it = m_messages.begin(); it != m_messages.end(); ) {
       // we need to have just one translation, and it be equal to the source
       if (it->translations().count() == 1 && it->translation() == it->sourceText()) {
          it = m_messages.erase(it);
@@ -446,7 +446,7 @@ void Translator::stripIdenticalSourceTranslations()
 
 void Translator::dropTranslations()
 {
-   for (TMM::Iterator it = m_messages.begin(); it != m_messages.end(); ++it) {
+   for (TMM::iterator it = m_messages.begin(); it != m_messages.end(); ++it) {
       if (it->type() == TranslatorMessage::Finished) {
          it->setType(TranslatorMessage::Unfinished);
       }
@@ -456,11 +456,14 @@ void Translator::dropTranslations()
 
 void Translator::dropUiLines()
 {
-   QString uiXt = QLatin1String(".ui");
+   QString uiXt  = QLatin1String(".ui");
    QString juiXt = QLatin1String(".jui");
-   for (TMM::Iterator it = m_messages.begin(); it != m_messages.end(); ++it) {
+
+   for (TMM::iterator it = m_messages.begin(); it != m_messages.end(); ++it) {
+
       QHash<QString, int> have;
       QList<TranslatorMessage::Reference> refs;
+
       foreach (const TranslatorMessage::Reference & itref, it->allReferences()) {
          const QString &fn = itref.fileName();
          if (fn.endsWith(uiXt) || fn.endsWith(juiXt)) {
@@ -529,10 +532,12 @@ inline bool operator==(TranslatorMessageContentPtr tmp1, TranslatorMessageConten
    if (tmp1->context() != tmp2->context() || tmp1->sourceText() != tmp2->sourceText()) {
       return false;
    }
+
    // Special treatment for context comments (empty source).
    if (tmp1->sourceText().isEmpty()) {
       return true;
    }
+
    return tmp1->comment() == tmp2->comment();
 }
 
@@ -541,14 +546,16 @@ Translator::Duplicates Translator::resolveDuplicates()
    Duplicates dups;
    QHash<TranslatorMessageIdPtr, int> idRefs;
    QHash<TranslatorMessageContentPtr, int> contentRefs;
+
    for (int i = 0; i < m_messages.count();) {
       const TranslatorMessage &msg = m_messages.at(i);
       TranslatorMessage *omsg;
       int oi;
       QSet<int> *pDup;
-      if (!msg.id().isEmpty()) {
-         QHash<TranslatorMessageIdPtr, int>::ConstIterator it =
-            idRefs.constFind(TranslatorMessageIdPtr(msg));
+
+      if (! msg.id().isEmpty()) {
+         QHash<TranslatorMessageIdPtr, int>::const_iterator it = idRefs.constFind(TranslatorMessageIdPtr(msg));
+
          if (it != idRefs.constEnd()) {
             oi = *it;
             omsg = &m_messages[oi];
@@ -557,7 +564,7 @@ Translator::Duplicates Translator::resolveDuplicates()
          }
       }
       {
-         QHash<TranslatorMessageContentPtr, int>::ConstIterator it =
+         QHash<TranslatorMessageContentPtr, int>::const_iterator it =
             contentRefs.constFind(TranslatorMessageContentPtr(msg));
          if (it != contentRefs.constEnd()) {
             oi = *it;
@@ -691,37 +698,41 @@ void Translator::normalizeTranslations(ConversionData &cd)
          m_messages[i].setTranslations(tlns);
       }
    }
+
    if (truncated)
-      cd.appendError(QLatin1String(
-                        "Removed plural forms as the target language has less "
-                        "forms.\nIf this sounds wrong, possibly the target language is "
-                        "not set or recognized."));
+      cd.appendError("Removed plural forms as the target language has less forms.\n"
+                     "If this sounds wrong, possibly the target language is not set or recognized.");
 }
 
 QString Translator::guessLanguageCodeFromFileName(const QString &filename)
 {
    QString str = filename;
-   foreach (const FileFormat & format, registeredFileFormats()) {
+
+   for (const FileFormat & format : registeredFileFormats()) {
       if (str.endsWith(format.extension)) {
          str = str.left(str.size() - format.extension.size() - 1);
          break;
       }
    }
-   static QRegExp re(QLatin1String("[\\._]"));
+
+   static QRegularExpression regExp("[\\._]");
+
    while (true) {
       QLocale locale(str);
-      //qDebug() << "LANGUAGE FROM " << str << "LANG: " << locale.language();
+
       if (locale.language() != QLocale::C) {
-         //qDebug() << "FOUND " << locale.name();
          return locale.name();
       }
-      int pos = str.indexOf(re);
-      if (pos == -1) {
+
+      auto pos = str.indexOfFast(regExp);
+
+      if (pos == str.end()) {
          break;
       }
-      str = str.mid(pos + 1);
+
+      str = QString(pos + 1, str.end());
    }
-   //qDebug() << "LANGUAGE GUESSING UNSUCCESSFUL";
+
    return QString();
 }
 

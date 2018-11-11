@@ -1,28 +1,26 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
 
+#include <algorithm>
 #include <qlistview.h>
 
 #ifndef QT_NO_LISTVIEW
@@ -1932,6 +1930,27 @@ int QCommonListViewBase::horizontalScrollToValue(const int /*index*/, QListView:
  * ListMode ListView Implementation
 */
 
+// internal only
+static inline int cs_vector_query(const QVector<int> &vector, int item, int start, int end)
+{
+   int i = (start + end + 1) >> 1;
+
+   while (end - start > 0) {
+      if (vector.at(i) > item)  {
+         end = i - 1;
+
+      }  else  {
+         start = i;
+
+      }
+
+      i = (start + end + 1) >> 1;
+   }
+
+   return i;
+}
+
+
 #ifndef QT_NO_DRAGANDDROP
 QAbstractItemView::DropIndicatorPosition QListModeViewBase::position(const QPoint &pos, const QRect &rect,
       const QModelIndex &index) const
@@ -2301,15 +2320,11 @@ bool QListModeViewBase::doBatchedItemLayout(const QListViewLayoutInfo &info, int
 
 QListViewItem QListModeViewBase::indexToListViewItem(const QModelIndex &index) const
 {
-   if (flowPositions.isEmpty()
-         || segmentPositions.isEmpty()
-         || index.row() >= flowPositions.count()) {
+   if (flowPositions.isEmpty() || segmentPositions.isEmpty() || index.row() >= flowPositions.count()) {
       return QListViewItem();
    }
 
-   const int segment = qBinarySearch<int>(segmentStartRows, index.row(),
-                                          0, segmentStartRows.count() - 1);
-
+   const int segment = cs_vector_query(segmentStartRows, index.row(), 0, segmentStartRows.count() - 1);
 
    QStyleOptionViewItemV4 options = viewOptions();
    options.rect.setSize(contentsSize);
@@ -2320,15 +2335,21 @@ QListViewItem QListModeViewBase::indexToListViewItem(const QModelIndex &index) c
    if (flow() == QListView::LeftToRight) {
       pos.setX(flowPositions.at(index.row()));
       pos.setY(segmentPositions.at(segment));
+
    } else { // TopToBottom
       pos.setY(flowPositions.at(index.row()));
       pos.setX(segmentPositions.at(segment));
-      if (isWrapping()) { // make the items as wide as the segment
+
+      if (isWrapping()) {
+         // make the items as wide as the segment
          int right = (segment + 1 >= segmentPositions.count()
                       ? contentsSize.width()
                       : segmentPositions.at(segment + 1));
+
          size.setWidth(right - pos.x());
-      } else { // make the items as wide as the viewport
+
+      } else {
+         // make the items as wide as the viewport
          size.setWidth(qMax(size.width(), viewport()->width() - 2 * spacing()));
       }
    }
@@ -2478,6 +2499,7 @@ void QListModeViewBase::doStaticLayout(const QListViewLayoutInfo &info)
    }
 }
 
+
 /*!
   \internal
   Finds the set of items intersecting with \a area.
@@ -2501,34 +2523,38 @@ QVector<QModelIndex> QListModeViewBase::intersectingSet(const QRect &area) const
       flowStartPosition = area.top();
       flowEndPosition = area.bottom();
    }
+
    if (segmentPositions.count() < 2 || flowPositions.isEmpty()) {
       return ret;
    }
+
    // the last segment position is actually the edge of the last segment
    const int segLast = segmentPositions.count() - 2;
-   int seg = qBinarySearch<int>(segmentPositions, segStartPosition, 0, segLast + 1);
+   int seg = cs_vector_query(segmentPositions, segStartPosition, 0, segLast + 1);
+
    for (; seg <= segLast && segmentPositions.at(seg) <= segEndPosition; ++seg) {
       int first = segmentStartRows.at(seg);
       int last = (seg < segLast ? segmentStartRows.at(seg + 1) : batchStartRow) - 1;
+
       if (segmentExtents.at(seg) < flowStartPosition) {
          continue;
       }
-      int row = qBinarySearch<int>(flowPositions, flowStartPosition, first, last);
+
+      int row = cs_vector_query(flowPositions, flowStartPosition, first, last );
+
       for (; row <= last && flowPositions.at(row) <= flowEndPosition; ++row) {
          if (isHidden(row)) {
             continue;
          }
+
          QModelIndex index = modelIndex(row);
          if (index.isValid()) {
             ret += index;
          }
-#if 0 // for debugging
-         else {
-            qWarning("intersectingSet: row %d was invalid", row);
-         }
-#endif
+
       }
    }
+
    return ret;
 }
 
@@ -2563,8 +2589,10 @@ int QListModeViewBase::perItemScrollingPageSteps(int length, int bounds, bool wr
       positions = segmentPositions;
    } else if (!flowPositions.isEmpty()) {
       positions.reserve(scrollValueMap.size());
-      foreach (int itemShown, scrollValueMap)
-      positions.append(flowPositions.at(itemShown));
+
+      for (int itemShown : scrollValueMap) {
+         positions.append(flowPositions.at(itemShown));
+      }
    }
    if (positions.isEmpty() || bounds <= length) {
       return positions.count();
@@ -2631,20 +2659,23 @@ int QListModeViewBase::perItemScrollToValue(int index, int scrollValue, int view
          default:
             break;
       }
-   } else { // wrapping
+   } else {
+      // wrapping
       Qt::Orientation flowOrientation = (flow() == QListView::LeftToRight
                                          ? Qt::Horizontal : Qt::Vertical);
       if (flowOrientation == orientation) { // scrolling in the "flow" direction
          // ### wrapped scrolling in the flow direction
          return visibleFlowPositions.at(index); // ### always pixel based for now
-      } else if (!segmentStartRows.isEmpty()) { // we are scrolling in the "segment" direction
-         int segment = qBinarySearch<int>(segmentStartRows, index, 0, segmentStartRows.count() - 1);
-         int leftSegment = segment;
-         const int rightSegment = leftSegment;
+
+      } else if (! segmentStartRows.isEmpty()) {
+         // we are scrolling in the "segment" direction
+         int segment = cs_vector_query(segmentStartRows, index, 0, segmentStartRows.count() - 1);
+
+         int leftSegment            = segment;
+         const int rightSegment     = leftSegment;
          const int bottomCoordinate = segmentPositions.at(segment);
 
-         while (leftSegment > scrollValue &&
-                (bottomCoordinate - segmentPositions.at(leftSegment - 1) + itemExtent) <= (viewportSize)) {
+         while (leftSegment > scrollValue && (bottomCoordinate - segmentPositions.at(leftSegment - 1) + itemExtent) <= (viewportSize)) {
             leftSegment--;
          }
 
@@ -2719,7 +2750,8 @@ bool QIconModeViewBase::filterStartDrag(Qt::DropActions supportedActions)
    QModelIndexList indexes = dd->selectionModel->selectedIndexes();
    if (indexes.count() > 0 ) {
       if (viewport()->acceptDrops()) {
-         QModelIndexList::ConstIterator it = indexes.constBegin();
+         QModelIndexList::const_iterator it = indexes.constBegin();
+
          for (; it != indexes.constEnd(); ++it)
             if (dd->model->flags(*it) & Qt::ItemIsDragEnabled
                   && (*it).column() == dd->column) {
@@ -2756,9 +2788,11 @@ bool QIconModeViewBase::filterDropEvent(QDropEvent *e)
    if (qq->acceptDrops()) {
       const Qt::ItemFlags dropableFlags = Qt::ItemIsDropEnabled | Qt::ItemIsEnabled;
       const QVector<QModelIndex> &dropIndices = intersectingSet(QRect(end, QSize(1, 1)));
-      foreach (const QModelIndex & index, dropIndices)
-      if ((index.flags() & dropableFlags) == dropableFlags) {
-         return false;
+
+      for (const QModelIndex & index : dropIndices) {
+         if ((index.flags() & dropableFlags) == dropableFlags) {
+            return false;
+         }
       }
    }
    QPoint start = dd->pressedPosition;
@@ -2985,8 +3019,8 @@ void QIconModeViewBase::doDynamicLayout(const QListViewLayoutInfo &info)
                deltaFlowPosition = item->h + info.spacing;
             }
          } else {
-            item->w = qMin<int>(info.grid.width(), item->w);
-            item->h = qMin<int>(info.grid.height(), item->h);
+            item->w = qMin(info.grid.width(), item->w);
+            item->h = qMin(info.grid.height(), item->h);
          }
 
          // create new segment

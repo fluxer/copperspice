@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -485,10 +482,12 @@ QString QScriptDeclarativeClass::toString(const Identifier &identifier)
 bool QScriptDeclarativeClass::startsWithUpper(const Identifier &identifier)
 {
    JSC::UString::Rep *r = (JSC::UString::Rep *)identifier;
+
    if (r->size() < 1) {
       return false;
    }
-   return QChar::category((ushort)(r->data()[0])) == QChar::Letter_Uppercase;
+
+   return QChar(char32_t(r->data()[0])).category() == QChar::Letter_Uppercase;
 }
 
 quint32 QScriptDeclarativeClass::toArrayIndex(const Identifier &identifier, bool *ok)
@@ -498,9 +497,8 @@ quint32 QScriptDeclarativeClass::toArrayIndex(const Identifier &identifier, bool
    return s.toArrayIndex(ok);
 }
 
-QScriptClass::QueryFlags
-QScriptDeclarativeClass::queryProperty(Object *object, const Identifier &name,
-                                       QScriptClass::QueryFlags flags)
+QScriptClass::QueryFlags QScriptDeclarativeClass::queryProperty(Object *object,
+                  const Identifier &name, QScriptClass::QueryFlags flags)
 {
    Q_UNUSED(object);
    Q_UNUSED(name);
@@ -508,32 +506,28 @@ QScriptDeclarativeClass::queryProperty(Object *object, const Identifier &name,
    return 0;
 }
 
-QScriptDeclarativeClass::Value
-QScriptDeclarativeClass::property(Object *object, const Identifier &name)
+QScriptDeclarativeClass::Value QScriptDeclarativeClass::property(Object *object, const Identifier &name)
 {
    Q_UNUSED(object);
    Q_UNUSED(name);
    return Value();
 }
 
-void QScriptDeclarativeClass::setProperty(Object *object, const Identifier &name,
-      const QScriptValue &value)
+void QScriptDeclarativeClass::setProperty(Object *object, const Identifier &name, const QScriptValue &value)
 {
    Q_UNUSED(object);
    Q_UNUSED(name);
    Q_UNUSED(value);
 }
 
-QScriptValue::PropertyFlags
-QScriptDeclarativeClass::propertyFlags(Object *object, const Identifier &name)
+QScriptValue::PropertyFlags QScriptDeclarativeClass::propertyFlags(Object *object, const Identifier &name)
 {
    Q_UNUSED(object);
    Q_UNUSED(name);
    return 0;
 }
 
-QScriptDeclarativeClass::Value QScriptDeclarativeClass::call(Object *object,
-      QScriptContext *ctxt)
+QScriptDeclarativeClass::Value QScriptDeclarativeClass::call(Object *object, QScriptContext *ctxt)
 {
    Q_UNUSED(object);
    Q_UNUSED(ctxt);

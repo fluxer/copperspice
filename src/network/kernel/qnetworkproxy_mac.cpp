@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -27,14 +24,15 @@
 
 #ifndef QT_NO_NETWORKPROXY
 
+#include <CFNetwork/CFNetwork.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <SystemConfiguration/SystemConfiguration.h>
-#include <QtCore/QRegExp>
-#include <QtCore/QStringList>
-#include <QtCore/QUrl>
-#include <QtCore/qendian.h>
-#include <QtCore/qstringlist.h>
+
+#include <qendian.h>
 #include <qcore_mac_p.h>
+#include <qregularexpression.h>
+#include <qstringlist.h>
+#include <qurl.h>
 
 /*
  * MacOS X has a proxy configuration module in System Preferences (on
@@ -59,8 +57,6 @@
  * http://developer.apple.com/DOCUMENTATION/Networking/Reference/SysConfig/SCDynamicStoreCopySpecific/CompositePage.html#//apple_ref/c/func/SCDynamicStoreCopyProxies
  *
  */
-
-QT_BEGIN_NAMESPACE
 
 static bool isHostExcluded(CFDictionaryRef dict, const QString &host)
 {
@@ -95,10 +91,15 @@ static bool isHostExcluded(CFDictionaryRef dict, const QString &host)
 
       if (isIpAddress && ipAddress.isInSubnet(QHostAddress::parseSubnet(entry))) {
          return true;        // excluded
+
       } else {
          // do wildcard matching
-         QRegExp rx(entry, Qt::CaseInsensitive, QRegExp::Wildcard);
-         if (rx.exactMatch(host)) {
+         QRegularExpression rx(entry, QPatternOption:CaseInsensitiveOption | QPatternOption:WildcardOption
+                  | QPatternOption:ExactMatchOption);
+
+         QRegularExpressionMatch match = rx.match(host);
+
+         if (match.hasMatch()) {
             return true;
          }
       }
@@ -216,21 +217,28 @@ QList<QNetworkProxy> macQueryInternal(const QNetworkProxyQuery &query)
       int enabled;
       if (CFNumberGetValue(pacEnabled, kCFNumberIntType, &enabled) && enabled) {
          // PAC is enabled
-         CFStringRef cfPacLocation = (CFStringRef)CFDictionaryGetValue(dict, kSCPropNetProxiesProxyAutoConfigURLString);
+         CFStringRef pacLocationSetting = (CFStringRef)CFDictionaryGetValue(dict, kSCPropNetProxiesProxyAutoConfigURLString);
+         QCFType<CFStringRef> cfPacLocation = CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault, pacLocationSetting, NULL, NULL,
+                                              kCFStringEncodingUTF8);
 
-#if (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_5)
          if (QSysInfo::MacintoshVersion >= QSysInfo::MV_10_5) {
             QCFType<CFDataRef> pacData;
             QCFType<CFURLRef> pacUrl = CFURLCreateWithString(kCFAllocatorDefault, cfPacLocation, NULL);
+            if (!pacUrl) {
+               qWarning("Invalid PAC URL \"%s\"", qPrintable(QCFString::toQString(cfPacLocation)));
+               return result;
+            }
             SInt32 errorCode;
             if (!CFURLCreateDataAndPropertiesFromResource(kCFAllocatorDefault, pacUrl, &pacData, NULL, NULL, &errorCode)) {
                QString pacLocation = QCFString::toQString(cfPacLocation);
                qWarning("Unable to get the PAC script at \"%s\" (%s)", qPrintable(pacLocation), cfurlErrorDescription(errorCode));
                return result;
             }
-
-            QCFType<CFStringRef> pacScript = CFStringCreateFromExternalRepresentation(kCFAllocatorDefault, pacData,
-                                             kCFStringEncodingISOLatin1);
+            if (!pacData) {
+               qWarning("\"%s\" returned an empty PAC script", qPrintable(QCFString::toQString(cfPacLocation)));
+               return result;
+            }
+            QCFType<CFStringRef> pacScript = CFStringCreateFromExternalRepresentation(kCFAllocatorDefault, pacData, kCFStringEncodingISOLatin1);
             if (!pacScript) {
                // This should never happen, but the documentation says it may return NULL if there was a problem creating the object.
                QString pacLocation = QCFString::toQString(cfPacLocation);
@@ -243,8 +251,7 @@ QList<QNetworkProxy> macQueryInternal(const QNetworkProxyQuery &query)
                return result; // Invalid URL, abort
             }
 
-            QCFType<CFURLRef> targetURL = CFURLCreateWithBytes(kCFAllocatorDefault, (UInt8 *)encodedURL.data(), encodedURL.size(),
-                                          kCFStringEncodingUTF8, NULL);
+            QCFType<CFURLRef> targetURL = CFURLCreateWithBytes(kCFAllocatorDefault, (UInt8 *)encodedURL.data(), encodedURL.size(), kCFStringEncodingUTF8, NULL);
             if (!targetURL) {
                return result; // URL creation problem, abort
             }
@@ -265,9 +272,8 @@ QList<QNetworkProxy> macQueryInternal(const QNetworkProxyQuery &query)
                result << proxyFromDictionary(proxy);
             }
             return result;
-         } else
-#endif
-         {
+
+         } else {
             QString pacLocation = QCFString::toQString(cfPacLocation);
             qWarning("Mac system proxy: PAC script at \"%s\" not handled", qPrintable(pacLocation));
          }
@@ -341,4 +347,4 @@ QList<QNetworkProxy> QNetworkProxyFactory::systemProxyForQuery(const QNetworkPro
 
 #endif
 
-QT_END_NAMESPACE
+

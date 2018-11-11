@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -475,14 +472,17 @@ QPlatformNativeInterface *QApplication::platformNativeInterface()
 static void init_platform(const QString &name, const QString &platformPluginPath)
 {
    QApplicationPrivate::platform_integration = QPlatformIntegrationFactory::create(name, platformPluginPath);
+
    if (!QApplicationPrivate::platform_integration) {
       QStringList keys = QPlatformIntegrationFactory::keys(platformPluginPath);
-      QString fatalMessage =
-         QString::fromLatin1("Failed to load platform plugin \"%1\". Available platforms are: \n").arg(name);
-      foreach(QString key, keys) {
+
+      QString fatalMessage = QString::fromLatin1("Failed to load platform plugin \"%1\". Available platforms are: \n").formatArg(name);
+
+      for(QString key : keys) {
          fatalMessage.append(key + QString::fromLatin1("\n"));
       }
-      qFatal("%s", fatalMessage.toLocal8Bit().constData());
+
+      qFatal("%s", fatalMessage.toUtf8().constData());
 
    }
 
@@ -515,7 +515,7 @@ static void init_plugins(const QList<QByteArray> pluginList)
 class QDummyInputContext : public QInputContext
 {
  public:
-   explicit QDummyInputContext(QObject *parent = 0) : QInputContext(parent) {}
+   explicit QDummyInputContext(QObject *parent = nullptr) : QInputContext(parent) {}
    ~QDummyInputContext() {}
    QString identifierName() {
       return QString();
@@ -543,45 +543,55 @@ void qt_init(QApplicationPrivate *priv, int type)
 
    if (argv && *argv) { //apparently, we allow people to pass 0 on the other platforms
       p = strrchr(argv[0], '/');
-      appName = QString::fromLocal8Bit(p ? p + 1 : argv[0]);
+      appName = QString::fromUtf8(p ? p + 1 : argv[0]);
    }
 
    QList<QByteArray> pluginList;
-   QString platformPluginPath = QLatin1String(qgetenv("QT_QPA_PLATFORM_PLUGIN_PATH"));
+   QString platformPluginPath = QString::fromUtf8(qgetenv("QT_QPA_PLATFORM_PLUGIN_PATH"));
+
    QByteArray platformName;
+
 #ifdef QT_QPA_DEFAULT_PLATFORM_NAME
    platformName = QT_QPA_DEFAULT_PLATFORM_NAME;
 #endif
+
    QByteArray platformNameEnv = qgetenv("QT_QPA_PLATFORM");
-   if (!platformNameEnv.isEmpty()) {
+
+   if (! platformNameEnv.isEmpty()) {
       platformName = platformNameEnv;
    }
 
    // Get command line params
 
    int j = argc ? 1 : 0;
+
    for (int i = 1; i < argc; i++) {
       if (argv[i] && *argv[i] != '-') {
          argv[j++] = argv[i];
          continue;
       }
+
       QByteArray arg = argv[i];
       if (arg == "-fn" || arg == "-font") {
          if (++i < argc) {
-            appFont = QString::fromLocal8Bit(argv[i]);
+            appFont = QString::fromUtf8(argv[i]);
          }
+
       } else if (arg == "-platformpluginpath") {
          if (++i < argc) {
             platformPluginPath = QLatin1String(argv[i]);
          }
+
       } else if (arg == "-platform") {
          if (++i < argc) {
             platformName = argv[i];
          }
+
       } else if (arg == "-plugin") {
          if (++i < argc) {
             pluginList << argv[i];
          }
+
       } else {
          argv[j++] = argv[i];
       }
@@ -763,7 +773,7 @@ void QApplicationPrivate::processMouseEvent(QWindowSystemInterfacePrivate::Mouse
    QMouseEvent ev(type, localPoint, globalPoint, button, buttons, QApplication::keyboardModifiers());
 
    QList<QWeakPointer<QPlatformCursor> > cursors = QPlatformCursorPrivate::getInstances();
-   foreach (QWeakPointer<QPlatformCursor> cursor, cursors) {
+   for (QWeakPointer<QPlatformCursor> cursor : cursors) {
       if (cursor) {
          cursor.data()->pointerEvent(ev);
       }

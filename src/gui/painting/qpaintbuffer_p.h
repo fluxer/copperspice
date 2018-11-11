@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -61,9 +58,9 @@ class Q_GUI_EXPORT QPaintBuffer : public QPaintDevice
    void setBoundingRect(const QRectF &rect);
    QRectF boundingRect() const;
 
-   virtual QPaintEngine *paintEngine() const;
-   virtual int metric(PaintDeviceMetric m) const;
-   virtual int devType() const;
+   QPaintEngine *paintEngine() const override;
+   int metric(PaintDeviceMetric m) const override;
+   int devType() const override;
 
    QPaintBuffer &operator=(const QPaintBuffer &other);
 
@@ -87,6 +84,7 @@ class QTextItemIntCopy
  public:
    QTextItemIntCopy(const QTextItem &item);
    ~QTextItemIntCopy();
+
    QTextItemInt &operator () () {
       return m_item;
    }
@@ -94,6 +92,7 @@ class QTextItemIntCopy
  private:
    QTextItemInt m_item;
    QFont m_font;
+   QString m_text;
 };
 
 struct QPaintBufferCommand {
@@ -317,7 +316,7 @@ class Q_GUI_EXPORT QPaintEngineExReplayer : public QPainterReplayer
  public:
    QPaintEngineExReplayer() { }
 
-   virtual void process(const QPaintBufferCommand &cmd);
+   void process(const QPaintBufferCommand &cmd) override;
 };
 
 class QPaintBufferEnginePrivate;
@@ -329,68 +328,70 @@ class QPaintBufferEngine : public QPaintEngineEx
  public:
    QPaintBufferEngine(QPaintBufferPrivate *buffer);
 
-   virtual bool begin(QPaintDevice *device);
-   virtual bool end();
+   bool begin(QPaintDevice *device) override;
+   bool end() override;
 
-   virtual Type type() const {
+   Type type() const override {
       return QPaintEngine::PaintBuffer;
    }
 
-   virtual QPainterState *createState(QPainterState *orig) const;
+   QPainterState *createState(QPainterState *orig) const override;
 
-   virtual void draw(const QVectorPath &path);
-   virtual void fill(const QVectorPath &path, const QBrush &brush);
-   virtual void stroke(const QVectorPath &path, const QPen &pen);
+   void draw(const QVectorPath &path) override;
+   void fill(const QVectorPath &path, const QBrush &brush) override;
+   void stroke(const QVectorPath &path, const QPen &pen) override;
 
-   virtual void clip(const QVectorPath &path, Qt::ClipOperation op);
-   virtual void clip(const QRect &rect, Qt::ClipOperation op);
-   virtual void clip(const QRegion &region, Qt::ClipOperation op);
-   virtual void clip(const QPainterPath &path, Qt::ClipOperation op);
+   void clip(const QVectorPath &path, Qt::ClipOperation op) override;
+   void clip(const QRect &rect, Qt::ClipOperation op) override;
+   void clip(const QRegion &region, Qt::ClipOperation op) override;
+   void clip(const QPainterPath &path, Qt::ClipOperation op) override;
 
-   virtual void clipEnabledChanged();
-   virtual void penChanged();
-   virtual void brushChanged();
-   virtual void brushOriginChanged();
-   virtual void opacityChanged();
-   virtual void compositionModeChanged();
-   virtual void renderHintsChanged();
-   virtual void transformChanged();
-   virtual void backgroundModeChanged();
+   void clipEnabledChanged() override;
+   void penChanged() override;
+   void brushChanged() override;
+   void brushOriginChanged() override;
+   void opacityChanged() override;
+   void compositionModeChanged() override;
+   void renderHintsChanged() override;
+   void transformChanged() override;
+   void backgroundModeChanged();
 
-   virtual void fillRect(const QRectF &rect, const QBrush &brush);
-   virtual void fillRect(const QRectF &rect, const QColor &color);
+   void fillRect(const QRectF &rect, const QBrush &brush) override;
+   void fillRect(const QRectF &rect, const QColor &color) override;
 
-   virtual void drawRects(const QRect *rects, int rectCount);
-   virtual void drawRects(const QRectF *rects, int rectCount);
+   void drawRects(const QRect *rects, int rectCount) override;
+   void drawRects(const QRectF *rects, int rectCount) override;
 
-   virtual void drawLines(const QLine *lines, int lineCount);
-   virtual void drawLines(const QLineF *lines, int lineCount);
+   void drawLines(const QLine *lines, int lineCount) override;
+   void drawLines(const QLineF *lines, int lineCount) override;
 
-   virtual void drawEllipse(const QRectF &r);
-   virtual void drawEllipse(const QRect &r);
+   void drawEllipse(const QRectF &r) override;
+   void drawEllipse(const QRect &r) override;
 
-   virtual void drawPath(const QPainterPath &path);
+   void drawPath(const QPainterPath &path) override;
 
-   virtual void drawPoints(const QPointF *points, int pointCount);
-   virtual void drawPoints(const QPoint *points, int pointCount);
+   void drawPoints(const QPointF *points, int pointCount) override;
+   void drawPoints(const QPoint *points, int pointCount) override;
 
-   virtual void drawPolygon(const QPointF *points, int pointCount, PolygonDrawMode mode);
-   virtual void drawPolygon(const QPoint *points, int pointCount, PolygonDrawMode mode);
+   void drawPolygon(const QPointF *points, int pointCount, PolygonDrawMode mode) override;
+   void drawPolygon(const QPoint *points, int pointCount, PolygonDrawMode mode) override;
 
-   virtual void drawPixmap(const QRectF &r, const QPixmap &pm, const QRectF &sr);
-   virtual void drawPixmap(const QPointF &pos, const QPixmap &pm);
+   void drawPixmap(const QRectF &r, const QPixmap &pm, const QRectF &sr) override;
+   void drawPixmap(const QPointF &pos, const QPixmap &pm) override;
 
-   virtual void drawImage(const QRectF &r, const QImage &pm, const QRectF &sr,
-                          Qt::ImageConversionFlags flags = Qt::AutoColor);
+   void drawImage(const QRectF &r, const QImage &pm, const QRectF &sr,
+                          Qt::ImageConversionFlags flags = Qt::AutoColor) override;
+
    virtual void drawImage(const QPointF &pos, const QImage &image);
 
-   virtual void drawTiledPixmap(const QRectF &r, const QPixmap &pixmap, const QPointF &s);
+   void drawTiledPixmap(const QRectF &r, const QPixmap &pixmap, const QPointF &s) override;
 
-   virtual void drawTextItem(const QPointF &pos, const QTextItem &ti);
-   virtual void drawStaticTextItem(QStaticTextItem *staticTextItem);
+   void drawTextItem(const QPointF &pos, const QTextItem &ti) override;
+   void drawStaticTextItem(QStaticTextItem *staticTextItem) override;
 
-   virtual void setState(QPainterState *s);
-   virtual uint flags() const {
+   void setState(QPainterState *s) override;
+
+   uint flags() const override{
       return QPaintEngineEx::DoNotEmulate;
    }
 
@@ -414,7 +415,7 @@ class Q_GUI_EXPORT QPaintBufferSignalProxy : public QObject
       emit aboutToDestroy(buffer);
    }
    static QPaintBufferSignalProxy *instance();
- 
+
    GUI_CS_SIGNAL_1(Public, void aboutToDestroy(const QPaintBufferPrivate *buffer))
    GUI_CS_SIGNAL_2(aboutToDestroy, buffer)
 };
@@ -427,7 +428,7 @@ class Q_GUI_EXPORT QPaintBufferResource : public QObject
  public:
    typedef void (*FreeFunc)(void *);
 
-   QPaintBufferResource(FreeFunc f, QObject *parent = 0);
+   QPaintBufferResource(FreeFunc f, QObject *parent = nullptr);
    ~QPaintBufferResource();
    // Set resource 'value' for 'key'.
    void insert(const QPaintBufferPrivate *key, void *value);

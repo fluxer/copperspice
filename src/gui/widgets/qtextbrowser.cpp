@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -108,7 +105,7 @@ class QTextBrowserPrivate : public QTextEditPrivate
 
    QString findFile(const QUrl &name) const;
 
-   inline void _q_documentModified() {
+   void _q_documentModified() {
       textOrSourceChanged = true;
       forceLoadOnSourceChange = !currentURL.path().isEmpty();
    }
@@ -119,8 +116,9 @@ class QTextBrowserPrivate : public QTextEditPrivate
    void setSource(const QUrl &url);
 
    // re-imlemented from QTextEditPrivate
-   virtual QUrl resolveUrl(const QUrl &url) const;
-   inline QUrl resolveUrl(const QString &url) const {
+   QUrl resolveUrl(const QUrl &url) const override;
+
+   QUrl resolveUrl(const QString &url) const {
       return resolveUrl(QUrl::fromEncoded(url.toUtf8()));
    }
 
@@ -145,10 +143,10 @@ QString QTextBrowserPrivate::findFile(const QUrl &name) const
    if (QFileInfo(fileName).isAbsolute()) {
       return fileName;
    }
+   
+   for (QString path : searchPaths) {
 
-   foreach (QString path, searchPaths) {
-
-      if (!path.endsWith(QLatin1Char('/'))) {
+      if (! path.endsWith(QLatin1Char('/'))) {
          path.append(QLatin1Char('/'));
       }
 

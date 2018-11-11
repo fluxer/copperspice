@@ -1,27 +1,26 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
+
+#include <algorithm>
 
 #include <qdebug.h>
 #include <qcoreapplication.h>
@@ -831,15 +830,16 @@ bool QDBusConnection::registerObject(const QString &path, QObject *object, Regis
 
         // find the position where we'd insert the node
         QDBusConnectionPrivate::ObjectTreeNode::DataList::Iterator it =
-            qLowerBound(node->children.begin(), node->children.end(), pathComponents.at(i));
+            std::lower_bound(node->children.begin(), node->children.end(), pathComponents.at(i));
+
         if (it != node->children.end() && it->name == pathComponents.at(i)) {
             // match: this node exists
             node = it;
 
             // are we allowed to go deeper?
             if (node->flags & ExportChildObjects) {
-                // we're not
-                qDebug("Cannot register object at %s because %s exports its own child objects",
+                // we are not
+                qDebug("Cann ot register object at %s because %s exports its own child objects",
                        qPrintable(path), qPrintable(pathComponents.at(i)));
                 return false;
             }
@@ -904,7 +904,8 @@ void QDBusConnection::unregisterObject(const QString &path, UnregisterMode mode)
         }
 
         QDBusConnectionPrivate::ObjectTreeNode::DataList::Iterator it =
-            qLowerBound(node->children.begin(), node->children.end(), pathComponents.at(i));
+            std::lower_bound(node->children.begin(), node->children.end(), pathComponents.at(i));
+
         if (it == node->children.end() || it->name != pathComponents.at(i))
             break;              // node not found
 
@@ -936,11 +937,13 @@ QObject *QDBusConnection::objectRegisteredAt(const QString &path) const
     while (node) {
         if (pathComponents.count() == i)
             return node->obj;
+
         if ((node->flags & QDBusConnectionPrivate::VirtualObject) && (node->flags & QDBusConnection::SubPath))
             return node->obj;
 
         QDBusConnectionPrivate::ObjectTreeNode::DataList::ConstIterator it =
-            qLowerBound(node->children.constBegin(), node->children.constEnd(), pathComponents.at(i));
+            std::lower_bound(node->children.constBegin(), node->children.constEnd(), pathComponents.at(i));
+
         if (it == node->children.constEnd() || it->name != pathComponents.at(i))
             break;              // node not found
 

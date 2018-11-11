@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -240,145 +237,80 @@ qreal QRawFont::averageCharWidth() const
    return d->isValid() ? d->fontEngine->averageCharWidth().toReal() : 0.0;
 }
 
-/*!
-   Returns the width of the widest character in the font.
-
-   \sa QFontMetricsF::maxWidth()
-*/
 qreal QRawFont::maxCharWidth() const
 {
    return d->isValid() ? d->fontEngine->maxCharWidth() : 0.0;
 }
 
-/*!
-   Returns the pixel size set for this QRawFont. The pixel size affects how glyphs are
-   rasterized, the size of glyphs returned by pathForGlyph(), and is used to convert
-   internal metrics from design units to logical pixel units.
-
-   \sa setPixelSize()
-*/
 qreal QRawFont::pixelSize() const
 {
    return d->isValid() ? d->fontEngine->fontDef.pixelSize : 0.0;
 }
 
-/*!
-   Returns the number of design units define the width and height of the em square
-   for this QRawFont. This value is used together with the pixel size when converting design metrics
-   to pixel units, as the internal metrics are specified in design units and the pixel size gives
-   the size of 1 em in pixels.
-
-   \sa pixelSize(), setPixelSize()
-*/
 qreal QRawFont::unitsPerEm() const
 {
    return d->isValid() ? d->fontEngine->emSquareSize().toReal() : 0.0;
 }
 
-/*!
-   Returns the family name of this QRawFont.
-*/
 QString QRawFont::familyName() const
 {
    return d->isValid() ? d->fontEngine->fontDef.family : QString();
 }
 
-/*!
-   Returns the style name of this QRawFont.
-
-   \sa QFont::styleName()
-*/
 QString QRawFont::styleName() const
 {
    return d->isValid() ? d->fontEngine->fontDef.styleName : QString();
 }
 
-/*!
-   Returns the style of this QRawFont.
-
-   \sa QFont::style()
-*/
 QFont::Style QRawFont::style() const
 {
    return d->isValid() ? QFont::Style(d->fontEngine->fontDef.style) : QFont::StyleNormal;
 }
 
-/*!
-   Returns the weight of this QRawFont.
-
-   \sa QFont::weight()
-*/
 int QRawFont::weight() const
 {
    return d->isValid() ? int(d->fontEngine->fontDef.weight) : -1;
 }
 
-/*!
-   Converts the string of unicode points given by \a text to glyph indexes
-   using the CMAP table in the underlying font, and returns a vector containing
-   the result.
-
-   Note that, in cases where there are other tables in the font that affect the
-   shaping of the text, the returned glyph indexes will not correctly represent
-   the rendering of the text. To get the correctly shaped text, you can use
-   QTextLayout to lay out and shape the text, then call QTextLayout::glyphs()
-   to get the set of glyph index list and QRawFont pairs.
-
-   \sa advancesForGlyphIndexes(), glyphIndexesForChars(), QGlyphRun, QTextLayout::glyphRuns(), QTextFragment::glyphRuns()
-*/
 QVector<quint32> QRawFont::glyphIndexesForString(const QString &text) const
 {
-   if (!d->isValid()) {
+   if (! d->isValid()) {
       return QVector<quint32>();
    }
 
-   int nglyphs = text.size();
-   QVarLengthGlyphLayoutArray glyphs(nglyphs);
-   if (!glyphIndexesForChars(text.data(), text.size(), glyphs.glyphs, &nglyphs)) {
-      glyphs.resize(nglyphs);
-      if (!glyphIndexesForChars(text.data(), text.size(), glyphs.glyphs, &nglyphs)) {
-         Q_ASSERT_X(false, Q_FUNC_INFO, "stringToCMap shouldn't fail twice");
+   int len = text.length();
+   QVarLengthGlyphLayoutArray glyphs(len);
+
+   if (!glyphIndexesForChars(text, glyphs.glyphs, &len)) {
+      glyphs.resize(len);
+
+      if (! glyphIndexesForChars(text, glyphs.glyphs, &len)) {
+         Q_ASSERT_X(false, Q_FUNC_INFO, "stringToCMap should not fail twice");
          return QVector<quint32>();
       }
    }
 
    QVector<quint32> glyphIndexes;
-   for (int i = 0; i < nglyphs; ++i) {
+
+   for (int i = 0; i < len; ++i) {
       glyphIndexes.append(glyphs.glyphs[i]);
    }
 
    return glyphIndexes;
 }
 
-/*!
-   Converts a string of unicode points to glyph indexes using the CMAP table in the
-   underlying font. The function works like glyphIndexesForString() except it take
-   an array (\a chars), the results will be returned though \a glyphIndexes array
-   and number of glyphs will be set in \a numGlyphs. The size of \a glyphIndexes array
-   must be at least \a numChars, if that's still not enough, this function will return
-   false, then you can resize \a glyphIndexes from the size returned in \a numGlyphs.
-
-   \sa glyphIndexesForString(), advancesForGlyphIndexes(), QGlyphRun,
-       QTextLayout::glyphRuns(), QTextFragment::glyphRuns()
-*/
-bool QRawFont::glyphIndexesForChars(const QChar *chars, int numChars, quint32 *glyphIndexes, int *numGlyphs) const
+bool QRawFont::glyphIndexesForChars(QStringView str, quint32 *glyphIndexes, int *numGlyphs) const
 {
-   if (!d->isValid()) {
+   if (! d->isValid()) {
       return false;
    }
 
    QGlyphLayout glyphs;
    glyphs.glyphs = glyphIndexes;
-   return d->fontEngine->stringToCMap(chars, numChars, &glyphs, numGlyphs, QTextEngine::GlyphIndicesOnly);
+
+   return d->fontEngine->stringToCMap(str, &glyphs, numGlyphs, QTextEngine::GlyphIndicesOnly);
 }
 
-/*!
-   Returns the QRawFont's advances for each of the \a glyphIndexes in pixel units. The advances
-   give the distance from the position of a given glyph to where the next glyph should be drawn
-   to make it appear as if the two glyphs are unspaced.
-
-   \sa QTextLine::horizontalAdvance(), QFontMetricsF::width()
-*/
 QVector<QPointF> QRawFont::advancesForGlyphIndexes(const QVector<quint32> &glyphIndexes) const
 {
    if (!d->isValid()) {
@@ -392,6 +324,7 @@ QVector<QPointF> QRawFont::advancesForGlyphIndexes(const QVector<quint32> &glyph
    d->fontEngine->recalcAdvances(&glyphs, 0);
 
    QVector<QPointF> advances;
+
    for (int i = 0; i < numGlyphs; ++i) {
       advances.append(QPointF(glyphs.advances_x[i].toReal(), glyphs.advances_y[i].toReal()));
    }
@@ -498,54 +431,34 @@ QList<QFontDatabase::WritingSystem> QRawFont::supportedWritingSystems() const
    return QList<QFontDatabase::WritingSystem>();
 }
 
-/*!
-    Returns true if the font has a glyph that corresponds to the given \a character.
-
-    \sa supportedWritingSystems()
-*/
 bool QRawFont::supportsCharacter(QChar character) const
 {
-   return d->isValid() && d->fontEngine->canRender(&character, 1);
+   return d->isValid() && d->fontEngine->canRender(QString(character));
 }
 
-/*!
-    \overload
-   Returns true if the font has a glyph that corresponds to the UCS-4 encoded character \a ucs4.
-
-   \sa supportedWritingSystems()
-*/
 bool QRawFont::supportsCharacter(quint32 ucs4) const
 {
-   QChar str[2];
-   int len;
-   if (!QChar::requiresSurrogates(ucs4)) {
-      str[0] = QChar(ucs4);
-      len = 1;
-   } else {
-      str[0] = QChar(QChar::highSurrogate(ucs4));
-      str[1] = QChar(QChar::lowSurrogate(ucs4));
-      len = 2;
-   }
-
-   return d->isValid() && d->fontEngine->canRender(str, len);
+   QChar c = QChar(char32_t(ucs4));
+   return d->isValid() && d->fontEngine->canRender(QString(c));
 }
 
 // qfontdatabase.cpp
 extern int qt_script_for_writing_system(QFontDatabase::WritingSystem writingSystem);
 
-/*!
-   Fetches the physical representation based on a \a font query. The physical font returned is
-   the font that will be preferred by Qt in order to display text in the selected \a writingSystem.
-*/
+
 QRawFont QRawFont::fromFont(const QFont &font, QFontDatabase::WritingSystem writingSystem)
 {
    QRawFont rawFont;
+
 #if defined(Q_OS_MAC)
    QTextLayout layout(QFontDatabase::writingSystemSample(writingSystem), font);
    layout.beginLayout();
+
    QTextLine line = layout.createLine();
    layout.endLayout();
+
    QList<QGlyphRun> list = layout.glyphRuns();
+
    if (list.size()) {
       // Pick the one matches the family name we originally requested,
       // if none of them match, just pick the first one

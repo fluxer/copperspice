@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -78,16 +75,21 @@ static void dumpLayout(QTextStream &qout, const QDockAreaLayoutItem &item, QStri
         << "pos: " << item.pos << " size:" << item.size
         << " gap:" << (item.flags & QDockAreaLayoutItem::GapItem)
         << " keepSize:" << (item.flags & QDockAreaLayoutItem::KeepSize) << '\n';
+
    indent += QLatin1String("  ");
+
    if (item.widgetItem != 0) {
       qout << indent << "widget: "
            << item.widgetItem->widget()->metaObject()->className()
            << ' ' << item.widgetItem->widget()->windowTitle() << '\n';
+
    } else if (item.subinfo != 0) {
       qout << indent << "subinfo:\n";
       dumpLayout(qout, *item.subinfo, indent + QLatin1String("  "));
+
    } else if (item.placeHolderItem != 0) {
       QRect r = item.placeHolderItem->topLevelRect;
+
       qout << indent << "placeHolder: "
            << "pos: " << item.pos << " size:" << item.size
            << " gap:" << (item.flags & QDockAreaLayoutItem::GapItem)
@@ -1179,10 +1181,13 @@ void QMainWindowLayout::setDocumentMode(bool enabled)
    _documentMode = enabled;
 
    // Update the document mode for all tab bars
-   foreach (QTabBar * bar, usedTabBars)
-   bar->setDocumentMode(_documentMode);
-   foreach (QTabBar * bar, unusedTabBars)
-   bar->setDocumentMode(_documentMode);
+   for (QTabBar * bar: usedTabBars) {
+      bar->setDocumentMode(_documentMode);
+   }
+
+   for (QTabBar * bar : unusedTabBars) {
+      bar->setDocumentMode(_documentMode);
+   }
 }
 #endif // QT_NO_TABBAR
 
@@ -1328,8 +1333,9 @@ class QMainWindowTabBar : public QTabBar
 {
  public:
    QMainWindowTabBar(QWidget *parent);
+
  protected:
-   bool event(QEvent *e);
+   bool event(QEvent *e) override;
 };
 
 QMainWindowTabBar::QMainWindowTabBar(QWidget *parent)
@@ -1345,6 +1351,7 @@ bool QMainWindowTabBar::event(QEvent *e)
    if (e->type() != QEvent::ToolTip) {
       return QTabBar::event(e);
    }
+
    QSize size = this->size();
    QSize hint = sizeHint();
    if (shape() == QTabBar::RoundedWest || shape() == QTabBar::RoundedEast) {
@@ -1578,7 +1585,8 @@ QSize QMainWindowLayout::minimumSize() const
 #ifdef Q_OS_MAC
       const QSize storedSize = minSize;
       int minWidth = 0;
-      foreach (QToolBar * toolbar, qtoolbarsInUnifiedToolbarList) {
+
+      for (QToolBar * toolbar : qtoolbarsInUnifiedToolbarList) {
          minWidth += toolbar->sizeHint().width() + 20;
       }
       minSize = QSize(qMax(minWidth, storedSize.width()), storedSize.height());
@@ -1746,10 +1754,13 @@ void QMainWindowLayout::animationFinished(QWidget *widget)
       //all animations are finished
 #ifndef QT_NO_DOCKWIDGET
       parentWidget()->update(layoutState.dockAreaLayout.separatorRegion());
+
 #ifndef QT_NO_TABBAR
-      foreach (QTabBar * tab_bar, usedTabBars)
-      tab_bar->show();
-#endif // QT_NO_TABBAR
+      for (QTabBar * tab_bar : usedTabBars) {
+         tab_bar->show();
+      }
+#endif
+
 #endif // QT_NO_DOCKWIDGET
    }
 
@@ -2029,8 +2040,9 @@ void QMainWindowLayout::applyState(QMainWindowLayoutState &newState, bool animat
    QSet<QTabBar *> retired = usedTabBars - used;
    usedTabBars = used;
 
-   foreach (QTabBar * tab_bar, retired) {
+   for (QTabBar * tab_bar : retired) {
       tab_bar->hide();
+
       while (tab_bar->count() > 0) {
          tab_bar->removeTab(0);
       }
@@ -2042,7 +2054,7 @@ void QMainWindowLayout::applyState(QMainWindowLayoutState &newState, bool animat
       QSet<QWidget *> retiredSeps = usedSeparatorWidgets - usedSeps;
       usedSeparatorWidgets = usedSeps;
 
-      foreach (QWidget * sepWidget, retiredSeps) {
+      for (QWidget * sepWidget : retiredSeps) {
          unusedSeparatorWidgets.append(sepWidget);
       }
    }
@@ -2083,12 +2095,15 @@ bool QMainWindowLayout::restoreState(QDataStream &stream)
 
 #ifndef QT_NO_DOCKWIDGET
    if (parentWidget()->isVisible()) {
-#ifndef QT_NO_TABBAR
-      foreach (QTabBar * tab_bar, usedTabBars)
-      tab_bar->show();
 
+#ifndef QT_NO_TABBAR
+      for (QTabBar * tab_bar : usedTabBars) {
+         tab_bar->show();
+      }
 #endif
+
    }
+
 #endif // QT_NO_DOCKWIDGET
 
    return true;

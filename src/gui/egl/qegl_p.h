@@ -1,32 +1,27 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
 
 #ifndef QEGL_P_H
 #define QEGL_P_H
-
-QT_BEGIN_INCLUDE_NAMESPACE
 
 #ifndef QT_NO_EGL
 #if defined(QT_OPENGL_ES_2)
@@ -94,12 +89,8 @@ typedef NativeDisplayType EGLNativeDisplayType;
 #define QEGL_NATIVE_TYPES_DEFINED 1
 #endif
 
-QT_END_INCLUDE_NAMESPACE
-
 #include <QtGui/qpaintdevice.h>
 #include <QFlags>
-
-QT_BEGIN_NAMESPACE
 
 #define QEGL_NO_CONFIG ((EGLConfig)-1)
 
@@ -192,7 +183,5 @@ Q_GUI_EXPORT VisualID getCompatibleVisualId(EGLConfig config);
 }
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QEgl::ConfigOptions)
-
-QT_END_NAMESPACE
 
 #endif //QEGL_P_H

@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -61,17 +58,20 @@ void ExtractImages::acceptUI(DomUI *node)
    QFile f;
    if (m_option.qrcOutputFile.size()) {
       f.setFileName(m_option.qrcOutputFile);
-      if (!f.open(QIODevice::WriteOnly | QFile::Text)) {
+
+      if (! f.open(QIODevice::WriteOnly | QFile::Text)) {
          fprintf(stderr, "%s: Error: Could not create resource file\n", qPrintable(m_option.messagePrefix()));
          return;
       }
 
       QFileInfo fi(m_option.qrcOutputFile);
       QDir dir = fi.absoluteDir();
-      if (!dir.exists(QLatin1String("images")) && !dir.mkdir(QLatin1String("images"))) {
+
+      if (!dir.exists("images") && ! dir.mkdir("images")) {
          fprintf(stderr, "%s: Error: Could not create image dir\n", qPrintable(m_option.messagePrefix()));
          return;
       }
+
       dir.cd(QLatin1String("images"));
       m_imagesDir = dir;
 

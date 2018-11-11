@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -29,10 +26,8 @@
 #include <qnetworkaccessmanager.h>
 #include <qnetworkaccesscache_p.h>
 #include <qnetworkaccessbackend_p.h>
-#include <QtNetwork/qnetworkproxy.h>
-#include <QtCore/QMutex>
-
-QT_BEGIN_NAMESPACE
+#include <qnetworkproxy.h>
+#include <QMutex>
 
 class QAuthenticator;
 class QAbstractNetworkCache;
@@ -45,14 +40,25 @@ class QNetworkAuthenticationCredential
    QString domain;
    QString user;
    QString password;
-   bool isNull() {
-      return domain.isNull() && user.isNull() && password.isNull();
+
+   bool isNull() const {
+      return domain.isEmpty() && user.isEmpty() && password.isEmpty();
    }
 };
+
 Q_DECLARE_TYPEINFO(QNetworkAuthenticationCredential, Q_MOVABLE_TYPE);
 inline bool operator<(const QNetworkAuthenticationCredential &t1, const QString &t2)
 {
    return t1.domain < t2;
+}
+inline bool operator<(const QString &t1, const QNetworkAuthenticationCredential &t2)
+{
+   return t1 < t2.domain;
+}
+
+inline bool operator<(const QNetworkAuthenticationCredential &t1, const QNetworkAuthenticationCredential &t2)
+{
+   return t1.domain < t2.domain;
 }
 
 class QNetworkAccessAuthenticationManager
@@ -76,7 +82,5 @@ class QNetworkAccessAuthenticationManager
    QNetworkAccessCache authenticationCache;
    QMutex mutex;
 };
-
-QT_END_NAMESPACE
 
 #endif

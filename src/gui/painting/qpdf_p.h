@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -168,26 +165,25 @@ class QPdfBaseEngine : public QAlphaPaintEngine, public QPrintEngine
    ~QPdfBaseEngine() {}
 
    // reimplementations QPaintEngine
-   bool begin(QPaintDevice *pdev);
-   bool end();
+   bool begin(QPaintDevice *pdev) override;
+   bool end() override;
 
-   void drawPoints(const QPointF *points, int pointCount);
-   void drawLines(const QLineF *lines, int lineCount);
-   void drawRects(const QRectF *rects, int rectCount);
-   void drawPolygon(const QPointF *points, int pointCount, PolygonDrawMode mode);
-   void drawPath (const QPainterPath &path);
+   void drawPoints(const QPointF *points, int pointCount) override;
+   void drawLines(const QLineF *lines, int lineCount) override;
+   void drawRects(const QRectF *rects, int rectCount) override;
+   void drawPolygon(const QPointF *points, int pointCount, PolygonDrawMode mode) override;
+   void drawPath (const QPainterPath &path) override;
 
-   void drawTextItem(const QPointF &p, const QTextItem &textItem);
+   void drawTextItem(const QPointF &p, const QTextItem &textItem) override;
 
-   void updateState(const QPaintEngineState &state);
+   void updateState(const QPaintEngineState &state) override;
 
-   int metric(QPaintDevice::PaintDeviceMetric metricType) const;
-   // end reimplementations QPaintEngine
-
-   // Printer stuff...
-   bool newPage();
-   void setProperty(PrintEnginePropertyKey key, const QVariant &value);
-   QVariant property(PrintEnginePropertyKey key) const;
+   int metric(QPaintDevice::PaintDeviceMetric metricType) const override;
+  
+   // printer stuff
+   bool newPage() override;
+   void setProperty(PrintEnginePropertyKey key, const QVariant &value) override;
+   QVariant property(PrintEnginePropertyKey key) const override;
 
    void setPen();
    virtual void setBrush() = 0;

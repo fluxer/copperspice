@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -163,8 +160,7 @@ class Q_GUI_EXPORT QStyle : public QObject
       PE_IndicatorItemViewItemDrop,
 
       PE_PanelItemViewItem,
-      PE_PanelItemViewRow, // ### Qt5/remove
-
+      PE_PanelItemViewRow,
       PE_PanelStatusBar,
 
       PE_IndicatorTabClose,
@@ -267,17 +263,6 @@ class Q_GUI_EXPORT QStyle : public QObject
       SE_ProgressBarContents,
       SE_ProgressBarLabel,
 
-      // ### Qt5/These values are unused; eliminate them
-      SE_DialogButtonAccept,
-      SE_DialogButtonReject,
-      SE_DialogButtonApply,
-      SE_DialogButtonHelp,
-      SE_DialogButtonAll,
-      SE_DialogButtonAbort,
-      SE_DialogButtonIgnore,
-      SE_DialogButtonRetry,
-      SE_DialogButtonCustom,
-
       SE_ToolBoxTabContents,
 
       SE_HeaderLabel,
@@ -307,7 +292,6 @@ class Q_GUI_EXPORT QStyle : public QObject
       SE_CheckBoxLayoutItem,
       SE_ComboBoxLayoutItem,
       SE_DateTimeEditLayoutItem,
-      SE_DialogButtonBoxLayoutItem, // ### remove
       SE_LabelLayoutItem,
       SE_ProgressBarLayoutItem,
       SE_PushButtonLayoutItem,
@@ -781,7 +765,7 @@ class Q_GUI_EXPORT QStyle : public QObject
    int layoutSpacing(QSizePolicy::ControlType control1, QSizePolicy::ControlType control2, Qt::Orientation orientation,
          const QStyleOption *option = 0, const QWidget *widget = 0) const;
 
-   int combinedLayoutSpacing(QSizePolicy::ControlTypes controls1,QSizePolicy::ControlTypes controls2, 
+   int combinedLayoutSpacing(QSizePolicy::ControlTypes controls1,QSizePolicy::ControlTypes controls2,
          Qt::Orientation orientation, QStyleOption *option = 0, QWidget *widget = 0) const;
 
    const QStyle *proxy() const;

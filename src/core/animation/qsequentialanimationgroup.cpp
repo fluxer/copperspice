@@ -1,65 +1,24 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
-
-/*!
-    \class QSequentialAnimationGroup
-    \brief The QSequentialAnimationGroup class provides a sequential group of animations.
-    \since 4.6
-    \ingroup animation
-
-    QSequentialAnimationGroup is a QAnimationGroup that runs its
-    animations in sequence, i.e., it starts one animation after
-    another has finished playing. The animations are played in the
-    order they are added to the group (using
-    \l{QAnimationGroup::}{addAnimation()} or
-    \l{QAnimationGroup::}{insertAnimation()}). The animation group
-    finishes when its last animation has finished.
-
-    At each moment there is at most one animation that is active in
-    the group; it is returned by currentAnimation(). An empty group
-    has no current animation.
-
-    A sequential animation group can be treated as any other
-    animation, i.e., it can be started, stopped, and added to other
-    groups. You can also call addPause() or insertPause() to add a
-    pause to a sequential animation group.
-
-    \code
-        QSequentialAnimationGroup *group = new QSequentialAnimationGroup;
-
-        group->addAnimation(anim1);
-        group->addAnimation(anim2);
-
-        group->start();
-    \endcode
-
-    In this example, \c anim1 and \c anim2 are two already set up
-    \l{QPropertyAnimation}s.
-
-    \sa QAnimationGroup, QAbstractAnimation, {The Animation Framework}
-*/
 
 #include <qsequentialanimationgroup.h>
 #include <qsequentialanimationgroup_p.h>

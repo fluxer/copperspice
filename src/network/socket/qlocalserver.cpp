@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,8 +23,7 @@
 #include <qlocalserver.h>
 #include <qlocalserver_p.h>
 #include <qlocalsocket.h>
-
-QT_BEGIN_NAMESPACE
+#include <qalgorithms.h>
 
 #ifndef QT_NO_LOCALSERVER
 
@@ -47,12 +43,26 @@ QLocalServer::~QLocalServer()
    }
 }
 
+void QLocalServer::setSocketOptions(SocketOptions options)
+{
+   Q_D(QLocalServer);
+   d->socketOptions = options;
+}
+
+QLocalServer::SocketOptions QLocalServer::socketOptions() const
+{
+   Q_D(const QLocalServer);
+   return d->socketOptions;
+}
+
 void QLocalServer::close()
 {
    Q_D(QLocalServer);
+
    if (!isListening()) {
       return;
    }
+
    qDeleteAll(d->pendingConnections);
    d->pendingConnections.clear();
    d->closeServer();
@@ -102,7 +112,7 @@ bool QLocalServer::hasPendingConnections() const
     \sa newConnection(), nextPendingConnection(),
     QLocalSocket::setSocketDescriptor()
  */
-void QLocalServer::incomingConnection(quintptr socketDescriptor)
+void QLocalServer::incomingConnection(qintptr socketDescriptor)
 {
    Q_D(QLocalServer);
    QLocalSocket *socket = new QLocalSocket(this);
@@ -155,7 +165,7 @@ bool QLocalServer::listen(const QString &name)
    if (name.isEmpty()) {
       d->error = QAbstractSocket::HostNotFoundError;
       QString function = QLatin1String("QLocalServer::listen");
-      d->errorString = tr("%1: Name error").arg(function);
+      d->errorString = tr("%1: Name error").formatArg(function);
       return false;
    }
 
@@ -170,6 +180,20 @@ bool QLocalServer::listen(const QString &name)
 }
 
 /*!
+bool QLocalServer::listen(qintptr socketDescriptor)
+{
+    Q_D(QLocalServer);
+    if (isListening()) {
+        qWarning("QLocalServer::listen() called when already listening");
+        return false;
+    }
+    d->serverName.clear();
+    d->fullServerName.clear();
+    if (!d->listen(socketDescriptor)) {
+        return false;
+    }
+    return true;
+}
     Returns the maximum number of pending accepted connections.
     The default is 30.
 
@@ -336,6 +360,4 @@ void QLocalServer::_q_onNewConnection()
 }
 
 #endif
-
-QT_END_NAMESPACE
 

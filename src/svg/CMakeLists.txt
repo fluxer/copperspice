@@ -1,9 +1,7 @@
 add_definitions(
     -DQT_BUILD_SVG_LIB
-    -DQT_SHARED
-    -DQT_MAKEDLL
 )
-set(EXTRA_SVG_LIBS CsCore${BUILD_MAJOR} CsGui${BUILD_MAJOR})
+set(EXTRA_SVG_LIBS CsCore${BUILD_ABI} CsGui${BUILD_ABI})
 set(EXTRA_SVG_CXXFLAGS)
 set(EXTRA_SVG_LDFLAGS)
 
@@ -77,9 +75,15 @@ endif()
 function_variable_fixup("${EXTRA_SVG_CXXFLAGS}" EXTRA_SVG_CXXFLAGS)
 function_variable_fixup("${EXTRA_SVG_LDFLAGS}" EXTRA_SVG_LDFLAGS)
 
-add_library(CsSvg${BUILD_MAJOR} SHARED ${SVG_SOURCES} ${SVG_INCLUDES})
-target_link_libraries(CsSvg${BUILD_MAJOR} ${EXTRA_SVG_LIBS})
-set_target_properties(CsSvg${BUILD_MAJOR} PROPERTIES
+add_library(CsSvg${BUILD_ABI} SHARED ${SVG_SOURCES} ${SVG_INCLUDES})
+target_link_libraries(CsSvg${BUILD_ABI} ${EXTRA_SVG_LIBS})
+
+target_include_directories(CsSvg${BUILD_ABI}
+   PUBLIC
+   $<INSTALL_INTERFACE:include/QtSvg>
+)
+
+set_target_properties(CsSvg${BUILD_ABI} PROPERTIES
     VERSION "0" # for compat
     SOVERSION "0.0.0" # for compat
     COMPILE_FLAGS ${EXTRA_SVG_CXXFLAGS}
@@ -88,17 +92,18 @@ set_target_properties(CsSvg${BUILD_MAJOR} PROPERTIES
 
 macro_generate_resources("${SVG_SOURCES}")
 macro_generate_package(
-    CsSvg${BUILD_MAJOR}
+    CsSvg${BUILD_ABI}
     QtSvg
     "${EXTRA_SVG_CXXFLAGS}"
-    "${EXTRA_SVG_LIBS}"
-    "CsCore${BUILD_MAJOR} CsGui${BUILD_MAJOR}"
+    "CsCore${BUILD_ABI} CsGui${BUILD_ABI}"
 )
 
 install(
-    TARGETS CsSvg${BUILD_MAJOR}
+    TARGETS CsSvg${BUILD_ABI}
     EXPORT CopperSpiceLibraryTargets ${INSTALL_TARGETS_DEFAULT_ARGS}
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
 install(

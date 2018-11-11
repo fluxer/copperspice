@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -54,13 +51,7 @@ QT_BEGIN_NAMESPACE
 
 class QWorkspaceTitleBarPrivate;
 
-
-/**************************************************************
-* QMDIControl
-*
-* Used for displaying MDI controls in a maximized MDI window
-*
-*/
+// Used for displaying MDI controls in a maximized MDI window
 class QMDIControl : public QWidget
 {
    GUI_CS_OBJECT(QMDIControl)
@@ -78,13 +69,13 @@ class QMDIControl : public QWidget
    QMDIControl(QWidget *widget);
 
  private:
-   QSize sizeHint() const;
-   void paintEvent(QPaintEvent *event);
-   void mousePressEvent(QMouseEvent *event);
-   void mouseReleaseEvent(QMouseEvent *event);
-   void mouseMoveEvent(QMouseEvent *event);
-   void leaveEvent(QEvent *event);
-   bool event(QEvent *event);
+   QSize sizeHint() const override;
+   void paintEvent(QPaintEvent *event) override;
+   void mousePressEvent(QMouseEvent *event) override;
+   void mouseReleaseEvent(QMouseEvent *event) override;
+   void mouseMoveEvent(QMouseEvent *event) override;
+   void leaveEvent(QEvent *event) override;
+   bool event(QEvent *event) override;
    void initStyleOption(QStyleOptionComplex *option) const;
 
    QStyle::SubControl activeControl; //control locked by pressing and holding the mouse
@@ -255,7 +246,7 @@ class QWorkspaceTitleBar : public QWidget
    QWidget *window() const;
    bool isTool() const;
 
-   QSize sizeHint() const;
+   QSize sizeHint() const override;
    void initStyleOption(QStyleOptionTitleBar *option) const;
 
  public:
@@ -291,19 +282,19 @@ class QWorkspaceTitleBar : public QWidget
    GUI_CS_SLOT_2(setActive)
 
  protected:
-   bool event(QEvent *);
+   bool event(QEvent *) override;
 
 #ifndef QT_NO_CONTEXTMENU
-   void contextMenuEvent(QContextMenuEvent *);
+   void contextMenuEvent(QContextMenuEvent *) override;
 #endif
 
-   void mousePressEvent(QMouseEvent *);
-   void mouseDoubleClickEvent(QMouseEvent *);
-   void mouseReleaseEvent(QMouseEvent *);
-   void mouseMoveEvent(QMouseEvent *);
-   void enterEvent(QEvent *e);
-   void leaveEvent(QEvent *e);
-   void paintEvent(QPaintEvent *p);
+   void mousePressEvent(QMouseEvent *) override;
+   void mouseDoubleClickEvent(QMouseEvent *) override;
+   void mouseReleaseEvent(QMouseEvent *) override;
+   void mouseMoveEvent(QMouseEvent *) override;
+   void enterEvent(QEvent *e) override;
+   void leaveEvent(QEvent *e) override;
+   void paintEvent(QPaintEvent *p) override;
 
  private:
    Q_DISABLE_COPY(QWorkspaceTitleBar)
@@ -970,8 +961,8 @@ class QWorkspaceChild : public QWidget
    void doResize();
    void doMove();
 
-   QSize sizeHint() const;
-   QSize minimumSizeHint() const;
+   QSize sizeHint() const override;
+   QSize minimumSizeHint() const override;
 
    QSize baseSize() const;
 
@@ -1010,15 +1001,15 @@ class QWorkspaceChild : public QWidget
 
 
  protected:
-   void enterEvent(QEvent *);
-   void leaveEvent(QEvent *);
-   void childEvent(QChildEvent *);
-   void resizeEvent(QResizeEvent *);
-   void moveEvent(QMoveEvent *);
-   bool eventFilter(QObject *, QEvent *);
+   void enterEvent(QEvent *) override;
+   void leaveEvent(QEvent *) override;
+   void childEvent(QChildEvent *) override;
+   void resizeEvent(QResizeEvent *) override;
+   void moveEvent(QMoveEvent *) override;
+   bool eventFilter(QObject *, QEvent *) override;
 
-   void paintEvent(QPaintEvent *);
-   void changeEvent(QEvent *);
+   void paintEvent(QPaintEvent *) override;
+   void changeEvent(QEvent *) override;
 
  private:
    void updateMask();
@@ -1125,8 +1116,7 @@ QWorkspace::QWorkspace(QWidget *parent)
 /*!
     \internal
 */
-void
-QWorkspacePrivate::init()
+void QWorkspacePrivate::init()
 {
    Q_Q(QWorkspace);
 
@@ -1143,22 +1133,21 @@ QWorkspacePrivate::init()
    toolPopup->setObjectName(QLatin1String("qt_internal_mdi_tool_popup"));
 
    actions[QWorkspacePrivate::RestoreAct] = new QAction(QIcon(q->style()->standardPixmap(QStyle::SP_TitleBarNormalButton,
-         0, q)),
-         QWorkspace::tr("&Restore"), q);
+         0, q)), QWorkspace::tr("&Restore"), q);
+
    actions[QWorkspacePrivate::MoveAct] = new QAction(QWorkspace::tr("&Move"), q);
    actions[QWorkspacePrivate::ResizeAct] = new QAction(QWorkspace::tr("&Size"), q);
    actions[QWorkspacePrivate::MinimizeAct] = new QAction(QIcon(q->style()->standardPixmap(QStyle::SP_TitleBarMinButton, 0,
-         q)),
-         QWorkspace::tr("Mi&nimize"), q);
+         q)), QWorkspace::tr("Mi&nimize"), q);
+
    actions[QWorkspacePrivate::MaximizeAct] = new QAction(QIcon(q->style()->standardPixmap(QStyle::SP_TitleBarMaxButton, 0,
-         q)),
-         QWorkspace::tr("Ma&ximize"), q);
+         q)), QWorkspace::tr("Ma&ximize"), q);
 
    actions[QWorkspacePrivate::CloseAct] = new QAction(QIcon(q->style()->standardPixmap(QStyle::SP_TitleBarCloseButton, 0,
-         q)),
-         QWorkspace::tr("&Close")
+         q)), QWorkspace::tr("&Close")
+
 #ifndef QT_NO_SHORTCUT
-         + QLatin1Char('\t') + (QString)QKeySequence(Qt::CTRL + Qt::Key_F4)
+         + QLatin1Char('\t') + QKeySequence(Qt::CTRL + Qt::Key_F4).toString(QKeySequence::NativeText)
 #endif
          , q);
 
@@ -1166,8 +1155,7 @@ QWorkspacePrivate::init()
    actions[QWorkspacePrivate::StaysOnTopAct] = new QAction(QWorkspace::tr("Stay on &Top"), q);
    actions[QWorkspacePrivate::StaysOnTopAct]->setChecked(true);
    actions[QWorkspacePrivate::ShadeAct] = new QAction(QIcon(q->style()->standardPixmap(QStyle::SP_TitleBarShadeButton, 0,
-         q)),
-         QWorkspace::tr("Sh&ade"), q);
+         q)), QWorkspace::tr("Sh&ade"), q);
 
    QObject::connect(popup, SIGNAL(aboutToShow()), q, SLOT(_q_updateActions()));
    QObject::connect(popup, SIGNAL(triggered(QAction *)), q, SLOT(_q_operationMenuActivated(QAction *)));
@@ -1192,19 +1180,23 @@ QWorkspacePrivate::init()
 #ifndef QT_NO_SHORTCUT
    // Set up shortcut bindings (id -> slot), most used first
    QList <QKeySequence> shortcuts = QKeySequence::keyBindings(QKeySequence::NextChild);
-   foreach (const QKeySequence & seq, shortcuts)
-   shortcutMap.insert(q->grabShortcut(seq), "activateNextWindow");
+
+   for (const QKeySequence & seq : shortcuts) {
+      shortcutMap.insert(q->grabShortcut(seq), "activateNextWindow");
+   }
 
    shortcuts = QKeySequence::keyBindings(QKeySequence::PreviousChild);
-   foreach (const QKeySequence & seq, shortcuts)
-   shortcutMap.insert(q->grabShortcut(seq), "activatePreviousWindow");
+   for (const QKeySequence & seq : shortcuts) {
+      shortcutMap.insert(q->grabShortcut(seq), "activatePreviousWindow");
+   }
 
    shortcuts = QKeySequence::keyBindings(QKeySequence::Close);
-   foreach (const QKeySequence & seq, shortcuts)
-   shortcutMap.insert(q->grabShortcut(seq), "closeActiveWindow");
+   for (const QKeySequence & seq : shortcuts) {
+      shortcutMap.insert(q->grabShortcut(seq), "closeActiveWindow");
+   }
 
    shortcutMap.insert(q->grabShortcut(QKeySequence(QLatin1String("ALT+-"))), "_q_showOperationMenu");
-#endif // QT_NO_SHORTCUT
+#endif
 
    q->setBackgroundRole(QPalette::Dark);
    q->setAutoFillBackground(true);
@@ -1370,7 +1362,7 @@ void QWorkspacePrivate::activateWindow(QWidget *w, bool change_focus)
 
    active = 0;
    // First deactivate all other workspace clients
-   QList<QWorkspaceChild *>::Iterator it(windows.begin());
+   QList<QWorkspaceChild *>::iterator it(windows.begin());
    while (it != windows.end()) {
       QWorkspaceChild *c = *it;
       ++it;
@@ -1442,7 +1434,7 @@ void QWorkspacePrivate::place(QWidget *w)
    Q_Q(QWorkspace);
 
    QList<QWidget *> widgets;
-   for (QList<QWorkspaceChild *>::Iterator it(windows.begin()); it != windows.end(); ++it)
+   for (QList<QWorkspaceChild *>::iterator it(windows.begin()); it != windows.end(); ++it)
       if (*it != w) {
          widgets.append(*it);
       }
@@ -1469,7 +1461,7 @@ void QWorkspacePrivate::place(QWidget *w)
          r1.setRect(x, y, w->width(), w->height());
 
          QWidget *l;
-         QList<QWidget *>::Iterator it(widgets.begin());
+         QList<QWidget *>::iterator it(widgets.begin());
          while (it != widgets.end()) {
             l = *it;
             ++it;
@@ -1513,7 +1505,7 @@ void QWorkspacePrivate::place(QWidget *w)
          }
 
          QWidget *l;
-         QList<QWidget *>::Iterator it(widgets.begin());
+         QList<QWidget *>::iterator it(widgets.begin());
          while (it != widgets.end()) {
             l = *it;
             ++it;
@@ -1544,7 +1536,7 @@ void QWorkspacePrivate::place(QWidget *w)
          }
 
          QWidget *l;
-         QList<QWidget *>::Iterator it(widgets.begin());
+         QList<QWidget *>::iterator it(widgets.begin());
          while (it != widgets.end()) {
             l = *it;
             ++it;
@@ -1589,7 +1581,7 @@ void QWorkspacePrivate::insertIcon(QWidget *w)
    int x = 0;
    int y = cr.height() - w->height();
 
-   QList<QWidget *>::Iterator it(icons.begin());
+   QList<QWidget *>::iterator it(icons.begin());
    while (it != icons.end()) {
       QWidget *i = *it;
       ++it;
@@ -1694,7 +1686,7 @@ void QWorkspacePrivate::minimizeWindow(QWidget *w)
          wasMax = true;
          maxWindow = 0;
          hideMaximizeControls();
-         for (QList<QWorkspaceChild *>::Iterator it(windows.begin()); it != windows.end(); ++it) {
+         for (QList<QWorkspaceChild *>::iterator it(windows.begin()); it != windows.end(); ++it) {
             QWorkspaceChild *c = *it;
             if (c->titlebar) {
                c->titlebar->setMovable(true);
@@ -1754,7 +1746,7 @@ void QWorkspacePrivate::normalizeWindow(QWidget *w)
       }
 
       hideMaximizeControls();
-      for (QList<QWorkspaceChild *>::Iterator it(windows.begin()); it != windows.end(); ++it) {
+      for (QList<QWorkspaceChild *>::iterator it(windows.begin()); it != windows.end(); ++it) {
          QWorkspaceChild *c = *it;
          if (c->titlebar) {
             c->titlebar->setMovable(true);
@@ -1848,7 +1840,7 @@ void QWorkspacePrivate::showWindow(QWidget *w)
 
 QWorkspaceChild *QWorkspacePrivate::findChild(QWidget *w)
 {
-   QList<QWorkspaceChild *>::Iterator it(windows.begin());
+   QList<QWorkspaceChild *>::iterator it(windows.begin());
    while (it != windows.end()) {
       QWorkspaceChild *c = *it;
       ++it;
@@ -1878,8 +1870,10 @@ QWidgetList QWorkspace::windowList(WindowOrder order) const
             windows.append(c->windowWidget());
          }
       }
+
    } else {
-      QList<QWorkspaceChild *>::ConstIterator it(d->windows.begin());
+      QList<QWorkspaceChild *>::const_iterator it(d->windows.begin());
+
       while (it != d->windows.end()) {
          QWorkspaceChild *c = *it;
          ++it;
@@ -1897,17 +1891,22 @@ bool QWorkspace::event(QEvent *e)
 {
 #ifndef QT_NO_SHORTCUT
    Q_D(QWorkspace);
+
    if (e->type() == QEvent::Shortcut) {
       QShortcutEvent *se = static_cast<QShortcutEvent *>(e);
-      const char *theSlot = d->shortcutMap.value(se->shortcutId(), 0);
-      if (theSlot) {
+      QString theSlot = QString::fromUtf8(d->shortcutMap.value(se->shortcutId(), 0));
+
+      if (! theSlot.isEmpty()) {
          QMetaObject::invokeMethod(this, theSlot);
       }
+
    } else
 #endif
+
       if (e->type() == QEvent::FocusIn || e->type() == QEvent::FocusOut) {
          return true;
       }
+
    return QWidget::event(e);
 }
 
@@ -1963,7 +1962,7 @@ bool QWorkspace::eventFilter(QObject *o, QEvent *e)
             if (d->maxWindow && d->maxWindow->windowWidget() && d->topTitle.size()) {
                d->inTitleChange = true;
                window()->setWindowTitle(tr("%1 - [%2]")
-                                        .arg(d->topTitle).arg(d->maxWindow->windowWidget()->windowTitle()));
+                                        .formatArg(d->topTitle).formatArg(d->maxWindow->windowWidget()->windowTitle()));
                d->inTitleChange = false;
             }
          }
@@ -1977,7 +1976,7 @@ bool QWorkspace::eventFilter(QObject *o, QEvent *e)
 
       case QEvent::Close:
          if (o == window()) {
-            QList<QWorkspaceChild *>::Iterator it(d->windows.begin());
+            QList<QWorkspaceChild *>::iterator it(d->windows.begin());
             while (it != d->windows.end()) {
                QWorkspaceChild *c = *it;
                ++it;
@@ -2025,7 +2024,7 @@ void QWorkspacePrivate::showMaximizeControls()
       QString docTitle = maxWindow->windowWidget()->windowTitle();
       if (topTitle.size() && docTitle.size()) {
          inTitleChange = true;
-         q->window()->setWindowTitle(QWorkspace::tr("%1 - [%2]").arg(topTitle).arg(docTitle));
+         q->window()->setWindowTitle(QWorkspace::tr("%1 - [%2]").formatArg(topTitle).formatArg(docTitle));
          inTitleChange = false;
       }
       q->window()->setWindowModified(maxWindow->windowWidget()->isWindowModified());
@@ -2430,7 +2429,7 @@ void QWorkspace::cascade()
 
    // make a list of all relevant mdi clients
    QList<QWorkspaceChild *> widgets;
-   QList<QWorkspaceChild *>::Iterator it(d->windows.begin());
+   QList<QWorkspaceChild *>::iterator it(d->windows.begin());
    QWorkspaceChild *wc = 0;
 
    for (it = d->focus.begin(); it != d->focus.end(); ++it) {
@@ -2505,7 +2504,7 @@ void QWorkspace::tile()
    int n = 0;
    QWorkspaceChild *c;
 
-   QList<QWorkspaceChild *>::Iterator it(d->windows.begin());
+   QList<QWorkspaceChild *>::iterator it(d->windows.begin());
    while (it != d->windows.end()) {
       c = *it;
       ++it;
@@ -2610,7 +2609,7 @@ void QWorkspace::arrangeIcons()
    int x = 0;
    int y = -1;
 
-   QList<QWidget *>::Iterator it(d->icons.begin());
+   QList<QWidget *>::iterator it(d->icons.begin());
    while (it != d->icons.end()) {
       QWidget *i = *it;
       if (y == -1) {
@@ -3301,7 +3300,7 @@ void QWorkspaceChild::internalRaise()
    QWidget *stackUnderWidget = 0;
    if (!windowWidget() || (windowWidget()->windowFlags() & Qt::WindowStaysOnTopHint) == 0) {
 
-      QList<QWorkspaceChild *>::Iterator it(((QWorkspace *)parent())->d_func()->windows.begin());
+      QList<QWorkspaceChild *>::iterator it(((QWorkspace *)parent())->d_func()->windows.begin());
       while (it != ((QWorkspace *)parent())->d_func()->windows.end()) {
          QWorkspaceChild *c = *it;
          ++it;
@@ -3387,7 +3386,7 @@ void QWorkspace::setScrollBarsEnabled(bool enable)
       d->corner = 0;
    }
 
-   QList<QWorkspaceChild *>::Iterator it(d->windows.begin());
+   QList<QWorkspaceChild *>::iterator it(d->windows.begin());
    while (it != d->windows.end()) {
       QWorkspaceChild *child = *it;
       ++it;
@@ -3409,7 +3408,7 @@ QRect QWorkspacePrivate::updateWorkspace()
       }
 
       QRect r(0, 0, 0, 0);
-      QList<QWorkspaceChild *>::Iterator it(windows.begin());
+      QList<QWorkspaceChild *>::iterator it(windows.begin());
       while (it != windows.end()) {
          QWorkspaceChild *child = *it;
          ++it;
@@ -3478,7 +3477,7 @@ QRect QWorkspacePrivate::updateWorkspace()
       cr.setRect(0, 0, q->width() - vsbExt, q->height() - hsbExt);
    }
 
-   QList<QWidget *>::Iterator ii(icons.begin());
+   QList<QWidget *>::iterator ii(icons.begin());
    while (ii != icons.end()) {
       QWidget *w = *ii;
       ++ii;
@@ -3513,7 +3512,7 @@ void QWorkspacePrivate::_q_scrollBarChanged()
    yoffset = vbar->value();
    xoffset = hbar->value();
 
-   QList<QWorkspaceChild *>::Iterator it(windows.begin());
+   QList<QWorkspaceChild *>::iterator it(windows.begin());
    while (it != windows.end()) {
       QWorkspaceChild *child = *it;
       ++it;

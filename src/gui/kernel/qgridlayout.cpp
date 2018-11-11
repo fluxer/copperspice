@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -1524,10 +1521,10 @@ void QGridLayout::addItem(QLayoutItem *item, int row, int column, int rowSpan, i
 static bool checkWidget(QLayout *l, QWidget *w)
 {
    if (!w) {
-      qWarning("QLayout: Cannot add null widget to %s/%s", l->metaObject()->className(),
-               l->objectName().toLocal8Bit().data());
+      qWarning("QLayout: Can not add null widget to %s/%s", csPrintable(l->metaObject()->className()), csPrintable(l->objectName()));
       return false;
    }
+
    return true;
 }
 
@@ -1546,10 +1543,11 @@ void QGridLayout::addWidget(QWidget *widget, int row, int column, Qt::Alignment 
    }
    if (row < 0 || column < 0) {
       qWarning("QGridLayout: Cannot add %s/%s to %s/%s at row %d column %d",
-               widget->metaObject()->className(), widget->objectName().toLocal8Bit().data(),
-               metaObject()->className(), objectName().toLocal8Bit().data(), row, column);
+               csPrintable(widget->metaObject()->className()), csPrintable(widget->objectName()),
+               csPrintable(metaObject()->className()), csPrintable(objectName()), row, column);
       return;
    }
+
    addChildWidget(widget);
    QWidgetItem *b = QLayoutPrivate::createWidgetItem(this, widget);
    addItem(b, row, column, 1, 1, alignment);

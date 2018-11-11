@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -53,7 +50,14 @@ class Q_NETWORK_EXPORT QNetworkCacheMetaData
    QNetworkCacheMetaData(const QNetworkCacheMetaData &other);
    ~QNetworkCacheMetaData();
 
+   QNetworkCacheMetaData &operator=(QNetworkCacheMetaData &&other)  {
+      swap(other);
+      return *this;
+   }
+
    QNetworkCacheMetaData &operator=(const QNetworkCacheMetaData &other);
+   void swap(QNetworkCacheMetaData &other)
+    { qSwap(d, other.d); }
    bool operator==(const QNetworkCacheMetaData &other) const;
    inline bool operator!=(const QNetworkCacheMetaData &other) const {
       return !(*this == other);
@@ -108,7 +112,7 @@ class Q_NETWORK_EXPORT QAbstractNetworkCache : public QObject
    NET_CS_SLOT_2(clear)
 
  protected:
-   explicit QAbstractNetworkCache(QObject *parent = 0);
+   explicit QAbstractNetworkCache(QObject *parent = nullptr);
    QAbstractNetworkCache(QAbstractNetworkCachePrivate &dd, QObject *parent);
 
    QScopedPointer<QAbstractNetworkCachePrivate> d_ptr;

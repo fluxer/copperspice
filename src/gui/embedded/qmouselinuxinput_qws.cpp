@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -85,7 +82,7 @@ QWSLinuxInputMousePrivate::QWSLinuxInputMousePrivate(QWSLinuxInputMouseHandler *
    int grab = 0;
 
    QStringList args = device.split(QLatin1Char(':'));
-   foreach (const QString & arg, args) {
+   for (const QString & arg : args) {
       if (arg.startsWith(QLatin1String("grab="))) {
          grab = arg.mid(5).toInt();
       } else if (arg.startsWith(QLatin1String("/dev/"))) {
@@ -93,13 +90,14 @@ QWSLinuxInputMousePrivate::QWSLinuxInputMousePrivate(QWSLinuxInputMouseHandler *
       }
    }
 
-   m_fd = QT_OPEN(dev.toLocal8Bit().constData(), O_RDONLY | O_NDELAY, 0);
+   m_fd = QT_OPEN(dev.toUtf8().constData(), O_RDONLY | O_NDELAY, 0);
+
    if (m_fd >= 0) {
       ::ioctl(m_fd, EVIOCGRAB, grab);
       m_notify = new QSocketNotifier(m_fd, QSocketNotifier::Read, this);
       connect(m_notify, SIGNAL(activated(int)), this, SLOT(readMouseData()));
    } else {
-      qWarning("Cannot open mouse input device '%s': %s", qPrintable(dev), strerror(errno));
+      qWarning("Cannot open mouse input device '%s': %s", csPrintable(dev), strerror(errno));
       return;
    }
 }
@@ -179,7 +177,7 @@ void QWSLinuxInputMousePrivate::readMouseData()
                button = Qt::LeftButton;
                break;
             case BTN_MIDDLE:
-               button = Qt::MidButton;
+               button = Qt::MiddleButton;
                break;
             case BTN_RIGHT:
                button = Qt::RightButton;

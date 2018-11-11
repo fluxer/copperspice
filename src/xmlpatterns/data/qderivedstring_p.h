@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,15 +23,17 @@
 #ifndef QDerivedString_P_H
 #define QDerivedString_P_H
 
-#include <QRegExp>
+#include <qregularexpression.h>
 #include <qxmlutils_p.h>
 #include <qbuiltintypes_p.h>
 #include <qpatternistlocale_p.h>
 #include <qvalidationerror_p.h>
+#include <qstringfwd.h>
 
 QT_BEGIN_NAMESPACE
 
 namespace QPatternist {
+
 template<TypeOfDerivedString DerivedType>
 class DerivedString : public AtomicValue
 {
@@ -173,9 +172,8 @@ class DerivedString : public AtomicValue
    }
 
    static AtomicValue::Ptr error(const NamePool::Ptr &np, const QString &invalidValue) {
-      return ValidationError::createError(QString::fromLatin1("%1 is not a valid value for "
-                                          "type %2.").arg(formatData(invalidValue))
-                                          .arg(formatType(np, itemType())));
+      return ValidationError::createError(QString("%1 is not a valid value for type %2.")
+                  .formatArg(formatData(invalidValue)).formatArg(formatType(np, itemType())));
    }
 
  public:
@@ -199,17 +197,20 @@ class DerivedString : public AtomicValue
       switch (DerivedType) {
          case TypeString:
             return AtomicValue::Ptr(new DerivedString(lexical));
+
          case TypeNormalizedString:
             return AtomicValue::Ptr(new DerivedString(attributeNormalize(lexical)));
+
          case TypeToken:
             return AtomicValue::Ptr(new DerivedString(lexical.simplified()));
+
          case TypeLanguage: {
             const QString simplified(lexical.trimmed());
 
-            const QRegExp validate(QLatin1String("[a-zA-Z]{1,8}(-[a-zA-Z0-9]{1,8})*"));
+            const QRegularExpression validate("[a-zA-Z]{1,8}(-[a-zA-Z0-9]{1,8})*", QPatternOption::ExactMatchOption);
             Q_ASSERT(validate.isValid());
 
-            if (validate.exactMatch(simplified)) {
+            if (validate.match(simplified).hasMatch()) {
                return AtomicValue::Ptr(new DerivedString(lexical.simplified()));
             } else {
                return error(np, simplified);
@@ -261,15 +262,15 @@ class DerivedString : public AtomicValue
       }
    }
 
-   virtual QString stringValue() const {
+   QString stringValue() const override {
       return m_value;
    }
 
-   virtual bool evaluateEBV(const QExplicitlySharedDataPointer<DynamicContext> &) const {
+   bool evaluateEBV(const QExplicitlySharedDataPointer<DynamicContext> &) const  override {
       return m_value.length() > 0;
    }
 
-   virtual ItemType::Ptr type() const {
+   ItemType::Ptr type() const override {
       return itemType();
    }
 };

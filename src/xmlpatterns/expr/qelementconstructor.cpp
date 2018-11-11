@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -37,10 +34,8 @@ QT_BEGIN_NAMESPACE
 
 using namespace QPatternist;
 
-ElementConstructor::ElementConstructor(const Expression::Ptr &op1,
-                                       const Expression::Ptr &op2,
-                                       const bool isXSLT) : PairContainer(op1, op2)
-   , m_isXSLT(isXSLT)
+ElementConstructor::ElementConstructor(const Expression::Ptr &op1, const Expression::Ptr &op2, const bool isXSLT)
+   : PairContainer(op1, op2), m_isXSLT(isXSLT)
 {
 }
 
@@ -49,7 +44,7 @@ Item ElementConstructor::evaluateSingleton(const DynamicContext::Ptr &context) c
    const Item name(m_operand1->evaluateSingleton(context));
 
    const NodeBuilder::Ptr nodeBuilder(context->nodeBuilder(m_staticBaseURI));
-   OutputValidator validator(nodeBuilder.data(), context, this, m_isXSLT);
+   OutputValidator validator(nodeBuilder.get(), context, this, m_isXSLT);
 
    const DynamicContext::Ptr receiverContext(context->createReceiverContext(&validator));
 

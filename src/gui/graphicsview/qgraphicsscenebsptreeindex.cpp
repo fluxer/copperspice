@@ -1,28 +1,26 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
 
+#include <algorithm>
 #include <QtCore/qglobal.h>
 
 #ifndef QT_NO_GRAPHICSVIEW
@@ -30,8 +28,8 @@
 #include <qgraphicsscene_p.h>
 #include <qgraphicsscenebsptreeindex_p.h>
 #include <qgraphicssceneindex_p.h>
-#include <QtCore/qmath.h>
-#include <QtCore/qdebug.h>
+#include <qmath.h>
+#include <qdebug.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -195,7 +193,8 @@ void QGraphicsSceneBspTreeIndexPrivate::climbTree(QGraphicsItem *item, int *stac
 {
    if (!item->d_ptr->children.isEmpty()) {
       QList<QGraphicsItem *> childList = item->d_ptr->children;
-      qSort(childList.begin(), childList.end(), qt_closestLeaf);
+      std::sort(childList.begin(), childList.end(), qt_closestLeaf);
+
       for (int i = 0; i < childList.size(); ++i) {
          QGraphicsItem *item = childList.at(i);
          if (!(item->flags() & QGraphicsItem::ItemStacksBehindParent)) {
@@ -238,7 +237,7 @@ void QGraphicsSceneBspTreeIndexPrivate::_q_updateSortCache()
       }
    }
 
-   qSort(topLevels.begin(), topLevels.end(), qt_closestLeaf);
+   std::sort(topLevels.begin(), topLevels.end(), qt_closestLeaf);
    for (int i = 0; i < topLevels.size(); ++i) {
       climbTree(topLevels.at(i), &stackingOrder);
    }
@@ -383,24 +382,24 @@ void QGraphicsSceneBspTreeIndexPrivate::sortItems(QList<QGraphicsItem *> *itemLi
 
    if (onlyTopLevelItems) {
       if (order == Qt::DescendingOrder) {
-         qSort(itemList->begin(), itemList->end(), qt_closestLeaf);
+         std::sort(itemList->begin(), itemList->end(), qt_closestLeaf);
       } else if (order == Qt::AscendingOrder) {
-         qSort(itemList->begin(), itemList->end(), qt_notclosestLeaf);
+         std::sort(itemList->begin(), itemList->end(), qt_notclosestLeaf);
       }
       return;
    }
 
    if (sortCacheEnabled) {
       if (order == Qt::DescendingOrder) {
-         qSort(itemList->begin(), itemList->end(), closestItemFirst_withCache);
+         std::sort(itemList->begin(), itemList->end(), closestItemFirst_withCache);
       } else if (order == Qt::AscendingOrder) {
-         qSort(itemList->begin(), itemList->end(), closestItemLast_withCache);
+         std::sort(itemList->begin(), itemList->end(), closestItemLast_withCache);
       }
    } else {
       if (order == Qt::DescendingOrder) {
-         qSort(itemList->begin(), itemList->end(), qt_closestItemFirst);
+         std::sort(itemList->begin(), itemList->end(), qt_closestItemFirst);
       } else if (order == Qt::AscendingOrder) {
-         qSort(itemList->begin(), itemList->end(), qt_closestItemLast);
+         std::sort(itemList->begin(), itemList->end(), qt_closestItemLast);
       }
    }
 }
@@ -531,7 +530,7 @@ QList<QGraphicsItem *> QGraphicsSceneBspTreeIndex::items(Qt::SortOrder order) co
    } else {
       // Rebuild the list of items to avoid holes. ### We could also just
       // compress the item lists at this point.
-      foreach (QGraphicsItem * item, d->indexedItems + d->unindexedItems) {
+      for (QGraphicsItem * item : d->indexedItems + d->unindexedItems) {
          if (item) {
             itemList << item;
          }

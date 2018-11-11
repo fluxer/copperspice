@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -128,11 +125,6 @@ extern "C" {
 #  include <errno.h>
 #endif
 
-#if _POSIX_VERSION+0 < 200112L && !defined(Q_OS_BSD4)
-# define QT_NO_UNSETENV
-#endif
-
-QT_BEGIN_NAMESPACE
 
 //#define X_NOT_BROKEN
 #ifdef X_NOT_BROKEN
@@ -142,7 +134,7 @@ QT_BEGIN_NAMESPACE
 // X looks and doesn't see the value Qt set. The solution here is to
 // implement _Xsetlocale just in case X calls it - redirecting it to
 // the real libC version.
-//
+
 # ifndef setlocale
 extern "C" char *_Xsetlocale(int category, const char *locale);
 char *_Xsetlocale(int category, const char *locale)
@@ -449,39 +441,38 @@ extern bool qt_xdnd_dragging;
 // gui or non-gui from qapplication.cpp
 extern bool qt_is_gui_used;
 
-/*!
-    \internal
-    Try to resolve a \a symbol from \a library with the version specified
-    by \a vernum.
 
-    Note that, in the case of the Xfixes library, \a vernum is not the same as
-    \c XFIXES_MAJOR - it is a part of soname and may differ from the Xfixes
-    version.
-*/
-static void *qt_load_library_runtime(const char *library, int vernum,
-                                     int highestVernum, const char *symbol)
+// internal
+static void *qt_load_library_runtime(const QString &library, int vernum, int highestVernum, const QString &symbol)
 {
    QList<int> versions;
+
    // we try to load in the following order:
    // explicit version -> the default one -> (from the highest (highestVernum) to the lowest (vernum) )
+
    if (vernum != -1) {
       versions << vernum;
    }
+
    versions << -1;
    if (vernum != -1) {
       for (int i = highestVernum; i > vernum; --i) {
          versions << i;
       }
    }
-   Q_FOREACH(int version, versions) {
-      QLatin1String libName(library);
+
+   for (int version : versions) {
+      QString libName(library);
       QLibrary xfixesLib(libName, version);
+
       xfixesLib.setLoadHints(QLibrary::ImprovedSearchHeuristics);
       void *ptr = xfixesLib.resolve(symbol);
+
       if (ptr) {
          return ptr;
       }
    }
+
    return 0;
 }
 
@@ -708,8 +699,10 @@ extern "C" {
       XGetErrorText( dpy, err->error_code, errstr, 256 );
       char buffer[256];
       char request_str[256];
-      qsnprintf(buffer, 256, "%d", err->request_code);
+
+      std::snprintf(buffer, 256, "%d", err->request_code);
       XGetErrorDatabaseText(dpy, "XRequest", buffer, "", request_str, 256);
+
       if (err->request_code < 128) {
          // X error for a normal protocol request
          qWarning( "X Error: %s %d\n"
@@ -739,11 +732,12 @@ extern "C" {
 
          char minor_str[256];
          if (extensionName) {
-            qsnprintf(buffer, 256, "%s.%d", extensionName, err->minor_code);
+            std::snprintf(buffer, 256, "%s.%d", extensionName, err->minor_code);
             XGetErrorDatabaseText(dpy, "XRequest", buffer, "", minor_str, 256);
+
          } else {
             extensionName = "Uknown extension";
-            qsnprintf(minor_str, 256, "Unknown request");
+            std::snprintf(minor_str, 256, "Unknown request");
          }
 
          qWarning( "X Error: %s %d\n"
@@ -836,9 +830,10 @@ static void qt_x11_create_intern_atoms()
 
    QByteArray settings_atom_name("_QT_SETTINGS_TIMESTAMP_");
    settings_atom_name += XDisplayName(X11->displayName);
-   names[i++] = settings_atom_name;
+   names[i++] = settings_atom_name.constData();
 
    Q_ASSERT(i == QX11Data::NAtoms);
+
 #if defined(XlibSpecificationRelease) && (XlibSpecificationRelease >= 6)
    XInternAtoms(X11->display, (char **)names, i, False, X11->atoms);
 #else
@@ -947,26 +942,26 @@ bool QApplicationPrivate::x11_apply_settings()
    }
 
    // read library (ie. plugin) path list
-   QString libpathkey = QString::fromLatin1("%1.%2/libraryPath").arg(CS_VERSION >> 16).arg((CS_VERSION & 0xff00) >> 8);
+   QString libpathkey = QString::fromLatin1("%1.%2/libraryPath").formatArg(CS_VERSION >> 16).formatArg((CS_VERSION & 0xff00) >> 8);
 
    QStringList pathlist = settings.value(libpathkey).toString().split(QLatin1Char(':'));
    if (! pathlist.isEmpty()) {
-      QStringList::ConstIterator it = pathlist.constBegin();
+      QStringList::const_iterator it = pathlist.constBegin();
       while (it != pathlist.constEnd()) {
          QApplication::addLibraryPath(*it++);
       }
    }
 
    // read new QStyle
-   QString stylename = settings.value(QLatin1String("style")).toString();
+   QString stylename = settings.value("style").toString();
 
-   if (stylename.isEmpty() && QApplicationPrivate::styleOverride.isNull() && X11->use_xrender) {
+   if (stylename.isEmpty() && QApplicationPrivate::styleOverride.isEmpty() && X11->use_xrender) {
       stylename = qt_guiPlatformPlugin()->styleName();
    }
 
    static QString currentStyleName = stylename;
    if (QCoreApplication::startingUp()) {
-      if (!stylename.isEmpty() && QApplicationPrivate::styleOverride.isNull()) {
+      if (!stylename.isEmpty() && QApplicationPrivate::styleOverride.isEmpty()) {
          QApplicationPrivate::styleOverride = stylename;
       }
    } else {
@@ -1041,7 +1036,7 @@ bool QApplicationPrivate::x11_apply_settings()
       settings.beginGroup(QLatin1String("Font Substitutions"));
       QStringList fontsubs = settings.childKeys();
       if (!fontsubs.isEmpty()) {
-         QStringList::Iterator it = fontsubs.begin();
+         QStringList::iterator it = fontsubs.begin();
          for (; it != fontsubs.end(); ++it) {
             QString fam = *it;
             QStringList subs = settings.value(fam).toStringList();
@@ -1173,11 +1168,13 @@ static void qt_set_x11_resources(const char *font = 0, const char *fg = 0,
             res = QString();
             break;
          }
+
          if (type == XA_STRING) {
             res += QString::fromLatin1((char *)data);
          } else {
-            res += QString::fromLocal8Bit((char *)data);
+            res += QString::fromUtf8((char *)data);
          }
+
          offset += 2048; // offset is in 32bit quantities... 8192/4 == 2048
          if (data) {
             XFree((char *)data);
@@ -1186,8 +1183,8 @@ static void qt_set_x11_resources(const char *font = 0, const char *fg = 0,
 
       QString key, value;
       int l = 0, r;
-      QString apn = QString::fromLocal8Bit(appName);
-      QString apc = QString::fromLocal8Bit(appClass);
+      QString apn = QString::fromUtf8(appName);
+      QString apc = QString::fromUtf8(appClass);
       int apnl = apn.length();
       int apcl = apc.length();
       int resl = res.length();
@@ -1263,16 +1260,16 @@ static void qt_set_x11_resources(const char *font = 0, const char *fg = 0,
       resFont = sysFont;
    }
    if (resFont.isEmpty()) {
-      resFont = QString::fromLocal8Bit(font);
+      resFont = QString::fromUtf8(font);
    }
    if (resFG.isEmpty()) {
-      resFG = QString::fromLocal8Bit(fg);
+      resFG = QString::fromUtf8(fg);
    }
    if (resBG.isEmpty()) {
-      resBG = QString::fromLocal8Bit(bg);
+      resBG = QString::fromUtf8(bg);
    }
    if (resButton.isEmpty()) {
-      resButton = QString::fromLocal8Bit(button);
+      resButton = QString::fromUtf8(button);
    }
    if (!resFont.isEmpty()
          && !X11->has_fontconfig
@@ -1619,14 +1616,9 @@ static PtrWacomConfigCloseDevice ptrWacomConfigCloseDevice = 0;
 static PtrWacomConfigTerm ptrWacomConfigTerm = 0;
 Q_GLOBAL_STATIC(QByteArray, wacomDeviceName)
 
-
 #endif
 
-/*****************************************************************************
-  qt_init() - initializes Qt for X11
- *****************************************************************************/
 
-#if !defined(QT_NO_FONTCONFIG)
 static void getXDefault(const char *group, const char *key, int *val)
 {
    char *str = XGetDefault(X11->display, group, key);
@@ -1682,7 +1674,6 @@ static void getXDefault(const char *group, const char *key, bool *val)
       }
    }
 }
-#endif
 
 #if defined(QT_DEBUG) && defined(Q_OS_LINUX)
 // Find out if our parent process is gdb by looking at the 'exe' symlink under /proc,.
@@ -1694,6 +1685,7 @@ bool runningUnderDebugger()
    if (parentProcExe.isSymLink()) {
       return parentProcExe.symLinkTarget().endsWith(QLatin1String("/gdb"));
    }
+
    QFile f(parentProc + QLatin1String("/cmdline"));
    if (!f.open(QIODevice::ReadOnly)) {
       return false;
@@ -1787,12 +1779,11 @@ void qt_init(QApplicationPrivate *priv, int,
 
    // Fontconfig
    X11->has_fontconfig = false;
-#if !defined(QT_NO_FONTCONFIG)
+
    if (qgetenv("QT_X11_NO_FONTCONFIG").isNull()) {
       X11->has_fontconfig = FcInit();
    }
    X11->fc_antialias = true;
-#endif
 
 #ifndef QT_NO_XRENDER
    memset(X11->solid_fills, 0, sizeof(X11->solid_fills));
@@ -1898,7 +1889,7 @@ void qt_init(QApplicationPrivate *priv, int,
          }
       } else if (arg == "-visual") {  // xv and netscape use this name
          if (++i < argc && !X11->visual) {
-            QString s = QString::fromLocal8Bit(argv[i]).toLower();
+            QString s = QString::fromUtf8(argv[i]).toLower();
             if (s == QLatin1String("staticgray")) {
                X11->visual_class = StaticGray;
             } else if (s == QLatin1String("grayscale")) {
@@ -1918,7 +1909,7 @@ void qt_init(QApplicationPrivate *priv, int,
 #ifndef QT_NO_XIM
       } else if (arg == "-inputstyle") {
          if (++i < argc) {
-            QString s = QString::fromLocal8Bit(argv[i]).toLower();
+            QString s = QString::fromUtf8(argv[i]).toLower();
             if (s == QLatin1String("onthespot"))
                qt_xim_preferred_style = XIMPreeditCallbacks |
                                         XIMStatusNothing;
@@ -1997,7 +1988,7 @@ void qt_init(QApplicationPrivate *priv, int,
 
       for (int s = 0; s < X11->screenCount; s++) {
          QX11InfoData *screen = X11->screens + s;
-         screen->ref = 1; // ensures it doesn't get deleted
+         screen->ref = 1;    // ensures it does not get deleted
          screen->screen = s;
 
          int widthMM = DisplayWidthMM(X11->display, s);
@@ -2022,26 +2013,26 @@ void qt_init(QApplicationPrivate *priv, int,
 #ifndef QT_NO_XRENDER
       int xrender_eventbase,  xrender_errorbase;
       // See if XRender is supported on the connected display
-      if (XQueryExtension(X11->display, "RENDER", &X11->xrender_major,
-                          &xrender_eventbase, &xrender_errorbase)
-            && XRenderQueryExtension(X11->display, &xrender_eventbase,
-                                     &xrender_errorbase)) {
+      if (XQueryExtension(X11->display, "RENDER", &X11->xrender_major, &xrender_eventbase, &xrender_errorbase)
+            && XRenderQueryExtension(X11->display, &xrender_eventbase, &xrender_errorbase)) {
+
          // Check the version as well - we need v0.4 or higher
          int major = 0;
          int minor = 0;
          XRenderQueryVersion(X11->display, &major, &minor);
+
          if (qgetenv("QT_X11_NO_XRENDER").isNull()) {
             X11->use_xrender = (major >= 0 && minor >= 5);
             X11->xrender_version = major * 100 + minor;
-            // workaround for broken XServer on Ubuntu Breezy (6.8 compiled with 7.0
-            // protocol headers)
-            if (X11->xrender_version == 10
-                  && VendorRelease(X11->display) < 60900000
+
+            // workaround for broken XServer on Ubuntu Breezy (6.8 compiled with 7.0 protocol headers)
+            if (X11->xrender_version == 10 && VendorRelease(X11->display) < 60900000
                   && QByteArray(ServerVendor(X11->display)).contains("X.Org")) {
                X11->xrender_version = 9;
             }
          }
       }
+
 #endif // QT_NO_XRENDER
 
 #ifndef QT_NO_MITSHM
@@ -2050,19 +2041,21 @@ void qt_init(QApplicationPrivate *priv, int,
       int mitshm_eventbase;
       int mitshm_errorbase;
       int mitshm_pixmaps;
-      if (XQueryExtension(X11->display, "MIT-SHM", &X11->mitshm_major,
-                          &mitshm_eventbase, &mitshm_errorbase)
-            && XShmQueryVersion(X11->display, &mitshm_major, &mitshm_minor,
-                                &mitshm_pixmaps)) {
-         QString displayName = QLatin1String(XDisplayName(NULL));
+
+      if (XQueryExtension(X11->display, "MIT-SHM", &X11->mitshm_major, &mitshm_eventbase, &mitshm_errorbase)
+            && XShmQueryVersion(X11->display, &mitshm_major, &mitshm_minor, &mitshm_pixmaps)) {
+
+         QString displayName = QString::fromLatin1(XDisplayName(nullptr));
 
          // MITSHM only works for local displays, so do a quick check here
          // to determine whether the display is local or not (not 100 % accurate).
          // BGR server layouts are not supported either, since it requires the raster
          // engine to work on a QImage with BGR layout.
-         bool local = displayName.isEmpty() || displayName.lastIndexOf(QLatin1Char(':')) == 0;
+         bool local = displayName.isEmpty() || displayName.lastIndexOf(':') == 0;
+
          if (local && (qgetenv("QT_X11_NO_MITSHM").toInt() == 0)) {
             Visual *defaultVisual = DefaultVisual(X11->display, DefaultScreen(X11->display));
+
             X11->use_mitshm = ((defaultVisual->red_mask == 0xff0000
                                 || defaultVisual->red_mask == 0xf800)
                                && (defaultVisual->green_mask == 0xff00
@@ -2275,8 +2268,6 @@ void qt_init(QApplicationPrivate *priv, int,
       }
 #endif
 
-
-#if !defined(QT_NO_FONTCONFIG)
       int dpi = 0;
       getXDefault("Xft", FC_DPI, &dpi);
       if (dpi) {
@@ -2288,8 +2279,10 @@ void qt_init(QApplicationPrivate *priv, int,
       double fc_scale = 1.;
       getXDefault("Xft", FC_SCALE, &fc_scale);
       X11->fc_scale = fc_scale;
+
       for (int s = 0; s < ScreenCount(X11->display); ++s) {
          int subpixel = FC_RGBA_UNKNOWN;
+
 #if !defined(QT_NO_XRENDER) && (RENDER_MAJOR > 0 || RENDER_MINOR >= 6)
          if (X11->use_xrender) {
             int rsp = XRenderQuerySubpixelOrder(X11->display, s);
@@ -2345,7 +2338,7 @@ void qt_init(QApplicationPrivate *priv, int,
       getXDefault("Xft", FC_HINT_STYLE, &X11->fc_hint_style);
 #endif
 
-#endif // QT_NO_XRENDER
+
 
       // initialize key mapper
       QKeyMapper::changeKeyboard();
@@ -2359,7 +2352,7 @@ void qt_init(QApplicationPrivate *priv, int,
    QFont::initialize();
 
    if (qt_is_gui_used) {
-      qApp->setObjectName(QString::fromLocal8Bit(appName));
+      qApp->setObjectName(QString::fromUtf8(appName));
 
       int screen;
       for (screen = 0; screen < X11->screenCount; ++screen) {
@@ -2370,7 +2363,7 @@ void qt_init(QApplicationPrivate *priv, int,
          if (X11->use_xrandr) {
             X11->ptrXRRSelectInput(X11->display, QX11Info::appRootWindow(screen), True);
          }
-#endif // QT_NO_XRANDR
+#endif
       }
    }
 
@@ -2656,15 +2649,11 @@ void qt_init(QApplicationPrivate *priv, int,
 #endif // QT_NO_TABLET
 
       X11->startupId = getenv("DESKTOP_STARTUP_ID");
+
       if (X11->startupId) {
-#ifndef QT_NO_UNSETENV
          unsetenv("DESKTOP_STARTUP_ID");
-#else
-         // it's a small memory leak, however we won't crash if Qt is
-         // unloaded and someones tries to use the envoriment.
-         putenv(strdup("DESKTOP_STARTUP_ID="));
-#endif
       }
+
    } else {
       // read some non-GUI settings when not using the X server...
 
@@ -2673,11 +2662,11 @@ void qt_init(QApplicationPrivate *priv, int,
          settings.beginGroup(QLatin1String("CS"));
 
          // read library (ie. plugin) path list
-         QString libpathkey = QString::fromLatin1("%1.%2/libraryPath").arg(CS_VERSION >> 16).arg((CS_VERSION & 0xff00) >> 8);
+         QString libpathkey = QString::fromLatin1("%1.%2/libraryPath").formatArg(CS_VERSION >> 16).formatArg((CS_VERSION & 0xff00) >> 8);
          QStringList pathlist = settings.value(libpathkey).toString().split(QLatin1Char(':'));
 
          if (! pathlist.isEmpty()) {
-            QStringList::ConstIterator it = pathlist.constBegin();
+            QStringList::const_iterator it = pathlist.constBegin();
             while (it != pathlist.constEnd()) {
                QApplication::addLibraryPath(*it++);
             }
@@ -2872,10 +2861,10 @@ bool qt_wstate_iconified(WId winid)
 
 QString QApplicationPrivate::appName() const
 {
-   return QString::fromLocal8Bit(QT_PREPEND_NAMESPACE(appName));
+   return QString::fromUtf8(QT_PREPEND_NAMESPACE(appName));
 }
 
-const char *QX11Info::appClass()                                // get application class
+const char *QX11Info::appClass()                // get application class
 {
    return QT_PREPEND_NAMESPACE(appClass);
 }
@@ -2902,12 +2891,15 @@ void QApplicationPrivate::applyX11SpecificCommandLineArguments(QWidget *main_wid
    }
    beenHereDoneThat = true;
    Q_ASSERT(main_widget->testAttribute(Qt::WA_WState_Created));
+
    if (mwTitle) {
       XStoreName(X11->display, main_widget->effectiveWinId(), (char *)mwTitle);
-      QByteArray net_wm_name = QString::fromLocal8Bit(mwTitle).toUtf8();
+      QByteArray net_wm_name = QString::fromUtf8(mwTitle).toUtf8();
+
       XChangeProperty(X11->display, main_widget->effectiveWinId(), ATOM(_NET_WM_NAME), ATOM(UTF8_STRING), 8,
                       PropModeReplace, (unsigned char *)net_wm_name.data(), net_wm_name.size());
    }
+
    if (mwGeometry) { // parse geometry
       int x, y;
       int w, h;
@@ -2951,7 +2943,7 @@ void QApplication::setOverrideCursor(const QCursor &cursor)
    qApp->d_func()->cursor_list.prepend(cursor);
 
    QWidgetList all = allWidgets();
-   for (QWidgetList::ConstIterator it = all.constBegin(); it != all.constEnd(); ++it) {
+   for (QWidgetList::const_iterator it = all.constBegin(); it != all.constEnd(); ++it) {
       QWidget *w = *it;
       if ((w->testAttribute(Qt::WA_SetCursor) || w->isWindow()) && (w->windowType() != Qt::Desktop)) {
          qt_x11_enforce_cursor(w);
@@ -2969,7 +2961,7 @@ void QApplication::restoreOverrideCursor()
 
    if (QWidgetPrivate::mapper != 0 && !closingDown()) {
       QWidgetList all = allWidgets();
-      for (QWidgetList::ConstIterator it = all.constBegin(); it != all.constEnd(); ++it) {
+      for (QWidgetList::const_iterator it = all.constBegin(); it != all.constEnd(); ++it) {
          QWidget *w = *it;
          if ((w->testAttribute(Qt::WA_SetCursor) || w->isWindow()) && (w->windowType() != Qt::Desktop)) {
             qt_x11_enforce_cursor(w);
@@ -3187,21 +3179,26 @@ void qPRCreate(const QWidget *widget, Window oldwin)
 void qPRCleanup(QWidget *widget)
 {
    QETWidget *etw = static_cast<QETWidget *>(const_cast<QWidget *>(widget));
+
    if (!(wPRmapper && widget->testAttribute(Qt::WA_WState_Reparented))) {
       return;   // not a reparented widget
    }
-   QWidgetMapper::Iterator it = wPRmapper->begin();
+
+   auto it = wPRmapper->constBegin();
+
    while (it != wPRmapper->constEnd()) {
       QWidget *w = *it;
+
       if (w == etw) {                       // found widget
          etw->setAttribute(Qt::WA_WState_Reparented, false); // clear flag
-         it = wPRmapper->erase(it);// old window no longer needed
+         it = wPRmapper->erase(it);         // old window no longer needed
       } else {
          ++it;
       }
    }
-   if (wPRmapper->size() == 0) {        // became empty
-      delete wPRmapper;                // then reset alt mapper
+
+   if (wPRmapper->size() == 0) {           // became empty
+      delete wPRmapper;                    // then reset alt mapper
       wPRmapper = 0;
    }
 }
@@ -4330,7 +4327,7 @@ static Qt::MouseButtons translateMouseButtons(int s)
       ret |= Qt::LeftButton;
    }
    if (s & Button2Mask) {
-      ret |= Qt::MidButton;
+      ret |= Qt::MiddleButton;
    }
    if (s & Button3Mask) {
       ret |= Qt::RightButton;
@@ -4468,7 +4465,7 @@ bool QETWidget::translateMouseEvent(const XEvent *event)
             button = Qt::LeftButton;
             break;
          case Button2:
-            button = Qt::MidButton;
+            button = Qt::MiddleButton;
             break;
          case Button3:
             button = Qt::RightButton;
@@ -5655,9 +5652,7 @@ bool QApplication::isEffectEnabled(Qt::UIEffect effect)
 
 #ifndef QT_NO_SESSIONMANAGER
 
-QT_BEGIN_INCLUDE_NAMESPACE
 #include <X11/SM/SMlib.h>
-QT_END_INCLUDE_NAMESPACE
 
 class QSessionManagerPrivate
 {
@@ -5774,7 +5769,7 @@ static void sm_setProperty(const QString &name, const QStringList &value)
    SmPropValue *prop = new SmPropValue[value.count()];
    int count = 0;
    QList<QByteArray> vl;
-   for (QStringList::ConstIterator it = value.begin(); it != value.end(); ++it) {
+   for (QStringList::const_iterator it = value.begin(); it != value.end(); ++it) {
       prop[count].length = (*it).length();
       vl.append((*it).toUtf8());
       prop[count].value = (char *)vl.last().data();
@@ -5828,7 +5823,7 @@ static void sm_performSaveYourself(QSessionManagerPrivate *smd)
    // generate a new session key
    timeval tv;
    gettimeofday(&tv, 0);
-   smd->sessionKey  = QString::number(qulonglong(tv.tv_sec)) + QLatin1Char('_') + QString::number(qulonglong(tv.tv_usec));
+   smd->sessionKey  = QString::number(quint64(tv.tv_sec)) + QLatin1Char('_') + QString::number(quint64(tv.tv_usec));
 
    QStringList arguments = qApp->arguments();
    QString argument0 = arguments.isEmpty() ? qApp->applicationFilePath() : arguments.at(0);
@@ -5837,8 +5832,11 @@ static void sm_performSaveYourself(QSessionManagerPrivate *smd)
    sm_setProperty(QString::fromLatin1(SmProgram), argument0);
    // tell the session manager about our user as well.
    struct passwd *entryPtr = 0;
+
 #if defined(_POSIX_THREAD_SAFE_FUNCTIONS) && (_POSIX_THREAD_SAFE_FUNCTIONS - 0 > 0)
-   QVarLengthArray<char, 1024> buf(qMax<long>(sysconf(_SC_GETPW_R_SIZE_MAX), 1024L));
+
+   QVarLengthArray<char, 1024> buf(qMax(sysconf(_SC_GETPW_R_SIZE_MAX), 1024L));
+
    struct passwd entry;
    while (getpwuid_r(geteuid(), &entry, buf.data(), buf.size(), &entryPtr) == ERANGE) {
       if (buf.size() >= 32768) {
@@ -6015,7 +6013,7 @@ QSessionManager::QSessionManager(QApplication *app, QString &id, QString &key)
    id = QString::fromLatin1(myId);
    ::free(myId); // it was allocated by C
 
-   QString error = QString::fromLocal8Bit(cerror);
+   QString error = QString::fromUtf8(cerror);
    if (!smcConnection) {
       qWarning("Qt: Session management error: %s", qPrintable(error));
    } else {
@@ -6412,4 +6410,3 @@ void QApplicationPrivate::cleanupMultitouch_sys()
 
 #endif // QT_RX71_MULTITOUCH
 
-QT_END_NAMESPACE

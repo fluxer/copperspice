@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -32,7 +29,6 @@
 
 class CSGadget_Fake_Parent;
 class QMetaObject;
-class QString;
 class QTextCodec;
 
 template<class T>
@@ -41,33 +37,25 @@ class QMetaObject_T;
 class Q_CORE_EXPORT Qt
 {
    private:
-
-      struct cs_classname {
-         static constexpr const char *value = "Qt";
-      };
-   
       ~Qt();
 
    public:
       using cs_parent = CSGadget_Fake_Parent;
-      using cs_class = Qt;
-   
+      using cs_class  = Qt;
+
       static const char *cs_className();
       static const QMetaObject_T<Qt> &staticMetaObject();
       virtual const QMetaObject *metaObject() const;
-       
-      template<int N> 
-      static void cs_regTrigger(cs_number<N>) 
-      { } 
 
-      static constexpr cs_number<0> cs_counter(cs_number<0>)  
-      { 
-         return cs_number<0>{};   
-      } 
+      template<int N>
+      static void cs_regTrigger(cs_number<N>)
+      { }
 
-      // implemented in QString.h
-      static QString escape(const QString &plain);
-    
+      static constexpr cs_number<0> cs_counter(cs_number<0>)
+      {
+         return cs_number<0>{};
+      }
+
       enum GlobalColor {
          color0,
          color1,
@@ -122,8 +110,7 @@ class Q_CORE_EXPORT Qt
       NoButton         = 0x00000000,
       LeftButton       = 0x00000001,
       RightButton      = 0x00000002,
-      MidButton        = 0x00000004, // ### Qt5/remove me
-      MiddleButton     = MidButton,
+      MiddleButton     = 0x00000004,
       XButton1         = 0x00000008,
       XButton2         = 0x00000010,
       MouseButtonMask  = 0x000000ff
@@ -237,9 +224,6 @@ class Q_CORE_EXPORT Qt
       BypassGraphicsProxyWidget = 0x20000000,
       WindowOkButtonHint = 0x00080000,
       WindowCancelButtonHint = 0x00100000,
-      WindowSoftkeysVisibleHint = 0x40000000,
-      WindowSoftkeysRespondHint = 0x80000000
-
    };
 
    using WindowFlags = QFlags<WindowType>;
@@ -258,9 +242,7 @@ class Q_CORE_EXPORT Qt
       WA_Disabled = 0,
       WA_UnderMouse = 1,
       WA_MouseTracking = 2,
-      WA_ContentsPropagated = 3, // ## deprecated
       WA_OpaquePaintEvent = 4,
-      WA_NoBackground = WA_OpaquePaintEvent, // ## deprecated
       WA_StaticContents = 5,
       WA_LaidOut = 7,
       WA_PaintOnScreen = 8,
@@ -287,7 +269,6 @@ class Q_CORE_EXPORT Qt
       WA_PendingUpdate = 44,
       WA_InvalidSize = 45,
       WA_MacBrushedMetal = 46, // Mac only
-      WA_MacMetalStyle = WA_MacBrushedMetal, // obsolete
       WA_CustomWhatsThis = 47,
       WA_LayoutOnEntireRect = 48,
       WA_OutsideWSRange = 49,
@@ -308,7 +289,6 @@ class Q_CORE_EXPORT Qt
       WA_WState_Reparented = 63,
       WA_WState_ConfigPending = 64,
       WA_WState_Polished = 66,
-      WA_WState_DND = 67, // ## deprecated
       WA_WState_OwnSizePolicy = 68,
       WA_WState_ExplicitShowHide = 69,
 
@@ -324,7 +304,6 @@ class Q_CORE_EXPORT Qt
 
       WA_AcceptDrops = 78,
       WA_DropSiteRegistered = 79, // internal
-      WA_ForceAcceptDrops = WA_DropSiteRegistered, // ## deprecated
 
       WA_WindowPropagation = 80,
 
@@ -387,9 +366,6 @@ class Q_CORE_EXPORT Qt
       WA_WState_AcceptedTouchBeginEvent = 122,
       WA_TouchPadAcceptSingleTouchEvents = 123,
 
-      WA_MergeSoftkeys =  124,
-      WA_MergeSoftkeysRecursively =  125,
-
       WA_LockPortraitOrientation = 128,
       WA_LockLandscapeOrientation = 129,
       WA_AutoOrientation = 130,
@@ -410,8 +386,7 @@ class Q_CORE_EXPORT Qt
       AA_MacPluginApplication = 5,
       AA_DontUseNativeMenuBar = 6,
       AA_MacDontSwapCtrlAndMeta = 7,
-      AA_S60DontConstructApplicationPanes = 8,
-      AA_S60DisablePartialScreenInputMode = 9,
+
       AA_X11InitThreads = 10,
       AA_CaptureMultimediaKeys = 11,
 
@@ -1066,11 +1041,11 @@ class Q_CORE_EXPORT Qt
    using ToolBarAreas = QFlags<ToolBarArea>;
 
    enum DateFormat {
-      TextDate,      // default Qt
-      ISODate,       // ISO 8601
-      SystemLocaleDate, // deprecated
-      LocalDate = SystemLocaleDate, // deprecated
-      LocaleDate,     // deprecated
+      TextDate,                      // default Qt
+      ISODate,                       // ISO 8601
+      SystemLocaleDate,              // deprecated
+      LocalDate = SystemLocaleDate,  // deprecated
+      LocaleDate,                    // deprecated
       SystemLocaleShortDate,
       SystemLocaleLongDate,
       DefaultLocaleShortDate,
@@ -1115,7 +1090,6 @@ class Q_CORE_EXPORT Qt
       AutoConnection,
       DirectConnection,
       QueuedConnection,
-      AutoCompatConnection,
       BlockingQueuedConnection,
       UniqueConnection =  0x80
    };
@@ -1312,7 +1286,7 @@ class Q_CORE_EXPORT Qt
    };
    using MatchFlags = QFlags<MatchFlag>;
 
-#if defined(Q_OS_MAC)
+#ifdef Q_OS_DARWIN
    typedef void *HANDLE;
 
 #elif defined(Q_OS_WIN)
@@ -1328,8 +1302,6 @@ class Q_CORE_EXPORT Qt
    typedef void *HANDLE;
 
 #endif
-
-   typedef WindowFlags WFlags;
 
    enum WindowModality {
       NonModal,

@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -42,7 +39,7 @@ class QToolBarItem : public QWidgetItem
 {
  public:
    QToolBarItem(QWidget *widget);
-   bool isEmpty() const;
+   bool isEmpty() const override;
 
    QAction *action;
    bool customWidget;
@@ -53,25 +50,26 @@ class QToolBarLayout : public QLayout
    GUI_CS_OBJECT(QToolBarLayout)
 
  public:
-   QToolBarLayout(QWidget *parent = 0);
+   QToolBarLayout(QWidget *parent = nullptr);
    ~QToolBarLayout();
 
-   void addItem(QLayoutItem *item);
-   QLayoutItem *itemAt(int index) const;
-   QLayoutItem *takeAt(int index);
-   int count() const;
+   void addItem(QLayoutItem *item) override;
+   QLayoutItem *itemAt(int index) const override;
+   QLayoutItem *takeAt(int index) override;
+   int count() const override;
 
-   bool isEmpty() const;
-   void invalidate();
-   Qt::Orientations expandingDirections() const;
+   bool isEmpty() const override;
+   void invalidate() override;
+   Qt::Orientations expandingDirections() const override;
 
-   void setGeometry(const QRect &r);
-   QSize minimumSize() const;
-   QSize sizeHint() const;
+   void setGeometry(const QRect &r) override;
+   QSize minimumSize() const override;
+   QSize sizeHint() const override;
 
    void insertAction(int index, QAction *action);
    int indexOf(QAction *action) const;
-   int indexOf(QWidget *widget) const {
+
+   int indexOf(QWidget *widget) const override {
       return QLayout::indexOf(widget);
    }
 
@@ -79,7 +77,7 @@ class QToolBarLayout : public QLayout
    QSize expandedSize(const QSize &size) const;
    bool expanded, animating;
 
-   void setUsePopupMenu(bool set); // Yeah, there's no getter, but it's internal.
+   void setUsePopupMenu(bool set);    // there's no getter, this is internal but public
    void checkUsePopupMenu();
 
    bool movable() const;

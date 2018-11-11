@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -208,8 +205,10 @@ void MessageEditor::messageModelAppended()
 
 void MessageEditor::allModelsDeleted()
 {
-   foreach (const MessageEditorData & med, m_editors)
-   med.container->deleteLater();
+   for (const MessageEditorData & med : m_editors) {
+      med.container->deleteLater();
+   }
+
    m_editors.clear();
    m_currentModel = -1;
    // Do not emit activeModelChanged() - the main window will refresh anyway
@@ -300,12 +299,15 @@ void MessageEditor::fixTabOrder()
 void MessageEditor::reallyFixTabOrder()
 {
    QWidget *prev = this;
-   foreach (const MessageEditorData & med, m_editors) {
-      foreach (FormMultiWidget * fmw, med.transTexts)
-      foreach (QTextEdit * te, fmw->getEditors()) {
-         setTabOrder(prev, te);
-         prev = te;
+   for (const MessageEditorData & med :  m_editors) {
+      for (FormMultiWidget * fmw, med.transTexts) {
+
+         for (QTextEdit * te : fmw->getEditors()) {
+            setTabOrder(prev, te);
+            prev = te;
+         }
       }
+
       QTextEdit *te = med.transCommentText->getEditor();
       setTabOrder(prev, te);
       prev = te;
@@ -374,19 +376,25 @@ void MessageEditor::resetSelection()
 void MessageEditor::activeModelAndNumerus(int *model, int *numerus) const
 {
    for (int j = 0; j < m_editors.count(); ++j) {
-      for (int i = 0; i < m_editors[j].transTexts.count(); ++i)
-         foreach (QTextEdit * te, m_editors[j].transTexts[i]->getEditors())
-         if (m_focusWidget == te) {
-            *model = j;
-            *numerus = i;
-            return;
+
+      for (int i = 0; i < m_editors[j].transTexts.count(); ++i) {
+
+         for (QTextEdit * te : m_editors[j].transTexts[i]->getEditors()) {
+            if (m_focusWidget == te) {
+               *model = j;
+               *numerus = i;
+               return;
+            }
          }
+      }
+
       if (m_focusWidget == m_editors[j].transCommentText->getEditor()) {
          *model = j;
          *numerus = -1;
          return;
       }
    }
+
    *model = -1;
    *numerus = -1;
 }
@@ -396,11 +404,12 @@ QTextEdit *MessageEditor::activeTranslation() const
    if (m_currentNumerus < 0) {
       return 0;
    }
-   const QList<FormatTextEdit *> &editors =
-      m_editors[m_currentModel].transTexts[m_currentNumerus]->getEditors();
-   foreach (QTextEdit * te, editors)
-   if (te->hasFocus()) {
-      return te;
+   const QList<FormatTextEdit *> &editors = m_editors[m_currentModel].transTexts[m_currentNumerus]->getEditors();
+
+   for  (QTextEdit * te, editors) {
+      if (te->hasFocus()) {
+         return te;
+      }
    }
    return editors.first();
 }
@@ -413,7 +422,8 @@ QTextEdit *MessageEditor::activeOr1stTranslation() const
                && !m_editors[i].transTexts.first()->getEditors().first()->isReadOnly()) {
             return m_editors[i].transTexts.first()->getEditors().first();
          }
-      return 0;
+
+      return nullptr;
    }
    return activeTranslation();
 }
@@ -471,25 +481,34 @@ void MessageEditor::setTargetLanguage(int model)
 MessageEditorData *MessageEditor::modelForWidget(const QObject *o)
 {
    for (int j = 0; j < m_editors.count(); ++j) {
-      for (int i = 0; i < m_editors[j].transTexts.count(); ++i)
-         foreach (QTextEdit * te, m_editors[j].transTexts[i]->getEditors())
-         if (te == o) {
-            return &m_editors[j];
+      for (int i = 0; i < m_editors[j].transTexts.count(); ++i) }
+
+         for (QTextEdit * te : m_editors[j].transTexts[i]->getEditors()) {
+            if (te == o) {
+               return &m_editors[j];
+            }
          }
+      }
+
       if (m_editors[j].transCommentText->getEditor() == o) {
          return &m_editors[j];
       }
    }
-   return 0;
+
+   return nullptr
 }
 
 static bool applyFont(MessageEditorData *med)
 {
    QFont font;
    font.setPointSize(static_cast<int>(med->fontSize));
-   for (int i = 0; i < med->transTexts.count(); ++i)
-      foreach (QTextEdit * te, med->transTexts[i]->getEditors())
-      te->setFont(font);
+
+   for (int i = 0; i < med->transTexts.count(); ++i) {
+      for (QTextEdit * te : med->transTexts[i]->getEditors())
+         te->setFont(font);
+      }
+   }
+
    med->transCommentText->getEditor()->setFont(font);
    return true;
 }
@@ -598,8 +617,11 @@ void MessageEditor::showNothing()
    m_commentText->clearTranslation();
    for (int j = 0; j < m_editors.count(); ++j) {
       setEditingEnabled(j, false);
-      foreach (FormMultiWidget * widget, m_editors[j].transTexts)
-      widget->clearTranslation();
+
+      for (FormMultiWidget * widget : m_editors[j].transTexts) {
+         widget->clearTranslation();
+      }
+
       m_editors[j].transCommentText->clearTranslation();
    }
    emit pasteAvailable(false);
@@ -714,8 +736,11 @@ void MessageEditor::setTranslation(int latestModel, const QString &translation)
 void MessageEditor::setEditingEnabled(int model, bool enabled)
 {
    MessageEditorData &ed = m_editors[model];
-   foreach (FormMultiWidget * widget, ed.transTexts)
-   widget->setEditingEnabled(enabled);
+
+   for (FormMultiWidget * widget : ed.transTexts) {
+      widget->setEditingEnabled(enabled);
+   }
+
    ed.transCommentText->setEditingEnabled(enabled);
 
    updateCanPaste();
@@ -724,9 +749,11 @@ void MessageEditor::setEditingEnabled(int model, bool enabled)
 void MessageEditor::setLengthVariants(bool on)
 {
    m_lengthVariants = on;
-   foreach (const MessageEditorData & ed, m_editors)
-   foreach (FormMultiWidget * widget, ed.transTexts)
-   widget->setMultiEnabled(on);
+   for (const MessageEditorData & ed : m_editors)  {
+      for (FormMultiWidget * widget : ed.transTexts) {
+         widget->setMultiEnabled(on);
+      }
+   }
 }
 
 void MessageEditor::undo()

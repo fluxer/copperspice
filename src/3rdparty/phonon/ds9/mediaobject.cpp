@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -152,7 +149,7 @@ namespace Phonon
             //we create a new graph
             w.graph = Graph(CLSID_FilterGraph, IID_IGraphBuilder);
             w.url = url;
-            w.url.detach();
+
             w.id = m_currentWorkId++;
 
             m_queue.enqueue(w);
@@ -238,15 +235,16 @@ namespace Phonon
             } else if (m_currentWork.task == Render) {
 
                 if (m_currentWork.filter) {
-                    //let's render pins
+                    // let's render pins
                     const QList<OutputPin> outputs = BackendNode::pins(m_currentWork.filter, PINDIR_OUTPUT);
                     for (int i = 0; SUCCEEDED(hr) && i < outputs.count(); ++i) {
                         hr = m_currentWork.graph->Render(outputs.at(i));
                     }
 
-                } else if (!m_currentWork.url.isEmpty()) {
-                    //let's render a url (blocking call)
-                    hr = m_currentWork.graph->RenderFile(reinterpret_cast<const wchar_t *>(m_currentWork.url.utf16()), 0);
+                } else if (! m_currentWork.url.isEmpty()) {
+                    // let's render a url (blocking call)
+                    hr = m_currentWork.graph->RenderFile(&m_currentWork.url.toStdWString()[0], 0);
+
                 }
 
                 if (hr != E_ABORT) {
@@ -309,7 +307,7 @@ namespace Phonon
                 OAFilterState s;
 
                 //blocking call
-                HRESULT hr = mc->GetState(INFINITE, &s);         
+                HRESULT hr = mc->GetState(INFINITE, &s);
 
                 if (SUCCEEDED(hr)) {
                     if (s == State_Stopped) {
@@ -532,7 +530,7 @@ namespace Phonon
             for (int i = 0; i < m_videoWidgets.count(); ++i) {
                 m_videoWidgets.at(i)->setCurrentGraph(currentGraph()->index());
             }
-#endif //QT_NO_PHONON_VIDEO
+#endif
 
             emit currentSourceChanged(currentGraph()->mediaSource());
             emit metaDataChanged(currentGraph()->metadata());
@@ -546,7 +544,7 @@ namespace Phonon
 
 #ifndef QT_NO_PHONON_MEDIACONTROLLER
             setTitles(currentGraph()->titles());
-#endif //QT_NO_PHONON_MEDIACONTROLLER
+#endif
         }
 
         Phonon::State MediaObject::state() const
@@ -753,14 +751,14 @@ namespace Phonon
         }
 
         void MediaObject::loadingFinished(MediaGraph *mg)
-        {                   
+        {
             if (mg == currentGraph()) {
 
 #ifndef QT_NO_PHONON_MEDIACONTROLLER
                 //Title interface
                 m_currentTitle = 0;
                 setTitles(currentGraph()->titles());
-#endif 
+#endif
 
                 HRESULT hr = mg->renderResult();
 
@@ -844,21 +842,23 @@ namespace Phonon
             if (hr != S_OK) {
 
 #ifdef GRAPH_DEBUG
-                qWarning("An error occurred 0x%x",hr);
+                qWarning("An error occurred 0x%x", hr);
 #endif
 
-                LPAMGETERRORTEXT getErrorText = (LPAMGETERRORTEXT)QLibrary::resolve(QLatin1String("quartz"), "AMGetErrorTextW");
+                LPAMGETERRORTEXT getErrorText = (LPAMGETERRORTEXT)QLibrary::resolve("quartz", "AMGetErrorTextW");
 
-                WCHAR buffer[MAX_ERROR_TEXT_LEN];
-                if (getErrorText && getErrorText(hr, buffer, MAX_ERROR_TEXT_LEN)) {
-                    m_errorString = QString::fromWCharArray(buffer);
+                std::wstring buffer(MAX_ERROR_TEXT_LEN, L'\0');
+
+                if (getErrorText && getErrorText(hr, &buffer[0], MAX_ERROR_TEXT_LEN)) {
+                    m_errorString = QString::fromStdWString(buffer);
                 } else {
-                    m_errorString = QString::fromLatin1("Unknown error");
+                    m_errorString = QString("Unknown error");
                 }
 
                 const QString comError = QString::number(uint(hr), 16);
-                if (!m_errorString.toLower().contains(comError.toLower())) {
-                    m_errorString += QString::fromLatin1(" (0x%1)").arg(comError);
+
+                if (! m_errorString.toLower().contains(comError.toLower())) {
+                    m_errorString += QString(" (0x%1)").formatArg(comError);
                 }
 
                 if (FAILED(hr)) {
@@ -889,19 +889,25 @@ namespace Phonon
         bool MediaObject::connectNodes(BackendNode *source, BackendNode *sink)
         {
             bool ret = true;
+
             for (int i = 0; i < FILTER_COUNT; ++i) {
                 ret = ret && m_graphs[i]->connectNodes(source, sink);
             }
+
             if (ret) {
+
 #ifndef QT_NO_PHONON_VIDEO
                 if (VideoWidget *video = qobject_cast<VideoWidget*>(sink)) {
                     m_videoWidgets += video;
+
                 } else
-#endif //QT_NO_PHONON_VIDEO
+#endif
+
                     if (AudioOutput *audio = qobject_cast<AudioOutput*>(sink)) {
-                    m_audioOutputs += audio;
-                }
+                       m_audioOutputs += audio;
+                   }
             }
+
             return ret;
         }
 
@@ -911,15 +917,17 @@ namespace Phonon
             for (int i = 0; i < FILTER_COUNT; ++i) {
                 ret = ret && m_graphs[i]->disconnectNodes(source, sink);
             }
+
             if (ret) {
+
 #ifndef QT_NO_PHONON_VIDEO
                 if (VideoWidget *video = qobject_cast<VideoWidget*>(sink)) {
                     m_videoWidgets.removeOne(video);
                 } else
-#endif //QT_NO_PHONON_VIDEO
+#endif
                     if (AudioOutput *audio = qobject_cast<AudioOutput*>(sink)) {
                         m_audioOutputs.removeOne(audio);
-                }
+                   }
             }
             return ret;
         }
@@ -1192,10 +1200,11 @@ namespace Phonon
                 currentGraph()->setStopPosition(-1);
             }
         }
-#endif //QT_NO_PHONON_QT_NO_PHONON_MEDIACONTROLLER
+#endif
 
         void MediaObject::switchFilters(int index, Filter oldFilter, Filter newFilter)
         {
+
             if (currentGraph()->index() == index) {
                 currentGraph()->switchFilters(oldFilter, newFilter);
             } else {

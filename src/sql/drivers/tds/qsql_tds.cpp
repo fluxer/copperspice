@@ -1,31 +1,28 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
 
 #include <qglobal.h>
 
-#ifdef Q_OS_WIN32    
+#ifdef Q_OS_WIN32
 
 // We assume that MS SQL Server is used. Set Q_USE_SYBASE to force Sybase.
 // Conflicting declarations of LPCBYTE in sqlfront.h and winscard.h
@@ -41,7 +38,7 @@
 #include <qvariant.h>
 #include <qdatetime.h>
 #include <qhash.h>
-#include <qregexp.h>
+#include <qregularexpression.h>
 #include <qsqlerror.h>
 #include <qsqlfield.h>
 #include <qsqlindex.h>
@@ -176,12 +173,12 @@ extern "C" {
 
       if (severity > 0) {
          QString errMsg = QString::fromLatin1("%1 (Msg %2, Level %3, State %4, Server %5, Line %6)")
-                          .arg(QString::fromAscii(msgtext))
-                          .arg(msgno)
-                          .arg(severity)
-                          .arg(msgstate)
-                          .arg(QString::fromAscii(srvname))
-                          .arg(line);
+                          .formatArg(QString::fromLatin1(msgtext))
+                          .formatArg(msgno)
+                          .formatArg(severity)
+                          .formatArg(msgstate)
+                          .formatArg(QString::fromLatin1(srvname))
+                          .formatArg(line);
          p->addErrorMsg(errMsg);
          if (severity > 10) {
             // Severe messages are really errors in the sense of lastError
@@ -216,7 +213,7 @@ extern "C" {
       }
 
 
-      QString errMsg = QString::fromLatin1("%1 %2\n").arg(QLatin1String(dberrstr)).arg(
+      QString errMsg = QString::fromLatin1("%1 %2\n").formatArg(QLatin1String(dberrstr)).formatArg(
                           QLatin1String(oserrstr));
       errMsg += p->getErrorMsgs();
       p->lastError = qMakeError(errMsg, QSqlError::UnknownError, dberr);
@@ -435,7 +432,7 @@ bool QTDSResult::reset (const QString &query)
    for (int i = 0; i < numCols; ++i) {
       int dbType = dbcoltype(d->dbproc, i + 1);
       QVariant::Type vType = qDecodeTDSType(dbType);
-      QSqlField f(QString::fromAscii(dbcolname(d->dbproc, i + 1)), vType);
+      QSqlField f(QString::fromLatin1(dbcolname(d->dbproc, i + 1)), vType);
       f.setSqlType(dbType);
       f.setLength(dbcollen(d->dbproc, i + 1));
       d->rec.append(f);
@@ -724,7 +721,7 @@ QSqlRecord QTDSDriver::record(const QString &tablename) const
 
    QString stmt (QLatin1String("select name, type, length, prec from syscolumns "
                                "where id = (select id from sysobjects where name = '%1')"));
-   t.exec(stmt.arg(table));
+   t.exec(stmt.formatArg(table));
    while (t.next()) {
       QSqlField f(t.value(0).toString().simplified(), qDecodeTDSType(t.value(1).toInt()));
       f.setLength(t.value(2).toInt());
@@ -815,13 +812,16 @@ QSqlIndex QTDSDriver::primaryIndex(const QString &tablename) const
 
    QSqlQuery t(createResult());
    t.setForwardOnly(true);
-   t.exec(QString::fromLatin1("sp_helpindex '%1'").arg(table));
+   t.exec(QString::fromLatin1("sp_helpindex '%1'").formatArg(table));
+
    if (t.next()) {
       QStringList fNames = t.value(2).toString().simplified().split(QLatin1Char(','));
       QRegExp regx(QLatin1String("\\s*(\\S+)(?:\\s+(DESC|desc))?\\s*"));
-      for (QStringList::Iterator it = fNames.begin(); it != fNames.end(); ++it) {
+
+      for (QStringList::iterator it = fNames.begin(); it != fNames.end(); ++it) {
          regx.indexIn(*it);
          QSqlField f(regx.cap(1), rec.field(regx.cap(1)).type());
+
          if (regx.cap(2).toLower() == QLatin1String("desc")) {
             idx.append(f, true);
          } else {

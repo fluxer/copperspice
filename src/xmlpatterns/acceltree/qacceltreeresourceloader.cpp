@@ -1,50 +1,40 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
 
-#include <QtCore/QFile>
-#include <QtCore/QTextCodec>
-#include <QtCore/QTimer>
-#include <QtCore/QXmlStreamReader>
+#include <qfile.h>
+#include <qtextcodec.h>
+#include <qtimer.h>
+#include <qnetworkrequest.h>
+#include <qxmlstreamreader.h>
 
-#include <QtNetwork/QNetworkRequest>
-
-#include "qatomicstring_p.h"
-#include "qautoptr_p.h"
-#include "qcommonsequencetypes_p.h"
-#include "qacceltreeresourceloader_p.h"
-
-QT_BEGIN_NAMESPACE
+#include <qatomicstring_p.h>
+#include <qcommonsequencetypes_p.h>
+#include <qacceltreeresourceloader_p.h>
 
 using namespace QPatternist;
 
 AccelTreeResourceLoader::AccelTreeResourceLoader(const NamePool::Ptr &np,
-      const NetworkAccessDelegator::Ptr &manager,
-      AccelTreeBuilder<true>::Features features)
-   : m_namePool(np)
-   , m_networkAccessDelegator(manager)
-   , m_features(features)
+                  const NetworkAccessDelegator::Ptr &manager, AccelTreeBuilder<true>::Features features)
+   : m_namePool(np), m_networkAccessDelegator(manager), m_features(features)
 {
    Q_ASSERT(m_namePool);
    Q_ASSERT(m_networkAccessDelegator);
@@ -56,14 +46,14 @@ bool AccelTreeResourceLoader::retrieveDocument(const QUrl &uri,
    Q_ASSERT(uri.isValid());
    AccelTreeBuilder<true> builder(uri, uri, m_namePool, context.data(), m_features);
 
-   const AutoPtr<QNetworkReply> reply(load(uri, m_networkAccessDelegator, context));
+   const std::unique_ptr<QNetworkReply> reply(load(uri, m_networkAccessDelegator, context));
 
-   if (!reply) {
+   if (! reply) {
       return false;
    }
 
    bool success = false;
-   success = streamToReceiver(reply.data(), &builder, m_namePool, context, uri);
+   success = streamToReceiver(reply.get(), &builder, m_namePool, context, uri);
 
    m_loadedDocuments.insert(uri, builder.builtDocument());
    return success;
@@ -95,8 +85,7 @@ QNetworkReply *AccelTreeResourceLoader::load(const QUrl &uri,
                context, errorHandling);
 }
 
-QNetworkReply *AccelTreeResourceLoader::load(const QUrl &uri,
-      QNetworkAccessManager *const networkManager,
+QNetworkReply *AccelTreeResourceLoader::load(const QUrl &uri, QNetworkAccessManager *const networkManager,
       const ReportContext::Ptr &context, ErrorHandling errorHandling)
 
 {
@@ -130,11 +119,8 @@ QNetworkReply *AccelTreeResourceLoader::load(const QUrl &uri,
    }
 }
 
-bool AccelTreeResourceLoader::streamToReceiver(QIODevice *const dev,
-      AccelTreeBuilder<true> *const receiver,
-      const NamePool::Ptr &np,
-      const ReportContext::Ptr &context,
-      const QUrl &uri)
+bool AccelTreeResourceLoader::streamToReceiver(QIODevice *const dev, AccelTreeBuilder<true> *const receiver,
+                  const NamePool::Ptr &np, const ReportContext::Ptr &context, const QUrl &uri)
 {
    Q_ASSERT(dev);
    Q_ASSERT(receiver);
@@ -142,10 +128,9 @@ bool AccelTreeResourceLoader::streamToReceiver(QIODevice *const dev,
 
    QXmlStreamReader reader(dev);
 
-   /* Optimize: change NamePool to take QStringRef such that we don't have to call toString() below. That
-    * will save us a gazillion of temporary QStrings. */
+   // ### Optimize: change NamePool to take QStringView
 
-   while (!reader.atEnd()) {
+   while (! reader.atEnd()) {
       reader.readNext();
 
       switch (reader.tokenType()) {
@@ -157,8 +142,8 @@ bool AccelTreeResourceLoader::streamToReceiver(QIODevice *const dev,
             /* Send namespace declarations. */
             const QXmlStreamNamespaceDeclarations &nss = reader.namespaceDeclarations();
 
-            /* The far most common case, is for it to be empty. */
-            if (!nss.isEmpty()) {
+            /* The far most common case is for this to be empty. */
+            if (! nss.isEmpty()) {
                const int len = nss.size();
 
                for (int i = 0; i < len; ++i) {
@@ -175,16 +160,17 @@ bool AccelTreeResourceLoader::streamToReceiver(QIODevice *const dev,
                const QXmlStreamAttribute &attr = attrs.at(i);
 
                receiver->attribute(np->allocateQName(attr.namespaceUri().toString(), attr.name().toString(),
-                                                     attr.prefix().toString()),
-                                   attr.value());
+                                                     attr.prefix().toString()), attr.value());
             }
 
             continue;
          }
+
          case QXmlStreamReader::EndElement: {
             receiver->endElement();
             continue;
          }
+
          case QXmlStreamReader::Characters: {
             if (reader.isWhitespace()) {
                receiver->whitespaceOnly(reader.text());
@@ -226,8 +212,7 @@ bool AccelTreeResourceLoader::streamToReceiver(QIODevice *const dev,
             return false;
          }
          case QXmlStreamReader::NoToken: {
-            Q_ASSERT_X(false, Q_FUNC_INFO,
-                       "This token is never expected to be received.");
+            Q_ASSERT_X(false, Q_FUNC_INFO, "This token should never be received.");
             return false;
          }
       }
@@ -296,7 +281,7 @@ bool AccelTreeResourceLoader::retrieveUnparsedText(const QUrl &uri,
       const ReportContext::Ptr &context,
       const SourceLocationReflection *const where)
 {
-   const AutoPtr<QNetworkReply> reply(load(uri, m_networkAccessDelegator, context));
+   const std::unique_ptr<QNetworkReply> reply(load(uri, m_networkAccessDelegator, context));
 
    if (!reply) {
       return false;
@@ -312,12 +297,11 @@ bool AccelTreeResourceLoader::retrieveUnparsedText(const QUrl &uri,
        * encoding is recognized as specified in [XML 1.0]"
        */
       codec = QTextCodec::codecForMib(106);
+
    } else {
       codec = QTextCodec::codecForName(encoding.toLatin1());
       if (codec && context) {
-         context->error(QtXmlPatterns::tr("%1 is an unsupported encoding.").arg(formatURI(encoding)),
-                        ReportContext::XTDE1190,
-                        where);
+         context->error(QtXmlPatterns::tr("%1 is an unsupported encoding.").formatArg(formatURI(encoding)), ReportContext::XTDE1190, where);
       } else {
          return false;
       }
@@ -329,11 +313,8 @@ bool AccelTreeResourceLoader::retrieveUnparsedText(const QUrl &uri,
 
    if (converterState.invalidChars) {
       if (context) {
-         context->error(QtXmlPatterns::tr("%1 contains octets which are disallowed in "
-                                          "the requested encoding %2.").arg(formatURI(uri),
-                                                formatURI(encoding)),
-                        ReportContext::XTDE1190,
-                        where);
+         context->error(QtXmlPatterns::tr("%1 contains octets which are disallowed in the requested encoding %2.").
+                  formatArgs(formatURI(uri), formatURI(encoding)), ReportContext::XTDE1190, where);
       } else {
          return false;
       }
@@ -344,12 +325,8 @@ bool AccelTreeResourceLoader::retrieveUnparsedText(const QUrl &uri,
    for (int i = 0; i < len; ++i) {
       if (!QXmlUtils::isChar(result.at(i))) {
          if (context) {
-            context->error(QtXmlPatterns::tr("The codepoint %1, occurring in %2 using encoding %3, "
-                                             "is an invalid XML character.").arg(formatData(result.at(i)),
-                                                   formatURI(uri),
-                                                   formatURI(encoding)),
-                           ReportContext::XTDE1190,
-                           where);
+            context->error(QtXmlPatterns::tr("The codepoint %1, occurring in %2 using encoding %3, is an invalid XML character.")
+                  .formatArgs(formatData(result.at(i)), formatURI(uri), formatURI(encoding)), ReportContext::XTDE1190, where);
          } else {
             return false;
          }
@@ -360,25 +337,23 @@ bool AccelTreeResourceLoader::retrieveUnparsedText(const QUrl &uri,
    return true;
 }
 
-bool AccelTreeResourceLoader::isUnparsedTextAvailable(const QUrl &uri,
-      const QString &encoding)
+bool AccelTreeResourceLoader::isUnparsedTextAvailable(const QUrl &uri, const QString &encoding)
 {
    return retrieveUnparsedText(uri, encoding, ReportContext::Ptr(), 0);
 }
 
-Item AccelTreeResourceLoader::openUnparsedText(const QUrl &uri,
-      const QString &encoding,
-      const ReportContext::Ptr &context,
-      const SourceLocationReflection *const where)
+Item AccelTreeResourceLoader::openUnparsedText(const QUrl &uri, const QString &encoding,
+                  const ReportContext::Ptr &context, const SourceLocationReflection *const where)
 {
    const QString &text = m_unparsedTexts.value(qMakePair(uri, encoding));
 
-   if (text.isNull()) {
+   if (text.isEmpty()) {
       if (retrieveUnparsedText(uri, encoding, context, where)) {
          return openUnparsedText(uri, encoding, context, where);
       } else {
          return Item();
       }
+
    } else {
       return AtomicString::fromValue(text);
    }
@@ -388,10 +363,11 @@ QSet<QUrl> AccelTreeResourceLoader::deviceURIs() const
 {
    QHash<QUrl, AccelTree::Ptr>::const_iterator it(m_loadedDocuments.constBegin());
    const QHash<QUrl, AccelTree::Ptr>::const_iterator end(m_loadedDocuments.constEnd());
+
    QSet<QUrl> retval;
 
    while (it != end) {
-      if (it.key().toString().startsWith(QLatin1String("tag:trolltech.com,2007:QtXmlPatterns:QIODeviceVariable:"))) {
+      if (it.key().toString().startsWith("tag:copperspice.com,2007:QtXmlPatterns:QIODeviceVariable:")) {
          retval.insert(it.key());
       }
 
@@ -421,6 +397,3 @@ void QPatternist::NetworkLoop::finished()
       exit(0);
    }
 }
-
-QT_END_NAMESPACE
-

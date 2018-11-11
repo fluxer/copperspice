@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -71,8 +68,8 @@ public:
     QDBusArgument &operator<<(ushort arg);
     QDBusArgument &operator<<(int arg);
     QDBusArgument &operator<<(uint arg);
-    QDBusArgument &operator<<(qlonglong arg);
-    QDBusArgument &operator<<(qulonglong arg);
+    QDBusArgument &operator<<(qint64 arg);
+    QDBusArgument &operator<<(quint64 arg);
     QDBusArgument &operator<<(double arg);
     QDBusArgument &operator<<(const QString &arg);
     QDBusArgument &operator<<(const QDBusVariant &arg);
@@ -103,8 +100,8 @@ public:
     const QDBusArgument &operator>>(ushort &arg) const;
     const QDBusArgument &operator>>(int &arg) const;
     const QDBusArgument &operator>>(uint &arg) const;
-    const QDBusArgument &operator>>(qlonglong &arg) const;
-    const QDBusArgument &operator>>(qulonglong &arg) const;
+    const QDBusArgument &operator>>(qint64 &arg) const;
+    const QDBusArgument &operator>>(quint64 &arg) const;
     const QDBusArgument &operator>>(double &arg) const;
     const QDBusArgument &operator>>(QString &arg) const;
     const QDBusArgument &operator>>(QDBusVariant &arg) const;

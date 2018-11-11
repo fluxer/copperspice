@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -43,22 +40,22 @@ QT_BEGIN_NAMESPACE
 
 // internal timer info
 struct QTimerInfo {
-   int id;           // - timer identifier
-   timeval interval; // - timer interval
-   timeval timeout;  // - when to sent event
-   QObject *obj;     // - object to receive event
+   int id;              // - timer identifier
+   int interval;        // - timer interval in milliseconds
+   timespec timeout;    // - when to sent event
+   QObject *obj;        // - object to receive event
    QTimerInfo **activateRef; // - ref from activateTimers
 };
 
 class QTimerInfoList : public QList<QTimerInfo *>
 {
 #if ((_POSIX_MONOTONIC_CLOCK-0 <= 0) && ! defined(Q_OS_MAC))
-   timeval previousTime;
+   timespec previousTime;
    clock_t previousTicks;
    int ticksPerSecond;
    int msPerTick;
 
-   bool timeChanged(timeval *delta);
+   bool timeChanged(timespec *delta);
 #endif
 
    // state variables used by activateTimers()
@@ -67,15 +64,15 @@ class QTimerInfoList : public QList<QTimerInfo *>
  public:
    QTimerInfoList();
 
-   timeval currentTime;
-   timeval updateCurrentTime();
+   timespec currentTime;
+   timespec updateCurrentTime();
 
    // must call updateCurrentTime() first!
    void repairTimersIfNeeded();
 
-   bool timerWait(timeval &);
+   bool timerWait(timespec &);
    void timerInsert(QTimerInfo *);
-   void timerRepair(const timeval &);
+   void timerRepair(const timespec &);
 
    void registerTimer(int timerId, int interval, QObject *object);
    bool unregisterTimer(int timerId);
@@ -114,33 +111,33 @@ class Q_CORE_EXPORT QEventDispatcherUNIX : public QAbstractEventDispatcher
    Q_DECLARE_PRIVATE(QEventDispatcherUNIX)
 
  public:
-   explicit QEventDispatcherUNIX(QObject *parent = 0);
+   explicit QEventDispatcherUNIX(QObject *parent = nullptr);
    ~QEventDispatcherUNIX();
 
-   bool processEvents(QEventLoop::ProcessEventsFlags flags);
-   bool hasPendingEvents();
+   bool processEvents(QEventLoop::ProcessEventsFlags flags) override;
+   bool hasPendingEvents() override;
 
-   void registerSocketNotifier(QSocketNotifier *notifier);
-   void unregisterSocketNotifier(QSocketNotifier *notifier);
+   void registerSocketNotifier(QSocketNotifier *notifier) override;
+   void unregisterSocketNotifier(QSocketNotifier *notifier) override;
 
-   void registerTimer(int timerId, int interval, QObject *object);
-   bool unregisterTimer(int timerId);
-   bool unregisterTimers(QObject *object);
-   QList<TimerInfo> registeredTimers(QObject *object) const;
+   void registerTimer(int timerId, int interval, QObject *object) override;
+   bool unregisterTimer(int timerId) override;
+   bool unregisterTimers(QObject *object) override;
+   QList<TimerInfo> registeredTimers(QObject *object) const override;
 
-   void wakeUp();
-   void interrupt();
-   void flush();
+   void wakeUp() override;
+   void interrupt() override;
+   void flush() override;
 
  protected:
-   QEventDispatcherUNIX(QEventDispatcherUNIXPrivate &dd, QObject *parent = 0);
+   QEventDispatcherUNIX(QEventDispatcherUNIXPrivate &dd, QObject *parent = nullptr);
 
    void setSocketNotifierPending(QSocketNotifier *notifier);
 
    int activateTimers();
    int activateSocketNotifiers();
 
-   virtual int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, timeval *timeout);
+   virtual int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, timespec *timeout);
 };
 
 class Q_CORE_EXPORT QEventDispatcherUNIXPrivate : public QAbstractEventDispatcherPrivate
@@ -151,13 +148,14 @@ class Q_CORE_EXPORT QEventDispatcherUNIXPrivate : public QAbstractEventDispatche
    QEventDispatcherUNIXPrivate();
    ~QEventDispatcherUNIXPrivate();
 
-   int doSelect(QEventLoop::ProcessEventsFlags flags, timeval *timeout);
+   int doSelect(QEventLoop::ProcessEventsFlags flags, timespec *timeout);
 
    bool mainThread;
    int thread_pipe[2];
 
    // highest fd for all socket notifiers
    int sn_highest;
+
    // 3 socket notifier types - read, write and exception
    QSockNotType sn_vec[3];
 

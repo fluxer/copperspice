@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -895,7 +892,7 @@ QModelIndex QDirModel::index(const QString &path, int column) const
    }
 #endif
 
-   QStringList pathElements = absolutePath.split(QLatin1Char('/'), QString::SkipEmptyParts);
+   QStringList pathElements = absolutePath.split(QLatin1Char('/'), QStringParser::SkipEmptyParts);
    if ((pathElements.isEmpty() || !QFileInfo(path).exists())
 
 #if !defined(Q_OS_WIN)
@@ -1209,14 +1206,17 @@ QFileInfo QDirModel::fileInfo(const QModelIndex &index) const
 void QDirModelPrivate::init()
 {
    Q_Q(QDirModel);
+
    filters = QDir::AllEntries | QDir::NoDotAndDotDot;
-   sort = QDir::Name;
+   sort    = QDir::Name;
    nameFilters << QLatin1String("*");
+
    root.parent = 0;
    root.info = QFileInfo();
    clear(&root);
+
    QHash<int, QByteArray> roles = q->roleNames();
-   roles.insertMulti(QDirModel::FileIconRole, "fileIcon"); // == Qt::decoration
+   roles.insert(QDirModel::FileIconRole, "fileIcon"); // == Qt::decoration
    roles.insert(QDirModel::FilePathRole, "filePath");
    roles.insert(QDirModel::FileNameRole, "fileName");
    q->setRoleNames(roles);
@@ -1293,8 +1293,10 @@ void QDirModelPrivate::savePersistentIndexes()
 {
    Q_Q(QDirModel);
    savedPersistent.clear();
-   foreach (QPersistentModelIndexData * data, persistent.indexes) {
+
+   for (QPersistentModelIndexData * data : persistent.m_indexes) {
       SavedPersistent saved;
+
       QModelIndex index = data->index;
       saved.path = q->filePath(index);
       saved.column = index.column();
@@ -1309,18 +1311,22 @@ void QDirModelPrivate::restorePersistentIndexes()
    Q_Q(QDirModel);
    bool allow = allowAppendChild;
    allowAppendChild = false;
+
    for (int i = 0; i < savedPersistent.count(); ++i) {
       QPersistentModelIndexData *data = savedPersistent.at(i).data;
       QString path = savedPersistent.at(i).path;
-      int column = savedPersistent.at(i).column;
+      int column   = savedPersistent.at(i).column;
+
       QModelIndex idx = q->index(path, column);
       if (idx != data->index || data->model == 0) {
          //data->model may be equal to 0 if the model is getting destroyed
-         persistent.indexes.remove(data->index);
+         persistent.m_indexes.remove(data->index);
+
          data->index = idx;
          data->model = q;
+
          if (idx.isValid()) {
-            persistent.indexes.insert(idx, data);
+            persistent.m_indexes.insert(idx, data);
          }
       }
    }
@@ -1384,18 +1390,18 @@ QString QDirModelPrivate::size(const QModelIndex &index) const
    const quint64 tb = 1024 * gb;
    quint64 bytes = n->info.size();
    if (bytes >= tb) {
-      return QFileSystemModel::tr("%1 TB").arg(QLocale().toString(qreal(bytes) / tb, 'f', 3));
+      return QFileSystemModel::tr("%1 TB").formatArg(QLocale().toString(qreal(bytes) / tb, 'f', 3));
    }
    if (bytes >= gb) {
-      return QFileSystemModel::tr("%1 GB").arg(QLocale().toString(qreal(bytes) / gb, 'f', 2));
+      return QFileSystemModel::tr("%1 GB").formatArg(QLocale().toString(qreal(bytes) / gb, 'f', 2));
    }
    if (bytes >= mb) {
-      return QFileSystemModel::tr("%1 MB").arg(QLocale().toString(qreal(bytes) / mb, 'f', 1));
+      return QFileSystemModel::tr("%1 MB").formatArg(QLocale().toString(qreal(bytes) / mb, 'f', 1));
    }
    if (bytes >= kb) {
-      return QFileSystemModel::tr("%1 KB").arg(QLocale().toString(bytes / kb));
+      return QFileSystemModel::tr("%1 KB").formatArg(QLocale().toString(bytes / kb));
    }
-   return QFileSystemModel::tr("%1 byte(s)").arg(QLocale().toString(bytes));
+   return QFileSystemModel::tr("%1 byte(s)").formatArg(QLocale().toString(bytes));
 }
 
 QString QDirModelPrivate::type(const QModelIndex &index) const

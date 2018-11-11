@@ -1,27 +1,26 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
+
+#include <algorithm>
 
 #include <qprinterinfo.h>
 #include <qprinterinfo_p.h>
@@ -87,6 +86,7 @@ inline bool operator<(const char *name, const NamedPaperSize &data)
 {
    return qstrcmp(name, data.name) < 0;
 }
+
 inline bool operator<(const NamedPaperSize &data, const char *name)
 {
    return qstrcmp(data.name, name) < 0;
@@ -94,10 +94,12 @@ inline bool operator<(const NamedPaperSize &data, const char *name)
 
 static inline QPrinter::PaperSize string2PaperSize(const char *name)
 {
-   const NamedPaperSize *r = qBinaryFind(named_sizes_map, named_sizes_map + QPrinter::NPageSize, name);
-   if (r - named_sizes_map != QPrinter::NPageSize) {
+   const NamedPaperSize *r = std::lower_bound(named_sizes_map, named_sizes_map + QPrinter::NPageSize, name);
+
+   if ((r != named_sizes_map + QPrinter::NPageSize) && ! (name < *r)) {
       return r->size;
    }
+
    return QPrinter::Custom;
 }
 
@@ -134,39 +136,48 @@ void qt_parsePrinterDesc(QString printerDesc, QList<QPrinterDescription> *printe
    }
 
    printerDesc = printerDesc.simplified();
-   int i = printerDesc.indexOf(QLatin1Char(':'));
+   int i = printerDesc.indexOf(':');
+
    QString printerName, printerComment, printerHost;
    QStringList aliases;
 
    if (i >= 0) {
       // have ':' want '|'
-      int j = printerDesc.indexOf(QLatin1Char('|'));
+      int j = printerDesc.indexOf('|');
+
       if (j > 0 && j < i) {
          printerName = printerDesc.left(j);
-         aliases = printerDesc.mid(j + 1, i - j - 1).split(QLatin1Char('|'));
+         aliases = printerDesc.mid(j + 1, i - j - 1).split('|');
+
          // try extracting a comment from the aliases
-         printerComment = QCoreApplication::translate("QPrinter", "Aliases: %1")
-                          .arg(aliases.join(QLatin1String(", ")));
+         printerComment = QCoreApplication::translate("QPrinter", "Aliases: %1").formatArg(aliases.join(", "));
+
       } else {
          printerName = printerDesc.left(i);
       }
+
       // look for lprng pseudo all printers entry
-      i = printerDesc.indexOf(QRegExp(QLatin1String(": *all *=")));
+      i = printerDesc.indexOf(QRegularExpression(": *all *="));
+
       if (i >= 0) {
          printerName = QString();
       }
+
       // look for signs of this being a remote printer
-      i = printerDesc.indexOf(QRegExp(QLatin1String(": *rm *=")));
+      i = printerDesc.indexOf(QRegularExpression(": *rm *="));
+
       if (i >= 0) {
          // point k at the end of remote host name
-         while (printerDesc[i] != QLatin1Char('=')) {
+         while (printerDesc[i] != '=') {
             i++;
          }
-         while (printerDesc[i] == QLatin1Char('=') || printerDesc[i].isSpace()) {
+
+         while (printerDesc[i] == '=' || printerDesc[i].isSpace()) {
             i++;
          }
+
          j = i;
-         while (j < (int)printerDesc.length() && printerDesc[j] != QLatin1Char(':')) {
+         while (j < (int)printerDesc.length() && printerDesc[j] != ':') {
             j++;
          }
 
@@ -174,9 +185,10 @@ void qt_parsePrinterDesc(QString printerDesc, QList<QPrinterDescription> *printe
          printerHost = printerDesc.mid(i, j - i);
       }
    }
-   if (printerName.length())
-      qt_perhapsAddPrinter(printers, printerName, printerHost, printerComment,
-                           aliases);
+
+   if (printerName.length()) {
+      qt_perhapsAddPrinter(printers, printerName, printerHost, printerComment, aliases);
+   }
 }
 
 int qt_parsePrintcap(QList<QPrinterDescription> *printers, const QString &fileName)
@@ -196,7 +208,7 @@ int qt_parsePrintcap(QList<QPrinterDescription> *printers, const QString &fileNa
       if (printcap.atEnd() || printcap.readLine(line_ascii, 1024) <= 0) {
          atEnd = true;
       }
-      QString line = QString::fromLocal8Bit(line_ascii);
+      QString line = QString::fromUtf8(line_ascii);
       line = line.trimmed();
       if (line.length() >= 1 && line[int(line.length()) - 1] == QLatin1Char('\\')) {
          line.chop(1);
@@ -232,24 +244,30 @@ int qt_parsePrintcap(QList<QPrinterDescription> *printers, const QString &fileNa
 */
 QString qt_getDefaultFromHomePrinters()
 {
-   QFile file(QDir::homePath() + QLatin1String("/.printers"));
+   QFile file(QDir::homePath() + "/.printers");
+
    if (!file.open(QIODevice::ReadOnly)) {
       return QString();
    }
+
    QString all(QLatin1String(file.readAll()));
-   QStringList words = all.split(QRegExp(QLatin1String("\\W+")), QString::SkipEmptyParts);
-   const int i = words.indexOf(QLatin1String("_default"));
+   QStringList words = all.split(QRegularExpression("\\W+"), QStringParser::SkipEmptyParts);
+
+   const int i = words.indexOf("_default");
+
    if (i != -1 && i < words.size() - 1) {
       return words.at(i + 1);
    }
+
    return QString();
 }
 
 // solaris, not 2.6
 void qt_parseEtcLpPrinters(QList<QPrinterDescription> *printers)
 {
-   QDir lp(QLatin1String("/etc/lp/printers"));
+   QDir lp("/etc/lp/printers");
    QFileInfoList dirs = lp.entryInfoList();
+
    if (dirs.isEmpty()) {
       return;
    }
@@ -257,29 +275,35 @@ void qt_parseEtcLpPrinters(QList<QPrinterDescription> *printers)
    QString tmp;
    for (int i = 0; i < dirs.size(); ++i) {
       QFileInfo printer = dirs.at(i);
+
       if (printer.isDir()) {
-         tmp.sprintf("/etc/lp/printers/%s/configuration",
-                     printer.fileName().toAscii().data());
+         tmp = QString("/etc/lp/printers/%1/configuration").formatArg(printer.fileName());
+
          QFile configuration(tmp);
          char *line = new char[1025];
+
          QString remote(QLatin1String("Remote:"));
-         QString contentType(QLatin1String("Content types:"));
+         QString contentType("Content types:");
          QString printerHost;
+
          bool canPrintPostscript = false;
          if (configuration.open(QIODevice::ReadOnly)) {
-            while (!configuration.atEnd() &&
-                   configuration.readLine(line, 1024) > 0) {
+
+            while (!configuration.atEnd() && configuration.readLine(line, 1024) > 0) {
                if (QString::fromLatin1(line).startsWith(remote)) {
                   const char *p = line;
                   while (*p != ':') {
                      p++;
                   }
+
                   p++;
                   while (isspace((uchar) *p)) {
                      p++;
                   }
-                  printerHost = QString::fromLocal8Bit(p);
+
+                  printerHost = QString::fromUtf8(p);
                   printerHost = printerHost.simplified();
+
                } else if (QString::fromLatin1(line).startsWith(contentType)) {
                   char *p = line;
                   while (*p != ':') {
@@ -343,47 +367,56 @@ char *qt_parsePrintersConf(QList<QPrinterDescription> *printers, bool *found)
 
    char *defaultPrinter = 0;
 
-   while (!pc.atEnd() &&
-          (lineLength = pc.readLine(line, 1024)) > 0) {
+   while (! pc.atEnd() && (lineLength = pc.readLine(line, 1024)) > 0) {
       if (*line == '#') {
          *line = '\0';
          lineLength = 0;
       }
+
       if (lineLength >= 2 && line[lineLength - 2] == '\\') {
          line[lineLength - 2] = '\0';
-         printerDesc += QString::fromLocal8Bit(line);
+         printerDesc += QString::fromUtf8(line);
+
       } else {
-         printerDesc += QString::fromLocal8Bit(line);
+         printerDesc += QString::fromUtf8(line);
          printerDesc = printerDesc.simplified();
-         int i = printerDesc.indexOf(QLatin1Char(':'));
+         int i = printerDesc.indexOf(':');
+
          QString printerName, printerHost, printerComment;
          QStringList aliases;
+
          if (i >= 0) {
             // have : want |
-            int j = printerDesc.indexOf(QLatin1Char('|'));
+            int j = printerDesc.indexOf('|');
             if (j >= i) {
                j = -1;
             }
+
             printerName = printerDesc.mid(0, j < 0 ? i : j);
-            if (printerName == QLatin1String("_default")) {
-               i = printerDesc.indexOf(
-                      QRegExp(QLatin1String(": *use *=")));
-               while (printerDesc[i] != QLatin1Char('=')) {
+
+            if (printerName == "_default") {
+
+               i = printerDesc.indexOf(QRegularExpression(": *use *="));
+
+               while (printerDesc[i] != '=') {
                   i++;
                }
-               while (printerDesc[i] == QLatin1Char('=') || printerDesc[i].isSpace()) {
+
+               while (printerDesc[i] == '=' || printerDesc[i].isSpace()) {
                   i++;
                }
+
                j = i;
                while (j < (int)printerDesc.length() &&
-                      printerDesc[j] != QLatin1Char(':') && printerDesc[j] != QLatin1Char(',')) {
+                      printerDesc[j] != ':' && printerDesc[j] != ',') {
                   j++;
                }
-               // that's our default printer
-               defaultPrinter =
-                  qstrdup(printerDesc.mid(i, j - i).toAscii().data());
+
+               // default printer
+               defaultPrinter = qstrdup(printerDesc.mid(i, j - i).toLatin1().data());
                printerName = QString();
                printerDesc = QString();
+
             } else if (printerName == QLatin1String("_all")) {
                // skip it.. any other cases we want to skip?
                printerName = QString();
@@ -392,13 +425,13 @@ char *qt_parsePrintersConf(QList<QPrinterDescription> *printers, bool *found)
 
             if (j > 0) {
                // try extracting a comment from the aliases
-               aliases = printerDesc.mid(j + 1, i - j - 1).split(QLatin1Char('|'));
-               printerComment = QCoreApplication::translate("QPrinter", "Aliases: %1")
-                                .arg(aliases.join(QLatin1String(", ")));
+               aliases = printerDesc.mid(j + 1, i - j - 1).split('|');
+               printerComment = QCoreApplication::translate("QPrinter", "Aliases: %1").formatArg(aliases.join(", "));
             }
+
             // look for signs of this being a remote printer
-            i = printerDesc.indexOf(
-                   QRegExp(QLatin1String(": *bsdaddr *=")));
+            i = printerDesc.indexOf(QRegularExpression(": *bsdaddr *="));
+
             if (i >= 0) {
                // point k at the end of remote host name
                while (printerDesc[i] != QLatin1Char('=')) {
@@ -453,8 +486,7 @@ char *qt_parsePrintersConf(QList<QPrinterDescription> *printers, bool *found)
 extern "C" {
 #endif
 
-   int qt_pd_foreach(int /*status */, char * /*key */, int /*keyLen */,
-                     char *val, int valLen, char *data)
+   int qt_pd_foreach(int /*status */, char * /*key */, int /*keyLen */, char *val, int valLen, char *data)
    {
       qt_parsePrinterDesc(QString::fromLatin1(val, valLen), (QList<QPrinterDescription> *)data);
       return 0;
@@ -675,21 +707,25 @@ void qt_parseSpoolInterface(QList<QPrinterDescription> *printers)
 
       while (!configFile.atEnd() &&
              (configFile.readLine(line.data(), 1024)) > 0) {
-         QString uline = QString::fromLocal8Bit(line);
+         QString uline = QString::fromUtf8(line);
          if (uline.startsWith(typeKey) ) {
             printerType = uline.mid(nameKey.length());
             printerType = printerType.simplified();
+
          } else if (uline.startsWith(hostKey)) {
             hostName = uline.mid(hostKey.length());
             hostName = hostName.simplified();
+
          } else if (uline.startsWith(hostPrinterKey)) {
             hostPrinter = uline.mid(hostPrinterKey.length());
             hostPrinter = hostPrinter.simplified();
+
          } else if (uline.startsWith(nameKey)) {
             namePrinter = uline.mid(nameKey.length());
             namePrinter = namePrinter.simplified();
          }
       }
+
       configFile.close();
 
       printerType = printerType.trimmed();
@@ -731,10 +767,11 @@ void qt_parseQconfig(QList<QPrinterDescription> *printers)
 
    QString stanzaName; // either a queue or a device name
    bool up = true; // queue up?  default true, can be false
+
    QString remoteHost; // null if local
    QString deviceName; // null if remote
 
-   QRegExp newStanza(QLatin1String("^[0-z\\-]*:$"));
+   QRegularExpression newStanza("^[0-z\\-]*:$");
 
    // our basic strategy here is to process each line, detecting new
    // stanzas.  each time we see a new stanza, we check if the
@@ -750,9 +787,12 @@ void qt_parseQconfig(QList<QPrinterDescription> *printers)
       line = line.simplified();
 
       int i = line.indexOf(QLatin1Char('='));
-      if (indented && i != -1) { // line in stanza
+
+      if (indented && i != -1) {
+         // line in stanza
          QString variable = line.left(i).simplified();
-         QString value = line.mid(i + 1, line.length()).simplified();
+         QString value    = line.mid(i + 1, line.length()).simplified();
+
          if (variable == QLatin1String("device")) {
             deviceName = value;
          } else if (variable == QLatin1String("host")) {
@@ -760,61 +800,81 @@ void qt_parseQconfig(QList<QPrinterDescription> *printers)
          } else if (variable == QLatin1String("up")) {
             up = !(value.toLower() == QLatin1String("false"));
          }
-      } else if (line[0] == QLatin1Char('*')) { // comment
-         // nothing to do
+
+      } else if (line[0] == QLatin1Char('*')) {
+         // comment, nothing to do
+
       } else if (ts.atEnd() || // end of file, or beginning of new stanza
                  (!indented && line.contains(newStanza))) {
+
          if (up && stanzaName.length() > 0 && stanzaName.length() < 21) {
-            if (remoteHost.length()) // remote printer
-               qt_perhapsAddPrinter(printers, stanzaName, remoteHost,
-                                    QString());
-            else if (deviceName.length()) // local printer
-               qt_perhapsAddPrinter(printers, stanzaName, QString(),
-                                    QString());
+            if (remoteHost.length()) {
+               // remote printer
+               qt_perhapsAddPrinter(printers, stanzaName, remoteHost, QString());
+
+            } else if (deviceName.length()) {
+               // local printer
+               qt_perhapsAddPrinter(printers, stanzaName, QString(), QString());
+            }
          }
+
          line.chop(1);
+
          if (line.length() >= 1 && line.length() <= 20) {
             stanzaName = line;
          }
+
          up = true;
          remoteHost.clear();
          deviceName.clear();
+
       } else {
          // syntax error?  ignore.
       }
-   } while (!ts.atEnd());
+
+   } while (! ts.atEnd());
 }
 
 int qt_getLprPrinters(QList<QPrinterDescription> &printers)
 {
    QByteArray etcLpDefault;
-   qt_parsePrintcap(&printers, QLatin1String("/etc/printcap"));
+   qt_parsePrintcap(&printers, "/etc/printcap");
    qt_parseEtcLpMember(&printers);
    qt_parseSpoolInterface(&printers);
    qt_parseQconfig(&printers);
 
    QFileInfo f;
-   f.setFile(QLatin1String("/etc/lp/printers"));
+   f.setFile("/etc/lp/printers");
+
    if (f.isDir()) {
       qt_parseEtcLpPrinters(&printers);
-      QFile def(QLatin1String("/etc/lp/default"));
+      QFile def("/etc/lp/default");
+
       if (def.open(QIODevice::ReadOnly)) {
          etcLpDefault.resize(1025);
+
          if (def.readLine(etcLpDefault.data(), 1024) > 0) {
-            QRegExp rx(QLatin1String("^(\\S+)"));
-            if (rx.indexIn(QString::fromLatin1(etcLpDefault)) != -1) {
-               etcLpDefault = rx.cap(1).toAscii();
+            QString tmp = QString::fromLatin1(etcLpDefault);
+
+            QRegularExpression rx("^(\\S+)");
+            QRegularExpressionMatch match = rx.match(tmp);
+
+            if (match.hasMatch()) {
+               etcLpDefault = match.captured(1).toLatin1();
             }
          }
       }
    }
 
    char *def = 0;
-   f.setFile(QLatin1String("/etc/nsswitch.conf"));
+   f.setFile("/etc/nsswitch.conf");
+
    if (f.isFile()) {
       def = qt_parseNsswitchConf(&printers);
+
    } else {
-      f.setFile(QLatin1String("/etc/printers.conf"));
+      f.setFile("/etc/printers.conf");
+
       if (f.isFile()) {
          def = qt_parsePrintersConf(&printers);
       }
@@ -827,52 +887,55 @@ int qt_getLprPrinters(QList<QPrinterDescription> &printers)
 
    QString homePrintersDefault = qt_getDefaultFromHomePrinters();
 
-   // all printers hopefully known.  try to find a good default
+   // all printers hopefully known. try to find a good default
    QString dollarPrinter;
+
    {
-      dollarPrinter = QString::fromLocal8Bit(qgetenv("PRINTER"));
+      dollarPrinter = QString::fromUtf8(qgetenv("PRINTER"));
+
       if (dollarPrinter.isEmpty()) {
-         dollarPrinter = QString::fromLocal8Bit(qgetenv("LPDEST"));
+         dollarPrinter = QString::fromUtf8(qgetenv("LPDEST"));
       }
+
       if (dollarPrinter.isEmpty()) {
-         dollarPrinter = QString::fromLocal8Bit(qgetenv("NPRINTER"));
+         dollarPrinter = QString::fromUtf8(qgetenv("NPRINTER"));
       }
+
       if (dollarPrinter.isEmpty()) {
-         dollarPrinter = QString::fromLocal8Bit(qgetenv("NGPRINTER"));
+         dollarPrinter = QString::fromUtf8(qgetenv("NGPRINTER"));
       }
-      if (!dollarPrinter.isEmpty())
-         qt_perhapsAddPrinter(&printers, dollarPrinter,
-                              QCoreApplication::translate("QPrinter", "unknown"),
-                              QLatin1String(""));
+
+      if (! dollarPrinter.isEmpty())
+         qt_perhapsAddPrinter(&printers, dollarPrinter, QCoreApplication::translate("QPrinter", "unknown"), QString(""));
    }
 
-   QRegExp ps(QLatin1String("[^a-z]ps(?:[^a-z]|$)"));
-   QRegExp lp(QLatin1String("[^a-z]lp(?:[^a-z]|$)"));
+   QRegularExpression ps("[^a-z]ps(?:[^a-z]|$)");
+   QRegularExpression lp("[^a-z]lp(?:[^a-z]|$)");
 
    int quality = 0;
-   int best = 0;
+   int best    = 0;
+
    for (int i = 0; i < printers.size(); ++i) {
-      QString name = printers.at(i).name;
+      QString name    = printers.at(i).name;
       QString comment = printers.at(i).comment;
+
       if (quality < 5 && name == dollarPrinter) {
          best = i;
          quality = 5;
-      } else if (quality < 4 && !homePrintersDefault.isEmpty() &&
-                 name == homePrintersDefault) {
-         best = i;
+
+      } else if (quality < 4 && !homePrintersDefault.isEmpty() && name == homePrintersDefault) {
+         best    = i;
          quality = 4;
-      } else if (quality < 3 && !etcLpDefault.isEmpty() &&
-                 name == QLatin1String(etcLpDefault)) {
-         best = i;
+
+      } else if (quality < 3 && !etcLpDefault.isEmpty() && name == etcLpDefault) {
+         best    = i;
          quality = 3;
-      } else if (quality < 2 &&
-                 (name == QLatin1String("ps") ||
-                  ps.indexIn(comment) != -1)) {
-         best = i;
+
+      } else if (quality < 2 && (name == "ps" || comment.indexOf(ps) != -1)) {
+         best    = i;
          quality = 2;
-      } else if (quality < 1 &&
-                 (name == QLatin1String("lp") ||
-                  lp.indexIn(comment) > -1)) {
+
+      } else if (quality < 1 && (name == "lp" || comment.indexOf(lp) > -1)) {
          best = i;
          quality = 1;
       }
@@ -881,22 +944,22 @@ int qt_getLprPrinters(QList<QPrinterDescription> &printers)
    return best;
 }
 
-/////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////
-
 QList<QPrinterInfo> QPrinterInfo::availablePrinters()
 {
    QList<QPrinterInfo> printers;
 
-#if !defined(QT_NO_CUPS)
+#if ! defined(QT_NO_CUPS)
    if (QCUPSSupport::isAvailable()) {
       QCUPSSupport cups;
+
       int cupsPrinterCount = cups.availablePrintersCount();
       const cups_dest_t *cupsPrinters = cups.availablePrinters();
+
       for (int i = 0; i < cupsPrinterCount; ++i) {
-         QString printerName(QString::fromLocal8Bit(cupsPrinters[i].name));
+         QString printerName(QString::fromUtf8(cupsPrinters[i].name));
+
          if (cupsPrinters[i].instance) {
-            printerName += QLatin1Char('/') + QString::fromLocal8Bit(cupsPrinters[i].instance);
+            printerName += '/' + QString::fromUtf8(cupsPrinters[i].instance);
          }
 
          QPrinterInfo printerInfo(printerName);
@@ -912,8 +975,10 @@ QList<QPrinterInfo> QPrinterInfo::availablePrinters()
       QList<QPrinterDescription> lprPrinters;
       int defprn = qt_getLprPrinters(lprPrinters);
       // populating printer combo
-      foreach (const QPrinterDescription & description, lprPrinters)
-      printers.append(QPrinterInfo(description.name));
+      for (const QPrinterDescription & description : lprPrinters) {
+         printers.append(QPrinterInfo(description.name));
+      }
+
       if (defprn >= 0 && defprn < printers.size()) {
          printers[defprn].d_ptr->isDefault = true;
       }
@@ -925,7 +990,7 @@ QList<QPrinterInfo> QPrinterInfo::availablePrinters()
 QPrinterInfo QPrinterInfo::defaultPrinter()
 {
    QList<QPrinterInfo> printers = availablePrinters();
-   foreach (const QPrinterInfo & printerInfo, printers) {
+   for (const QPrinterInfo & printerInfo : printers) {
       if (printerInfo.isDefault()) {
          return printerInfo;
       }

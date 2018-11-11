@@ -4,17 +4,19 @@ lib_libCsScriptTools1_la_SOURCES =
 lib_libCsScriptTools1_la_CXXFLAGS = $(AM_CXXFLAGS) -Iinclude -Iinclude/QtCore -Iinclude/QtGui \
    -Iinclude/QtScriptTools -Iprivateinclude/QtCore -Iprivateinclude/QtGui   \
    -Iprivateinclude/QtScriptTools -Isrc/scripttools/debugging   \
-	-DQT_BUILD_SCRIPTTOOLS_LIB \
-	-DQT_SHARED   \
-	-DQT_MAKEDLL
+	-DQT_BUILD_SCRIPTTOOLS_LIB
 
 lib_libCsScriptTools1_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined
-lib_libCsScriptTools1_la_LIBADD = lib/libCsCore1.la lib/libCsScript1.la lib/libCsGui1.la
+lib_libCsScriptTools1_la_LIBADD = lib/libCsCore@BUILD_ABI@.la lib/libCsScript@BUILD_ABI@.la lib/libCsGui@BUILD_ABI@.la
 
 SCRIPTTOOLS_INCLUDES =
 SCRIPTTOOLS_PUBLIC_INCLUDES =
 SCRIPTTOOLS_PRIVATE_INCLUDES =
 SCRIPTTOOLS_DIRS =
+
+EXTRA_DIST += \
+	src/scripttools/CMakeLists.txt \
+	src/scripttools/debugging/debugging.cmake
 
 include src/scripttools/debugging/Makefile.am
 

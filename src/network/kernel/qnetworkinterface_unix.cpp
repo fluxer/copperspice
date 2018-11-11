@@ -1,33 +1,33 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
 
-#include <qset.h>
 #include <qnetworkinterface.h>
 #include <qnetworkinterface_p.h>
-#include <qalgorithms.h>
 #include <qnet_unix_p.h>
+
+#include <qalgorithms.h>
+#include <qplatformdefs.h>
+#include <qset.h>
+#include <qvarlengtharray.h>
 
 #ifndef QT_NO_NETWORKINTERFACE
 
@@ -52,11 +52,7 @@
 #  endif
 #endif
 
-#include <qplatformdefs.h>
-
-QT_BEGIN_NAMESPACE
-
-static QHostAddress addressFromSockaddr(sockaddr *sa)
+static QHostAddress addressFromSockaddr(sockaddr *sa, int ifindex = 0, const QString &ifname = QString())
 {
    QHostAddress address;
    if (!sa) {
@@ -69,14 +65,22 @@ static QHostAddress addressFromSockaddr(sockaddr *sa)
 
    else if (sa->sa_family == AF_INET6) {
       address.setAddress(((sockaddr_in6 *)sa)->sin6_addr.s6_addr);
+
       int scope = ((sockaddr_in6 *)sa)->sin6_scope_id;
-      if (scope) {
+      if (scope && scope == ifindex) {
+         address.setScopeId(ifname);
+
+      } else  if (scope) {
+
+#ifndef QT_NO_IPV6IFNAME
          char scopeid[IFNAMSIZ];
+
          if (::if_indextoname(scope, scopeid)) {
             address.setScopeId(QLatin1String(scopeid));
-         } else {
-            address.setScopeId(QString::number(scope));
-         }
+
+         } else
+#endif
+            address.setScopeId(QString::number(uint(scope)));
       }
    }
    return address;
@@ -104,15 +108,15 @@ static QNetworkInterface::InterfaceFlags convertFlags(uint rawFlags)
 #ifdef QT_NO_GETIFADDRS
 // getifaddrs not available
 
-static const int STORAGEBUFFER_GROWTH = 256;
-
 static QSet<QByteArray> interfaceNames(int socket)
 {
    QSet<QByteArray> result;
 
 #ifdef QT_NO_IPV6IFNAME
    QByteArray storageBuffer;
+
    struct ifconf interfaceList;
+   static const int STORAGEBUFFER_GROWTH = 256;
 
    forever {
       // grow the storage buffer
@@ -121,8 +125,7 @@ static QSet<QByteArray> interfaceNames(int socket)
       interfaceList.ifc_len = storageBuffer.size();
 
       // get the interface list
-      if (qt_safe_ioctl(socket, SIOCGIFCONF, &interfaceList) >= 0)
-      {
+      if (qt_safe_ioctl(socket, SIOCGIFCONF, &interfaceList) >= 0) {
          if (int(interfaceList.ifc_len + sizeof(ifreq) + 64) < storageBuffer.size()) {
             // if the buffer was big enough, break
             storageBuffer.resize(interfaceList.ifc_len);
@@ -132,8 +135,8 @@ static QSet<QByteArray> interfaceNames(int socket)
          // internal error
          return result;
       }
-      if (storageBuffer.size() > 100000)
-      {
+
+      if (storageBuffer.size() > 100000) {
          // out of space
          return result;
       }
@@ -169,12 +172,18 @@ static QNetworkInterfacePrivate *findInterface(int socket, QList<QNetworkInterfa
    QNetworkInterfacePrivate *iface = 0;
    int ifindex = 0;
 
-#ifndef QT_NO_IPV6IFNAME
+#if !defined(QT_NO_IPV6IFNAME) || defined(SIOCGIFINDEX)
    // Get the interface index
+#  ifdef SIOCGIFINDEX
+   if (qt_safe_ioctl(socket, SIOCGIFINDEX, &req) >= 0) {
+      ifindex = req.ifr_ifindex;
+   }
+#  else
    ifindex = if_nametoindex(req.ifr_name);
+#  endif
 
    // find the interface data
-   QList<QNetworkInterfacePrivate *>::Iterator if_it = interfaces.begin();
+   QList<QNetworkInterfacePrivate *>::iterator if_it = interfaces.begin();
    for ( ; if_it != interfaces.end(); ++if_it)
       if ((*if_it)->index == ifindex) {
          // existing interface
@@ -183,7 +192,7 @@ static QNetworkInterfacePrivate *findInterface(int socket, QList<QNetworkInterfa
       }
 #else
    // Search by name
-   QList<QNetworkInterfacePrivate *>::Iterator if_it = interfaces.begin();
+   QList<QNetworkInterfacePrivate *>::iterator if_it = interfaces.begin();
    for ( ; if_it != interfaces.end(); ++if_it)
       if ((*if_it)->name == QLatin1String(req.ifr_name)) {
          // existing interface
@@ -192,12 +201,30 @@ static QNetworkInterfacePrivate *findInterface(int socket, QList<QNetworkInterfa
       }
 #endif
 
-   if (!iface) {
+   if (! iface) {
       // new interface, create data:
       iface = new QNetworkInterfacePrivate;
       iface->index = ifindex;
       interfaces << iface;
+   }
 
+   return iface;
+}
+static QList<QNetworkInterfacePrivate *> interfaceListing()
+{
+   QList<QNetworkInterfacePrivate *> interfaces;
+   int socket;
+   if ((socket = qt_safe_socket(AF_INET, SOCK_STREAM, IPPROTO_IP)) == -1) {
+      return interfaces;   // error
+   }
+   QSet<QByteArray> names = interfaceNames(socket);
+   QSet<QByteArray>::const_iterator it = names.constBegin();
+
+   for ( ; it != names.constEnd(); ++it) {
+      ifreq req;
+      memset(&req, 0, sizeof(ifreq));
+      memcpy(req.ifr_name, *it, qMin<int>(it->length() + 1, sizeof(req.ifr_name) - 1));
+      QNetworkInterfacePrivate *iface = findInterface(socket, interfaces, req);
 #ifdef SIOCGIFNAME
       // Get the canonical name
       QByteArray oldName = req.ifr_name;
@@ -205,7 +232,7 @@ static QNetworkInterfacePrivate *findInterface(int socket, QList<QNetworkInterfa
          iface->name = QString::fromLatin1(req.ifr_name);
 
          // reset the name:
-         memcpy(req.ifr_name, oldName, qMin<int>(oldName.length() + 1, sizeof(req.ifr_name) - 1));
+         memcpy(req.ifr_name, oldName, qMin(oldName.length() + 1, sizeof(req.ifr_name) - 1));
       } else
 #endif
       {
@@ -225,53 +252,33 @@ static QNetworkInterfacePrivate *findInterface(int socket, QList<QNetworkInterfa
          iface->hardwareAddress = iface->makeHwAddress(6, addr);
       }
 #endif
-   }
-
-   return iface;
-}
-
-static QList<QNetworkInterfacePrivate *> interfaceListing()
-{
-   QList<QNetworkInterfacePrivate *> interfaces;
-
-   int socket;
-   if ((socket = qt_safe_socket(AF_INET, SOCK_STREAM, IPPROTO_IP)) == -1) {
-      return interfaces;   // error
-   }
-
-   QSet<QByteArray> names = interfaceNames(socket);
-   QSet<QByteArray>::ConstIterator it = names.constBegin();
-   for ( ; it != names.constEnd(); ++it) {
-      ifreq req;
-      memset(&req, 0, sizeof(ifreq));
-      memcpy(req.ifr_name, *it, qMin<int>(it->length() + 1, sizeof(req.ifr_name) - 1));
-
-      QNetworkInterfacePrivate *iface = findInterface(socket, interfaces, req);
-
-      // Get the interface broadcast address
-      QNetworkAddressEntry entry;
-      if (iface->flags & QNetworkInterface::CanBroadcast) {
-         if (qt_safe_ioctl(socket, SIOCGIFBRDADDR, &req) >= 0) {
-            sockaddr *sa = &req.ifr_addr;
-            if (sa->sa_family == AF_INET) {
-               entry.setBroadcast(addressFromSockaddr(sa));
-            }
-         }
-      }
 
       // Get the address of the interface
+      QNetworkAddressEntry entry;
       if (qt_safe_ioctl(socket, SIOCGIFADDR, &req) >= 0) {
          sockaddr *sa = &req.ifr_addr;
          entry.setIp(addressFromSockaddr(sa));
-      }
 
-      // Get the interface netmask
-      if (qt_safe_ioctl(socket, SIOCGIFNETMASK, &req) >= 0) {
-         sockaddr *sa = &req.ifr_addr;
-         entry.setNetmask(addressFromSockaddr(sa));
-      }
+         // Get the interface broadcast address
+         if (iface->flags & QNetworkInterface::CanBroadcast) {
+            if (qt_safe_ioctl(socket, SIOCGIFBRDADDR, &req) >= 0) {
+               sockaddr *sa = &req.ifr_addr;
+               if (sa->sa_family == AF_INET) {
+                  entry.setBroadcast(addressFromSockaddr(sa));
+               }
+            }
+         }
 
-      iface->addressEntries << entry;
+
+
+         // Get the interface netmask
+         if (qt_safe_ioctl(socket, SIOCGIFNETMASK, &req) >= 0) {
+            sockaddr *sa = &req.ifr_addr;
+            entry.setNetmask(addressFromSockaddr(sa));
+         }
+
+         iface->addressEntries << entry;
+      }
    }
 
    ::close(socket);
@@ -281,53 +288,63 @@ static QList<QNetworkInterfacePrivate *> interfaceListing()
 #else
 // use getifaddrs
 
-// platform-specific defs:
+// platform-specific defs
 # ifdef Q_OS_LINUX
-QT_BEGIN_INCLUDE_NAMESPACE
 #  include <features.h>
-QT_END_INCLUDE_NAMESPACE
 # endif
 
 # if defined(Q_OS_LINUX) &&  __GLIBC__ - 0 >= 2 && __GLIBC_MINOR__ - 0 >= 1
-#  include <netpacket/packet.h>
+
+#include <netpacket/packet.h>
 
 static QList<QNetworkInterfacePrivate *> createInterfaces(ifaddrs *rawList)
 {
    QList<QNetworkInterfacePrivate *> interfaces;
+   QSet<QString> seenInterfaces;
+   QVarLengthArray<int, 16> seenIndexes;   // faster than QSet<int>
 
    for (ifaddrs *ptr = rawList; ptr; ptr = ptr->ifa_next) {
-      if ( !ptr->ifa_addr ) {
-         continue;
-      }
 
-      // Get the interface index
-      int ifindex = if_nametoindex(ptr->ifa_name);
-
-      // on Linux we use AF_PACKET and sockaddr_ll to obtain hHwAddress
-      QList<QNetworkInterfacePrivate *>::Iterator if_it = interfaces.begin();
-      for ( ; if_it != interfaces.end(); ++if_it)
-         if ((*if_it)->index == ifindex) {
-            // this one has been added already
-            if ( ptr->ifa_addr->sa_family == AF_PACKET
-                  && (*if_it)->hardwareAddress.isEmpty()) {
-               sockaddr_ll *sll = (sockaddr_ll *)ptr->ifa_addr;
-               (*if_it)->hardwareAddress = (*if_it)->makeHwAddress(sll->sll_halen, (uchar *)sll->sll_addr);
-            }
-            break;
-         }
-      if ( if_it != interfaces.end() ) {
-         continue;
-      }
-
-      QNetworkInterfacePrivate *iface = new QNetworkInterfacePrivate;
-      interfaces << iface;
-      iface->index = ifindex;
-      iface->name = QString::fromLatin1(ptr->ifa_name);
-      iface->flags = convertFlags(ptr->ifa_flags);
-
-      if ( ptr->ifa_addr->sa_family == AF_PACKET ) {
+      if (ptr->ifa_addr && ptr->ifa_addr->sa_family == AF_PACKET) {
          sockaddr_ll *sll = (sockaddr_ll *)ptr->ifa_addr;
+         QNetworkInterfacePrivate *iface = new QNetworkInterfacePrivate;
+         interfaces << iface;
+         iface->index = sll->sll_ifindex;
+         iface->name = QString::fromLatin1(ptr->ifa_name);
+         iface->flags = convertFlags(ptr->ifa_flags);
          iface->hardwareAddress = iface->makeHwAddress(sll->sll_halen, (uchar *)sll->sll_addr);
+
+         Q_ASSERT(!seenIndexes.contains(iface->index));
+
+         seenIndexes.append(iface->index);
+         seenInterfaces.insert(iface->name);
+      }
+   }
+
+   // see if we missed anything:
+   // - virtual interfaces with no HW address have no AF_PACKET
+   // - interface labels have no AF_PACKET, but shouldn't be shown as a new interface
+
+   for (ifaddrs *ptr = rawList; ptr; ptr = ptr->ifa_next) {
+      if (!ptr->ifa_addr || ptr->ifa_addr->sa_family != AF_PACKET) {
+         QString name = QString::fromLatin1(ptr->ifa_name);
+         if (seenInterfaces.contains(name)) {
+            continue;
+         }
+
+         int ifindex = if_nametoindex(ptr->ifa_name);
+         if (seenIndexes.contains(ifindex)) {
+            continue;
+         }
+
+         seenInterfaces.insert(name);
+         seenIndexes.append(ifindex);
+
+         QNetworkInterfacePrivate *iface = new QNetworkInterfacePrivate;
+         interfaces << iface;
+         iface->name = name;
+         iface->flags = convertFlags(ptr->ifa_flags);
+         iface->index = ifindex;
       }
    }
 
@@ -335,9 +352,7 @@ static QList<QNetworkInterfacePrivate *> createInterfaces(ifaddrs *rawList)
 }
 
 # elif defined(Q_OS_BSD4)
-QT_BEGIN_INCLUDE_NAMESPACE
 #  include <net/if_dl.h>
-QT_END_INCLUDE_NAMESPACE
 
 static QList<QNetworkInterfacePrivate *> createInterfaces(ifaddrs *rawList)
 {
@@ -371,7 +386,7 @@ static QList<QNetworkInterfacePrivate *> createInterfaces(ifaddrs *rawList)
       // Get the interface index
       int ifindex = if_nametoindex(ptr->ifa_name);
 
-      QList<QNetworkInterfacePrivate *>::Iterator if_it = interfaces.begin();
+      QList<QNetworkInterfacePrivate *>::iterator if_it = interfaces.begin();
       for ( ; if_it != interfaces.end(); ++if_it)
          if ((*if_it)->index == ifindex)
             // this one has been added already
@@ -400,53 +415,62 @@ static QList<QNetworkInterfacePrivate *> interfaceListing()
 {
    QList<QNetworkInterfacePrivate *> interfaces;
 
-   int socket;
-   if ((socket = qt_safe_socket(AF_INET, SOCK_STREAM, IPPROTO_IP)) == -1) {
-      return interfaces;   // error
-   }
 
    ifaddrs *interfaceListing;
    if (getifaddrs(&interfaceListing) == -1) {
       // error
-      ::close(socket);
+
       return interfaces;
    }
 
    interfaces = createInterfaces(interfaceListing);
    for (ifaddrs *ptr = interfaceListing; ptr; ptr = ptr->ifa_next) {
-      // Get the interface index
-      int ifindex = if_nametoindex(ptr->ifa_name);
+      // find the interface index
+      QString name = QString::fromLatin1(ptr->ifa_name);
+
       QNetworkInterfacePrivate *iface = 0;
-      QList<QNetworkInterfacePrivate *>::Iterator if_it = interfaces.begin();
+      QList<QNetworkInterfacePrivate *>::iterator if_it = interfaces.begin();
+
       for ( ; if_it != interfaces.end(); ++if_it)
-         if ((*if_it)->index == ifindex) {
+         if ((*if_it)->name == name) {
             // found this interface already
             iface = *if_it;
             break;
          }
+      if (!iface) {
+         // it may be an interface label, search by interface index
+         int ifindex = if_nametoindex(ptr->ifa_name);
+         for (if_it = interfaces.begin(); if_it != interfaces.end(); ++if_it)
+            if ((*if_it)->index == ifindex) {
+               // found this interface already
+               iface = *if_it;
+               break;
+            }
+      }
       if (!iface) {
          // skip all non-IP interfaces
          continue;
       }
 
       QNetworkAddressEntry entry;
-      entry.setIp(addressFromSockaddr(ptr->ifa_addr));
+      entry.setIp(addressFromSockaddr(ptr->ifa_addr, iface->index, iface->name));
       if (entry.ip().isNull())
          // could not parse the address
       {
          continue;
       }
 
-      entry.setNetmask(addressFromSockaddr(ptr->ifa_netmask));
+      entry.setNetmask(addressFromSockaddr(ptr->ifa_netmask, iface->index, iface->name));
       if (iface->flags & QNetworkInterface::CanBroadcast) {
-         entry.setBroadcast(addressFromSockaddr(ptr->ifa_broadaddr));
+         entry.setBroadcast(addressFromSockaddr(ptr->ifa_broadaddr, iface->index, iface->name));
       }
+
 
       iface->addressEntries << entry;
    }
 
    freeifaddrs(interfaceListing);
-   ::close(socket);
+
    return interfaces;
 }
 #endif
@@ -455,7 +479,5 @@ QList<QNetworkInterfacePrivate *> QNetworkInterfaceManager::scan()
 {
    return interfaceListing();
 }
-
-QT_END_NAMESPACE
 
 #endif // QT_NO_NETWORKINTERFACE

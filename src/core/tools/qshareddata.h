@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,10 +23,8 @@
 #ifndef QSHAREDDATA_H
 #define QSHAREDDATA_H
 
-#include <QtCore/qglobal.h>
-#include <QtCore/qatomic.h>
-
-QT_BEGIN_NAMESPACE
+#include <qglobal.h>
+#include <qatomic.h>
 
 template <class T> class QSharedDataPointer;
 
@@ -92,6 +87,7 @@ template <class T> class QSharedDataPointer
    inline bool operator==(const QSharedDataPointer<T> &other) const {
       return d == other.d;
    }
+
    inline bool operator!=(const QSharedDataPointer<T> &other) const {
       return d != other.d;
    }
@@ -99,8 +95,9 @@ template <class T> class QSharedDataPointer
    inline QSharedDataPointer() {
       d = 0;
    }
+
    inline ~QSharedDataPointer() {
-      if (d && !d->ref.deref()) {
+      if (d && ! d->ref.deref()) {
          delete d;
       }
    }
@@ -292,7 +289,7 @@ template <class T> class QExplicitlySharedDataPointer
 };
 
 template <class T>
-Q_INLINE_TEMPLATE QSharedDataPointer<T>::QSharedDataPointer(T *adata) : d(adata)
+inline QSharedDataPointer<T>::QSharedDataPointer(T *adata) : d(adata)
 {
    if (d) {
       d->ref.ref();
@@ -300,13 +297,13 @@ Q_INLINE_TEMPLATE QSharedDataPointer<T>::QSharedDataPointer(T *adata) : d(adata)
 }
 
 template <class T>
-Q_INLINE_TEMPLATE T *QSharedDataPointer<T>::clone()
+inline T *QSharedDataPointer<T>::clone()
 {
    return new T(*d);
 }
 
 template <class T>
-Q_OUTOFLINE_TEMPLATE void QSharedDataPointer<T>::detach_helper()
+void QSharedDataPointer<T>::detach_helper()
 {
    T *x = clone();
    x->ref.ref();
@@ -317,13 +314,13 @@ Q_OUTOFLINE_TEMPLATE void QSharedDataPointer<T>::detach_helper()
 }
 
 template <class T>
-Q_INLINE_TEMPLATE T *QExplicitlySharedDataPointer<T>::clone()
+inline T *QExplicitlySharedDataPointer<T>::clone()
 {
    return new T(*d);
 }
 
 template <class T>
-Q_OUTOFLINE_TEMPLATE void QExplicitlySharedDataPointer<T>::detach_helper()
+void QExplicitlySharedDataPointer<T>::detach_helper()
 {
    T *x = clone();
    x->ref.ref();
@@ -334,7 +331,7 @@ Q_OUTOFLINE_TEMPLATE void QExplicitlySharedDataPointer<T>::detach_helper()
 }
 
 template <class T>
-Q_INLINE_TEMPLATE QExplicitlySharedDataPointer<T>::QExplicitlySharedDataPointer(T *adata) : d(adata)
+inline QExplicitlySharedDataPointer<T>::QExplicitlySharedDataPointer(T *adata) : d(adata)
 {
    if (d) {
       d->ref.ref();
@@ -342,13 +339,13 @@ Q_INLINE_TEMPLATE QExplicitlySharedDataPointer<T>::QExplicitlySharedDataPointer(
 }
 
 template <class T>
-Q_INLINE_TEMPLATE void qSwap(QSharedDataPointer<T> &p1, QSharedDataPointer<T> &p2)
+inline void qSwap(QSharedDataPointer<T> &p1, QSharedDataPointer<T> &p2)
 {
    p1.swap(p2);
 }
 
 template <class T>
-Q_INLINE_TEMPLATE void qSwap(QExplicitlySharedDataPointer<T> &p1, QExplicitlySharedDataPointer<T> &p2)
+inline void qSwap(QExplicitlySharedDataPointer<T> &p1, QExplicitlySharedDataPointer<T> &p2)
 {
    p1.swap(p2);
 }
@@ -357,14 +354,14 @@ Q_INLINE_TEMPLATE void qSwap(QExplicitlySharedDataPointer<T> &p1, QExplicitlySha
 QT_END_NAMESPACE
 namespace std {
 template <class T>
-Q_INLINE_TEMPLATE void swap(QT_PREPEND_NAMESPACE(QSharedDataPointer)<T> &p1,
+inline void swap(QT_PREPEND_NAMESPACE(QSharedDataPointer)<T> &p1,
                             QT_PREPEND_NAMESPACE(QSharedDataPointer)<T> &p2)
 {
    p1.swap(p2);
 }
 
 template <class T>
-Q_INLINE_TEMPLATE void swap(QT_PREPEND_NAMESPACE(QExplicitlySharedDataPointer)<T> &p1,
+inline void swap(QT_PREPEND_NAMESPACE(QExplicitlySharedDataPointer)<T> &p1,
                             QT_PREPEND_NAMESPACE(QExplicitlySharedDataPointer)<T> &p2)
 {
    p1.swap(p2);
@@ -375,6 +372,4 @@ QT_BEGIN_NAMESPACE
 template<typename T> Q_DECLARE_TYPEINFO_BODY(QSharedDataPointer<T>, Q_MOVABLE_TYPE);
 template<typename T> Q_DECLARE_TYPEINFO_BODY(QExplicitlySharedDataPointer<T>, Q_MOVABLE_TYPE);
 
-QT_END_NAMESPACE
-
-#endif // QSHAREDDATA_H
+#endif

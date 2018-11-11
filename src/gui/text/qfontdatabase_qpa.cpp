@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -62,7 +59,7 @@ Q_GUI_EXPORT  void qt_registerFont(const QString &familyName, const QString &fou
 }
 
 static QStringList fallbackFamilies(const QString &family, const QFont::Style &style, const QFont::StyleHint &styleHint,
-                                    const QUnicodeTables::Script &script)
+                                    const QChar::Script &script)
 {
    QStringList retList = QApplicationPrivate::platformIntegration()->fontDatabase()->fallbacksForFamily(family, style,
                          styleHint, script);
@@ -155,7 +152,7 @@ QFontEngine *loadSingleEngine(int script,
    QFontEngine *engine = QFontCache::instance()->findEngine(key);
    if (!engine) {
       QPlatformFontDatabase *pfdb = QApplicationPrivate::platformIntegration()->fontDatabase();
-      engine = pfdb->fontEngine(def, QUnicodeTables::Script(script), size->handle);
+      engine = pfdb->fontEngine(def, QChar::Script(script), size->handle);
       if (engine) {
          QFontCache::Key key(def, script);
          QFontCache::instance()->instance()->insertEngine(key, engine);
@@ -181,7 +178,7 @@ QFontEngine *loadEngine(int script, const QFontDef &request,
          if (styleHint == QFont::AnyStyle && request.fixedPitch) {
             styleHint = QFont::TypeWriter;
          }
-         family->fallbackFamilies = fallbackFamilies(family->name, fontStyle, styleHint, QUnicodeTables::Script(script));
+         family->fallbackFamilies = fallbackFamilies(family->name, fontStyle, styleHint, QChar::Script(script));
 
          family->askedForFallback = true;
       }
@@ -297,12 +294,14 @@ QFontDatabase::findFont(int script, const QFontPrivate *fp,
    if (!engine) {
       if (!request.family.isEmpty()) {
          QStringList fallbacks = fallbackFamilies(request.family, QFont::Style(request.style),
-                                 QFont::StyleHint(request.styleHint), QUnicodeTables::Script(script));
+                                 QFont::StyleHint(request.styleHint), QChar::Script(script));
+
          for (int i = 0; i < fallbacks.size(); i++) {
             QFontDef def = request;
             def.family = fallbacks.at(i);
             QFontCache::Key key(def, script);
             engine = QFontCache::instance()->findEngine(key);
+
             if (!engine) {
                QtFontDesc desc;
                match(script, def, def.family, QLatin1String(""), 0, &desc);
@@ -382,7 +381,7 @@ void QFontDatabase::load(const QFontPrivate *d, int script)
    // null family means find the first font matching the specified script
    family_list << QString();
 
-   QStringList::ConstIterator it = family_list.constBegin(), end = family_list.constEnd();
+   QStringList::const_iterator it = family_list.constBegin(), end = family_list.constEnd();
    for (; !fe && it != end; ++it) {
       req.family = *it;
 
@@ -397,7 +396,7 @@ void QFontDatabase::load(const QFontPrivate *d, int script)
    }
 
    if (fe->symbol || (d->request.styleStrategy & QFont::NoFontMerging)) {
-      for (int i = 0; i < QUnicodeTables::ScriptCount; ++i) {
+      for (int i = 0; i < QChar::ScriptCount; ++i) {
          if (!d->engineData->engines[i]) {
             d->engineData->engines[i] = fe;
             fe->ref.ref();

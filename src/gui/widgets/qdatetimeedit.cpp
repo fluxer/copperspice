@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -43,7 +40,7 @@
 
 //#define QDATETIMEEDIT_QDTEDEBUG
 #ifdef QDATETIMEEDIT_QDTEDEBUG
-#  define QDTEDEBUG qDebug() << QString::fromLatin1("%1:%2").arg(__FILE__).arg(__LINE__)
+#  define QDTEDEBUG qDebug() << QString::fromLatin1("%1:%2").formatArg(__FILE__).formatArg(__LINE__)
 #  define QDTEDEBUGN qDebug
 #else
 #  define QDTEDEBUG if (false) qDebug()
@@ -969,13 +966,15 @@ QSize QDateTimeEdit::sizeHint() const
       int h = d->edit->sizeHint().height();
       int w = 0;
       QString s;
+
       s = d->textFromValue(d->minimum) + QLatin1String("   ");
-      w = qMax<int>(w, fm.width(s));
+      w = qMax(w, fm.width(s));
       s = d->textFromValue(d->maximum) + QLatin1String("   ");
-      w = qMax<int>(w, fm.width(s));
+      w = qMax(w, fm.width(s));
+
       if (d->specialValueText.size()) {
          s = d->specialValueText;
-         w = qMax<int>(w, fm.width(s));
+         w = qMax(w, fm.width(s));
       }
       w += 2; // cursor blinking space
 
@@ -1899,16 +1898,20 @@ QDateTime QDateTimeEditPrivate::validateAndInterpret(QString &input, int &positi
          state = QValidator::Invalid;
       }
       return getZeroVariant().toDateTime();
+
    } else if (cachedText == input && !fixup) {
       state = cachedState;
       return cachedValue.toDateTime();
+
    } else if (!specialValueText.isEmpty()) {
       bool changeCase = false;
       const int max = qMin(specialValueText.size(), input.size());
       int i;
+
       for (i = 0; i < max; ++i) {
          const QChar ic = input.at(i);
          const QChar sc = specialValueText.at(i);
+
          if (ic != sc) {
             if (sc.toLower() == ic.toLower()) {
                changeCase = true;
@@ -1917,6 +1920,7 @@ QDateTime QDateTimeEditPrivate::validateAndInterpret(QString &input, int &positi
             }
          }
       }
+
       if (i == max) {
          state = specialValueText.size() == input.size() ? QValidator::Acceptable : QValidator::Intermediate;
          if (changeCase) {
@@ -1925,6 +1929,7 @@ QDateTime QDateTimeEditPrivate::validateAndInterpret(QString &input, int &positi
          return minimum.toDateTime();
       }
    }
+
    StateNode tmp = parse(input, position, value.toDateTime(), fixup);
    input = tmp.input;
    state = QValidator::State(int(tmp.state));
@@ -2069,7 +2074,7 @@ QDateTime QDateTimeEditPrivate::stepBy(int sectionIndex, int steps, bool test) c
    }
    if (!test && oldDay != v.date().day() && !(sn.type & (DaySection | DayOfWeekSection))) {
       // this should not happen when called from stepEnabled
-      cachedDay = qMax<int>(oldDay, cachedDay);
+      cachedDay = qMax(oldDay, cachedDay);
    }
 
    if (v < minimumDateTime) {
@@ -2157,12 +2162,14 @@ void QDateTimeEditPrivate::_q_editorCursorPositionChanged(int oldpos, int newpos
    if (ignoreCursorPositionChanged || specialValue()) {
       return;
    }
+
    const QString oldText = displayText();
    updateCache(value, oldText);
 
    const bool allowChange = !edit->hasSelectedText();
    const bool forward = oldpos <= newpos;
    ignoreCursorPositionChanged = true;
+
    int s = sectionAt(newpos);
    if (s == NoSectionIndex && forward && newpos > 0) {
       s = sectionAt(newpos - 1);
@@ -2183,7 +2190,7 @@ void QDateTimeEditPrivate::_q_editorCursorPositionChanged(int oldpos, int newpos
          c = -1;
       } else {
          int closest = closestSection(newpos, forward);
-         c = sectionPos(closest) + (forward ? 0 : qMax<int>(0, sectionSize(closest)));
+         c = sectionPos(closest) + (forward ? 0 : qMax(0, sectionSize(closest)));
 
          if (allowChange) {
             edit->setCursorPosition(c);
@@ -2196,6 +2203,7 @@ void QDateTimeEditPrivate::_q_editorCursorPositionChanged(int oldpos, int newpos
    if (allowChange && currentSectionIndex != s) {
       interpret(EmitIfChanged);
    }
+
    if (c == -1) {
       setSelected(s, true);
    } else if (!edit->hasSelectedText()) {
@@ -2211,11 +2219,9 @@ void QDateTimeEditPrivate::_q_editorCursorPositionChanged(int oldpos, int newpos
              << "was" << sectionName(sectionType(currentSectionIndex));
 
    currentSectionIndex = s;
-   Q_ASSERT_X(currentSectionIndex < sectionNodes.size(),
-              "QDateTimeEditPrivate::_q_editorCursorPositionChanged()",
-              qPrintable(QString::fromAscii("Internal error (%1 %2)").
-                         arg(currentSectionIndex).
-                         arg(sectionNodes.size())));
+
+   Q_ASSERT_X(currentSectionIndex < sectionNodes.size(), "QDateTimeEditPrivate::_q_editorCursorPositionChanged()",
+             csPrintable(QString("Internal error (%1 %2)").formatArg(currentSectionIndex).formatArg(sectionNodes.size())) );
 
    ignoreCursorPositionChanged = false;
 }

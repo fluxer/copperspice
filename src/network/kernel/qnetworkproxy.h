@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,12 +23,11 @@
 #ifndef QNETWORKPROXY_H
 #define QNETWORKPROXY_H
 
-#include <QtNetwork/qhostaddress.h>
-#include <QtCore/qshareddata.h>
+#include <qhostaddress.h>
+#include <qnetworkrequest.h>
+#include <qshareddata.h>
 
 #ifndef QT_NO_NETWORKPROXY
-
-QT_BEGIN_NAMESPACE
 
 class QUrl;
 class QNetworkConfiguration;
@@ -50,14 +46,12 @@ class Q_NETWORK_EXPORT QNetworkProxyQuery
    };
 
    QNetworkProxyQuery();
-   QNetworkProxyQuery(const QUrl &requestUrl, QueryType queryType = UrlRequest);
+   explicit QNetworkProxyQuery(const QUrl &requestUrl, QueryType queryType = UrlRequest);
    QNetworkProxyQuery(const QString &hostname, int port, const QString &protocolTag = QString(),
                       QueryType queryType = TcpSocket);
 
-   QNetworkProxyQuery(quint16 bindPort, const QString &protocolTag = QString(),
+   explicit QNetworkProxyQuery(quint16 bindPort, const QString &protocolTag = QString(),
                       QueryType queryType = TcpServer);
-
-   QNetworkProxyQuery(const QNetworkProxyQuery &other);
 
 #ifndef QT_NO_BEARERMANAGEMENT
    QNetworkProxyQuery(const QNetworkConfiguration &networkConfiguration,
@@ -72,11 +66,20 @@ class Q_NETWORK_EXPORT QNetworkProxyQuery
                       QueryType queryType = TcpServer);
 #endif
 
+   QNetworkProxyQuery(const QNetworkProxyQuery &other);
    ~QNetworkProxyQuery();
+
    QNetworkProxyQuery &operator=(const QNetworkProxyQuery &other);
+
+   QNetworkProxyQuery &operator=(QNetworkProxyQuery &&other) {
+      swap(other);
+      return *this;
+   }
+
    bool operator==(const QNetworkProxyQuery &other) const;
+
    inline bool operator!=(const QNetworkProxyQuery &other) const {
-      return !(*this == other);
+      return ! (*this == other);
    }
 
    QueryType queryType() const;
@@ -102,15 +105,17 @@ class Q_NETWORK_EXPORT QNetworkProxyQuery
    void setNetworkConfiguration(const QNetworkConfiguration &networkConfiguration);
 #endif
 
+   void swap(QNetworkProxyQuery &other) {
+      qSwap(d, other.d);
+   }
+
  private:
    QSharedDataPointer<QNetworkProxyQueryPrivate> d;
 };
-Q_DECLARE_TYPEINFO(QNetworkProxyQuery, Q_MOVABLE_TYPE);
 
 
 class Q_NETWORK_EXPORT QNetworkProxy
 {
-
  public:
    enum ProxyType {
       DefaultProxy,
@@ -133,9 +138,18 @@ class Q_NETWORK_EXPORT QNetworkProxy
    QNetworkProxy();
    QNetworkProxy(ProxyType type, const QString &hostName = QString(), quint16 port = 0,
                  const QString &user = QString(), const QString &password = QString());
+
    QNetworkProxy(const QNetworkProxy &other);
-   QNetworkProxy &operator=(const QNetworkProxy &other);
+
    ~QNetworkProxy();
+
+   QNetworkProxy &operator=(const QNetworkProxy &other);
+
+   QNetworkProxy &operator=(QNetworkProxy &&other) {
+      swap(other);
+      return *this;
+   }
+
    bool operator==(const QNetworkProxy &other) const;
    inline bool operator!=(const QNetworkProxy &other) const {
       return !(*this == other);
@@ -164,9 +178,24 @@ class Q_NETWORK_EXPORT QNetworkProxy
    static void setApplicationProxy(const QNetworkProxy &proxy);
    static QNetworkProxy applicationProxy();
 
+   void swap(QNetworkProxy &other) {
+      qSwap(d, other.d);
+   }
+
+   // "cooked" headers
+   QVariant header(QNetworkRequest::KnownHeaders header) const;
+   void setHeader(QNetworkRequest::KnownHeaders header, const QVariant &value);
+
+   // raw headers:
+   bool hasRawHeader(const QByteArray &headerName) const;
+   QList<QByteArray> rawHeaderList() const;
+   QByteArray rawHeader(const QByteArray &headerName) const;
+   void setRawHeader(const QByteArray &headerName, const QByteArray &value);
+
  private:
    QSharedDataPointer<QNetworkProxyPrivate> d;
 };
+
 Q_DECLARE_OPERATORS_FOR_FLAGS(QNetworkProxy::Capabilities)
 
 class Q_NETWORK_EXPORT QNetworkProxyFactory
@@ -183,8 +212,7 @@ class Q_NETWORK_EXPORT QNetworkProxyFactory
    static QList<QNetworkProxy> systemProxyForQuery(const QNetworkProxyQuery &query = QNetworkProxyQuery());
 };
 
-QT_END_NAMESPACE
-
+Q_NETWORK_EXPORT QDebug operator<<(QDebug debug, const QNetworkProxy &proxy);
 #endif // QT_NO_NETWORKPROXY
 
 #endif // QHOSTINFO_H

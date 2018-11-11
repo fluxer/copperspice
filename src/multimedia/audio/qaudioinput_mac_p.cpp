@@ -1,38 +1,34 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
 
-#include <QtCore/qendian.h>
-#include <QtCore/qtimer.h>
-#include <QtCore/qdebug.h>
-#include <QtMultimedia/qaudioinput.h>
+#include <qglobal.h>
+#include <qendian.h>
+#include <qtimer.h>
+#include <qdebug.h>
+#include <qaudioinput.h>
 
 #include <qaudio_mac_p.h>
 #include <qaudioinput_mac_p.h>
 #include <qaudiodeviceinfo_mac_p.h>
-
-QT_BEGIN_NAMESPACE
 
 namespace QtMultimediaInternal {
 
@@ -184,11 +180,8 @@ class QAudioInputBuffer : public QObject
    MULTI_CS_OBJECT(QAudioInputBuffer)
 
  public:
-   QAudioInputBuffer(int bufferSize,
-                     int maxPeriodSize,
-                     AudioStreamBasicDescription const &inputFormat,
-                     AudioStreamBasicDescription const &outputFormat,
-                     QObject *parent):
+   QAudioInputBuffer(int bufferSize, int maxPeriodSize, AudioStreamBasicDescription const &inputFormat,
+                     AudioStreamBasicDescription const &outputFormat, QObject *parent):
       QObject(parent),
       m_deviceError(false),
       m_audioConverter(0),
@@ -201,7 +194,7 @@ class QAudioInputBuffer : public QObject
       m_inputBufferList = new QAudioBufferList(m_inputFormat);
 
       m_flushTimer = new QTimer(this);
-      connect(m_flushTimer, SIGNAL(timeout()), SLOT(flushBuffer()));
+      connect(m_flushTimer, SIGNAL(timeout()), this, SLOT(flushBuffer()));
 
       if (toQAudioFormat(inputFormat) != toQAudioFormat(outputFormat)) {
          if (AudioConverterNew(&m_inputFormat, &m_outputFormat, &m_audioConverter) != noErr) {
@@ -215,26 +208,19 @@ class QAudioInputBuffer : public QObject
       delete m_buffer;
    }
 
-   qint64 renderFromDevice(AudioUnit audioUnit,
-                           AudioUnitRenderActionFlags *ioActionFlags,
-                           const AudioTimeStamp *inTimeStamp,
-                           UInt32 inBusNumber,
-                           UInt32 inNumberFrames) {
-      const bool  pullMode = m_device == 0;
+   qint64 renderFromDevice(AudioUnit audioUnit, AudioUnitRenderActionFlags *ioActionFlags,
+                  const AudioTimeStamp *inTimeStamp, UInt32 inBusNumber, UInt32 inNumberFrames) {
 
+      const bool  pullMode = m_device == 0;
       OSStatus    err;
       qint64      framesRendered = 0;
 
       m_inputBufferList->reset();
-      err = AudioUnitRender(audioUnit,
-                            ioActionFlags,
-                            inTimeStamp,
-                            inBusNumber,
-                            inNumberFrames,
-                            m_inputBufferList->audioBufferList());
+      err = AudioUnitRender(audioUnit, ioActionFlags, inTimeStamp, inBusNumber, inNumberFrames,
+                  m_inputBufferList->audioBufferList());
 
       if (m_audioConverter != 0) {
-         QAudioPacketFeeder  feeder(m_inputBufferList);
+         QAudioPacketFeeder feeder(m_inputBufferList);
 
          int     copied = 0;
          const int available = m_buffer->free();
@@ -378,20 +364,21 @@ class QAudioInputBuffer : public QObject
       return m_buffer->used();
    }
 
- signals:
-   void readyRead();
-
- private slots:
-   void flushBuffer() {
-      flush();
-   }
+   MULTI_CS_SIGNAL_1(Public, void readyRead())
+   MULTI_CS_SIGNAL_2(readyRead)
 
  private:
+   MULTI_CS_SLOT_1(Private, void flushBuffer() {
+      flush();
+       })
+   MULTI_CS_SLOT_2(flushBuffer)
+
    bool        m_deviceError;
    int         m_maxPeriodSize;
    int         m_periodTime;
    QIODevice  *m_device;
    QTimer     *m_flushTimer;
+
    QAudioRingBuffer   *m_buffer;
    QAudioBufferList   *m_inputBufferList;
    AudioConverterRef   m_audioConverter;
@@ -429,21 +416,21 @@ class MacInputDevice : public QIODevice
       QIODevice(parent),
       m_audioBuffer(audioBuffer) {
       open(QIODevice::ReadOnly | QIODevice::Unbuffered);
-      connect(m_audioBuffer, SIGNAL(readyRead()), SIGNAL(readyRead()));
+      connect(m_audioBuffer, SIGNAL(readyRead()), this, SLOT(readyRead()));
    }
 
-   qint64 readData(char *data, qint64 len) {
+   qint64 readData(char *data, qint64 len) override {
       return m_audioBuffer->readBytes(data, len);
    }
 
-   qint64 writeData(const char *data, qint64 len) {
+   qint64 writeData(const char *data, qint64 len) override {
       Q_UNUSED(data);
       Q_UNUSED(len);
 
       return 0;
    }
 
-   bool isSequential() const {
+   bool isSequential() const override {
       return true;
    }
 
@@ -453,25 +440,30 @@ class MacInputDevice : public QIODevice
 
 }
 
-
-QAudioInputPrivate::QAudioInputPrivate(const QByteArray &device, QAudioFormat const &format):
-   audioFormat(format)
+QAudioInputPrivate::QAudioInputPrivate(const QString &device, QAudioFormat const &format)
+   : audioFormat(format)
 {
-   QDataStream ds(device);
-   quint32 did, mode;
+   auto iter_s = device.indexOfFast(":");
+   quint32 t_id = QString(device.constBegin(), iter_s).toInteger<quint32>();
 
-   ds >> did >> mode;
+   auto iter_e = device.indexOfFast(":", iter_s);
+   quint32 t_mode = QString(iter_s + 1, iter_e).toInteger<quint32>();
 
-   if (QAudio::Mode(mode) == QAudio::AudioOutput) {
+   // (unused) name = QString(iter_e + 1, device.constEnd());
+
+   if (QAudio::Mode(t_mode) == QAudio::AudioOutput) {
       errorCode = QAudio::OpenError;
+
    } else {
       audioDeviceInfo = new QAudioDeviceInfoInternal(device, QAudio::AudioInput);
       isOpen = false;
-      audioDeviceId = AudioDeviceID(did);
-      audioUnit = 0;
-      startTime = 0;
-      totalFrames = 0;
-      audioBuffer = 0;
+
+      audioDeviceId = AudioDeviceID(t_id);
+      audioUnit     = 0;
+      startTime     = 0;
+      totalFrames   = 0;
+      audioBuffer   = 0;
+
       internalBufferSize = QtMultimediaInternal::default_buffer_size;
       clockFrequency = AudioGetHostClockFrequency() / 1000;
       errorCode = QAudio::NoError;
@@ -479,7 +471,7 @@ QAudioInputPrivate::QAudioInputPrivate(const QByteArray &device, QAudioFormat co
 
       intervalTimer = new QTimer(this);
       intervalTimer->setInterval(1000);
-      connect(intervalTimer, SIGNAL(timeout()), SIGNAL(notify()));
+      connect(intervalTimer, SIGNAL(timeout()), this, SLOT(notify()));
    }
 }
 
@@ -663,9 +655,10 @@ QIODevice *QAudioInputPrivate::start(QIODevice *device)
 {
    QIODevice  *op = device;
 
-   if (!audioDeviceInfo->isFormatSupported(audioFormat) || !open()) {
+   if (! audioDeviceInfo->isFormatSupported(audioFormat) || ! open()) {
       stateCode = QAudio::StoppedState;
       errorCode = QAudio::OpenError;
+
       return audioIO;
    }
 
@@ -837,7 +830,7 @@ void QAudioInputPrivate::audioDeviceFull()
 
 void QAudioInputPrivate::audioDeviceError()
 {
-   QMutexLocker    lock(&mutex);
+   QMutexLocker lock(&mutex);
    if (stateCode == QAudio::ActiveState) {
       audioDeviceStop();
 
@@ -868,33 +861,27 @@ void QAudioInputPrivate::deviceStopped()
 }
 
 // Input callback
-OSStatus QAudioInputPrivate::inputCallback(void *inRefCon,
-      AudioUnitRenderActionFlags *ioActionFlags,
-      const AudioTimeStamp *inTimeStamp,
-      UInt32 inBusNumber,
-      UInt32 inNumberFrames,
-      AudioBufferList *ioData)
+OSStatus QAudioInputPrivate::inputCallback(void *inRefCon, AudioUnitRenderActionFlags *ioActionFlags,
+                  const AudioTimeStamp *inTimeStamp, UInt32 inBusNumber, UInt32 inNumberFrames, AudioBufferList *ioData)
 {
-   Q_UNUSED(ioData);
-
    QAudioInputPrivate *d = static_cast<QAudioInputPrivate *>(inRefCon);
 
    const int threadState = d->audioThreadState.fetchAndAddAcquire(0);
+
    if (threadState == Stopped) {
       d->audioDeviceStop();
-   } else {
-      qint64      framesWritten;
 
-      framesWritten = d->audioBuffer->renderFromDevice(d->audioUnit,
-                      ioActionFlags,
-                      inTimeStamp,
-                      inBusNumber,
-                      inNumberFrames);
+   } else {
+      qint64 framesWritten;
+      framesWritten = d->audioBuffer->renderFromDevice(d->audioUnit, ioActionFlags, inTimeStamp,
+                      inBusNumber, inNumberFrames);
 
       if (framesWritten > 0) {
          d->totalFrames += framesWritten;
+
       } else if (framesWritten == 0) {
          d->audioDeviceFull();
+
       } else if (framesWritten < 0) {
          d->audioDeviceError();
       }
@@ -903,5 +890,3 @@ OSStatus QAudioInputPrivate::inputCallback(void *inRefCon,
    return noErr;
 }
 
-
-QT_END_NAMESPACE

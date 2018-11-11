@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -60,11 +57,9 @@ AtomicValue::~AtomicValue()
 
 bool AtomicValue::evaluateEBV(const QExplicitlySharedDataPointer<DynamicContext> &context) const
 {
-   context->error(QtXmlPatterns::tr("A value of type %1 cannot have an "
-                                    "Effective Boolean Value.")
-                  .arg(formatType(context->namePool(), type())),
-                  ReportContext::FORG0006,
-                  QSourceLocation());
+   context->error(QtXmlPatterns::tr("A value of type %1 cannot have an Effective Boolean Value.")
+                  .formatArg(formatType(context->namePool(), type())), ReportContext::FORG0006,  QSourceLocation());
+
    return false; /* Silence GCC warning. */
 }
 
@@ -116,8 +111,7 @@ QVariant AtomicValue::toQt(const AtomicValue *const value)
 
 Item AtomicValue::toXDM(const QVariant &value)
 {
-   Q_ASSERT_X(value.isValid(), Q_FUNC_INFO,
-              "QVariants sent to Patternist must be valid.");
+   Q_ASSERT_X(value.isValid(), Q_FUNC_INFO, "QVariants sent to Patternist must be valid.");
 
    switch (value.userType()) {
       case QVariant::Char:
@@ -138,7 +132,7 @@ Item AtomicValue::toXDM(const QVariant &value)
       case QVariant::LongLong:
       /* Fallthrough. */
       case QVariant::UInt:
-         return Integer::fromValue(value.toLongLong());
+         return Integer::fromValue(value.toInt());
       case QVariant::ULongLong:
          return DerivedInteger<TypeUnsignedLong>::fromValueUnchecked(value.toULongLong());
       case QVariant::Bool:
@@ -153,16 +147,15 @@ Item AtomicValue::toXDM(const QVariant &value)
          return Item(Double::fromValue(value.toFloat()));
       case QVariant::Double:
          return Item(Double::fromValue(value.toDouble()));
+
       default: {
          if (value.userType() == qMetaTypeId<float>()) {
             return Item(Float::fromValue(value.value<float>()));
+
          } else {
-            Q_ASSERT_X(false,
-                       Q_FUNC_INFO,
-                       qPrintable(QString::fromLatin1(
-                                     "QVariants of type %1 are not supported in "
-                                     "Patternist, see the documentation")
-                                  .arg(QLatin1String(value.typeName()))));
+            Q_ASSERT_X(false, Q_FUNC_INFO, csPrintable(QString::fromLatin1("QVariants of type %1 are not supported in Patternist")
+                  .formatArg(QLatin1String(value.typeName()))));
+
             return AtomicValue::Ptr();
          }
       }

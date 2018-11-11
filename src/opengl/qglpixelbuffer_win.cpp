@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -251,13 +248,13 @@ bool QGLPixelBufferPrivate::init(const QSize &size, const QGLFormat &f, QGLWidge
    has_render_texture = false;
 
    // sample buffers doesn't work in conjunction with the render_texture extension
-   if (!f.sampleBuffers()) {
+   if (! f.sampleBuffers()) {
       PFNWGLGETEXTENSIONSSTRINGARBPROC wglGetExtensionsStringARB =
          (PFNWGLGETEXTENSIONSSTRINGARBPROC) wglGetProcAddress("wglGetExtensionsStringARB");
 
       if (wglGetExtensionsStringARB) {
-         QString extensions(QLatin1String(wglGetExtensionsStringARB(dc)));
-         has_render_texture = extensions.contains(QLatin1String("WGL_ARB_render_texture"));
+         QString extensions(QString::fromLatin1(wglGetExtensionsStringARB(dc)));
+         has_render_texture = extensions.contains("WGL_ARB_render_texture");
       }
    }
 
@@ -353,6 +350,7 @@ bool QGLPixelBuffer::bindToDynamicTexture(GLuint texture_id)
    }
    PFNWGLBINDTEXIMAGEARBPROC wglBindTexImageARB =
       (PFNWGLBINDTEXIMAGEARBPROC) wglGetProcAddress("wglBindTexImageARB");
+
    if (wglBindTexImageARB) {
       glBindTexture(GL_TEXTURE_2D, texture_id);
       return wglBindTexImageARB(d->pbuf, WGL_FRONT_LEFT_ARB);
@@ -363,11 +361,14 @@ bool QGLPixelBuffer::bindToDynamicTexture(GLuint texture_id)
 void QGLPixelBuffer::releaseFromDynamicTexture()
 {
    Q_D(QGLPixelBuffer);
+
    if (d->invalid || !d->has_render_texture) {
       return;
    }
+
    PFNWGLRELEASETEXIMAGEARBPROC wglReleaseTexImageARB =
       (PFNWGLRELEASETEXIMAGEARBPROC) wglGetProcAddress("wglReleaseTexImageARB");
+
    if (wglReleaseTexImageARB) {
       wglReleaseTexImageARB(d->pbuf, WGL_FRONT_LEFT_ARB);
    }
@@ -377,21 +378,26 @@ bool QGLPixelBuffer::hasOpenGLPbuffers()
 {
    bool ret = false;
    QGLTemporaryContext *tmpContext = 0;
-   if (!QGLContext::currentContext()) {
+
+   if (! QGLContext::currentContext()) {
       tmpContext = new QGLTemporaryContext;
    }
+
    PFNWGLGETEXTENSIONSSTRINGARBPROC wglGetExtensionsStringARB =
       (PFNWGLGETEXTENSIONSSTRINGARBPROC) wglGetProcAddress("wglGetExtensionsStringARB");
+
    if (wglGetExtensionsStringARB) {
-      QString extensions(QLatin1String(wglGetExtensionsStringARB(wglGetCurrentDC())));
-      if (extensions.contains(QLatin1String("WGL_ARB_pbuffer"))
-            && extensions.contains(QLatin1String("WGL_ARB_pixel_format"))) {
+      QString extensions(QString::fromLatin1(wglGetExtensionsStringARB(wglGetCurrentDC())));
+
+      if (extensions.contains("WGL_ARB_pbuffer") && extensions.contains("WGL_ARB_pixel_format")) {
          ret = true;
       }
    }
+
    if (tmpContext) {
       delete tmpContext;
    }
+
    return ret;
 }
 

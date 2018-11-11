@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -87,30 +84,36 @@ class Q_GUI_EXPORT QRegion
       return translated(p.x(), p.y());
    }
 
-   // ### Qt5 - make these four functions QT4_SUPPORT
+   // ### Qt5 - make these four functions
    QRegion unite(const QRegion &r) const;
    QRegion unite(const QRect &r) const;
    QRegion intersect(const QRegion &r) const;
    QRegion intersect(const QRect &r) const;
+
    QRegion subtract(const QRegion &r) const;
    QRegion eor(const QRegion &r) const;
 
-   inline QRegion united(const QRegion &r) const {
+   QRegion united(const QRegion &r) const {
       return unite(r);
    }
-   inline QRegion united(const QRect &r) const {
+
+   QRegion united(const QRect &r) const {
       return unite(r);
    }
-   inline QRegion intersected(const QRegion &r) const {
+
+   QRegion intersected(const QRegion &r) const {
       return intersect(r);
    }
-   inline QRegion intersected(const QRect &r) const {
+   
+   QRegion intersected(const QRect &r) const {
       return intersect(r);
    }
-   inline QRegion subtracted(const QRegion &r) const {
+
+   QRegion subtracted(const QRegion &r) const {
       return subtract(r);
    }
-   inline QRegion xored(const QRegion &r) const {
+
+   QRegion xored(const QRegion &r) const {
       return eor(r);
    }
 
@@ -119,12 +122,8 @@ class Q_GUI_EXPORT QRegion
 
    QRect boundingRect() const;
    QVector<QRect> rects() const;
+
    void setRects(const QRect *rect, int num);
-
-#ifdef QT_DEPRECATED
-   QT_DEPRECATED int numRects() const;
-#endif
-
    int rectCount() const;
 
    const QRegion operator|(const QRegion &r) const;
@@ -149,8 +148,11 @@ class Q_GUI_EXPORT QRegion
    }
    operator QVariant() const;
 
-#if defined(Q_OS_WIN)
-   inline HRGN    handle() const {
+#if defined (CS_DOXYPRESS)
+   inline Handle handle() const;
+   
+#elif defined(Q_OS_WIN)
+   inline HRGN  handle() const {
       ensureHandle();
       return d->rgn;
    }

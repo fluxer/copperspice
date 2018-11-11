@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -28,14 +25,13 @@
 #include "ui4.h"
 #include "uic.h"
 #include "databaseinfo.h"
+#include <qstring.h>
 
 #include <QtCore/QDebug>
 #include <QtCore/QFileInfo>
 #include <QtCore/QTextStream>
 
 #include <stdio.h>
-
-QT_BEGIN_NAMESPACE
 
 enum { debugWriteIncludes = 0 };
 enum { warnHeaderGeneration = 0 };
@@ -57,8 +53,9 @@ static const ClassInfoEntry qclass_lib_map[] = {
 static inline QString moduleHeader(const QString &module, const QString &header)
 {
    QString rc = module;
-   rc += QLatin1Char('/');
+   rc += '/';
    rc += header;
+
    return rc;
 }
 
@@ -70,14 +67,19 @@ WriteIncludes::WriteIncludes(Uic *uic)
    // When possible (no namespace) use the "QtModule/QClass" convention
    // and create a re-mapping of the old header "qclass.h" to it. Do not do this
    // for the "Phonon::Someclass" classes, however.
-   const QString namespaceDelimiter = QLatin1String("::");
+
+   const QString namespaceDelimiter = "::";
    const ClassInfoEntry *classLibEnd = qclass_lib_map + sizeof(qclass_lib_map) / sizeof(ClassInfoEntry);
+
    for (const ClassInfoEntry *it = qclass_lib_map; it < classLibEnd;  ++it) {
-      const QString klass = QLatin1String(it->klass);
-      const QString module = QLatin1String(it->module);
-      QLatin1String header = QLatin1String(it->header);
+
+      const QString klass  = QString::fromLatin1(it->klass);
+      const QString module = QString::fromLatin1(it->module);
+      QString header       = QString::fromLatin1(it->header);
+
       if (klass.contains(namespaceDelimiter)) {
          m_classToHeader.insert(klass, moduleHeader(module, header));
+
       } else {
          const QString newHeader = moduleHeader(module, klass);
          m_classToHeader.insert(klass, newHeader);
@@ -103,9 +105,9 @@ void WriteIncludes::acceptUI(DomUI *node)
       TreeWalker::acceptCustomWidgets(node->elementCustomWidgets());
    }
 
-   add(QLatin1String("QApplication"));
-   add(QLatin1String("QVariant"));
-   add(QLatin1String("QAction"));
+   add("QApplication");
+   add("QVariant");
+   add("QAction");
 
    add(QLatin1String("QButtonGroup")); // ### only if it is really necessary
    add(QLatin1String("QHeaderView"));
@@ -120,7 +122,7 @@ void WriteIncludes::acceptUI(DomUI *node)
    writeHeaders(m_globalIncludes, true);
    writeHeaders(m_localIncludes, false);
 
-   m_output << QLatin1Char('\n');
+   m_output << '\n';
 }
 
 void WriteIncludes::acceptWidget(DomWidget *node)
@@ -331,4 +333,3 @@ void WriteIncludes::activateScripts()
 }
 } // namespace CPP
 
-QT_END_NAMESPACE

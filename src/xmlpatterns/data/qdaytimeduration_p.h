@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -55,26 +52,25 @@ class DayTimeDuration : public AbstractDuration
     * whether this DayTimeDuration is positive or negative. @p msecs must always
     * be positive.
     */
-   static DayTimeDuration::Ptr fromSeconds(const SecondCountProperty secs,
-                                           const MSecondProperty msecs = 0);
+   static DayTimeDuration::Ptr fromSeconds(const SecondCountProperty secs, const MSecondProperty msecs = 0);
 
-   virtual ItemType::Ptr type() const;
-   virtual QString stringValue() const;
-
-   /**
-    * @returns always 0.
-    */
-   virtual YearProperty years() const;
+   ItemType::Ptr type() const override;
+   QString stringValue() const override;
 
    /**
     * @returns always 0.
     */
-   virtual MonthProperty months() const;
-   virtual DayCountProperty days() const;
-   virtual HourProperty hours() const;
-   virtual MinuteProperty minutes() const;
-   virtual MSecondProperty mseconds() const;
-   virtual SecondProperty seconds() const;
+   YearProperty years() const override;
+
+   /**
+    * @returns always 0.
+    */
+   MonthProperty months() const override;
+   DayCountProperty days() const override;
+   HourProperty hours() const override;
+   MinuteProperty minutes() const override;
+   MSecondProperty mseconds() const override;
+   SecondProperty seconds() const override;
 
    /**
     * @returns the value of this xs:dayTimeDuration
@@ -83,7 +79,7 @@ class DayTimeDuration : public AbstractDuration
     * and XPath 2.0 Functions and Operators, 10.3.2.2 Calculating the value of a
     * xs:dayTimeDuration from the lexical representation</a>
     */
-   virtual Value value() const;
+   Value value() const override;
 
    /**
     * Creates a DayTimeDuration containing the value @p val. @p val is
@@ -91,17 +87,13 @@ class DayTimeDuration : public AbstractDuration
     *
     * If @p val is zero, is CommonValues::DayTimeDurationZero returned.
     */
-   virtual Item fromValue(const Value val) const;
+   Item fromValue(const Value val) const override;
 
  protected:
    friend class CommonValues;
 
-   DayTimeDuration(const bool isPositive,
-                   const DayCountProperty days,
-                   const HourProperty hours,
-                   const MinuteProperty minutes,
-                   const SecondProperty seconds,
-                   const MSecondProperty mseconds);
+   DayTimeDuration(const bool isPositive, const DayCountProperty days, const HourProperty hours,
+                  const MinuteProperty minutes, const SecondProperty seconds, const MSecondProperty mseconds);
 
  private:
    const DayCountProperty  m_days;

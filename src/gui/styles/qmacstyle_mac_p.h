@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -160,7 +157,7 @@ class QMacStylePrivate : public QObject
    HIRect pushButtonContentBounds(const QStyleOptionButton *btn, const HIThemeButtonDrawInfo *bdi) const;
 
    void initComboboxBdi(const QStyleOptionComboBox *combo, HIThemeButtonDrawInfo *bdi,
-         const QWidget *widget, const ThemeDrawState &tds);
+                  const QWidget *widget, const ThemeDrawState &tds);
 
    static HIRect comboboxInnerBounds(const HIRect &outerBounds, int buttonKind);
 
@@ -168,13 +165,13 @@ class QMacStylePrivate : public QObject
 
    static void drawCombobox(const HIRect &outerBounds, const HIThemeButtonDrawInfo &bdi, QPainter *p);
    static void drawTableHeader(const HIRect &outerBounds, bool drawTopBorder, bool drawLeftBorder,
-         const HIThemeButtonDrawInfo &bdi, QPainter *p);
+                  const HIThemeButtonDrawInfo &bdi, QPainter *p);
 
    bool contentFitsInPushButton(const QStyleOptionButton *btn, HIThemeButtonDrawInfo *bdi,
-         ThemeButtonKind buttonKindToCheck) const;
+                  ThemeButtonKind buttonKindToCheck) const;
 
    void initHIThemePushButton(const QStyleOptionButton *btn, const QWidget *widget,
-         const ThemeDrawState tds,HIThemeButtonDrawInfo *bdi) const;
+                  const ThemeDrawState tds,HIThemeButtonDrawInfo *bdi) const;
 
    QPixmap generateBackgroundPattern() const;
 
@@ -194,8 +191,8 @@ class QMacStylePrivate : public QObject
    bool mouseDown;
 
  protected:
-   bool eventFilter(QObject *, QEvent *);
-   void timerEvent(QTimerEvent *);
+   bool eventFilter(QObject *, QEvent *) override;
+   void timerEvent(QTimerEvent *) override;
 
  private :
    GUI_CS_SLOT_1(Private, void startAnimationTimer())

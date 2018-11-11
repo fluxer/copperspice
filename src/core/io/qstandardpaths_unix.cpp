@@ -1,37 +1,38 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
 
 #include <qstandardpaths.h>
+
+#include <qcoreapplication.h>
 #include <qdir.h>
 #include <qfile.h>
+#include <qfilesystemengine_p.h>
 #include <qhash.h>
 #include <qtextstream.h>
-#include <qfilesystemengine_p.h>
+
+#include <qregularexpression.h>
+
 #include <errno.h>
 #include <stdlib.h>
-#include <qcoreapplication.h>
 
 #ifndef QT_NO_STANDARDPATHS
 
@@ -138,26 +139,33 @@ QString QStandardPaths::writableLocation(StandardLocation type)
 
    // http://www.freedesktop.org/wiki/Software/xdg-user-dirs
    QString xdgConfigHome = QFile::decodeName(qgetenv("XDG_CONFIG_HOME"));
+
    if (xdgConfigHome.isEmpty()) {
-      xdgConfigHome = QDir::homePath() + QLatin1String("/.config");
+      xdgConfigHome = QDir::homePath() + "/.config";
    }
-   QFile file(xdgConfigHome + QLatin1String("/user-dirs.dirs"));
+
+   QFile file(xdgConfigHome + "/user-dirs.dirs");
+
    if (!isTestModeEnabled() && file.open(QIODevice::ReadOnly)) {
       QHash<QString, QString> lines;
       QTextStream stream(&file);
+
       // Only look for lines like: XDG_DESKTOP_DIR="$HOME/Desktop"
-      QRegExp exp(QLatin1String("^XDG_(.*)_DIR=(.*)$"));
-      while (!stream.atEnd()) {
+      QRegularExpression exp("^XDG_(.*)_DIR=(.*)$");
+      QRegularExpressionMatch match;
+
+      while (! stream.atEnd()) {
          const QString &line = stream.readLine();
-         if (exp.indexIn(line) != -1) {
-            const QStringList lst = exp.capturedTexts();
-            const QString key = lst.at(1);
-            QString value = lst.at(2);
-            if (value.length() > 2
-                  && value.startsWith(QLatin1Char('\"'))
-                  && value.endsWith(QLatin1Char('\"'))) {
+         match = exp.match(line);
+
+         if (match.hasMatch()) {
+            const QString key = match.captured(1);
+            QString value     = match.captured(2);
+
+            if (value.length() > 2 && value.startsWith('\"') && value.endsWith('\"')) {
                value = value.mid(1, value.length() - 2);
             }
+
             // Store the key and value: "DESKTOP", "$HOME/Desktop"
             lines[key] = value;
          }
@@ -186,11 +194,14 @@ QString QStandardPaths::writableLocation(StandardLocation type)
          default:
             break;
       }
+
       if (!key.isEmpty()) {
          QString value = lines.value(key);
+
          if (!value.isEmpty()) {
             // value can start with $HOME
-            if (value.startsWith(QLatin1String("$HOME"))) {
+
+            if (value.startsWith("$HOME")) {
                value = QDir::homePath() + value.mid(5);
             }
             return value;

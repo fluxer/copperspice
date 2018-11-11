@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -111,7 +108,7 @@ class QTipLabel : public QLabel
    ~QTipLabel();
    static QTipLabel *instance;
 
-   bool eventFilter(QObject *, QEvent *);
+   bool eventFilter(QObject *, QEvent *) override;
 
    QBasicTimer hideTimer, expireTimer;
 
@@ -128,10 +125,10 @@ class QTipLabel : public QLabel
    static int getTipScreen(const QPoint &pos, QWidget *w);
 
  protected:
-   void timerEvent(QTimerEvent *e);
-   void paintEvent(QPaintEvent *e);
-   void mouseMoveEvent(QMouseEvent *e);
-   void resizeEvent(QResizeEvent *e);
+   void timerEvent(QTimerEvent *e) override;
+   void paintEvent(QPaintEvent *e) override;
+   void mouseMoveEvent(QMouseEvent *e) override;
+   void resizeEvent(QResizeEvent *e) override;
 
  private:
    QWidget *widget;

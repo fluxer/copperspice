@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -27,12 +24,12 @@
 #define QDATETIME_P_H
 
 #include <qplatformdefs.h>
-#include <QtCore/qatomic.h>
-#include <QtCore/qdatetime.h>
-#include <QtCore/qstringlist.h>
-#include <QtCore/qlocale.h>
-#include <QtCore/qvariant.h>
-#include <QtCore/qvector.h>
+#include <qatomic.h>
+#include <qdatetime.h>
+#include <qstringlist.h>
+#include <qlocale.h>
+#include <qvariant.h>
+#include <qvector.h>
 
 #define QDATETIMEEDIT_TIME_MIN QTime(0, 0, 0, 0)
 #define QDATETIMEEDIT_TIME_MAX QTime(23, 59, 59, 999)
@@ -51,13 +48,16 @@ class QDateTimePrivate
  public:
    enum Spec { LocalUnknown = -1, LocalStandard = 0, LocalDST = 1, UTC = 2, OffsetFromUTC = 3};
 
-   QDateTimePrivate() : spec(LocalUnknown), m_offsetFromUtc(0) {}
-   QDateTimePrivate(const QDate &toDate, const QTime &toTime, Qt::TimeSpec toSpec,
-                    int offsetSeconds);
+   QDateTimePrivate()
+      : spec(LocalUnknown), m_offsetFromUtc(0)
+   { }
+
+   QDateTimePrivate(const QDate &toDate, const QTime &toTime, Qt::TimeSpec toSpec, int offsetSeconds);
+
    QDateTimePrivate(const QDateTimePrivate &other)
       : date(other.date), time(other.time), spec(other.spec),
-        m_offsetFromUtc(other.m_offsetFromUtc) {
-   }
+        m_offsetFromUtc(other.m_offsetFromUtc)
+   { }
 
    QAtomicInt ref;
    QDate date;
@@ -67,11 +67,13 @@ class QDateTimePrivate
 
    // Get current date/time in LocalTime and put result in outDate and outTime
    Spec getLocal(QDate &outDate, QTime &outTime) const;
+
    // Get current date/time in UTC and put result in outDate and outTime
    void getUTC(QDate &outDate, QTime &outTime) const;
 
    // Add msecs to given datetime and return result
    static QDateTime addMSecs(const QDateTime &dt, qint64 msecs);
+
    // Add msecs to given datetime and put result in utcDate and utcTime
    static void addMSecs(QDate &utcDate, QTime &utcTime, qint64 msecs);
 };
@@ -83,6 +85,7 @@ class Q_CORE_EXPORT QDateTimeParser
       FromString,
       DateTimeEdit
    };
+
    QDateTimeParser(QVariant::Type t, Context ctx)
       : currentSectionIndex(-1), display(0), cachedDay(-1), parserType(t),
         fixday(false), spec(Qt::LocalTime), context(ctx) {
@@ -100,7 +103,9 @@ class Q_CORE_EXPORT QDateTimeParser
       none.count = -1;
       none.zeroesAdded = 0;
    }
+
    virtual ~QDateTimeParser() {}
+
    enum {
       Neither = -1,
       AM = 0,

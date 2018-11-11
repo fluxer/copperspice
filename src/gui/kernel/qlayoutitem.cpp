@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -133,7 +130,7 @@ int QLayoutItem::heightForWidth(int /* w */) const
 
 QSizePolicy::ControlTypes QLayoutItem::controlTypes() const
 {
-   // ### Qt 5: This function should probably be virtual instead
+   // ### Qt5: This function should probably be virtual instead
    if (const QWidget *widget = const_cast<QLayoutItem *>(this)->widget()) {
       return widget->sizePolicy().controlType();
 
@@ -164,57 +161,64 @@ void QWidgetItem::setGeometry(const QRect &rect)
       return;
    }
 
-   QRect r = !wid->testAttribute(Qt::WA_LayoutUsesWidgetRect)
-             ? fromLayoutItemRect(wid->d_func(), rect)
-             : rect;
+   QRect r = ! wid->testAttribute(Qt::WA_LayoutUsesWidgetRect)
+             ? fromLayoutItemRect(wid->d_func(), rect) : rect;
+
    const QSize widgetRectSurplus = r.size() - rect.size();
 
    /*
-      For historical reasons, this code is done using widget rect
-      coordinates, not layout item rect coordinates. However,
-      QWidgetItem's sizeHint(), maximumSize(), and heightForWidth()
-      all work in terms of layout item rect coordinates, so we have to
-      add or subtract widgetRectSurplus here and there. The code could
-      be much simpler if we did everything using layout item rect
-      coordinates and did the conversion right before the call to
-      QWidget::setGeometry().
+      this code is done using widget rect coordinates, not layout item rect coordinates.
+      However, QWidgetItem's sizeHint(), maximumSize(), and heightForWidth() all work in
+      terms of layout item rect coordinates. Therefore, we have to add or subtract
+      widgetRectSurplus here and there. The code could be simpler if we did everything
+      using layout item rect coordinates and did the conversion right before the call to QWidget::setGeometry().
     */
 
    QSize s = r.size().boundedTo(maximumSize() + widgetRectSurplus);
-   int x = r.x();
-   int y = r.y();
+   int x   = r.x();
+   int y   = r.y();
+
+
    if (align & (Qt::AlignHorizontal_Mask | Qt::AlignVertical_Mask)) {
       QSize pref(sizeHint());
       QSizePolicy sp = wid->sizePolicy();
+
       if (sp.horizontalPolicy() == QSizePolicy::Ignored) {
          pref.setWidth(wid->sizeHint().expandedTo(wid->minimumSize()).width());
       }
+
       if (sp.verticalPolicy() == QSizePolicy::Ignored) {
          pref.setHeight(wid->sizeHint().expandedTo(wid->minimumSize()).height());
       }
+
       pref += widgetRectSurplus;
       if (align & Qt::AlignHorizontal_Mask) {
          s.setWidth(qMin(s.width(), pref.width()));
       }
+
       if (align & Qt::AlignVertical_Mask) {
          if (hasHeightForWidth())
-            s.setHeight(qMin(s.height(),
-                             heightForWidth(s.width() - widgetRectSurplus.width())
+            s.setHeight(qMin(s.height(), heightForWidth(s.width() - widgetRectSurplus.width())
                              + widgetRectSurplus.height()));
          else {
             s.setHeight(qMin(s.height(), pref.height()));
          }
       }
    }
+
    Qt::Alignment alignHoriz = QStyle::visualAlignment(wid->layoutDirection(), align);
+
    if (alignHoriz & Qt::AlignRight) {
       x = x + (r.width() - s.width());
+
    } else if (!(alignHoriz & Qt::AlignLeft)) {
       x = x + (r.width() - s.width()) / 2;
+
    }
 
    if (align & Qt::AlignBottom) {
       y = y + (r.height() - s.height());
+
    } else if (!(align & Qt::AlignTop)) {
       y = y + (r.height() - s.height()) / 2;
    }
@@ -229,17 +233,16 @@ QRect QSpacerItem::geometry() const
 
 QRect QWidgetItem::geometry() const
 {
-   return !wid->testAttribute(Qt::WA_LayoutUsesWidgetRect)
-          ? toLayoutItemRect(wid->d_func(), wid->geometry())
-          : wid->geometry();
+   return ! wid->testAttribute(Qt::WA_LayoutUsesWidgetRect)
+          ? toLayoutItemRect(wid->d_func(), wid->geometry()) : wid->geometry();
 }
-
 
 bool QWidgetItem::hasHeightForWidth() const
 {
    if (isEmpty()) {
       return false;
    }
+
    return wid->d_func()->hasHeightForWidth();
 }
 
@@ -249,9 +252,8 @@ int QWidgetItem::heightForWidth(int w) const
       return -1;
    }
 
-   w = !wid->testAttribute(Qt::WA_LayoutUsesWidgetRect)
-       ? fromLayoutItemSize(wid->d_func(), QSize(w, 0)).width()
-       : w;
+   w = ! wid->testAttribute(Qt::WA_LayoutUsesWidgetRect)
+       ? fromLayoutItemSize(wid->d_func(), QSize(w, 0)).width() : w;
 
    int hfw;
    if (wid->layout()) {

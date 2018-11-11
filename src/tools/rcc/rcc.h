@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -129,11 +126,15 @@ class RCCResourceLibrary
       const QString ATTRIBUTE_THRESHOLD;
       const QString ATTRIBUTE_COMPRESS;
    };
+
    friend class RCCFileInfo;
+
    void reset();
    bool addFile(const QString &alias, const RCCFileInfo &file);
+
    bool interpretResourceFile(QIODevice *inputDevice, const QString &file,
-                              QString currentPath = QString(), bool ignoreErrors = false);
+                  QString currentPath = QString(), bool ignoreErrors = false);
+
    bool writeHeader();
    bool writeDataBlobs();
    bool writeDataNames();
@@ -142,11 +143,15 @@ class RCCResourceLibrary
    void writeMangleNamespaceFunction(const QByteArray &name);
    void writeAddNamespaceFunction(const QByteArray &name);
    void writeHex(quint8 number);
+
+   void writeNumber1(quint8 number);
    void writeNumber2(quint16 number);
    void writeNumber4(quint32 number);
+
    void writeChar(char c) {
       m_out.append(c);
    }
+
    void writeByteArray(const QByteArray &);
    void write(const char *, int len);
 
@@ -170,4 +175,4 @@ class RCCResourceLibrary
 
 QT_END_NAMESPACE
 
-#endif // RCC_H
+#endif

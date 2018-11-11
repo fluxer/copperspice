@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -863,68 +860,41 @@ bool QPen::isDetached()
    return d->ref.load() == 1;
 }
 
-
-/*****************************************************************************
-  QPen stream functions
- *****************************************************************************/
-#ifndef QT_NO_DATASTREAM
-/*!
-    \fn QDataStream &operator<<(QDataStream &stream, const QPen &pen)
-    \relates QPen
-
-    Writes the given \a pen to the given \a stream and returns a reference to
-    the \a stream.
-
-    \sa {Serializing Qt Data Types}
-*/
-
 QDataStream &operator<<(QDataStream &s, const QPen &p)
 {
    QPenData *dd = static_cast<QPenData *>(p.d);
-   if (s.version() < 3) {
-      s << (quint8)p.style();
-   } else if (s.version() < QDataStream::Qt_4_3) {
+
+   if (s.version() < QDataStream::Qt_4_3) {
       s << (quint8)(p.style() | p.capStyle() | p.joinStyle());
    } else {
       s << (quint16)(p.style() | p.capStyle() | p.joinStyle());
       s << (bool)(dd->cosmetic);
    }
 
-   if (s.version() < 7) {
-      s << (quint8)p.width();
-      s << p.color();
+   s << double(p.widthF());
+   s << p.brush();
+   s << double(p.miterLimit());
+
+   if (sizeof(qreal) == sizeof(double)) {
+      s << p.dashPattern();
+
    } else {
-      s << double(p.widthF());
-      s << p.brush();
-      s << double(p.miterLimit());
-      if (sizeof(qreal) == sizeof(double)) {
-         s << p.dashPattern();
-      } else {
-         // ensure that we write doubles here instead of streaming the pattern
-         // directly; otherwise, platforms that redefine qreal might generate
-         // data that cannot be read on other platforms.
-         QVector<qreal> pattern = p.dashPattern();
-         s << quint32(pattern.size());
-         for (int i = 0; i < pattern.size(); ++i) {
-            s << double(pattern.at(i));
-         }
-      }
-      if (s.version() >= 9) {
-         s << double(p.dashOffset());
+      // ensure that we write doubles here instead of streaming the pattern
+      // directly; otherwise, platforms that redefine qreal might generate
+      // data that cannot be read on other platforms.
+      QVector<qreal> pattern = p.dashPattern();
+      s << quint32(pattern.size());
+      for (int i = 0; i < pattern.size(); ++i) {
+         s << double(pattern.at(i));
       }
    }
+
+   if (s.version() >= QDataStream::Qt_4_3) {
+      s << double(p.dashOffset());
+   }
+
    return s;
 }
-
-/*!
-    \fn QDataStream &operator>>(QDataStream &stream, QPen &pen)
-    \relates QPen
-
-    Reads a pen from the given \a stream into the given \a pen and
-    returns a reference to the \a stream.
-
-    \sa {Serializing Qt Data Types}
-*/
 
 QDataStream &operator>>(QDataStream &s, QPen &p)
 {
@@ -937,6 +907,7 @@ QDataStream &operator>>(QDataStream &s, QPen &p)
    QVector<qreal> dashPattern;
    double dashOffset = 0;
    bool cosmetic = false;
+
    if (s.version() < QDataStream::Qt_4_3) {
       quint8 style8;
       s >> style8;
@@ -945,29 +916,25 @@ QDataStream &operator>>(QDataStream &s, QPen &p)
       s >> style;
       s >> cosmetic;
    }
-   if (s.version() < 7) {
-      s >> width8;
-      s >> color;
-      brush = color;
-      width = width8;
+
+   s >> width;
+   s >> brush;
+   s >> miterLimit;
+
+   if (sizeof(qreal) == sizeof(double)) {
+      s >> dashPattern;
    } else {
-      s >> width;
-      s >> brush;
-      s >> miterLimit;
-      if (sizeof(qreal) == sizeof(double)) {
-         s >> dashPattern;
-      } else {
-         quint32 numDashes;
-         s >> numDashes;
-         double dash;
-         for (quint32 i = 0; i < numDashes; ++i) {
-            s >> dash;
-            dashPattern << dash;
-         }
+      quint32 numDashes;
+      s >> numDashes;
+      double dash;
+      for (quint32 i = 0; i < numDashes; ++i) {
+         s >> dash;
+         dashPattern << dash;
       }
-      if (s.version() >= 9) {
-         s >> dashOffset;
-      }
+   }
+
+   if (s.version() >= QDataStream::Qt_4_3) {
+      s >> dashOffset;
    }
 
    p.detach();
@@ -984,7 +951,6 @@ QDataStream &operator>>(QDataStream &s, QPen &p)
 
    return s;
 }
-#endif //QT_NO_DATASTREAM
 
 QDebug operator<<(QDebug dbg, const QPen &p)
 {

@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -48,8 +45,6 @@
 #include <qaccessible2.h>
 #endif
 
-#include <qsoftkeymanager_p.h>
-
 QT_BEGIN_NAMESPACE
 
 QAbstractItemViewPrivate::QAbstractItemViewPrivate()
@@ -70,6 +65,7 @@ QAbstractItemViewPrivate::QAbstractItemViewPrivate()
        editTriggers(QAbstractItemView::DoubleClicked | QAbstractItemView::EditKeyPressed),
        lastTrigger(QAbstractItemView::NoEditTriggers),
        tabKeyNavigation(false),
+
 #ifndef QT_NO_DRAGANDDROP
        showDropIndicator(true),
        dragEnabled(false),
@@ -78,9 +74,7 @@ QAbstractItemViewPrivate::QAbstractItemViewPrivate()
        dropIndicatorPosition(QAbstractItemView::OnItem),
        defaultDropAction(Qt::IgnoreAction),
 #endif
-#ifdef QT_SOFTKEYS_ENABLED
-       doneSoftKey(0),
-#endif
+
        autoScroll(true),
        autoScrollMargin(16),
        autoScrollCount(0),
@@ -119,11 +113,6 @@ void QAbstractItemViewPrivate::init()
    viewport->setBackgroundRole(QPalette::Base);
 
    q->setAttribute(Qt::WA_InputMethodEnabled);
-
-#ifdef QT_SOFTKEYS_ENABLED
-   doneSoftKey = QSoftKeyManager::createKeyedAction(QSoftKeyManager::DoneSoftKey, Qt::Key_Back, q);
-#endif
-
 }
 
 void QAbstractItemViewPrivate::setHoverIndex(const QPersistentModelIndex &index)
@@ -541,7 +530,7 @@ void QAbstractItemView::reset()
 
    d->delayedReset.stop(); //make sure we stop the timer
 
-   foreach (const QEditorInfo & info, d->indexEditorHash) {
+   for (const QEditorInfo & info : d->indexEditorHash) {
       if (info.widget) {
          d->releaseEditor(info.widget.data());
       }
@@ -1007,11 +996,7 @@ bool QAbstractItemView::event(QEvent *event)
       case QEvent::FontChange:
          d->doDelayedItemsLayout(); // the size of the items will change
          break;
-#ifdef QT_SOFTKEYS_ENABLED
-      case QEvent::LanguageChange:
-         d->doneSoftKey->setText(QSoftKeyManager::standardSoftKeyText(QSoftKeyManager::DoneSoftKey));
-         break;
-#endif
+
       default:
          break;
    }
@@ -1624,12 +1609,6 @@ void QAbstractItemView::focusOutEvent(QFocusEvent *event)
    Q_D(QAbstractItemView);
    QAbstractScrollArea::focusOutEvent(event);
    d->viewport->update();
-
-#ifdef QT_SOFTKEYS_ENABLED
-   if (!hasEditFocus()) {
-      removeAction(d->doneSoftKey);
-   }
-#endif
 }
 
 /*!
@@ -1654,24 +1633,13 @@ void QAbstractItemView::keyPressEvent(QKeyEvent *event)
          if (QApplication::keypadNavigationEnabled()) {
             if (!hasEditFocus()) {
                setEditFocus(true);
-#ifdef QT_SOFTKEYS_ENABLED
-               // If we can't keypad navigate to any direction, there is no sense to add
-               // "Done" softkey, since it basically does nothing when there is
-               // only one widget in screen
-               if (QWidgetPrivate::canKeypadNavigate(Qt::Horizontal)
-                     || QWidgetPrivate::canKeypadNavigate(Qt::Vertical)) {
-                  addAction(d->doneSoftKey);
-               }
-#endif
                return;
             }
          }
          break;
+
       case Qt::Key_Back:
          if (QApplication::keypadNavigationEnabled() && hasEditFocus()) {
-#ifdef QT_SOFTKEYS_ENABLED
-            removeAction(d->doneSoftKey);
-#endif
             setEditFocus(false);
          } else {
             event->ignore();
@@ -2327,7 +2295,7 @@ void QAbstractItemView::editorDestroyed(QObject *editor)
 }
 
 /*!
-    \obsolete   
+    \obsolete
 */
 void QAbstractItemView::setHorizontalStepsPerItem(int steps)
 {
@@ -2336,7 +2304,7 @@ void QAbstractItemView::setHorizontalStepsPerItem(int steps)
 }
 
 /*!
-    \obsolete  
+    \obsolete
 */
 int QAbstractItemView::horizontalStepsPerItem() const
 {
@@ -3715,7 +3683,7 @@ void QAbstractItemViewPrivate::clearOrRemove()
       for (int i = 0; i < list.size(); ++i) {
          QModelIndex index = list.at(i);
          QMap<int, QVariant> roles = model->itemData(index);
-         for (QMap<int, QVariant>::Iterator it = roles.begin(); it != roles.end(); ++it) {
+         for (QMap<int, QVariant>::iterator it = roles.begin(); it != roles.end(); ++it) {
             it.value() = QVariant();
          }
          model->setItemData(index, roles);

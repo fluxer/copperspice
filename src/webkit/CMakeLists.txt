@@ -1,8 +1,8 @@
 add_definitions(
     -DWTF_CHANGES
-    -UHAVE_CONFIG_H
     -DBUILDING_WEBKIT
-    -DBUILDING_QT__=1
+    -DBUILDING_WTF
+    -DBUILDING_CS=1
     -DWTF_PLATFORM_QT=1
     -DENABLE_WORKERS=1
     -DENABLE_JAVASCRIPT_DEBUGGER=1
@@ -27,12 +27,16 @@ add_definitions(
     -DENABLE_DATALIST=1
 )
 set(EXTRA_WEBKIT_LIBS
-    CsCore${BUILD_MAJOR}
-    CsGui${BUILD_MAJOR}
-    CsNetwork${BUILD_MAJOR}
-    CsScript${BUILD_MAJOR}
+    CsCore${BUILD_ABI}
+    CsGui${BUILD_ABI}
+    CsNetwork${BUILD_ABI}
+    CsScript${BUILD_ABI}
 )
-set(EXTRA_WEBKIT_CXXFLAGS -O2 -fPIC) # that's not always wanted!
+
+if(NOT MSVC)
+   set(EXTRA_WEBKIT_CXXFLAGS -O2 -fPIC)
+endif()
+
 set(EXTRA_WEBKIT_LDFLAGS)
 
 include_directories(
@@ -159,8 +163,18 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/src/3rdparty/webkit/Source/WebCore/platform/graphics/qt
 )
 
-if(NOT OPENSSL_FOUND)
-    add_definitions(-DQT_NO_OPENSSL)
+if (SECURETRANSPORT_FOUND)
+    add_definitions(-DQT_SSL)
+    add_definitions(-DQT_SECURETRANSPORT)
+
+elseif (OPENSSL_FOUND)
+    add_definitions(-DQT_SSL)
+    add_definitions(-DQT_OPENSSL)
+
+    include_directories(${OPENSSL_INCLUDE_DIR})
+    set(EXTRA_NETWORK_LIBS
+        ${EXTRA_NETWORK_LIBS} ${OPENSSL_LIBRARIES}
+    )
 endif()
 
 set(WEBKIT_PUBLIC_INCLUDES
@@ -540,7 +554,7 @@ set(WEBKITA_SOURCES
     ${CMAKE_SOURCE_DIR}/src/3rdparty/webkit/Source/WebCore/bindings/js/JSMessagePortCustom.cpp
     ${CMAKE_SOURCE_DIR}/src/3rdparty/webkit/Source/WebCore/bindings/js/JSMessagePortCustom.h
     ${CMAKE_SOURCE_DIR}/src/3rdparty/webkit/Source/WebCore/bindings/js/JSNamedNodeMapCustom.cpp
-    ${CMAKE_SOURCE_DIR}/src/3rdparty/webkit/Source/WebCore/bindings/js/JSNavigatorCustom.cpp 
+    ${CMAKE_SOURCE_DIR}/src/3rdparty/webkit/Source/WebCore/bindings/js/JSNavigatorCustom.cpp
     ${CMAKE_SOURCE_DIR}/src/3rdparty/webkit/Source/WebCore/bindings/js/JSNodeCustom.cpp
     ${CMAKE_SOURCE_DIR}/src/3rdparty/webkit/Source/WebCore/bindings/js/JSNodeFilterCondition.cpp
     ${CMAKE_SOURCE_DIR}/src/3rdparty/webkit/Source/WebCore/bindings/js/JSNodeFilterCustom.cpp
@@ -2332,7 +2346,8 @@ set(WEBKITE_SOURCES
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
     include_directories(${CMAKE_SOURCE_DIR}/src/3rdparty/webkit/Source/WebCore/platform/graphics/win)
-    add_definitions(-DUNICODE -DQT_MAKEDLL)
+    add_definitions(-DUNICODE)
+
     set(WEBKIT_SOURCES
         ${WEBKIT_SOURCES}
         ${CMAKE_SOURCE_DIR}/src/3rdparty/webkit/Source/JavaScriptCore/wtf/OSAllocatorWin.cpp
@@ -2346,6 +2361,14 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
         ${CMAKE_SOURCE_DIR}/src/3rdparty/webkit/Source/WebCore/platform/win/BitmapInfo.cpp
         ${CMAKE_SOURCE_DIR}/src/3rdparty/webkit/Source/WebCore/platform/win/WebCoreInstanceHandle.cpp
     )
+
+    if(MSVC)
+       set(WEBKIT_SOURCES
+          ${WEBKIT_SOURCES}
+          ${CMAKE_SOURCE_DIR}/src/3rdparty/webkit/Source/WebCore/plugins/win/PaintHooks.asm
+       )
+    endif()
+
     set(EXTRA_WEBKIT_LIBS
         ${EXTRA_WEBKIT_LIBS}
         gdi32
@@ -2353,19 +2376,23 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
         shlwapi
         version
     )
+
     set(EXTRA_WEBKIT_LDFLAGS
         ${EXTRA_WEBKIT_LDFLAGS}
         -Wl,-s
     )
-elseif(${CMAKE_SYSTEM_NAME} MATCHES "(Linux|OpenBSD|FreeBSD|NetBSD)")
+
+elseif(${CMAKE_SYSTEM_NAME} MATCHES "(Linux|OpenBSD|FreeBSD|NetBSD|DragonFly)")
     add_definitions(-DXP_UNIX
         -DENABLE_NETSCAPE_PLUGIN_METADATA_CACHE=1
         -DENABLE_NETSCAPE_PLUGIN_API=1
     )
+
     # TODO: move this to global scope as noted in the top-level CMake file?
     if(HAVE_PTHREAD_NP_H)
         add_definitions(-DHAVE_PTHREAD_NP_H)
     endif()
+
     set(WEBKIT_SOURCES
         ${WEBKIT_SOURCES}
         ${CMAKE_SOURCE_DIR}/src/3rdparty/webkit/Source/JavaScriptCore/wtf/OSAllocatorPosix.cpp
@@ -2374,6 +2401,7 @@ elseif(${CMAKE_SYSTEM_NAME} MATCHES "(Linux|OpenBSD|FreeBSD|NetBSD)")
         ${CMAKE_SOURCE_DIR}/src/3rdparty/webkit/Source/WebCore/plugins/qt/PluginViewQt.cpp
     )
     include_directories(${X11_X11_INCLUDE_PATH})
+
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     include_directories(${CMAKE_SOURCE_DIR}/src/3rdparty/webkit/Source/WebCore/platform/mac)
 
@@ -2405,7 +2433,6 @@ function_variable_fixup("${EXTRA_WEBKIT_LDFLAGS}" EXTRA_WEBKIT_LDFLAGS)
 
 foreach(lib a b c d e)
     string(TOUPPER ${lib} upperalpha)
-    # XXX: build those as static libraries?
     add_library(webkit${lib} OBJECT ${WEBKIT${upperalpha}_SOURCES})
     set_target_properties(webkit${lib} PROPERTIES
         COMPILE_FLAGS ${EXTRA_WEBKIT_CXXFLAGS}
@@ -2413,13 +2440,19 @@ foreach(lib a b c d e)
     )
 endforeach()
 
-add_library(CsWebKit${BUILD_MAJOR} SHARED ${WEBKIT_SOURCES} ${WEBKIT_INCLUDES}
+add_library(CsWebKit${BUILD_ABI} SHARED ${WEBKIT_SOURCES} ${WEBKIT_INCLUDES}
     $<TARGET_OBJECTS:webkita> $<TARGET_OBJECTS:webkitb>
     $<TARGET_OBJECTS:webkitc> $<TARGET_OBJECTS:webkitd>
     $<TARGET_OBJECTS:webkite>
 )
-target_link_libraries(CsWebKit${BUILD_MAJOR} ${EXTRA_WEBKIT_LIBS})
-set_target_properties(CsWebKit${BUILD_MAJOR} PROPERTIES
+target_link_libraries(CsWebKit${BUILD_ABI} ${EXTRA_WEBKIT_LIBS})
+
+target_include_directories(CsWebKit${BUILD_ABI}
+   PUBLIC
+   $<INSTALL_INTERFACE:include/QtWebKit>
+)
+
+set_target_properties(CsWebKit${BUILD_ABI} PROPERTIES
     VERSION "0" # for compat
     SOVERSION "0.0.0" # for compat
     COMPILE_FLAGS ${EXTRA_WEBKIT_CXXFLAGS}
@@ -2428,17 +2461,18 @@ set_target_properties(CsWebKit${BUILD_MAJOR} PROPERTIES
 
 macro_generate_resources("${WEBKIT_SOURCES}")
 macro_generate_package(
-    CsWebKit${BUILD_MAJOR}
+    CsWebKit${BUILD_ABI}
     QtWebKit
     "${EXTRA_WEBKIT_CXXFLAGS}"
-    "${EXTRA_WEBKIT_LIBS}"
-    "CsCore${BUILD_MAJOR} CsGui${BUILD_MAJOR} CsNetwork${BUILD_MAJOR} CsScript${BUILD_MAJOR}"
+    "CsCore${BUILD_ABI} CsGui${BUILD_ABI} CsNetwork${BUILD_ABI} CsScript${BUILD_ABI}"
 )
 
 install(
-    TARGETS CsWebKit${BUILD_MAJOR}
+    TARGETS CsWebKit${BUILD_ABI}
     EXPORT CopperSpiceLibraryTargets ${INSTALL_TARGETS_DEFAULT_ARGS}
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
 install(

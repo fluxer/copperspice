@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -171,7 +168,7 @@ QString qws_dataDir()
       return result;
    }
    result = QT_VFB_DATADIR(qws_display_id);
-   QByteArray dataDir = result.toLocal8Bit();
+   QByteArray dataDir = result.toUtf8();
 
    if (QT_MKDIR(dataDir, 0700)) {
       if (errno != EEXIST) {
@@ -267,10 +264,11 @@ static TransformFunc getTransformationFunction()
 
       // symbol is not built into the library, search for the plugin
       const QStringList paths = QApplication::libraryPaths();
-      foreach (const QString & path, paths) {
+
+      for (const QString & path : paths) {
          const QString file = path + QLatin1String("/gfxdrivers/libqgfxtransformed");
-         func = (TransformFunc)QLibrary::resolve(file,
-                                                 "qws_setScreenTransformation");
+         func = (TransformFunc)QLibrary::resolve(file, "qws_setScreenTransformation");
+
          if (func) {
             break;
          }
@@ -1944,7 +1942,7 @@ static void qt_set_qws_resources()
    }
 
    if (appFont) {
-      QApplication::setFont(QFont(QString::fromLocal8Bit(appFont)));
+      QApplication::setFont(QFont(QString::fromUtf8(appFont)));
    }
 
    if (appBGCol || appBTNCol || appFGCol) {
@@ -2054,11 +2052,12 @@ bool QApplicationPrivate::qws_apply_settings()
    }
 
    // read library (ie. plugin) path list
-   QString libpathkey = QString::fromLatin1("%1.%2/libraryPath").arg(CS_VERSION >> 16).arg((CS_VERSION & 0xff00) >> 8);
+   QString libpathkey = QString::fromLatin1("%1.%2/libraryPath").formatArg(CS_VERSION >> 16).formatArg((CS_VERSION & 0xff00) >> 8);
    QStringList pathlist = settings.value(libpathkey).toString().split(QLatin1Char(':'));
 
    if (! pathlist.isEmpty()) {
-      QStringList::ConstIterator it = pathlist.constBegin();
+      QStringList::const_iterator it = pathlist.constBegin();
+
       while (it != pathlist.constEnd()) {
          QApplication::addLibraryPath(*it++);
       }
@@ -2140,7 +2139,7 @@ bool QApplicationPrivate::qws_apply_settings()
    settings.beginGroup(QLatin1String("Font Substitutions"));
    QStringList fontsubs = settings.childKeys();
    if (!fontsubs.isEmpty()) {
-      QStringList::Iterator it = fontsubs.begin();
+      QStringList::iterator it = fontsubs.begin();
       for (; it != fontsubs.end(); ++it) {
          QString fam = *it;
          QStringList subs = settings.value(fam).toStringList();
@@ -2265,7 +2264,7 @@ void qt_init(QApplicationPrivate *priv, int type)
 
    if (argv && *argv) { //apparently, we allow people to pass 0 on the other platforms
       p = strrchr(argv[0], '/');
-      appName = QString::fromLocal8Bit(p ? p + 1 : argv[0]);
+      appName = QString::fromUtf8(p ? p + 1 : argv[0]);
    }
 
    // Get command line params
@@ -2296,7 +2295,7 @@ void qt_init(QApplicationPrivate *priv, int type)
          }
       } else if (arg == "-name") {
          if (++i < argc) {
-            appName = QString::fromLocal8Bit(argv[i]);
+            appName = QString::fromUtf8(argv[i]);
          }
       } else if (arg == "-title") {
          if (++i < argc) {
@@ -2316,32 +2315,42 @@ void qt_init(QApplicationPrivate *priv, int type)
          qws_savefonts = false;
       } else if (arg == "-swcursor") {
          qws_sw_cursor = true;
+
       } else if (arg == "-noswcursor") {
          qws_sw_cursor = false;
+
       } else if (arg == "-keyboard") {
          flags &= ~QWSServer::DisableKeyboard;
+
       } else if (arg == "-nokeyboard") {
          flags |= QWSServer::DisableKeyboard;
+
       } else if (arg == "-mouse") {
          flags &= ~QWSServer::DisableMouse;
+
       } else if (arg == "-nomouse") {
          flags |= QWSServer::DisableMouse;
+
       } else if (arg == "-qws") {
          type = QApplication::GuiServer;
+
       } else if (arg == "-interlaced") {
          qws_screen_is_interlaced = true;
+
       } else if (arg == "-display") {
          if (++i < argc) {
             qws_display_spec = argv[i];
          }
+
       } else if (arg == "-decoration") {
          if (++i < argc) {
-            decoration = QString::fromLocal8Bit(argv[i]);
+            decoration = QString::fromUtf8(argv[i]);
          }
       } else {
          argv[j++] = argv[i];
       }
    }
+
    if (j < priv->argc) {
       priv->argv[j] = 0;
       priv->argc = j;
@@ -2350,7 +2359,7 @@ void qt_init(QApplicationPrivate *priv, int type)
    mouseInWidget = new QPointer<QWidget>;
 
    const QString disp = QString::fromLatin1(qws_display_spec);
-   QRegExp regexp(QLatin1String(":(\\d+)$"));
+   QRegularExpression regexp(QLatin1String(":(\\d+)$"));
    if (regexp.lastIndexIn(disp) != -1) {
       const QString capture = regexp.cap(1);
       bool ok = false;
@@ -2625,16 +2634,21 @@ static int parseGeometry(const char *string,
 void QApplicationPrivate::applyQWSSpecificCommandLineArguments(QWidget *main_widget)
 {
    static bool beenHereDoneThat = false;
+
    if (beenHereDoneThat) {
       return;
    }
+
    beenHereDoneThat = true;
+
    if (qApp->windowIcon().isNull() && main_widget->testAttribute(Qt::WA_SetWindowIcon)) {
       qApp->setWindowIcon(main_widget->windowIcon());
    }
+
    if (mwTitle) { //  && main_widget->windowTitle().isEmpty())
-      main_widget->setWindowTitle(QString::fromLocal8Bit(mwTitle));
+      main_widget->setWindowTitle(QString::fromUtf8(mwTitle));
    }
+
    if (mwGeometry) { // parse geometry
       int x = 0;
       int y = 0;
@@ -2925,7 +2939,7 @@ int QApplication::qwsProcessEvent(QWSEvent *event)
    } else if (widget && event->type == QWSEvent::Mouse) {
       // The mouse event is to one of my top-level widgets
       // which one?
-      const int btnMask = Qt::LeftButton | Qt::RightButton | Qt::MidButton;
+      const int btnMask = Qt::LeftButton | Qt::RightButton | Qt::MiddleButton;
       QPoint p(event->asMouse()->simpleData.x_root,
                event->asMouse()->simpleData.y_root);
       int mouseButtonState = event->asMouse()->simpleData.state & btnMask;
@@ -3398,7 +3412,7 @@ void QApplicationPrivate::closePopup(QWidget *popup)
 
 // Needed for QCursor::pos
 
-static const int AnyButton = (Qt::LeftButton | Qt::MidButton | Qt::RightButton);
+static const int AnyButton = (Qt::LeftButton | Qt::MiddleButton | Qt::RightButton);
 
 
 
@@ -3480,7 +3494,7 @@ bool QETWidget::translateMouseEvent(const QWSMouseEvent *event, int prevstate)
       type = QEvent::MouseMove;
    } else if ((mouse.state & AnyButton) != (prevstate & AnyButton)) {
       Qt::MouseButtons current_buttons = Qt::MouseButtons(prevstate & Qt::MouseButtonMask);
-      for (button = Qt::LeftButton; !type && button <= Qt::MidButton; button <<= 1) {
+      for (button = Qt::LeftButton; !type && button <= Qt::MiddleButton; button <<= 1) {
          if ((mouse.state & button) != (current_buttons & button)) {
             // button press or release
             current_buttons = Qt::MouseButtons(current_buttons ^ button);
@@ -3630,7 +3644,7 @@ bool QETWidget::translateMouseEvent(const QWSMouseEvent *event, int prevstate)
       QPointer<QWidget> leaveAfterRelease = 0;
       if (type == QEvent::MouseButtonRelease &&
             (mouse.state & (~button) & (Qt::LeftButton |
-                                        Qt::MidButton |
+                                        Qt::MiddleButton |
                                         Qt::RightButton)) == 0) {
          // Button released outside the widget -> leave the widget after the
          // release event has been delivered.

@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -26,11 +23,11 @@
 #ifndef QSORTFILTERPROXYMODEL_H
 #define QSORTFILTERPROXYMODEL_H
 
-#include <QtGui/qabstractproxymodel.h>
+#include <qabstractproxymodel.h>
 
 #ifndef QT_NO_SORTFILTERPROXYMODEL
 
-#include <QtCore/qregexp.h>
+#include <qregularexpression.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -70,22 +67,22 @@ class Q_GUI_EXPORT QSortFilterProxyModel : public QAbstractProxyModel
    friend class QSortFilterProxyModelGreaterThan;
 
  public:
-   QSortFilterProxyModel(QObject *parent = 0);
+   QSortFilterProxyModel(QObject *parent = nullptr);
    ~QSortFilterProxyModel();
 
-   void setSourceModel(QAbstractItemModel *sourceModel);
+   void setSourceModel(QAbstractItemModel *sourceModel) override;
 
-   QModelIndex mapToSource(const QModelIndex &proxyIndex) const;
-   QModelIndex mapFromSource(const QModelIndex &sourceIndex) const;
+   QModelIndex mapToSource(const QModelIndex &proxyIndex) const override;
+   QModelIndex mapFromSource(const QModelIndex &sourceIndex) const override;
 
-   QItemSelection mapSelectionToSource(const QItemSelection &proxySelection) const;
-   QItemSelection mapSelectionFromSource(const QItemSelection &sourceSelection) const;
+   QItemSelection mapSelectionToSource(const QItemSelection &proxySelection) const override;
+   QItemSelection mapSelectionFromSource(const QItemSelection &sourceSelection) const override;
 
-   QRegExp filterRegExp() const;
-   void setFilterRegExp(const QRegExp &regExp);
+   QRegularExpression filterRegExp() const;
+   void setFilterRegExp(const QRegularExpression &regExp);
 
    // wrapper for overloaded method
-   inline void cs_setFilterRegExp(const QRegExp &regExp);
+   inline void cs_setFilterRegExp(const QRegularExpression &regExp);
 
    int filterKeyColumn() const;
    void setFilterKeyColumn(int column);
@@ -128,40 +125,40 @@ class Q_GUI_EXPORT QSortFilterProxyModel : public QAbstractProxyModel
 
    using QObject::parent;
 
-   QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const;
-   QModelIndex parent(const QModelIndex &child) const;
+   QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const override;
+   QModelIndex parent(const QModelIndex &child) const override;
 
-   int rowCount(const QModelIndex &parent = QModelIndex()) const;
-   int columnCount(const QModelIndex &parent = QModelIndex()) const;
-   bool hasChildren(const QModelIndex &parent = QModelIndex()) const;
+   int rowCount(const QModelIndex &parent = QModelIndex()) const override;
+   int columnCount(const QModelIndex &parent = QModelIndex()) const override;
+   bool hasChildren(const QModelIndex &parent = QModelIndex()) const override;
 
-   QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
-   bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole);
+   QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
+   bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
 
-   QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const;
-   bool setHeaderData(int section, Qt::Orientation orientation, const QVariant &value, int role = Qt::EditRole);
+   QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
+   bool setHeaderData(int section, Qt::Orientation orientation, const QVariant &value, int role = Qt::EditRole) override;
 
-   QMimeData *mimeData(const QModelIndexList &indexes) const;
-   bool dropMimeData(const QMimeData *data, Qt::DropAction action,int row, int column, const QModelIndex &parent);
+   QMimeData *mimeData(const QModelIndexList &indexes) const override;
+   bool dropMimeData(const QMimeData *data, Qt::DropAction action,int row, int column, const QModelIndex &parent) override;
 
-   bool insertRows(int row, int count, const QModelIndex &parent = QModelIndex());
-   bool insertColumns(int column, int count, const QModelIndex &parent = QModelIndex());
-   bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex());
-   bool removeColumns(int column, int count, const QModelIndex &parent = QModelIndex());
+   bool insertRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
+   bool insertColumns(int column, int count, const QModelIndex &parent = QModelIndex()) override;
+   bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
+   bool removeColumns(int column, int count, const QModelIndex &parent = QModelIndex()) override;
 
-   void fetchMore(const QModelIndex &parent);
-   bool canFetchMore(const QModelIndex &parent) const;
-   Qt::ItemFlags flags(const QModelIndex &index) const;
+   void fetchMore(const QModelIndex &parent) override;
+   bool canFetchMore(const QModelIndex &parent) const override;
+   Qt::ItemFlags flags(const QModelIndex &index) const override;
 
-   QModelIndex buddy(const QModelIndex &index) const;
+   QModelIndex buddy(const QModelIndex &index) const override;
    QModelIndexList match(const QModelIndex &start, int role, const QVariant &value, int hits = 1,
-                         Qt::MatchFlags flags = Qt::MatchFlags(Qt::MatchStartsWith | Qt::MatchWrap)) const;
+                  Qt::MatchFlags flags = Qt::MatchFlags(Qt::MatchStartsWith | Qt::MatchWrap)) const override;
 
-   QSize span(const QModelIndex &index) const;
-   void sort(int column, Qt::SortOrder order = Qt::AscendingOrder);
+   QSize span(const QModelIndex &index) const override;
+   void sort(int column, Qt::SortOrder order = Qt::AscendingOrder) override;
 
-   QStringList mimeTypes() const;
-   Qt::DropActions supportedDropActions() const;
+   QStringList mimeTypes() const override;
+   Qt::DropActions supportedDropActions() const override;
 
  protected:
    virtual bool filterAcceptsRow(int source_row, const QModelIndex &source_parent) const;
@@ -223,7 +220,7 @@ class Q_GUI_EXPORT QSortFilterProxyModel : public QAbstractProxyModel
 
 };
 
-void QSortFilterProxyModel::cs_setFilterRegExp(const QRegExp &regExp)
+void QSortFilterProxyModel::cs_setFilterRegExp(const QRegularExpression &regExp)
 {
    setFilterRegExp(regExp);
 }

@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -161,7 +158,7 @@ static Qt::MouseButtons translateMouseButtons(int s)
     if (s & Button1Mask)
         ret |= Qt::LeftButton;
     if (s & Button2Mask)
-        ret |= Qt::MidButton;
+        ret |= Qt::MiddleButton;
     if (s & Button3Mask)
         ret |= Qt::RightButton;
     return ret;
@@ -179,7 +176,7 @@ void QXlibWindow::handleMouseEvent(QEvent::Type type, XButtonEvent *e)
     if (type != QEvent::MouseMove) {
         switch (e->button) {
         case Button1: button = Qt::LeftButton; break;
-        case Button2: button = Qt::MidButton; break;
+        case Button2: button = Qt::MiddleButton; break;
         case Button3: button = Qt::RightButton; break;
         case Button4:
         case Button5:

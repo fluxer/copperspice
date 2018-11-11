@@ -1,27 +1,26 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
+
+#include <algorithm>
 
 #include "qscriptsyntaxhighlighter_p.h"
 #include "qfunctions_p.h"
@@ -112,12 +111,12 @@ struct KeywordHelper {
    const QString needle;
 };
 
-Q_STATIC_GLOBAL_OPERATOR bool operator<(const KeywordHelper &helper, const char *kw)
+static bool operator<(const KeywordHelper &helper, const char *kw)
 {
    return helper.needle < QLatin1String(kw);
 }
 
-Q_STATIC_GLOBAL_OPERATOR bool operator<(const char *kw, const KeywordHelper &helper)
+static bool operator<(const char *kw, const KeywordHelper &helper)
 {
    return QLatin1String(kw) < helper.needle;
 }
@@ -125,16 +124,17 @@ Q_STATIC_GLOBAL_OPERATOR bool operator<(const char *kw, const KeywordHelper &hel
 static bool isKeyword(const QString &word)
 {
    const char *const *start = &keywords[0];
-   const char *const *end = &keywords[MAX_KEYWORD - 1];
-   const char *const *kw = qBinaryFind(start, end, KeywordHelper(word));
+   const char *const *end   = &keywords[MAX_KEYWORD - 1];
 
-   return kw != end;
+   const KeywordHelper tmp(word);
+   const char *const *kw    = std::lower_bound(start, end, tmp);
+
+   return kw != end && ! (tmp < *kw);
 }
 
 QScriptSyntaxHighlighter::QScriptSyntaxHighlighter(QTextDocument *document)
    : QSyntaxHighlighter(document)
 {
-
    m_formats[ScriptNumberFormat].setForeground(Qt::darkBlue);
    m_formats[ScriptStringFormat].setForeground(Qt::darkGreen);
    m_formats[ScriptTypeFormat].setForeground(Qt::darkMagenta);
@@ -227,7 +227,7 @@ void QScriptSyntaxHighlighter::highlightBlock(const QString &text)
       if (lastWasBackSlash) {
          input = InputSep;
       } else {
-         switch (c.toAscii()) {
+         switch (c.toLatin1()) {
             case '*':
                input = InputAsterix;
                break;

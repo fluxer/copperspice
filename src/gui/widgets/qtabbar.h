@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -68,7 +65,7 @@ class Q_GUI_EXPORT QTabBar: public QWidget
    GUI_CS_PROPERTY_WRITE(documentMode, setDocumentMode)
 
  public:
-   explicit QTabBar(QWidget *parent = 0);
+   explicit QTabBar(QWidget *parent = nullptr);
    ~QTabBar();
 
    enum Shape { RoundedNorth, RoundedSouth, RoundedWest, RoundedEast,
@@ -132,8 +129,8 @@ class Q_GUI_EXPORT QTabBar: public QWidget
    int currentIndex() const;
    int count() const;
 
-   QSize sizeHint() const;
-   QSize minimumSizeHint() const;
+   QSize sizeHint() const override;
+   QSize minimumSizeHint() const override;
 
    void setDrawBase(bool drawTheBase);
    bool drawBase() const;
@@ -174,25 +171,26 @@ class Q_GUI_EXPORT QTabBar: public QWidget
 
  protected:
    virtual QSize tabSizeHint(int index) const;
+   virtual QSize minimumTabSizeHint(int index) const;
    virtual void tabInserted(int index);
    virtual void tabRemoved(int index);
    virtual void tabLayoutChange();
 
-   bool event(QEvent *);
-   void resizeEvent(QResizeEvent *);
-   void showEvent(QShowEvent *);
-   void hideEvent(QHideEvent *);
-   void paintEvent(QPaintEvent *);
-   void mousePressEvent (QMouseEvent *);
-   void mouseMoveEvent (QMouseEvent *);
-   void mouseReleaseEvent (QMouseEvent *);
+   bool event(QEvent *) override;
+   void resizeEvent(QResizeEvent *) override;
+   void showEvent(QShowEvent *) override;
+   void hideEvent(QHideEvent *) override;
+   void paintEvent(QPaintEvent *) override;
+   void mousePressEvent (QMouseEvent *) override;
+   void mouseMoveEvent (QMouseEvent *) override;
+   void mouseReleaseEvent (QMouseEvent *) override;
 
 #ifndef QT_NO_WHEELEVENT
-   void wheelEvent(QWheelEvent *event);
+   void wheelEvent(QWheelEvent *event) override;
 #endif
 
-   void keyPressEvent(QKeyEvent *);
-   void changeEvent(QEvent *);
+   void keyPressEvent(QKeyEvent *) override;
+   void changeEvent(QEvent *) override;
    void initStyleOption(QStyleOptionTab *option, int tabIndex) const;
 
    friend class QAccessibleTabBar;

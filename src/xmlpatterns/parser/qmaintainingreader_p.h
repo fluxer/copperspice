@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -41,8 +38,7 @@ QT_BEGIN_NAMESPACE
 
 namespace QPatternist {
 
-template<typename TokenLookupClass,
-         typename LookupKey = typename TokenLookupClass::NodeName>
+template<typename TokenLookupClass, typename LookupKey = typename TokenLookupClass::NodeName>
 class ElementDescription
 {
  public:
@@ -52,21 +48,18 @@ class ElementDescription
 };
 
 
-template<typename TokenLookupClass,
-         typename LookupKey = typename TokenLookupClass::NodeName>
-class MaintainingReader : public QXmlStreamReader
-   , protected TokenLookupClass
+template<typename TokenLookupClass, typename LookupKey = typename TokenLookupClass::NodeName>
+class MaintainingReader : public QXmlStreamReader, protected TokenLookupClass
 {
  protected:
 
    MaintainingReader(const typename ElementDescription<TokenLookupClass, LookupKey>::Hash &elementDescriptions,
                      const QSet<typename TokenLookupClass::NodeName> &standardAttributes,
-                     const ReportContext::Ptr &context,
-                     QIODevice *const queryDevice);
+                     const ReportContext::Ptr &context, QIODevice *const queryDevice);
 
    virtual ~MaintainingReader();
 
-   TokenType readNext();
+   QXmlStreamReader::TokenType readNext();
 
    /**
     * Returns the name of the current element.
@@ -76,8 +69,7 @@ class MaintainingReader : public QXmlStreamReader
    /**
     * @short Convenience function for calling ReportContext::error().
     */
-   void error(const QString &message,
-              const ReportContext::ErrorCode code) const;
+   void error(const QString &message, const ReportContext::ErrorCode code) const;
 
    /**
     * @short Convenience function for calling ReportContext::warning().

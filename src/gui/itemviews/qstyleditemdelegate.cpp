@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -137,11 +134,10 @@ QString QStyledItemDelegate::displayText(const QVariant &value, const QLocale &l
       default:
          // convert new lines into line separators
          text = value.toString();
-         for (int i = 0; i < text.count(); ++i) {
-            if (text.at(i) == QLatin1Char('\n')) {
-               text[i] = QChar::LineSeparator;
-            }
-         }
+
+         const QChar ch = QChar::LineSeparator;
+         text.replace('\n', ch);
+
          break;
    }
 
@@ -149,9 +145,9 @@ QString QStyledItemDelegate::displayText(const QVariant &value, const QLocale &l
 }
 
 void QStyledItemDelegate::initStyleOption(QStyleOptionViewItem *option, const QModelIndex &index) const
-{   
+{
    QVariant value = index.data(Qt::FontRole);
- 
+
    if (value.isValid() && ! value.isNull()) {
       option->font = qvariant_cast<QFont>(value).resolve(option->font);
       option->fontMetrics = QFontMetrics(option->font);
@@ -234,7 +230,7 @@ void QStyledItemDelegate::initStyleOption(QStyleOptionViewItem *option, const QM
       }
 
       v4->backgroundBrush = qvariant_cast<QBrush>(index.data(Qt::BackgroundRole));
-   }  
+   }
 }
 
 void QStyledItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
@@ -300,29 +296,34 @@ void QStyledItemDelegate::setEditorData(QWidget *editor, const QModelIndex &inde
    Q_UNUSED(editor);
    Q_UNUSED(index);
 #else
+
    Q_D(const QStyledItemDelegate);
    QVariant v = index.data(Qt::EditRole);
-   QByteArray n = editor->metaObject()->userProperty().name();
 
-   // ### Qt 5: remove
+   QString n = editor->metaObject()->userProperty().name();
+
+   // ### Qt5: remove
    // A work-around for missing "USER true" in qdatetimeedit.h for
    // QTimeEdit's time property and QDateEdit's date property.
    // It only triggers if the default user property "dateTime" is
    // reported for QTimeEdit and QDateEdit.
+
    if (n == "dateTime") {
       if (editor->inherits("QTimeEdit")) {
          n = "time";
+
       } else if (editor->inherits("QDateEdit")) {
          n = "date";
       }
    }
 
-   // ### Qt 5: give QComboBox a USER property
+   // ### Qt5: give QComboBox a USER property
    if (n.isEmpty() && editor->inherits("QComboBox")) {
       n = d->editorFactory()->valuePropertyName(static_cast<QVariant::Type>(v.userType()));
    }
+
    if (!n.isEmpty()) {
-      if (!v.isValid()) {
+      if (! v.isValid()) {
          v = QVariant(editor->property(n).userType(), (const void *)0);
       }
       editor->setProperty(n, v);
@@ -342,22 +343,17 @@ void QStyledItemDelegate::setModelData(QWidget *editor, QAbstractItemModel *mode
    Q_ASSERT(model);
    Q_ASSERT(editor);
 
-   QByteArray n = editor->metaObject()->userProperty().name();
+   QString n = editor->metaObject()->userProperty().name();
 
    if (n.isEmpty()) {
       n = d->editorFactory()->valuePropertyName(static_cast<QVariant::Type>(model->data(index, Qt::EditRole).userType()));
-   }
 
-   if (!n.isEmpty()) {
+   } else {
       model->setData(index, editor->property(n), Qt::EditRole);
    }
 #endif
 }
 
-/*!
-    Updates the \a editor for the item specified by \a index
-    according to the style \a option given.
-*/
 void QStyledItemDelegate::updateEditorGeometry(QWidget *editor, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
    if (!editor) {
@@ -373,7 +369,7 @@ void QStyledItemDelegate::updateEditorGeometry(QWidget *editor, const QStyleOpti
    // let the editor take up all available space
    //if the editor is not a QLineEdit or it is in a QTableView
 
-#if !defined(QT_NO_TABLEVIEW) && !defined(QT_NO_LINEEDIT)
+#if ! defined(QT_NO_TABLEVIEW) && !defined(QT_NO_LINEEDIT)
    if (qobject_cast<QExpandingLineEdit *>(editor) && !qobject_cast<const QTableView *>(widget)) {
       opt.showDecorationSelected = editor->style()->styleHint(QStyle::SH_ItemView_ShowDecorationSelected, 0, editor);
    } else

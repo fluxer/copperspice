@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -85,7 +82,7 @@ QTextItem::RenderFlags QTextItem::renderFlags() const
 QString QTextItem::text() const
 {
    const QTextItemInt *ti = static_cast<const QTextItemInt *>(this);
-   return QString(ti->chars, ti->num_chars);
+   return QString(ti->m_iter, ti->m_end);
 }
 
 /*!
@@ -727,11 +724,14 @@ void QPaintEngine::drawTextItem(const QPointF &p, const QTextItem &textItem)
    if (ti.glyphs.numGlyphs) {
       ti.fontEngine->addOutlineToPath(0, 0, ti.glyphs, &path, ti.flags);
    }
-   if (!path.isEmpty()) {
+
+   if (! path.isEmpty()) {
       painter()->save();
+
       painter()->setRenderHint(QPainter::Antialiasing,
-                               bool((painter()->renderHints() & QPainter::TextAntialiasing)
-                                    && !(painter()->font().styleStrategy() & QFont::NoAntialias)));
+                  bool((painter()->renderHints() & QPainter::TextAntialiasing)
+                  && ! (painter()->font().styleStrategy() & QFont::NoAntialias)));
+
       painter()->translate(p.x(), p.y());
       painter()->fillPath(path, state->pen().brush());
       painter()->restore();

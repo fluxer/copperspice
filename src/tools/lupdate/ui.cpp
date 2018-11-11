@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -148,8 +145,8 @@ bool UiReader::characters(const QString &ch)
 bool UiReader::fatalError(const QXmlParseException &exception)
 {
    QString msg = LU::tr("XML error: Parse error at line %1, column %2 (%3).")
-                 .arg(exception.lineNumber()).arg(exception.columnNumber())
-                 .arg(exception.message());
+                 .formatArg(exception.lineNumber()).formatArg(exception.columnNumber()).formatArg(exception.message());
+
    m_cd.appendError(msg);
    return false;
 }
@@ -157,10 +154,10 @@ bool UiReader::fatalError(const QXmlParseException &exception)
 void UiReader::flush()
 {
    if (!m_context.isEmpty() && !m_source.isEmpty()) {
-      TranslatorMessage msg(m_context, m_source,
-                            m_comment, QString(), m_cd.m_sourceFileName,
-                            m_lineNumber, QStringList());
+
+      TranslatorMessage msg(m_context, m_source, m_comment, QString(), m_cd.m_sourceFileName, m_lineNumber, QStringList());
       msg.setExtraComment(m_extracomment);
+
       if (m_needUtf8 && msg.needs8Bit()) {
          msg.setUtf8(true);
       }
@@ -177,14 +174,14 @@ bool loadUI(Translator &translator, const QString &filename, ConversionData &cd)
    QFile file(filename);
 
    if (!file.open(QIODevice::ReadOnly)) {
-      cd.appendError(LU::tr("Can not open %1: %2").arg(filename, file.errorString()));
+      cd.appendError(LU::tr("Can not open %1: %2").formatArgs(filename, file.errorString()));
       return false;
    }
    QXmlInputSource in(&file);
    QXmlSimpleReader reader;
    reader.setFeature(QLatin1String("http://xml.org/sax/features/namespaces"), false);
    reader.setFeature(QLatin1String("http://xml.org/sax/features/namespace-prefixes"), true);
-   reader.setFeature(QLatin1String("http://trolltech.com/xml/features/report-whitespace-only-CharData"), false);
+   reader.setFeature(QLatin1String("http://copperspice.com/xml/features/report-whitespace-only-CharData"), false);
 
    UiReader handler(translator, cd);
    reader.setContentHandler(&handler);

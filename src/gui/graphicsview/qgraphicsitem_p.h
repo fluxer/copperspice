@@ -1,30 +1,29 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
 
 #ifndef QGRAPHICSITEM_P_H
 #define QGRAPHICSITEM_P_H
+
+#include <algorithm>
 
 #include <qgraphicsitem.h>
 #include <qset.h>
@@ -170,10 +169,12 @@ class Q_GUI_EXPORT QGraphicsItemPrivate
    void updateChildWithGraphicsEffectFlagRecursively();
    void updateAncestorFlag(QGraphicsItem::GraphicsItemFlag childFlag,
                            AncestorFlag flag = NoFlag, bool enabled = false, bool root = true);
+
    void updateAncestorFlags();
    void setIsMemberOfGroup(bool enabled);
    void remapItemPos(QEvent *event, QGraphicsItem *item);
    QPointF genericMapFromScene(const QPointF &pos, const QWidget *viewport) const;
+
    inline bool itemIsUntransformable() const {
       return (flags & QGraphicsItem::ItemIgnoresTransformations)
              || (ancestorFlags & AncestorIgnoresTransformations);
@@ -183,8 +184,6 @@ class Q_GUI_EXPORT QGraphicsItemPrivate
    void combineTransformFromParent(QTransform *x, const QTransform *viewTransform = 0) const;
    virtual void updateSceneTransformFromParent();
 
-   // ### Qt5/Remove. Workaround for reimplementation added after Qt 4.4.
-   virtual QVariant inputMethodQueryHelper(Qt::InputMethodQuery query) const;
    static bool movableAncestorIsSelected(const QGraphicsItem *item);
 
    virtual void setPosHelper(const QPointF &pos);
@@ -193,8 +192,8 @@ class Q_GUI_EXPORT QGraphicsItemPrivate
    void appendGraphicsTransform(QGraphicsTransform *t);
    void setVisibleHelper(bool newVisible, bool explicitly, bool update = true);
    void setEnabledHelper(bool newEnabled, bool explicitly, bool update = true);
-   bool discardUpdateRequest(bool ignoreVisibleBit = false,
-                             bool ignoreDirtyBit = false, bool ignoreOpacity = false) const;
+
+   bool discardUpdateRequest(bool ignoreVisibleBit = false, bool ignoreDirtyBit = false, bool ignoreOpacity = false) const;
    virtual void transformChanged() {}
    int depth() const;
 
@@ -588,53 +587,54 @@ class QGraphicsItemEffectSourcePrivate : public QGraphicsEffectSourcePrivate
       : QGraphicsEffectSourcePrivate(), item(i), info(0) {
    }
 
-   inline void detach() {
+   void detach() override {
       item->d_ptr->graphicsEffect = 0;
       item->prepareGeometryChange();
    }
 
-   inline const QGraphicsItem *graphicsItem() const {
+   const QGraphicsItem *graphicsItem() const  override{
       return item;
    }
 
-   inline const QWidget *widget() const {
-      return 0;
+   const QWidget *widget() const override {
+      return nullptr;
    }
 
-   inline void update() {
+   void update() override {
       item->d_ptr->updateDueToGraphicsEffect = true;
       item->update();
       item->d_ptr->updateDueToGraphicsEffect = false;
    }
 
-   inline void effectBoundingRectChanged() {
+   void effectBoundingRectChanged() override {
       item->prepareGeometryChange();
    }
 
-   inline bool isPixmap() const {
+   bool isPixmap() const override {
       return item->type() == QGraphicsPixmapItem::Type
              && !(item->flags() & QGraphicsItem::ItemIsSelectable)
              && item->d_ptr->children.size() == 0;
       //|| (item->d_ptr->isObject && qobject_cast<QDeclarativeImage *>(q_func()));
    }
 
-   inline const QStyleOption *styleOption() const {
-      return info ? info->option : 0;
+   const QStyleOption *styleOption() const override {
+      return info ? info->option : nullptr;
    }
 
-   inline QRect deviceRect() const {
-      if (!info || !info->widget) {
+   QRect deviceRect() const override {
+      if (! info || ! info->widget) {
          qWarning("QGraphicsEffectSource::deviceRect: Not yet implemented, lacking device context");
          return QRect();
       }
+
       return info->widget->rect();
    }
 
-   QRectF boundingRect(Qt::CoordinateSystem system) const;
-   void draw(QPainter *);
-   QPixmap pixmap(Qt::CoordinateSystem system,
-                  QPoint *offset,
-                  QGraphicsEffect::PixmapPadMode mode) const;
+   QRectF boundingRect(Qt::CoordinateSystem system) const override;
+   void draw(QPainter *) override;
+
+   QPixmap pixmap(Qt::CoordinateSystem system, QPoint *offset, QGraphicsEffect::PixmapPadMode mode) const override;
+
    QRect paddedEffectRect(Qt::CoordinateSystem system, QGraphicsEffect::PixmapPadMode mode, const QRectF &sourceRect,
                           bool *unpadded = 0) const;
 
@@ -644,12 +644,6 @@ class QGraphicsItemEffectSourcePrivate : public QGraphicsEffectSourcePrivate
 };
 #endif //QT_NO_GRAPHICSEFFECT
 
-/*!
-    Returns true if \a item1 is on top of \a item2.
-    The items don't need to be siblings.
-
-    \internal
-*/
 inline bool qt_closestItemFirst(const QGraphicsItem *item1, const QGraphicsItem *item2)
 {
    // Siblings? Just check their z-values.
@@ -699,20 +693,11 @@ inline bool qt_closestItemFirst(const QGraphicsItem *item1, const QGraphicsItem 
    return qt_closestLeaf(p1, p2);
 }
 
-/*!
-    Returns true if \a item2 is on top of \a item1.
-    The items don't need to be siblings.
-
-    \internal
-*/
 inline bool qt_closestItemLast(const QGraphicsItem *item1, const QGraphicsItem *item2)
 {
    return qt_closestItemFirst(item2, item1);
 }
 
-/*!
-    \internal
-*/
 inline bool qt_closestLeaf(const QGraphicsItem *item1, const QGraphicsItem *item2)
 {
    // Return true if sibling item1 is on top of item2.
@@ -729,9 +714,7 @@ inline bool qt_closestLeaf(const QGraphicsItem *item1, const QGraphicsItem *item
    return d1->siblingIndex > d2->siblingIndex;
 }
 
-/*!
-    \internal
-*/
+
 inline bool qt_notclosestLeaf(const QGraphicsItem *item1, const QGraphicsItem *item2)
 {
    return qt_closestLeaf(item2, item1);
@@ -747,9 +730,7 @@ inline QTransform QGraphicsItemPrivate::transformToParent() const
    return matrix;
 }
 
-/*!
-    \internal
-*/
+// internal
 inline void QGraphicsItemPrivate::ensureSortedChildren()
 {
    if (needSortChildren) {
@@ -758,7 +739,8 @@ inline void QGraphicsItemPrivate::ensureSortedChildren()
       if (children.isEmpty()) {
          return;
       }
-      qSort(children.begin(), children.end(), qt_notclosestLeaf);
+      std::sort(children.begin(), children.end(), qt_notclosestLeaf);
+
       for (int i = 0; i < children.size(); ++i) {
          if (children.at(i)->d_ptr->siblingIndex != i) {
             sequentialOrdering = 0;
@@ -768,9 +750,7 @@ inline void QGraphicsItemPrivate::ensureSortedChildren()
    }
 }
 
-/*!
-    \internal
-*/
+// internal
 inline bool QGraphicsItemPrivate::insertionOrder(QGraphicsItem *a, QGraphicsItem *b)
 {
    return a->d_ptr->siblingIndex < b->d_ptr->siblingIndex;

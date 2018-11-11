@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -120,10 +117,11 @@ static QSize qt_mac_desktopSize()
    QVector<CGDirectDisplayID> displays(cg_count);
    CGGetActiveDisplayList(cg_count, displays.data(), &cg_count);
    Q_ASSERT(cg_count == (CGDisplayCount)displays.size());
+
    for (int i = 0; i < (int)cg_count; ++i) {
       CGRect r = CGDisplayBounds(displays.at(i));
-      w = qMax<int>(w, qRound(r.origin.x + r.size.width));
-      h = qMax<int>(h, qRound(r.origin.y + r.size.height));
+      w = qMax(w, qRound(r.origin.x + r.size.width));
+      h = qMax(h, qRound(r.origin.y + r.size.height));
    }
    return QSize(w, h);
 }
@@ -794,6 +792,7 @@ void QWidgetPrivate::determineWindowClass()
       ADD_DEBUG_WINDOW_NAME(kWindowCloseBoxAttribute),
       ADD_DEBUG_WINDOW_NAME(kWindowHideOnSuspendAttribute),
       { 0, 0 }
+
    }, known_classes[] = {
       ADD_DEBUG_WINDOW_NAME(kHelpWindowClass),
       ADD_DEBUG_WINDOW_NAME(kPlainWindowClass),
@@ -809,29 +808,33 @@ void QWidgetPrivate::determineWindowClass()
       ADD_DEBUG_WINDOW_NAME(kModalWindowClass),
       { 0, 0 }
    };
-   qDebug("Qt: internal: ************* Creating new window %p (%s::%s)", q, q->metaObject()->className(),
-          q->objectName().toLocal8Bit().constData());
+
+   qDebug("Internal Issue:  Creating new window %p (%s::%s)", q, csPrintable(q->metaObject()->className()),
+          q->objectName().toUtf8().constData());
+
    bool found_class = false;
+
    for (int i = 0; known_classes[i].name; i++) {
       if (wclass == known_classes[i].tag) {
          found_class = true;
-         qDebug("Qt: internal: ** Class: %s", known_classes[i].name);
+         qDebug("Internal Issue: Class %s", known_classes[i].name);
          break;
       }
    }
    if (!found_class) {
-      qDebug("Qt: internal: !! Class: Unknown! (%d)", (int)wclass);
+      qDebug("Internal Issue: Class Unknown (%d)", (int)wclass);
    }
    if (wattr) {
       WindowAttributes tmp_wattr = wattr;
-      qDebug("Qt: internal: ** Attributes:");
+      qDebug("Internal Issue:  Attributes:");
+
       for (int i = 0; tmp_wattr && known_attribs[i].name; i++) {
          if ((tmp_wattr & known_attribs[i].tag) == known_attribs[i].tag) {
             tmp_wattr ^= known_attribs[i].tag;
          }
       }
       if (tmp_wattr) {
-         qDebug("Qt: internal: !! Attributes: Unknown (%d)", (int)tmp_wattr);
+         qDebug("Internal Issue: Attributes Unknown (%d)", (int)tmp_wattr);
       }
    }
 #endif
@@ -853,8 +856,10 @@ void QWidgetPrivate::setWindowLevel()
          OSWindowRef parentRef = qt_mac_window_for(primaryWindow);
          winLevel = qMax([parentRef level], winLevel);
       }
+
    } else if (q->windowType() == Qt::Tool) {
       winLevel = NSFloatingWindowLevel;
+
    } else if (q->windowType() == Qt::Dialog) {
       // Correct modality level (NSModalPanelWindowLevel) will be
       // set by cocoa when creating a modal session later.

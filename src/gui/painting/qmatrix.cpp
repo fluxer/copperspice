@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -937,70 +934,32 @@ Q_GUI_EXPORT QPainterPath operator *(const QPainterPath &p, const QMatrix &m)
 }
 
 
-/*****************************************************************************
-  QMatrix stream functions
- *****************************************************************************/
-#ifndef QT_NO_DATASTREAM
-/*!
-    \fn QDataStream &operator<<(QDataStream &stream, const QMatrix &matrix)
-    \relates QMatrix
-
-    Writes the given \a matrix to the given \a stream and returns a
-    reference to the stream.
-
-    \sa {Serializing Qt Data Types}
-*/
-
 QDataStream &operator<<(QDataStream &s, const QMatrix &m)
 {
-   if (s.version() == 1) {
-      s << (float)m.m11() << (float)m.m12() << (float)m.m21()
-        << (float)m.m22() << (float)m.dx()  << (float)m.dy();
-   } else {
-      s << double(m.m11())
-        << double(m.m12())
-        << double(m.m21())
-        << double(m.m22())
-        << double(m.dx())
-        << double(m.dy());
-   }
+   s << double(m.m11())
+     << double(m.m12())
+     << double(m.m21())
+     << double(m.m22())
+     << double(m.dx())
+     << double(m.dy());
+
    return s;
 }
-
-/*!
-    \fn QDataStream &operator>>(QDataStream &stream, QMatrix &matrix)
-    \relates QMatrix
-
-    Reads the given \a matrix from the given \a stream and returns a
-    reference to the stream.
-
-    \sa {Serializing Qt Data Types}
-*/
 
 QDataStream &operator>>(QDataStream &s, QMatrix &m)
 {
-   if (s.version() == 1) {
-      float m11, m12, m21, m22, dx, dy;
-      s >> m11;
-      s >> m12;
-      s >> m21;
-      s >> m22;
-      s >> dx;
-      s >> dy;
-      m.setMatrix(m11, m12, m21, m22, dx, dy);
-   } else {
-      double m11, m12, m21, m22, dx, dy;
-      s >> m11;
-      s >> m12;
-      s >> m21;
-      s >> m22;
-      s >> dx;
-      s >> dy;
-      m.setMatrix(m11, m12, m21, m22, dx, dy);
-   }
+
+   double m11, m12, m21, m22, dx, dy;
+   s >> m11;
+   s >> m12;
+   s >> m21;
+   s >> m22;
+   s >> dx;
+   s >> dy;
+   m.setMatrix(m11, m12, m21, m22, dx, dy);
+
    return s;
 }
-#endif // QT_NO_DATASTREAM
 
 QDebug operator<<(QDebug dbg, const QMatrix &m)
 {

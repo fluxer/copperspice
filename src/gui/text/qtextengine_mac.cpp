@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -27,47 +24,49 @@
 #include <qfontengine_coretext_p.h>
 #include <qfontengine_mac_p.h>
 
-QT_BEGIN_NAMESPACE
-
 // set the glyph attributes heuristically. Assumes a 1 to 1 relationship between chars and glyphs
-// and no reordering.
-// also computes logClusters heuristically
-static void heuristicSetGlyphAttributes(const QChar *uc, int length, QGlyphLayout *glyphs, unsigned short *logClusters,
-                                        int num_glyphs)
-{
-   // ### zeroWidth and justification are missing here!!!!!
+// and no reordering, also computes logClusters heuristically
 
+static void heuristicSetGlyphAttributes(QStringView str, QGlyphLayout *glyphs, unsigned short *logClusters, int num_glyphs)
+{
+   // ### zeroWidth and justification are missing here
    Q_UNUSED(num_glyphs);
 
-   //     qDebug("QScriptEngine::heuristicSetGlyphAttributes, num_glyphs=%d", item->num_glyphs);
-
-   const bool symbolFont = false; // ####
+   const bool symbolFont = false;
    glyphs->attributes[0].mark = false;
    glyphs->attributes[0].clusterStart = true;
-   glyphs->attributes[0].dontPrint = (!symbolFont && uc[0].unicode() == 0x00ad) || qIsControlChar(uc[0].unicode());
+   glyphs->attributes[0].dontPrint = (! symbolFont && str[0] == 0x00ad) || qIsControlChar(str[0]);
 
    int pos = 0;
-   int lastCat = QChar::category(uc[0].unicode());
-   for (int i = 1; i < length; ++i) {
-      if (logClusters[i] == pos)
+   int lastCat = str[0].category();
+
+   int i = -1;
+
+   for (QChar c : str) {
+      ++i;
+
+      if (logClusters[i] == pos) {
          // same glyph
-      {
          continue;
       }
+
       ++pos;
+
       while (pos < logClusters[i]) {
          ++pos;
       }
+
       // hide soft-hyphens by default
-      if ((!symbolFont && uc[i].unicode() == 0x00ad) || qIsControlChar(uc[i].unicode())) {
+      if ((! symbolFont && str[i] == 0x00ad) || qIsControlChar(str[i])) {
          glyphs->attributes[pos].dontPrint = true;
       }
-      const QUnicodeTables::Properties *prop = QUnicodeTables::properties(uc[i].unicode());
+
+      const QUnicodeTables::Properties *prop = QUnicodeTables::properties(str[i].unicode());
       int cat = prop->category;
 
       // one gets an inter character justification point if the current char is not a non spacing mark.
-      // as then the current char belongs to the last one and one gets a space justification point
-      // after the space char.
+      // as then the current char belongs to the last one and one gets a space justification point after the space char.
+
       if (lastCat == QChar::Separator_Space) {
          glyphs->attributes[pos - 1].justification = HB_Space;
       } else if (cat != QChar::Mark_NonSpacing) {
@@ -78,7 +77,9 @@ static void heuristicSetGlyphAttributes(const QChar *uc, int length, QGlyphLayou
 
       lastCat = cat;
    }
-   pos = logClusters[length - 1];
+
+   pos = logClusters[str.size() - 1];
+
    if (lastCat == QChar::Separator_Space) {
       glyphs->attributes[pos].justification = HB_Space;
    } else {
@@ -102,12 +103,12 @@ enum QArabicShape {
 };
 
 
-// these groups correspond to the groups defined in the Unicode standard.
-// Some of these groups are equal with regards to both joining and line breaking behaviour,
-// and thus have the same enum value
+// these groups correspond to the groups defined in the Unicode standard, some of these groups are equal
+// with regards to both joining and line breaking behaviour, and thus have the same enum value
 //
-// I'm not sure the mapping of syriac to arabic enums is correct with regards to justification, but as
-// I couldn't find any better document I'll hope for the best.
+// not sure the mapping of syriac to arabic enums is correct with regards to justification,
+// could not find any better document
+
 enum ArabicGroup {
    // NonJoining
    ArabicNone,
@@ -294,14 +295,17 @@ static const unsigned char arabic_group[0x150] = {
    ArabicNone, Zain, Kaph, Fe,
 };
 
-static inline ArabicGroup arabicGroup(unsigned short uc)
+static inline ArabicGroup arabicGroup(QChar uc)
 {
    if (uc >= 0x0600 && uc < 0x750) {
-      return (ArabicGroup) arabic_group[uc - 0x600];
+      return (ArabicGroup) arabic_group[uc.unicode() - 0x600];
+
    } else if (uc == 0x200d) {
       return Center;
-   } else if (QChar::category(uc) == QChar::Separator_Space) {
+
+   } else if (uc.category() == QChar::Separator_Space) {
       return ArabicSpace;
+
    } else {
       return ArabicNone;
    }
@@ -406,49 +410,47 @@ are those in table 6.6 of the UNICODE 2.0 book.
 
 PrioritY        Glyph                   Condition                                       Kashida Location
 
-Arabic_Kashida        User inserted Kashida   The user entered a Kashida in a position.       After the user
-                (Shift+j or Shift+[E with hat])    Thus, it is the highest priority to insert an   inserted kashida
+Arabic_Kashida    User inserted Kashida   The user entered a Kashida in a position.       After the user
+                  (Shift+j or Shift+[E with hat])    Thus, it is the highest priority to insert an   inserted kashida
                                         automatic kashida.
 
-Arabic_Seen        Seen, Sad               Connecting to the next character.               After the character.
+Arabic_Seen       Seen, Sad               Connecting to the next character.            After the character.
                                         (Initial or medial form).
 
-Arabic_HaaDal        Teh Marbutah, Haa, Dal  Connecting to previous character.               Before the final form
-                                                                                        of these characters.
+Arabic_HaaDal     Teh Marbutah, Haa, Dal  Connecting to previous character.          Before the final form
+                                                                                     of these characters.
 
-Arabic_Alef     Alef, Tah, Lam,         Connecting to previous character.               Before the final form
-                Kaf and Gaf                                                             of these characters.
+Arabic_Alef       Alef, Tah, Lam,         Connecting to previous character.          Before the final form
+                  Kaf and Gaf                                                        of these characters.
 
-Arabic_BaRa     Reh, Yeh                Connected to medial Beh                         Before preceding medial Baa
+Arabic_BaRa       Reh, Yeh                Connected to medial Beh                    Before preceding medial Baa
 
-Arabic_Waw        Waw, Ain, Qaf, Feh      Connecting to previous character.               Before the final form of
-                                                                                        these characters.
+Arabic_Waw        Waw, Ain, Qaf, Feh      Connecting to previous character.          Before the final form of
+                                                                                     these characters.
 
-Arabic_Normal   Other connecting        Connecting to previous character.               Before the final form
-                characters                                                              of these characters.
-
-
+Arabic_Normal     Other connecting        Connecting to previous character.          Before the final form
+                  characters                                                         of these characters.
 
 This seems to imply that we have at most one kashida point per arabic word.
 
 */
 
-void qt_getArabicProperties(const unsigned short *chars, int len, QArabicProperties *properties)
+void qt_getArabicProperties(QStringView str, int len, QArabicProperties *properties)
 {
-   //     qDebug("arabicSyriacOpenTypeShape: properties:");
    int lastPos = 0;
    int lastGroup = ArabicNone;
 
-   ArabicGroup group = arabicGroup(chars[0]);
-   Joining j = joining_for_group[group];
+   ArabicGroup group  = arabicGroup(str[0]);
+   Joining j          = joining_for_group[group];
    QArabicShape shape = joining_table[XIsolated][j].form2;
+
    properties[0].justification = HB_NoJustification;
 
    for (int i = 1; i < len; ++i) {
-      // #### fix handling for spaces and punktuation
+      // #### fix handling for spaces and punctuation
       properties[i].justification = HB_NoJustification;
 
-      group = arabicGroup(chars[i]);
+      group = arabicGroup(str[i]);
       j = joining_for_group[group];
 
       if (j == JTransparent) {
@@ -522,7 +524,7 @@ void qt_getArabicProperties(const unsigned short *chars, int len, QArabicPropert
 
          case Yeh:
          case Reh:
-            if (properties[lastPos].shape == XMedial && arabicGroup(chars[lastPos]) == Beh) {
+            if (properties[lastPos].shape == XMedial && arabicGroup(str[lastPos]) == Beh) {
                properties[lastPos - 1].justification = HB_Arabic_BaRa;
             }
             break;
@@ -543,11 +545,8 @@ void qt_getArabicProperties(const unsigned short *chars, int len, QArabicPropert
 
       lastPos = i;
    }
+
    properties[lastPos].shape = joining_table[shape][JNone].form1;
-
-
-   //     for (int i = 0; i < len; ++i)
-   //         qDebug("arabic properties(%d): uc=%x shape=%d, justification=%d", i, chars[i], properties[i].shape, properties[i].justification);
 }
 
 void QTextEngine::shapeTextMac(int item) const
@@ -574,54 +573,54 @@ void QTextEngine::shapeTextMac(int item) const
 
    attributes(); // pre-initialize char attributes
 
-   const int len = length(item);
+   const int len  = length(item);
    int num_glyphs = length(item);
-   const QChar *str = layoutData->string.unicode() + si.position;
-   ushort upperCased[256];
+
+   QStringView str = layoutData->string.midView(si.position, len);
+   QString upperCased;
+
    if (si.analysis.flags == QScriptAnalysis::SmallCaps || si.analysis.flags == QScriptAnalysis::Uppercase
          || si.analysis.flags == QScriptAnalysis::Lowercase) {
-      ushort *uc = upperCased;
-      if (len > 256) {
-         uc = new ushort[len];
+
+      if (si.analysis.flags == QScriptAnalysis::Lowercase) {
+         upperCased = str.toLower();
+
+      } else {
+         upperCased = str.toUpper();
+
       }
-      for (int i = 0; i < len; ++i) {
-         if (si.analysis.flags == QScriptAnalysis::Lowercase) {
-            uc[i] = str[i].toLower().unicode();
-         } else {
-            uc[i] = str[i].toUpper().unicode();
-         }
-      }
-      str = reinterpret_cast<const QChar *>(uc);
+
+      str = upperCased;
    }
 
    ensureSpace(num_glyphs);
    num_glyphs = layoutData->glyphLayout.numGlyphs - layoutData->used;
 
    QGlyphLayout g = availableGlyphs(&si);
-   g.numGlyphs = num_glyphs;
+   g.numGlyphs    = num_glyphs;
    unsigned short *log_clusters = logClusters(&si);
 
    bool stringToCMapFailed = false;
 
-   if (!fe->stringToCMap(str, len, &g, &num_glyphs, flags, log_clusters, attributes(), &si)) {
+   if (! fe->stringToCMap(str, &g, &num_glyphs, flags, log_clusters, attributes(), &si)) {
       ensureSpace(num_glyphs);
       g = availableGlyphs(&si);
-      stringToCMapFailed = !fe->stringToCMap(str, len, &g, &num_glyphs, flags, log_clusters,
-                                             attributes(), &si);
+
+      stringToCMapFailed = ! fe->stringToCMap(str, &g, &num_glyphs, flags, log_clusters, attributes(), &si);
    }
 
-   if (!stringToCMapFailed) {
-      heuristicSetGlyphAttributes(str, len, &g, log_clusters, num_glyphs);
+   if (! stringToCMapFailed) {
+      heuristicSetGlyphAttributes(str, &g, log_clusters, num_glyphs);
 
       si.num_glyphs = num_glyphs;
-
       layoutData->used += si.num_glyphs;
 
       QGlyphLayout g = shapedGlyphs(&si);
 
-      if (si.analysis.script == QUnicodeTables::Arabic) {
+      if (si.analysis.script == QChar::Script_Arabic) {
          QVarLengthArray<QArabicProperties> props(len + 2);
          QArabicProperties *properties = props.data();
+
          int f = si.position;
          int l = len;
          if (f > 0) {
@@ -629,10 +628,12 @@ void QTextEngine::shapeTextMac(int item) const
             ++l;
             ++properties;
          }
+
          if (f + l < layoutData->string.length()) {
             ++l;
          }
-         qt_getArabicProperties((const unsigned short *)(layoutData->string.unicode() + f), l, props.data());
+
+         qt_getArabicProperties(layoutData->string.midView(f), l, props.data());
 
          unsigned short *log_clusters = logClusters(&si);
 
@@ -642,15 +643,5 @@ void QTextEngine::shapeTextMac(int item) const
          }
       }
    }
-
-cleanUp:
-   const ushort *uc = reinterpret_cast<const ushort *>(str);
-
-   if ((si.analysis.flags == QScriptAnalysis::SmallCaps || si.analysis.flags == QScriptAnalysis::Uppercase
-         || si.analysis.flags == QScriptAnalysis::Lowercase)
-         && uc != upperCased) {
-      delete [] uc;
-   }
 }
 
-QT_END_NAMESPACE

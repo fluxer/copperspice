@@ -1,31 +1,28 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
 
 #include <qvariant.h>
 #include <qhash.h>
-#include <qregexp.h>
+#include <qregularexpression.h>
 #include <qsqlerror.h>
 #include <qsqlfield.h>
 #include <qsqlrecord.h>
@@ -33,7 +30,7 @@
 #include <qvector.h>
 #include <qsqldriver.h>
 #include <qpointer.h>
-#include <QDebug>
+#include <qdebug.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -137,9 +134,9 @@ QString QSqlResultPrivate::positionalToNamedBinding()
    int n = sql.size();
 
    QString result;
-   result.reserve(n * 5 / 4);
+
    bool inQuote = false;
-   int count = 0;
+   int count    = 0;
 
    for (int i = 0; i < n; ++i) {
       QChar ch = sql.at(i);
@@ -161,10 +158,10 @@ QString QSqlResultPrivate::namedToPositionalBinding()
    int n = sql.size();
 
    QString result;
-   result.reserve(n);
+
    bool inQuote = false;
-   int count = 0;
-   int i = 0;
+   int count    = 0;
+   int i        = 0;
 
    while (i < n) {
       QChar ch = sql.at(i);
@@ -254,24 +251,10 @@ QSqlResult::~QSqlResult()
    delete d;
 }
 
-/*!
-    Sets the current query for the result to \a query. You must call
-    reset() to execute the query on the database.
-
-    \sa reset(), lastQuery()
-*/
-
 void QSqlResult::setQuery(const QString &query)
 {
    d->sql = query;
 }
-
-/*!
-    Returns the current SQL query text, or an empty string if there
-    isn't one.
-
-    \sa setQuery()
-*/
 
 QString QSqlResult::lastQuery() const
 {
@@ -416,99 +399,6 @@ QSqlError QSqlResult::lastError() const
     determined or if the query is not a \c SELECT statement.
 
     \sa numRowsAffected()
-*/
-
-/*!
-    \fn int QSqlResult::numRowsAffected()
-
-    Returns the number of rows affected by the last query executed, or
-    -1 if it cannot be determined or if the query is a \c SELECT
-    statement.
-
-    \sa size()
-*/
-
-/*!
-    \fn QVariant QSqlResult::data(int index)
-
-    Returns the data for field \a index in the current row as
-    a QVariant. This function is only called if the result is in
-    an active state and is positioned on a valid record and \a index is
-    non-negative. Derived classes must reimplement this function and
-    return the value of field \a index, or QVariant() if it cannot be
-    determined.
-*/
-
-/*!
-    \fn  bool QSqlResult::reset(const QString &query)
-
-    Sets the result to use the SQL statement \a query for subsequent
-    data retrieval.
-
-    Derived classes must reimplement this function and apply the \a
-    query to the database. This function is only called after the
-    result is set to an inactive state and is positioned before the
-    first record of the new result. Derived classes should return
-    true if the query was successful and ready to be used, or false
-    otherwise.
-
-    \sa setQuery()
-*/
-
-/*!
-    \fn bool QSqlResult::fetch(int index)
-
-    Positions the result to an arbitrary (zero-based) row \a index.
-
-    This function is only called if the result is in an active state.
-    Derived classes must reimplement this function and position the
-    result to the row \a index, and call setAt() with an appropriate
-    value. Return true to indicate success, or false to signify
-    failure.
-
-    \sa isActive(), fetchFirst(), fetchLast(), fetchNext(), fetchPrevious()
-*/
-
-/*!
-    \fn bool QSqlResult::fetchFirst()
-
-    Positions the result to the first record (row 0) in the result.
-
-    This function is only called if the result is in an active state.
-    Derived classes must reimplement this function and position the
-    result to the first record, and call setAt() with an appropriate
-    value. Return true to indicate success, or false to signify
-    failure.
-
-    \sa fetch(), fetchLast()
-*/
-
-/*!
-    \fn bool QSqlResult::fetchLast()
-
-    Positions the result to the last record (last row) in the result.
-
-    This function is only called if the result is in an active state.
-    Derived classes must reimplement this function and position the
-    result to the last record, and call setAt() with an appropriate
-    value. Return true to indicate success, or false to signify
-    failure.
-
-    \sa fetch(), fetchFirst()
-*/
-
-/*!
-    Positions the result to the next available record (row) in the
-    result.
-
-    This function is only called if the result is in an active
-    state. The default implementation calls fetch() with the next
-    index. Derived classes can reimplement this function and position
-    the result to the next record in some other way, and call setAt()
-    with an appropriate value. Return true to indicate success, or
-    false to signify failure.
-
-    \sa fetch(), fetchPrevious()
 */
 
 bool QSqlResult::fetchNext()
@@ -680,6 +570,7 @@ bool QSqlResult::exec()
    d->executedQuery = query;
    setQuery(orig);
    d->resetBindCount();
+
    return ret;
 }
 
@@ -722,8 +613,10 @@ void QSqlResult::bindValue(const QString &placeholder, const QVariant &val,
                            QSql::ParamType paramType)
 {
    d->binds = NamedBinding;
+
    // if the index has already been set when doing emulated named
    // bindings - don't reset it
+
    int idx = d->indexes.value(placeholder, -1);
    if (idx >= 0) {
       if (d->values.count() <= idx) {
@@ -878,7 +771,7 @@ bool QSqlResult::hasOutValues() const
    if (d->types.isEmpty()) {
       return false;
    }
-   QHash<int, QSql::ParamType>::ConstIterator it;
+   QHash<int, QSql::ParamType>::const_iterator it;
    for (it = d->types.constBegin(); it != d->types.constEnd(); ++it) {
       if (it.value() != QSql::In) {
          return true;

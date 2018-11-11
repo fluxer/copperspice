@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -1272,10 +1269,10 @@ bool QDeclarativeMetaType::copy(int type, void *data, const void *copy)
             *static_cast<uint *>(data) = *static_cast<const uint *>(copy);
             return true;
          case QMetaType::LongLong:
-            *static_cast<qlonglong *>(data) = *static_cast<const qlonglong *>(copy);
+            *static_cast<qint64 *>(data) = *static_cast<const qint64 *>(copy);
             return true;
          case QMetaType::ULongLong:
-            *static_cast<qulonglong *>(data) = *static_cast<const qulonglong *>(copy);
+            *static_cast<quint64 *>(data) = *static_cast<const quint64 *>(copy);
             return true;
          case QMetaType::UShort:
             *static_cast<ushort *>(data) = *static_cast<const ushort *>(copy);
@@ -1473,10 +1470,10 @@ bool QDeclarativeMetaType::copy(int type, void *data, const void *copy)
             *static_cast<uint *>(data) = uint(0);
             return true;
          case QMetaType::LongLong:
-            *static_cast<qlonglong *>(data) = qlonglong(0);
+            *static_cast<qint64 *>(data) = qint64(0);
             return true;
          case QMetaType::ULongLong:
-            *static_cast<qulonglong *>(data) = qulonglong(0);
+            *static_cast<quint64 *>(data) = quint64(0);
             return true;
          case QMetaType::UShort:
             *static_cast<ushort *>(data) = ushort(0);

@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -161,7 +158,7 @@ QT_BEGIN_NAMESPACE
     window, a tool, a popup, etc).
 */
 QGraphicsWidget::QGraphicsWidget(QGraphicsItem *parent, Qt::WindowFlags wFlags)
-   : QGraphicsObject(*new QGraphicsWidgetPrivate, 0, 0), QGraphicsLayoutItem(0, false)
+   : QGraphicsObject(*new QGraphicsWidgetPrivate, nullptr), QGraphicsLayoutItem(0, false)
 {
    Q_D(QGraphicsWidget);
    d->init(parent, wFlags);
@@ -172,9 +169,8 @@ QGraphicsWidget::QGraphicsWidget(QGraphicsItem *parent, Qt::WindowFlags wFlags)
 
     Constructs a new QGraphicsWidget, using \a dd as parent.
 */
-QGraphicsWidget::QGraphicsWidget(QGraphicsWidgetPrivate &dd, QGraphicsItem *parent, QGraphicsScene *scene,
-                                 Qt::WindowFlags wFlags)
-   : QGraphicsObject(dd, 0, scene), QGraphicsLayoutItem(0, false)
+QGraphicsWidget::QGraphicsWidget(QGraphicsWidgetPrivate &dd, QGraphicsItem *parent, Qt::WindowFlags wFlags)
+   : QGraphicsObject(dd, nullptr), QGraphicsLayoutItem(0, false)
 {
    Q_D(QGraphicsWidget);
    d->init(parent, wFlags);
@@ -245,7 +241,7 @@ QGraphicsWidget::~QGraphicsWidget()
    //we check if we have a layout previously
    if (d->layout) {
       QGraphicsLayout *temp = d->layout;
-      foreach (QGraphicsItem * item, childItems()) {
+      for (QGraphicsItem * item : childItems()) {
          // In case of a custom layout which doesn't remove and delete items, we ensure that
          // the parent layout item does not point to the deleted layout. This code is here to
          // avoid regression from 4.4 to 4.5, because according to 4.5 docs it is not really needed.
@@ -843,10 +839,10 @@ void QGraphicsWidget::setLayout(QGraphicsLayout *l)
 
    // Prevent assigning a layout that is already assigned to another widget.
    QGraphicsLayoutItem *oldParent = l->parentLayoutItem();
+
    if (oldParent && oldParent != this) {
       qWarning("QGraphicsWidget::setLayout: Attempting to set a layout on %s"
-               " \"%s\", when the layout already has a parent",
-               metaObject()->className(), qPrintable(objectName()));
+               " \"%s\", when the layout already has a parent", csPrintable(metaObject()->className()), csPrintable(objectName()));
       return;
    }
 
@@ -1175,31 +1171,38 @@ QVariant QGraphicsWidget::itemChange(GraphicsItemChange change, const QVariant &
          QApplication::sendEvent(this, &event);
          break;
       }
+
       case ItemParentHasChanged: {
          // Deliver ParentChange.
          QEvent event(QEvent::ParentChange);
          QApplication::sendEvent(this, &event);
          break;
       }
+
       case ItemCursorHasChanged: {
          // Deliver CursorChange.
          QEvent event(QEvent::CursorChange);
          QApplication::sendEvent(this, &event);
          break;
       }
+
       case ItemToolTipHasChanged: {
          // Deliver ToolTipChange.
          QEvent event(QEvent::ToolTipChange);
          QApplication::sendEvent(this, &event);
          break;
       }
+
       case ItemChildAddedChange: {
-         QGraphicsItem *child = qVariantValue<QGraphicsItem *>(value);
+         QGraphicsItem *child = value.value<QGraphicsItem *>();
+
          if (child->isWidget()) {
             static_cast<QGraphicsWidget *>(child)->d_func()->resolveLayoutDirection();
          }
+
          break;
       }
+
       default:
          break;
    }

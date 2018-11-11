@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -35,8 +32,6 @@
 #include <QtCore/qatomic.h>
 #include <QtCore/qsemaphore.h>
 
-QT_BEGIN_NAMESPACE
-
 namespace QtConcurrent {
 
 // The ThreadEngineBarrier counts worker threads, and allows one
@@ -44,18 +39,6 @@ namespace QtConcurrent {
 // QtConcurrent, requires more testing for use as a general class.
 class ThreadEngineBarrier
 {
- private:
-   // The thread count is maintained as an integer in the count atomic
-   // variable. The count can be either positive or negative - a negative
-   // count signals that a thread is waiting on the barrier.
-
-   // BC note: inlined code from Qt < 4.6 will expect to find the QMutex
-   // and QAtomicInt here. ### Qt5/remove.
-   QMutex mutex;
-   QAtomicInt count;
-
-   QSemaphore semaphore;
-
  public:
    ThreadEngineBarrier();
    void acquire();
@@ -63,6 +46,14 @@ class ThreadEngineBarrier
    void wait();
    int currentCount();
    bool releaseUnlessLast();
+
+ private:
+   // The thread count is maintained as an integer in the count atomic
+   // variable. The count can be either positive or negative - a negative
+   // count signals that a thread is waiting on the barrier.
+
+   QAtomicInt count;
+   QSemaphore semaphore;
 };
 
 enum ThreadFunctionResult { ThrottleThread, ThreadFinished };
@@ -74,7 +65,6 @@ enum ThreadFunctionResult { ThrottleThread, ThreadFinished };
 class Q_CORE_EXPORT ThreadEngineBase: public QRunnable
 {
  public:
-
    ThreadEngineBase();
    virtual ~ThreadEngineBase();
    void startSingleThreaded();
@@ -90,12 +80,15 @@ class Q_CORE_EXPORT ThreadEngineBase: public QRunnable
  protected:
    virtual void start() {}
    virtual void finish() {}
+
    virtual ThreadFunctionResult threadFunction() {
       return ThreadFinished;
    }
+
    virtual bool shouldStartThread() {
       return futureInterface ? !futureInterface->isPaused() : true;
    }
+
    virtual bool shouldThrottleThread() {
       return futureInterface ? futureInterface->isPaused() : false;
    }
@@ -110,12 +103,11 @@ class Q_CORE_EXPORT ThreadEngineBase: public QRunnable
    void startThreads();
    void threadExit();
    bool threadThrottleExit();
-   void run();
+   void run() override;
    virtual void asynchronousFinish() = 0;
    void handleException(const QtConcurrent::Exception &exception);
 
 };
-
 
 template <typename T>
 class ThreadEngine : public virtual ThreadEngineBase
@@ -124,7 +116,7 @@ class ThreadEngine : public virtual ThreadEngineBase
    typedef T ResultType;
 
    virtual T *result() {
-      return 0;
+      return nullptr;
    }
 
    QFutureInterface<T> *futureInterfaceTyped() {
@@ -151,8 +143,7 @@ class ThreadEngine : public virtual ThreadEngineBase
       futureInterface = new QFutureInterface<T>();
 
       // reportStart() must be called before starting threads, otherwise the
-      // user algorithm might finish while reportStart() is running, which
-      // is very bad.
+      // user algorithm might finish while reportStart() is running, which is very bad.
       futureInterface->reportStarted();
       QFuture<T> future = QFuture<T>(futureInterfaceTyped());
       start();
@@ -162,7 +153,7 @@ class ThreadEngine : public virtual ThreadEngineBase
       return future;
    }
 
-   void asynchronousFinish() {
+   void asynchronousFinish() override {
       finish();
       futureInterfaceTyped()->reportFinished(result());
       delete futureInterfaceTyped();
@@ -248,7 +239,5 @@ inline ThreadEngineStarter<typename ThreadEngine::ResultType> startThreadEngine(
 }
 
 } // namespace QtConcurrent
-
-QT_END_NAMESPACE
 
 #endif

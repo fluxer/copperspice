@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -33,14 +30,12 @@
 #include <qmenubar_p.h>
 #include <qmenubar.h>
 #include <qt_cocoa_helpers_mac_p.h>
+#include <qstringfwd.h>
 
 QT_FORWARD_DECLARE_CLASS(QCFString)
-QT_FORWARD_DECLARE_CLASS(QString)
 
 #ifndef QT_NO_TRANSLATION
-QT_BEGIN_NAMESPACE
 extern QString qt_mac_applicationmenu_string(int type);
-QT_END_NAMESPACE
 #endif
 
 QT_USE_NAMESPACE
@@ -152,9 +147,9 @@ QT_USE_NAMESPACE
    return [[aboutItem retain] autorelease];
 }
 
-- (NSMenuItem *)aboutQtMenuItem
+- (NSMenuItem *)aboutCsMenuItem
 {
-   return [[aboutQtItem retain] autorelease];
+   return [[aboutCsItem retain] autorelease];
 }
 
 - (NSMenuItem *)hideMenuItem
@@ -177,11 +172,12 @@ QT_USE_NAMESPACE
 
    NSInteger location;
    if (lastAppSpecificItem == nil) {
-      location = [appMenu indexOfItem: aboutQtItem];
+      location = [appMenu indexOfItem: aboutCsItem];
    } else {
       location = [appMenu indexOfItem: lastAppSpecificItem];
       [lastAppSpecificItem release];
    }
+
    lastAppSpecificItem = item;  // Keep track of this for later (i.e., don't release it)
    [appMenu insertItem: item atIndex: location + 1];
 
@@ -227,12 +223,12 @@ QT_USE_NAMESPACE
 {
 #ifndef QT_NO_TRANSLATION
    [servicesItem setTitle: qt_mac_QStringToNSString(qt_mac_applicationmenu_string(0))];
-   [hideItem setTitle: qt_mac_QStringToNSString(qt_mac_applicationmenu_string(1).arg(qAppName()))];
+   [hideItem setTitle: qt_mac_QStringToNSString(qt_mac_applicationmenu_string(1).formatArg(qAppName()))];
    [hideAllOthersItem setTitle: qt_mac_QStringToNSString(qt_mac_applicationmenu_string(2))];
    [showAllItem setTitle: qt_mac_QStringToNSString(qt_mac_applicationmenu_string(3))];
    [preferencesItem setTitle: qt_mac_QStringToNSString(qt_mac_applicationmenu_string(4))];
-   [quitItem setTitle: qt_mac_QStringToNSString(qt_mac_applicationmenu_string(5).arg(qAppName()))];
-   [aboutItem setTitle: qt_mac_QStringToNSString(qt_mac_applicationmenu_string(6).arg(qAppName()))];
+   [quitItem setTitle: qt_mac_QStringToNSString(qt_mac_applicationmenu_string(5).formatArg(qAppName()))];
+   [aboutItem setTitle: qt_mac_QStringToNSString(qt_mac_applicationmenu_string(6).formatArg(qAppName()))];
 #endif
 }
 

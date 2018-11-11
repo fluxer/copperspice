@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -42,6 +39,7 @@ QSystemSemaphorePrivate::QSystemSemaphorePrivate() :
 void QSystemSemaphorePrivate::setErrorString(const QString &function)
 {
    DWORD windowsError = GetLastError();
+
    if (windowsError == 0) {
       return;
    }
@@ -50,15 +48,18 @@ void QSystemSemaphorePrivate::setErrorString(const QString &function)
       case ERROR_NO_SYSTEM_RESOURCES:
       case ERROR_NOT_ENOUGH_MEMORY:
          error = QSystemSemaphore::OutOfResources;
-         errorString = QCoreApplication::translate("QSystemSemaphore", "%1: out of resources").arg(function);
+         errorString = QCoreApplication::translate("QSystemSemaphore", "%1: out of resources").formatArg(function);
          break;
+
       case ERROR_ACCESS_DENIED:
          error = QSystemSemaphore::PermissionDenied;
-         errorString = QCoreApplication::translate("QSystemSemaphore", "%1: permission denied").arg(function);
+         errorString = QCoreApplication::translate("QSystemSemaphore", "%1: permission denied").formatArg(function);
          break;
+
       default:
-         errorString = QCoreApplication::translate("QSystemSemaphore", "%1: unknown error %2").arg(function).arg(windowsError);
+         errorString = QCoreApplication::translate("QSystemSemaphore", "%1: unknown error %2").formatArg(function).formatArg(windowsError);
          error = QSystemSemaphore::UnknownError;
+
 #ifdef QSYSTEMSEMAPHORE_DEBUG
          qDebug() << errorString << "key" << key;
 #endif
@@ -75,9 +76,10 @@ HANDLE QSystemSemaphorePrivate::handle(QSystemSemaphore::AccessMode)
 
    // Create it if it doesn't already exists.
    if (semaphore == 0) {
-      semaphore = CreateSemaphore(0, initialValue, MAXLONG, (wchar_t *)fileName.utf16());
+      semaphore = CreateSemaphore(0, initialValue, MAXLONG, &fileName.toStdWString()[0]);
+
       if (semaphore == NULL) {
-         setErrorString(QLatin1String("QSystemSemaphore::handle"));
+         setErrorString("QSystemSemaphore::handle");
       }
    }
 
@@ -87,9 +89,11 @@ HANDLE QSystemSemaphorePrivate::handle(QSystemSemaphore::AccessMode)
 void QSystemSemaphorePrivate::cleanHandle()
 {
    if (semaphore && !CloseHandle(semaphore)) {
+
 #if defined QSYSTEMSEMAPHORE_DEBUG
       qDebug() << QLatin1String("QSystemSemaphorePrivate::CloseHandle: sem failed");
 #endif
+
    }
    semaphore = 0;
 }
@@ -103,14 +107,17 @@ bool QSystemSemaphorePrivate::modifySemaphore(int count)
    if (count > 0) {
       if (0 == ReleaseSemaphore(semaphore, count, 0)) {
          setErrorString(QLatin1String("QSystemSemaphore::modifySemaphore"));
+
 #if defined QSYSTEMSEMAPHORE_DEBUG
          qDebug() << QLatin1String("QSystemSemaphore::modifySemaphore ReleaseSemaphore failed");
 #endif
          return false;
       }
+
    } else {
       if (WAIT_OBJECT_0 != WaitForSingleObject(semaphore, INFINITE)) {
          setErrorString(QLatin1String("QSystemSemaphore::modifySemaphore"));
+
 #if defined QSYSTEMSEMAPHORE_DEBUG
          qDebug() << QLatin1String("QSystemSemaphore::modifySemaphore WaitForSingleObject failed");
 #endif

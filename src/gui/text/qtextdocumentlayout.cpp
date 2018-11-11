@@ -1,27 +1,26 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
+
+#include <algorithm>
 
 #include <qtextdocumentlayout_p.h>
 #include <qtextdocument_p.h>
@@ -274,7 +273,7 @@ QRectF QTextTableData::cellRect(const QTextTableCell &cell) const
 }
 
 static inline bool isEmptyBlockBeforeTable(const QTextBlock &block, const QTextBlockFormat &format,
-      const QTextFrame::Iterator &nextIt)
+      const QTextFrame::iterator &nextIt)
 {
    return !nextIt.atEnd()
           && qobject_cast<QTextTable *>(nextIt.currentFrame())
@@ -286,9 +285,9 @@ static inline bool isEmptyBlockBeforeTable(const QTextBlock &block, const QTextB
           ;
 }
 
-static inline bool isEmptyBlockBeforeTable(QTextFrame::Iterator it)
+static inline bool isEmptyBlockBeforeTable(QTextFrame::iterator it)
 {
-   QTextFrame::Iterator next = it;
+   QTextFrame::iterator next = it;
    ++next;
    if (it.currentFrame()) {
       return false;
@@ -381,12 +380,12 @@ struct QCheckPoint {
 };
 Q_DECLARE_TYPEINFO(QCheckPoint, Q_PRIMITIVE_TYPE);
 
-Q_STATIC_GLOBAL_OPERATOR bool operator<(const QCheckPoint &checkPoint, QFixed y)
+static bool operator<(const QCheckPoint &checkPoint, QFixed y)
 {
    return checkPoint.y < y;
 }
 
-Q_STATIC_GLOBAL_OPERATOR bool operator<(const QCheckPoint &checkPoint, int pos)
+static bool operator<(const QCheckPoint &checkPoint, int pos)
 {
    return checkPoint.positionInFrame < pos;
 }
@@ -444,7 +443,7 @@ class QTextDocumentLayoutPrivate : public QAbstractTextDocumentLayoutPrivate
    void drawFrame(const QPointF &offset, QPainter *painter, const QAbstractTextDocumentLayout::PaintContext &context,
                   QTextFrame *f) const;
    void drawFlow(const QPointF &offset, QPainter *painter, const QAbstractTextDocumentLayout::PaintContext &context,
-                 QTextFrame::Iterator it, const QList<QTextFrame *> &floats, QTextBlock *cursorBlockNeedingRepaint) const;
+                 QTextFrame::iterator it, const QList<QTextFrame *> &floats, QTextBlock *cursorBlockNeedingRepaint) const;
    void drawBlock(const QPointF &offset, QPainter *painter, const QAbstractTextDocumentLayout::PaintContext &context,
                   QTextBlock bl, bool inRootFrame) const;
    void drawListItem(const QPointF &offset, QPainter *painter, const QAbstractTextDocumentLayout::PaintContext &context,
@@ -466,7 +465,7 @@ class QTextDocumentLayoutPrivate : public QAbstractTextDocumentLayoutPrivate
    };
    HitPoint hitTest(QTextFrame *frame, const QFixedPoint &point, int *position, QTextLayout **l,
                     Qt::HitTestAccuracy accuracy) const;
-   HitPoint hitTest(QTextFrame::Iterator it, HitPoint hit, const QFixedPoint &p,
+   HitPoint hitTest(QTextFrame::iterator it, HitPoint hit, const QFixedPoint &p,
                     int *position, QTextLayout **l, Qt::HitTestAccuracy accuracy) const;
    HitPoint hitTest(QTextTable *table, const QFixedPoint &point, int *position, QTextLayout **l,
                     Qt::HitTestAccuracy accuracy) const;
@@ -488,7 +487,7 @@ class QTextDocumentLayoutPrivate : public QAbstractTextDocumentLayoutPrivate
 
    void layoutBlock(const QTextBlock &bl, int blockPosition, const QTextBlockFormat &blockFormat,
                     QTextLayoutStruct *layoutStruct, int layoutFrom, int layoutTo, const QTextBlockFormat *previousBlockFormat);
-   void layoutFlow(QTextFrame::Iterator it, QTextLayoutStruct *layoutStruct, int layoutFrom, int layoutTo,
+   void layoutFlow(QTextFrame::iterator it, QTextLayoutStruct *layoutStruct, int layoutFrom, int layoutTo,
                    QFixed width = 0);
    void pageBreakInsideTable(QTextTable *table, QTextLayoutStruct *layoutStruct);
 
@@ -498,8 +497,8 @@ class QTextDocumentLayoutPrivate : public QAbstractTextDocumentLayoutPrivate
 
    QVector<QCheckPoint> checkPoints;
 
-   QTextFrame::Iterator frameIteratorForYPosition(QFixed y) const;
-   QTextFrame::Iterator frameIteratorForTextPosition(int position) const;
+   QTextFrame::iterator frameIteratorForYPosition(QFixed y) const;
+   QTextFrame::iterator frameIteratorForTextPosition(int position) const;
 
    void ensureLayouted(QFixed y) const;
    void ensureLayoutedByPosition(int position) const;
@@ -527,7 +526,7 @@ QTextDocumentLayoutPrivate::QTextDocumentLayoutPrivate()
    contentHasAlignment = false;
 }
 
-QTextFrame::Iterator QTextDocumentLayoutPrivate::frameIteratorForYPosition(QFixed y) const
+QTextFrame::iterator QTextDocumentLayoutPrivate::frameIteratorForYPosition(QFixed y) const
 {
    QTextFrame *rootFrame = document->rootFrame();
 
@@ -536,7 +535,7 @@ QTextFrame::Iterator QTextDocumentLayoutPrivate::frameIteratorForYPosition(QFixe
       return rootFrame->begin();
    }
 
-   QVector<QCheckPoint>::ConstIterator checkPoint = qLowerBound(checkPoints.begin(), checkPoints.end(), y);
+   QVector<QCheckPoint>::const_iterator checkPoint = std::lower_bound(checkPoints.begin(), checkPoints.end(), y);
    if (checkPoint == checkPoints.end()) {
       return rootFrame->begin();
    }
@@ -549,7 +548,7 @@ QTextFrame::Iterator QTextDocumentLayoutPrivate::frameIteratorForYPosition(QFixe
    return frameIteratorForTextPosition(position);
 }
 
-QTextFrame::Iterator QTextDocumentLayoutPrivate::frameIteratorForTextPosition(int position) const
+QTextFrame::iterator QTextDocumentLayoutPrivate::frameIteratorForTextPosition(int position) const
 {
    QTextFrame *rootFrame = docPrivate->rootFrame();
 
@@ -653,7 +652,7 @@ QTextDocumentLayoutPrivate::hitTest(QTextFrame *frame, const QFixedPoint &point,
       }
    }
 
-   QTextFrame::Iterator it = frame->begin();
+   QTextFrame::iterator it = frame->begin();
 
    if (frame == rootFrame) {
       it = frameIteratorForYPosition(relativePoint.y);
@@ -671,7 +670,7 @@ QTextDocumentLayoutPrivate::hitTest(QTextFrame *frame, const QFixedPoint &point,
 }
 
 QTextDocumentLayoutPrivate::HitPoint
-QTextDocumentLayoutPrivate::hitTest(QTextFrame::Iterator it, HitPoint hit, const QFixedPoint &p,
+QTextDocumentLayoutPrivate::hitTest(QTextFrame::iterator it, HitPoint hit, const QFixedPoint &p,
                                     int *position, QTextLayout **l, Qt::HitTestAccuracy accuracy) const
 {
    INC_INDENT;
@@ -713,14 +712,14 @@ QTextDocumentLayoutPrivate::hitTest(QTextTable *table, const QFixedPoint &point,
 {
    QTextTableData *td = static_cast<QTextTableData *>(data(table));
 
-   QVector<QFixed>::ConstIterator rowIt = qLowerBound(td->rowPositions.constBegin(), td->rowPositions.constEnd(), point.y);
+   QVector<QFixed>::const_iterator rowIt = std::lower_bound(td->rowPositions.constBegin(), td->rowPositions.constEnd(), point.y);
    if (rowIt == td->rowPositions.constEnd()) {
       rowIt = td->rowPositions.constEnd() - 1;
    } else if (rowIt != td->rowPositions.constBegin()) {
       --rowIt;
    }
 
-   QVector<QFixed>::ConstIterator colIt = qLowerBound(td->columnPositions.constBegin(), td->columnPositions.constEnd(),
+   QVector<QFixed>::const_iterator colIt = std::lower_bound(td->columnPositions.constBegin(), td->columnPositions.constEnd(),
                                           point.x);
    if (colIt == td->columnPositions.constEnd()) {
       colIt = td->columnPositions.constEnd() - 1;
@@ -1043,14 +1042,14 @@ void QTextDocumentLayoutPrivate::drawFrame(const QPointF &offset, QPainter *pain
       int lastRow = rows;
 
       if (context.clip.isValid()) {
-         QVector<QFixed>::ConstIterator rowIt = qLowerBound(td->rowPositions.constBegin(), td->rowPositions.constEnd(),
+         QVector<QFixed>::const_iterator rowIt = std::lower_bound(td->rowPositions.constBegin(), td->rowPositions.constEnd(),
                                                 QFixed::fromReal(context.clip.top() - off.y()));
          if (rowIt != td->rowPositions.constEnd() && rowIt != td->rowPositions.constBegin()) {
             --rowIt;
             firstRow = rowIt - td->rowPositions.constBegin();
          }
 
-         rowIt = qUpperBound(td->rowPositions.constBegin(), td->rowPositions.constEnd(),
+         rowIt = std::upper_bound(td->rowPositions.constBegin(), td->rowPositions.constEnd(),
                              QFixed::fromReal(context.clip.bottom() - off.y()));
          if (rowIt != td->rowPositions.constEnd()) {
             ++rowIt;
@@ -1086,7 +1085,7 @@ void QTextDocumentLayoutPrivate::drawFrame(const QPointF &offset, QPainter *pain
    } else {
       drawFrameDecoration(painter, frame, fd, context.clip, frameRect);
 
-      QTextFrame::Iterator it = frame->begin();
+      QTextFrame::iterator it = frame->begin();
 
       if (frame == docPrivate->rootFrame()) {
          it = frameIteratorForYPosition(QFixed::fromReal(context.clip.top()));
@@ -1213,14 +1212,14 @@ void QTextDocumentLayoutPrivate::drawTableCell(const QRectF &cellRect, QPainter 
 
 void QTextDocumentLayoutPrivate::drawFlow(const QPointF &offset, QPainter *painter,
       const QAbstractTextDocumentLayout::PaintContext &context,
-      QTextFrame::Iterator it, const QList<QTextFrame *> &floats, QTextBlock *cursorBlockNeedingRepaint) const
+      QTextFrame::iterator it, const QList<QTextFrame *> &floats, QTextBlock *cursorBlockNeedingRepaint) const
 {
    Q_Q(const QTextDocumentLayout);
    const bool inRootFrame = (!it.atEnd() && it.parentFrame() && it.parentFrame()->parentFrame() == 0);
 
-   QVector<QCheckPoint>::ConstIterator lastVisibleCheckPoint = checkPoints.end();
+   QVector<QCheckPoint>::const_iterator lastVisibleCheckPoint = checkPoints.end();
    if (inRootFrame && context.clip.isValid()) {
-      lastVisibleCheckPoint = qLowerBound(checkPoints.begin(), checkPoints.end(), QFixed::fromReal(context.clip.bottom()));
+      lastVisibleCheckPoint = std::lower_bound(checkPoints.begin(), checkPoints.end(), QFixed::fromReal(context.clip.bottom()));
    }
 
    QTextBlock previousBlock;
@@ -2247,7 +2246,7 @@ QRectF QTextDocumentLayoutPrivate::layoutFrame(QTextFrame *f, int layoutFrom, in
       idealWidth = 0;   // reset
    }
 
-   QTextFrame::Iterator it = f->begin();
+   QTextFrame::iterator it = f->begin();
    layoutFlow(it, &layoutStruct, layoutFrom, layoutTo);
 
    QFixed maxChildFrameWidth = 0;
@@ -2284,7 +2283,7 @@ QRectF QTextDocumentLayoutPrivate::layoutFrame(QTextFrame *f, int layoutFrom, in
    return layoutStruct.updateRect;
 }
 
-void QTextDocumentLayoutPrivate::layoutFlow(QTextFrame::Iterator it, QTextLayoutStruct *layoutStruct,
+void QTextDocumentLayoutPrivate::layoutFlow(QTextFrame::iterator it, QTextLayoutStruct *layoutStruct,
       int layoutFrom, int layoutTo, QFixed width)
 {
    LDEBUG << "layoutFlow from=" << layoutFrom << "to=" << layoutTo;
@@ -2292,14 +2291,14 @@ void QTextDocumentLayoutPrivate::layoutFlow(QTextFrame::Iterator it, QTextLayout
 
    fd->currentLayoutStruct = layoutStruct;
 
-   QTextFrame::Iterator previousIt;
+   QTextFrame::iterator previousIt;
 
    const bool inRootFrame = (it.parentFrame() == document->rootFrame());
    if (inRootFrame) {
       bool redoCheckPoints = layoutStruct->fullLayout || checkPoints.isEmpty();
 
       if (!redoCheckPoints) {
-         QVector<QCheckPoint>::Iterator checkPoint = qLowerBound(checkPoints.begin(), checkPoints.end(), layoutFrom);
+         QVector<QCheckPoint>::iterator checkPoint = std::lower_bound(checkPoints.begin(), checkPoints.end(), layoutFrom);
          if (checkPoint != checkPoints.end()) {
             if (checkPoint != checkPoints.begin()) {
                --checkPoint;
@@ -2502,7 +2501,7 @@ void QTextDocumentLayoutPrivate::layoutFlow(QTextFrame::Iterator it, QTextLayout
          previousIt = it;
          ++it;
       } else {
-         QTextFrame::Iterator lastIt;
+         QTextFrame::iterator lastIt;
          if (!previousIt.atEnd()) {
             lastIt = previousIt;
          }
@@ -2789,7 +2788,7 @@ void QTextDocumentLayoutPrivate::layoutBlock(const QTextBlock &bl, int blockPosi
                } else {
                   right -= text_indent;
                }
-               line.setLineWidth(qMax<qreal>(line.naturalTextWidth(), (right - left).toReal()));
+               line.setLineWidth(qMax(line.naturalTextWidth(), (right - left).toReal()));
 
                if (haveWordOrAnyWrapMode) {
                   option.setWrapMode(QTextOption::WordWrap);
@@ -2808,8 +2807,9 @@ void QTextDocumentLayoutPrivate::layoutBlock(const QTextBlock &bl, int blockPosi
             layoutStruct->newPage();
 
             floatMargins(layoutStruct->y, layoutStruct, &left, &right);
-            left = qMax(left, l);
+            left  = qMax(left, l);
             right = qMin(right, r);
+
             if (dir == Qt::LeftToRight) {
                left += text_indent;
             } else {
@@ -2819,8 +2819,9 @@ void QTextDocumentLayoutPrivate::layoutBlock(const QTextBlock &bl, int blockPosi
 
          line.setPosition(QPointF((left - layoutStruct->x_left).toReal(), (layoutStruct->y - cy - lineAdjustment).toReal()));
          layoutStruct->y += lineHeight;
-         layoutStruct->contentsWidth
-            = qMax<QFixed>(layoutStruct->contentsWidth, QFixed::fromReal(line.x() + line.naturalTextWidth()) + totalRightMargin);
+
+         layoutStruct->contentsWidth = qMax(layoutStruct->contentsWidth, QFixed::fromReal(line.x() +
+                  line.naturalTextWidth()) + totalRightMargin);
 
          // position floats
          for (int i = 0; i < layoutStruct->pendingFloats.size(); ++i) {

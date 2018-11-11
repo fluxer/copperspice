@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -36,14 +33,14 @@
 
 #elif defined(Q_OS_WIN)
 #   include <qt_windows.h>
-#   include <qwineventnotifier_p.h>
+#   include <qwineventnotifier.h>
 
 #else
 #   include <qabstractsocketengine_p.h>
 #   include <qsocketnotifier.h>
 #endif
 
-QT_BEGIN_NAMESPACE
+
 
 class QLocalServerPrivate
 {
@@ -54,16 +51,19 @@ class QLocalServerPrivate
 #if !defined(QT_LOCALSOCKET_TCP) && !defined(Q_OS_WIN)
       listenSocket(-1), socketNotifier(0),
 #endif
-      maxPendingConnections(30), error(QAbstractSocket::UnknownSocketError) {
+      maxPendingConnections(30), error(QAbstractSocket::UnknownSocketError),
+      socketOptions(QLocalServer::NoOptions) {
    }
 
    virtual ~QLocalServerPrivate() {}
 
    void init();
    bool listen(const QString &name);
+   bool listen(qintptr socketDescriptor);
    static bool removeServer(const QString &name);
    void closeServer();
    void waitForNewConnection(int msec, bool *timedOut);
+
    void _q_onNewConnection();
 
 #if defined(QT_LOCALSOCKET_TCP)
@@ -83,6 +83,7 @@ class QLocalServerPrivate
    QList<Listener> listeners;
    HANDLE eventHandle;
    QWinEventNotifier *connectionEventNotifier;
+
 #else
    void setError(const QString &function);
 
@@ -96,13 +97,14 @@ class QLocalServerPrivate
    QQueue<QLocalSocket *> pendingConnections;
    QString errorString;
    QAbstractSocket::SocketError error;
+   QLocalServer::SocketOptions socketOptions;
 
  protected:
    QLocalServer *q_ptr;
 
 };
 
-QT_END_NAMESPACE
+
 
 #endif // QT_NO_LOCALSERVER
 

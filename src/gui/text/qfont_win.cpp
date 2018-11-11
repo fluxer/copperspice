@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -44,19 +41,24 @@ extern HDC   shared_dc();                // common dc for all fonts
 extern QFont::Weight weightFromInteger(int weight); // qfontdatabase.cpp
 
 // ### maybe move to qapplication_win
-QFont qt_LOGFONTtoQFont(LOGFONT &lf, bool /*scale*/)
+QFont qt_LOGFONTtoQFont(LOGFONT &lf, bool scale)
 {
-   QString family = QString::fromWCharArray(lf.lfFaceName);
+   std::wstring tmp(lf.lfFaceName);
+   QString family = QString::fromStdWString(tmp);
+
    QFont qf(family);
    qf.setItalic(lf.lfItalic);
+
    if (lf.lfWeight != FW_DONTCARE) {
       qf.setWeight(weightFromInteger(lf.lfWeight));
    }
+
    int lfh = qAbs(lf.lfHeight);
    qf.setPointSizeF(lfh * 72.0 / GetDeviceCaps(shared_dc(), LOGPIXELSY));
    qf.setUnderline(false);
    qf.setOverline(false);
    qf.setStrikeOut(false);
+
    return qf;
 }
 
@@ -98,7 +100,7 @@ void QFont::cleanup()
 
 HFONT QFont::handle() const
 {
-   QFontEngine *engine = d->engineForScript(QUnicodeTables::Common);
+   QFontEngine *engine = d->engineForScript(QChar::Script_Common);
    Q_ASSERT(engine != 0);
    if (engine->type() == QFontEngine::Multi) {
       engine = static_cast<QFontEngineMulti *>(engine)->engine(0);

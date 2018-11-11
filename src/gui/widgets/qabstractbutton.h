@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -72,7 +69,7 @@ class Q_GUI_EXPORT QAbstractButton : public QWidget
    GUI_CS_PROPERTY_DESIGNABLE(down, false)
 
  public:
-   explicit QAbstractButton(QWidget *parent = 0);
+   explicit QAbstractButton(QWidget *parent = nullptr);
    ~QAbstractButton();
 
    void setText(const QString &text);
@@ -133,23 +130,23 @@ class Q_GUI_EXPORT QAbstractButton : public QWidget
    GUI_CS_SIGNAL_2(toggled, checked)
 
  protected:
-   virtual void paintEvent(QPaintEvent *e) = 0;
+   void paintEvent(QPaintEvent *e) override = 0;
    virtual bool hitButton(const QPoint &pos) const;
    virtual void checkStateSet();
    virtual void nextCheckState();
 
-   bool event(QEvent *e);
-   void keyPressEvent(QKeyEvent *e);
-   void keyReleaseEvent(QKeyEvent *e);
-   void mousePressEvent(QMouseEvent *e);
-   void mouseReleaseEvent(QMouseEvent *e);
-   void mouseMoveEvent(QMouseEvent *e);
-   void focusInEvent(QFocusEvent *e);
-   void focusOutEvent(QFocusEvent *e);
-   void changeEvent(QEvent *e);
-   void timerEvent(QTimerEvent *e);
+   bool event(QEvent *e) override;
+   void keyPressEvent(QKeyEvent *e) override;
+   void keyReleaseEvent(QKeyEvent *e) override;
+   void mousePressEvent(QMouseEvent *e) override;
+   void mouseReleaseEvent(QMouseEvent *e) override;
+   void mouseMoveEvent(QMouseEvent *e) override;
+   void focusInEvent(QFocusEvent *e) override;
+   void focusOutEvent(QFocusEvent *e) override;
+   void changeEvent(QEvent *e) override;
+   void timerEvent(QTimerEvent *e) override;
 
-   QAbstractButton(QAbstractButtonPrivate &dd, QWidget *parent = 0);
+   QAbstractButton(QAbstractButtonPrivate &dd, QWidget *parent = nullptr);
 
  private:
    Q_DECLARE_PRIVATE(QAbstractButton)

@@ -2,18 +2,12 @@
 CORE_DIRS += src/core/tools
 
 CORE_PUBLIC_INCLUDES += \
-	QAbstractConcatenable \
 	QArrayData \
 	QBitArray \
 	QBitRef \
 	QByteArray \
 	QByteRef \
-	QByteArrayMatcher \
 	QCache \
-	QChar \
-	QCharRef \
-	QConcatenable \
-	QConstString \
 	QContiguousCache \
 	QContiguousCacheData \
 	QContiguousCacheTypedData \
@@ -25,15 +19,9 @@ CORE_PUBLIC_INCLUDES += \
 	QEasingCurve \
 	QElapsedTimer \
 	QExplicitlySharedDataPointer \
+	QFlatMap \
 	QHash \
-	QHashData \
-	QHashDummyNode \
-	QHashDummyValue \
 	QHashIterator \
-	QHashNode \
-	QLatin1Char \
-	QLatin1Literal \
-	QLatin1String \
 	QLine \
 	QLineF \
 	QLinkedList \
@@ -41,15 +29,12 @@ CORE_PUBLIC_INCLUDES += \
 	QLinkedListIterator \
 	QLinkedListNode \
 	QList \
-	QListData \
 	QListIterator \
 	QLocale \
 	QMap \
-	QMapData \
 	QMapIterator \
-	QMapNode \
-	QMapPayloadNode \
 	QMargins \
+	QMessageAuthenticationCode \
 	QMultiHash \
 	QMultiMap \
 	QMutableHashIterator \
@@ -65,7 +50,6 @@ CORE_PUBLIC_INCLUDES += \
 	QQueue \
 	QRect \
 	QRectF \
-	QRegExp \
 	QScopedArrayPointer \
 	QScopedPointer \
 	QScopedPointerArrayDeleter \
@@ -80,13 +64,8 @@ CORE_PUBLIC_INCLUDES += \
 	QSize \
 	QSizeF \
 	QStack \
-	QStdWString \
-	QString \
-	QStringBuilder \
 	QStringList \
 	QStringListIterator \
-	QStringMatcher \
-	QStringRef \
 	QSystemLocale \
 	QTextBoundaryFinder \
 	QTime \
@@ -101,7 +80,6 @@ CORE_PUBLIC_INCLUDES += \
 	QtContainerFwd
 
 CORE_TOOLS_INCLUDES = \
-	qabstractconcatenable.h \
 	qalgorithms.h \
 	qarraydata.h \
 	qarraydataops.h \
@@ -109,12 +87,7 @@ CORE_TOOLS_INCLUDES = \
 	qbitref.h \
 	qbytearray.h \
 	qbyteref.h \
-	qbytearraymatcher.h \
 	qcache.h \
-	qchar.h \
-	qcharref.h \
-	qconcatenable.h \
-	qconststring.h \
 	qcontainerfwd.h \
 	qcontiguouscache.h \
 	qcontiguouscachedata.h \
@@ -127,16 +100,11 @@ CORE_TOOLS_INCLUDES = \
 	qeasingcurve.h \
 	qelapsedtimer.h \
 	qexplicitlyshareddatapointer.h \
+	qflatmap.h \
 	qhash.h \
-	qhashdata.h \
-	qhashdummynode.h \
-	qhashdummyvalue.h \
+	qhashfunc.h \
 	qhashfwd.h \
 	qhashiterator.h \
-	qhashnode.h \
-	qlatin1char.h \
-	qlatin1literal.h \
-	qlatin1string.h \
 	qline.h \
 	qlinef.h \
 	qlinkedlist.h \
@@ -144,15 +112,13 @@ CORE_TOOLS_INCLUDES = \
 	qlinkedlistiterator.h \
 	qlinkedlistnode.h \
 	qlist.h \
-	qlistdata.h \
 	qlistiterator.h \
 	qlocale.h \
 	qmap.h \
-	qmapdata.h \
+	qmapfunc.h \
 	qmapiterator.h \
-	qmapnode.h \
-	qmappayloadnode.h \
 	qmargins.h \
+	qmessageauthenticationcode.h \
 	qmultihash.h \
 	qmultimap.h \
 	qmutablehashiterator.h \
@@ -169,7 +135,6 @@ CORE_TOOLS_INCLUDES = \
 	qrect.h \
 	qrectf.h \
 	qrefcount.h \
-	qregexp.h \
 	qscopedarraypointer.h \
 	qscopedpointer.h \
 	qscopedpointerarraydeleter.h \
@@ -185,13 +150,8 @@ CORE_TOOLS_INCLUDES = \
 	qsize.h \
 	qsizef.h \
 	qstack.h \
-	qstdwstring.h \
-	qstring.h \
-	qstringbuilder.h \
 	qstringlist.h \
 	qstringlistiterator.h \
-	qstringmatcher.h \
-	qstringref.h \
 	qsystemlocale.h \
 	qtalgorithms.h \
 	qtcontainerfwd.h \
@@ -225,16 +185,16 @@ CORE_PUBLIC_INCLUDES += $(CORE_TOOLS_PUBLIC_INCLUDES)
 CORE_INCLUDES += $(CORE_TOOLS_INCLUDES)
 CORE_PRIVATE_INCLUDES += $(CORE_TOOLS_PRIVATE_INCLUDES)
 
-lib_libCsCore1_la_SOURCES += \
+lib_libCsCore@BUILD_ABI@_la_SOURCES += \
 	src/core/tools/qarraydata.cpp \
 	src/core/tools/qbitarray.cpp \
 	src/core/tools/qbytearray.cpp \
-	src/core/tools/qbytearraymatcher.cpp \
 	src/core/tools/qcryptographichash.cpp \
 	src/core/tools/qdatetime.cpp \
 	src/core/tools/qeasingcurve.cpp \
 	src/core/tools/qelapsedtimer.cpp \
 	src/core/tools/qfreelist.cpp \
+	src/core/tools/qflatmap.cpp \
 	src/core/tools/qhash.cpp \
 	src/core/tools/qline.cpp \
 	src/core/tools/qlinkedlist.cpp \
@@ -244,23 +204,21 @@ lib_libCsCore1_la_SOURCES += \
 	src/core/tools/qpoint.cpp \
 	src/core/tools/qmap.cpp \
 	src/core/tools/qmargins.cpp \
+	src/core/tools/qmessageauthenticationcode.cpp \
 	src/core/tools/qcontiguouscache.cpp \
 	src/core/tools/qcommandlineoption.cpp \
 	src/core/tools/qcommandlineparser.cpp \
 	src/core/tools/qrect.cpp \
 	src/core/tools/qrefcount.cpp \
-	src/core/tools/qregexp.cpp \
 	src/core/tools/qshareddata.cpp \
 	src/core/tools/qsharedpointer.cpp \
 	src/core/tools/qsimd.cpp \
 	src/core/tools/qsize.cpp \
-	src/core/tools/qstring.cpp \
-	src/core/tools/qstringbuilder.cpp \
 	src/core/tools/qstringlist.cpp \
 	src/core/tools/qtextboundaryfinder.cpp \
 	src/core/tools/qtimeline.cpp \
 	src/core/tools/qvector.cpp \
-	src/core/tools/qvsnprintf.cpp \
+	src/core/tools/qharfbuzz.cpp \
 	src/3rdparty/harfbuzz/src/harfbuzz-buffer.c \
 	src/3rdparty/harfbuzz/src/harfbuzz-gdef.c \
 	src/3rdparty/harfbuzz/src/harfbuzz-gsub.c \
@@ -268,38 +226,33 @@ lib_libCsCore1_la_SOURCES += \
 	src/3rdparty/harfbuzz/src/harfbuzz-impl.c \
 	src/3rdparty/harfbuzz/src/harfbuzz-open.c \
 	src/3rdparty/harfbuzz/src/harfbuzz-stream.c \
-	src/3rdparty/harfbuzz/src/harfbuzz-shaper-all.cpp \
-	src/core/tools/qharfbuzz.cpp
+	src/3rdparty/harfbuzz/src/harfbuzz-shaper-all.cpp
 
-
-# FIXME platform specific
-#  qelapsedtimer_mac.cpp
-#  qlocale_mac.mm
-#  qelapsedtimer_generic.cpp
 
 if OSTYPE_WIN
-lib_libCsCore1_la_SOURCES += \
+lib_libCsCore@BUILD_ABI@_la_SOURCES += \
 	src/core/tools/qelapsedtimer_win.cpp \
 	src/core/tools/qlocale_win.cpp
 endif
 
 if OSTYPE_LINUX
-lib_libCsCore1_la_SOURCES += \
+lib_libCsCore@BUILD_ABI@_la_SOURCES += \
 	src/core/tools/qelapsedtimer_unix.cpp \
 	src/core/tools/qlocale_unix.cpp
 endif
 
 if OSTYPE_BSD
-lib_libCsCore1_la_SOURCES += \
-        src/core/tools/qelapsedtimer_unix.cpp \
-        src/core/tools/qlocale_unix.cpp
+lib_libCsCore@BUILD_ABI@_la_SOURCES += \
+	src/core/tools/qelapsedtimer_unix.cpp \
+	src/core/tools/qlocale_unix.cpp
 endif
 
 
 if OSTYPE_DARWIN
-lib_libCsCore1_la_SOURCES += \
+lib_libCsCore@BUILD_ABI@_la_SOURCES += \
 	src/core/tools/qelapsedtimer_mac.cpp \
-	src/core/tools/qlocale_mac.mm
+	src/core/tools/qlocale_mac.mm \
+	src/core/tools/qbytearray_mac.mm
 endif
 
 
@@ -307,34 +260,41 @@ noinst_HEADERS+=$(patsubst %,src/core/tools/%,$(CORE_TOOLS_INCLUDES)) \
 		$(patsubst %,src/core/tools/%,$(CORE_TOOLS_PRIVATE_INCLUDES)) \
 		src/3rdparty/md5/md5.h \
 		src/3rdparty/md4/md4.h \
-	        src/3rdparty/harfbuzz/src/harfbuzz-buffer-private.h \
-	        src/3rdparty/harfbuzz/src/harfbuzz-buffer.h \
-	        src/3rdparty/harfbuzz/src/harfbuzz-dump.h \
-	        src/3rdparty/harfbuzz/src/harfbuzz-external.h \
-	        src/3rdparty/harfbuzz/src/harfbuzz-gdef.h \
-	        src/3rdparty/harfbuzz/src/harfbuzz-gdef-private.h \
-	        src/3rdparty/harfbuzz/src/harfbuzz-global.h \
-	        src/3rdparty/harfbuzz/src/harfbuzz-gpos.h \
-	        src/3rdparty/harfbuzz/src/harfbuzz-gpos-private.h \
-	        src/3rdparty/harfbuzz/src/harfbuzz-gsub-private.h \
-	        src/3rdparty/harfbuzz/src/harfbuzz-gsub.h \
-	        src/3rdparty/harfbuzz/src/harfbuzz-impl.h \
-	        src/3rdparty/harfbuzz/src/harfbuzz.h \
-	        src/3rdparty/harfbuzz/src/harfbuzz-open-private.h \
-	        src/3rdparty/harfbuzz/src/harfbuzz-open.h \
-	        src/3rdparty/harfbuzz/src/harfbuzz-shape.h \
-	        src/3rdparty/harfbuzz/src/harfbuzz-shaper-private.h \
-	        src/3rdparty/harfbuzz/src/harfbuzz-shaper.h \
-	        src/3rdparty/harfbuzz/src/harfbuzz-stream-private.h \
-	        src/3rdparty/harfbuzz/src/harfbuzz-stream.h
+		src/3rdparty/harfbuzz/src/harfbuzz-buffer-private.h \
+		src/3rdparty/harfbuzz/src/harfbuzz-buffer.h \
+		src/3rdparty/harfbuzz/src/harfbuzz-dump.h \
+		src/3rdparty/harfbuzz/src/harfbuzz-external.h \
+		src/3rdparty/harfbuzz/src/harfbuzz-gdef.h \
+		src/3rdparty/harfbuzz/src/harfbuzz-gdef-private.h \
+		src/3rdparty/harfbuzz/src/harfbuzz-global.h \
+		src/3rdparty/harfbuzz/src/harfbuzz-gpos.h \
+		src/3rdparty/harfbuzz/src/harfbuzz-gpos-private.h \
+		src/3rdparty/harfbuzz/src/harfbuzz-gsub-private.h \
+		src/3rdparty/harfbuzz/src/harfbuzz-gsub.h \
+		src/3rdparty/harfbuzz/src/harfbuzz-impl.h \
+		src/3rdparty/harfbuzz/src/harfbuzz.h \
+		src/3rdparty/harfbuzz/src/harfbuzz-open-private.h \
+		src/3rdparty/harfbuzz/src/harfbuzz-open.h \
+		src/3rdparty/harfbuzz/src/harfbuzz-shape.h \
+		src/3rdparty/harfbuzz/src/harfbuzz-shaper-private.h \
+		src/3rdparty/harfbuzz/src/harfbuzz-shaper.h \
+		src/3rdparty/harfbuzz/src/harfbuzz-stream-private.h \
+		src/3rdparty/harfbuzz/src/harfbuzz-stream.h \
+		src/3rdparty/rfc6234/sha.h \
+		src/3rdparty/rfc6234/sha-private.h \
+		src/3rdparty/sha3/brg_endian.h \
+		src/3rdparty/sha3/KeccakSponge.h \
+		src/3rdparty/sha3/KeccakNISTInterface.h \
+		src/3rdparty/sha3/KeccakF-1600-int-set.h \
+		src/3rdparty/sha3/KeccakF-1600-interface.h \
+		src/3rdparty/sha3/KeccakF-1600-opt32-settings.h \
+		src/3rdparty/sha3/KeccakF-1600-opt64-settings.h
 
 
 EXTRA_DIST+=src/3rdparty/md5/md5.cpp \
 	    src/3rdparty/md4/md4.cpp \
 	    src/3rdparty/sha1/sha1.cpp \
 	    src/3rdparty/easing/easing.cpp \
-	    src/core/tools/qchar.cpp \
-	    src/core/tools/qstringmatcher.cpp \
 	    src/core/tools/qunicodetables.cpp \
 	    src/3rdparty/harfbuzz/src/harfbuzz-indic.cpp \
 	    src/3rdparty/harfbuzz/src/harfbuzz-shaper-all.cpp \
@@ -356,5 +316,16 @@ EXTRA_DIST+=src/3rdparty/md5/md5.cpp \
 	    src/3rdparty/harfbuzz/src/harfbuzz-open.c \
 	    src/3rdparty/harfbuzz/src/harfbuzz-stream.c \
 	    src/3rdparty/harfbuzz/src/harfbuzz-thai.c \
-	    src/3rdparty/harfbuzz/src/harfbuzz-tibetan.c
+	    src/3rdparty/harfbuzz/src/harfbuzz-tibetan.c \
+	    src/3rdparty/rfc6234/sha224-256.c \
+	    src/3rdparty/rfc6234/sha384-512.c \
+	    src/3rdparty/sha3/KeccakSponge.c \
+	    src/3rdparty/sha3/KeccakNISTInterface.c \
+	    src/3rdparty/sha3/KeccakF-1600-opt32.c \
+	    src/3rdparty/sha3/KeccakF-1600-opt64.c \
+	    src/3rdparty/sha3/KeccakF-1600-32-rvk.macros \
+	    src/3rdparty/sha3/KeccakF-1600-32.macros \
+	    src/3rdparty/sha3/KeccakF-1600-64.macros \
+	    src/3rdparty/sha3/KeccakF-1600-unrolling.macros
+
 

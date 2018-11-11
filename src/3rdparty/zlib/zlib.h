@@ -32,15 +32,10 @@
 #define ZLIB_H
 
 #include "zconf.h"
+#include "qglobal.h"
 
-#include "qconfig.h"
-#if defined(QT_VISIBILITY_AVAILABLE)
-# undef ZEXTERN
-# define ZEXTERN __attribute__((visibility("default")))
-#elif defined(QT_MAKEDLL)
-# undef ZEXTERN
-# define ZEXTERN __declspec(dllexport)
-#endif
+#undef ZEXTERN
+#define ZEXTERN Q_CORE_EXPORT
 
 #ifdef __cplusplus
 extern "C" {

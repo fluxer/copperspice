@@ -125,6 +125,8 @@
 #include "runtime/InitializeThreading.h"
 #include "wtf/Threading.h"
 
+#include <qhttpheader_p.h>
+
 #include <QApplication>
 #include <QBasicTimer>
 #include <QBitArray>
@@ -135,7 +137,6 @@
 #include <QDragMoveEvent>
 #include <QDropEvent>
 #include <QFileDialog>
-#include <QHttpRequestHeader>
 #include <QInputDialog>
 #include <QMessageBox>
 #include <QNetworkProxy>
@@ -376,8 +377,8 @@ QWebPagePrivate::QWebPagePrivate(QWebPage *qq)
     memset(actions, 0, sizeof(actions));
 
     PageGroup::setShouldTrackVisitedLinks(true);
-    
-#if ENABLE(NOTIFICATIONS)    
+
+#if ENABLE(NOTIFICATIONS)
     NotificationPresenterClientQt::notificationPresenter()->addClient();
 #endif
 }
@@ -397,7 +398,7 @@ QWebPagePrivate::~QWebPagePrivate()
 #endif
     delete settings;
     delete page;
-    
+
     if (inspector)
         inspector->setPage(0);
 
@@ -779,7 +780,7 @@ void QWebPagePrivate::handleClipboard(QEvent* ev, Qt::MouseButton button)
                 Pasteboard::generalPasteboard()->writeSelection(focusFrame->editor()->selectedRange().get(), focusFrame->editor()->canSmartCopyOrDelete(), focusFrame);
                 ev->setAccepted(true);
             }
-        } else if (button == Qt::MidButton) {
+        } else if (button == Qt::MiddleButton) {
             if (focusFrame && (focusFrame->editor()->canPaste() || focusFrame->editor()->canDHTMLPaste())) {
                 focusFrame->editor()->paste();
                 ev->setAccepted(true);
@@ -1199,16 +1200,23 @@ void QWebPagePrivate::dynamicPropertyChangeEvent(QDynamicPropertyChangeEvent* ev
         };
 
         QString p = q->property("_q_RepaintThrottlingPreset").toString();
+
         for (size_t i = 0; i < sizeof(presets) / sizeof(presets[0]); i++) {
-            if (p == QLatin1String(presets[i].name)) {
+
+            if (p == QString::fromLatin1(presets[i].name)) {
+
                 FrameView::setRepaintThrottlingDeferredRepaintDelay(
                         presets[i].deferredRepaintDelay);
+
                 FrameView::setRepaintThrottlingnInitialDeferredRepaintDelayDuringLoading(
                         presets[i].initialDeferredRepaintDelayDuringLoading);
+
                 FrameView::setRepaintThrottlingMaxDeferredRepaintDelayDuringLoading(
                         presets[i].maxDeferredRepaintDelayDuringLoading);
+
                 FrameView::setRepaintThrottlingDeferredRepaintDelayIncrementDuringLoading(
                         presets[i].deferredRepaintDelayIncrementDuringLoading);
+
                 break;
             }
         }
@@ -2121,7 +2129,7 @@ void QWebPage::javaScriptAlert(QWebFrame *frame, const QString& msg)
     Q_UNUSED(frame)
 #ifndef QT_NO_MESSAGEBOX
     QWidget* parent = (d->client) ? d->client->ownerWidget() : 0;
-    QMessageBox::information(parent, tr("JavaScript Alert - %1").arg(mainFrame()->url().host()), Qt::escape(msg), QMessageBox::Ok);
+    QMessageBox::information(parent, tr("JavaScript Alert - %1").formatArg(mainFrame()->url().host()), msg.toHtmlEscaped(), QMessageBox::Ok);
 #endif
 }
 
@@ -2138,7 +2146,8 @@ bool QWebPage::javaScriptConfirm(QWebFrame *frame, const QString& msg)
     return true;
 #else
     QWidget* parent = (d->client) ? d->client->ownerWidget() : 0;
-    return QMessageBox::Yes == QMessageBox::information(parent, tr("JavaScript Confirm - %1").arg(mainFrame()->url().host()), Qt::escape(msg), QMessageBox::Yes, QMessageBox::No);
+    return QMessageBox::Yes == QMessageBox::information(parent, tr("JavaScript Confirm - %1")
+                  .formatArg(mainFrame()->url().host()), msg.toHtmlEscaped(), QMessageBox::Yes, QMessageBox::No);
 #endif
 }
 
@@ -2156,9 +2165,12 @@ bool QWebPage::javaScriptPrompt(QWebFrame *frame, const QString& msg, const QStr
 {
     Q_UNUSED(frame)
     bool ok = false;
+
 #ifndef QT_NO_INPUTDIALOG
     QWidget* parent = (d->client) ? d->client->ownerWidget() : 0;
-    QString x = QInputDialog::getText(parent, tr("JavaScript Prompt - %1").arg(mainFrame()->url().host()), Qt::escape(msg), QLineEdit::Normal, defaultValue, &ok);
+    QString x = QInputDialog::getText(parent, tr("JavaScript Prompt - %1")
+                  .formatArg(mainFrame()->url().host()), msg.toHtmlEscaped(), QLineEdit::Normal, defaultValue, &ok);
+
     if (ok && result)
         *result = x;
 #endif
@@ -2184,7 +2196,10 @@ bool QWebPage::shouldInterruptJavaScript()
     return false;
 #else
     QWidget* parent = (d->client) ? d->client->ownerWidget() : 0;
-    return QMessageBox::Yes == QMessageBox::information(parent, tr("JavaScript Problem - %1").arg(mainFrame()->url().host()), tr("The script on this page appears to have a problem. Do you want to stop the script?"), QMessageBox::Yes, QMessageBox::No);
+
+    return QMessageBox::Yes == QMessageBox::information(parent, tr("JavaScript Problem - %1")
+                  .formatArg(mainFrame()->url().host()), tr("The script on this page appears to have a problem. Do you want to stop the script?"),
+                  QMessageBox::Yes, QMessageBox::No);
 #endif
 }
 
@@ -3325,7 +3340,7 @@ void QWebPage::updatePositionDependentActions(const QPoint &pos)
 
     d->page->contextMenuController()->setHitTestResult(result);
     d->page->contextMenuController()->populate();
-    
+
 #if ENABLE(INSPECTOR)
     if (d->page->inspectorController()->enabled())
         d->page->contextMenuController()->addInspectElementItem();
@@ -3565,7 +3580,7 @@ bool QWebPage::extension(Extension extension, const ExtensionOption *option, Ext
         // FIXME: do not ignore suggestedFiles
         QStringList suggestedFiles = static_cast<const ChooseMultipleFilesExtensionOption*>(option)->suggestedFileNames;
         QWidget* parent = (d->client) ? d->client->ownerWidget() : 0;
-        QStringList names = QFileDialog::getOpenFileNames(parent, QString::null);
+        QStringList names = QFileDialog::getOpenFileNames(parent, QString());
         static_cast<ChooseMultipleFilesExtensionReturn*>(output)->fileNames = names;
         return true;
     }
@@ -3656,11 +3671,12 @@ QWebSettings *QWebPage::settings() const
 QString QWebPage::chooseFile(QWebFrame *parentFrame, const QString& suggestedFile)
 {
     Q_UNUSED(parentFrame)
+
 #ifndef QT_NO_FILEDIALOG
     QWidget* parent = (d->client) ? d->client->ownerWidget() : 0;
-    return QFileDialog::getOpenFileName(parent, QString::null, suggestedFile);
+    return QFileDialog::getOpenFileName(parent, QString(), suggestedFile);
 #else
-    return QString::null;
+    return QString();
 #endif
 }
 
@@ -3728,7 +3744,7 @@ QWebPluginFactory *QWebPage::pluginFactory() const
     The default implementation returns the following value:
 
     "Mozilla/5.0 (%Platform%%Security%%Subplatform%) AppleWebKit/%WebKitVersion% (KHTML, like Gecko) %AppVersion Safari/%WebKitVersion%"
-  
+
     In this string the following values are replaced at run-time:
     \list
     \o %Platform% expands to the windowing system followed by "; " if it is not Windows (e.g. "X11; ").
@@ -3745,9 +3761,8 @@ QString QWebPage::userAgentForUrl(const QUrl&) const
     static QString secondPart;
     static QString thirdPart;
 
-    if (firstPart.isNull() || secondPart.isNull() || thirdPart.isNull()) {
+    if (firstPart.isEmpty() || secondPart.isEmpty() || thirdPart.isEmpty()) {
         QString firstPartTemp;
-        firstPartTemp.reserve(150);
         firstPartTemp += QString::fromLatin1("Mozilla/5.0 ("
 
     // Platform
@@ -3764,9 +3779,9 @@ QString QWebPage::userAgentForUrl(const QUrl&) const
 #endif
     );
 
-#if defined(QT_NO_OPENSSL)
-        // No SSL support
-        firstPartTemp += QString::fromLatin1("N; ");
+#if ! defined(QT_SSL)
+   // No SSL support
+   firstPartTemp += QString::fromLatin1("N; ");
 #endif
 
         // Operating system
@@ -3781,6 +3796,8 @@ QString QWebPage::userAgentForUrl(const QUrl&) const
 
 #elif defined Q_OS_BSD4
         firstPartTemp += QString::fromLatin1("BSD Four");
+#elif defined Q_OS_DRAGONFLY
+        firstPartTemp += QString::fromLatin1("DragonFly");
 #elif defined Q_OS_FREEBSD
         firstPartTemp += QString::fromLatin1("FreeBSD");
 #elif defined Q_OS_HPUX
@@ -3826,7 +3843,6 @@ QString QWebPage::userAgentForUrl(const QUrl&) const
         firstPart = firstPartTemp;
 
         QString secondPartTemp;
-        secondPartTemp.reserve(150);
         secondPartTemp += QString::fromLatin1(") ");
 
         // webkit/qt version
@@ -3839,15 +3855,15 @@ QString QWebPage::userAgentForUrl(const QUrl&) const
         secondPart = secondPartTemp;
 
         QString thirdPartTemp;
-        thirdPartTemp.reserve(150);
 
         thirdPartTemp += QLatin1String(" Safari/");
         thirdPartTemp += qWebKitVersion();
         thirdPartTemp.squeeze();
         thirdPart = thirdPartTemp;
-        Q_ASSERT(!firstPart.isNull());
-        Q_ASSERT(!secondPart.isNull());
-        Q_ASSERT(!thirdPart.isNull());
+
+        Q_ASSERT(!firstPart.isEmpty());
+        Q_ASSERT(!secondPart.isEmpty());
+        Q_ASSERT(!thirdPart.isEmpty());
     }
 
     // Application name/version
@@ -3907,7 +3923,7 @@ void QWebPage::_q_cleanupLeakMessages()
 	d->_q_cleanupLeakMessages();
 }
 
-#ifndef QT_NO_ACTION  
+#ifndef QT_NO_ACTION
 void QWebPage::_q_webActionTriggered(bool checked)
 {
    //Q_D(ErrorPageExtensionReturn);

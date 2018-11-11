@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -51,18 +48,22 @@ static bool read_xbm_header(QIODevice *device, int &w, int &h)
 {
    const int buflen = 300;
    const int maxlen = 4096;
-   char buf[buflen + 1];
-   QRegExp r1(QLatin1String("^#define[ \t]+[a-zA-Z0-9._]+[ \t]+"));
-   QRegExp r2(QLatin1String("[0-9]+"));
 
-   qint64 readBytes = 0;
+   char buffer[buflen + 1];
+   buffer[0] = '\0';
+
+   static QRegularExpression regExp1("^#define[ \t]+[a-zA-Z0-9._]+[ \t]+");
+   static QRegularExpression regExp2("[0-9]+");
+
+   QRegularExpressionMatch match1;
+   QRegularExpressionMatch match2;
+
+   qint64 readBytes      = 0;
    qint64 totalReadBytes = 0;
 
-   buf[0] = '\0';
-
    // skip initial comment, if any
-   while (buf[0] != '#') {
-      readBytes = device->readLine(buf, buflen);
+   while (buffer[0] != '#') {
+      readBytes = device->readLine(buffer, buflen);
 
       // if readBytes >= buflen, it's very probably not a C file
       if (readBytes <= 0 || readBytes >= buflen - 1) {
@@ -72,33 +73,42 @@ static bool read_xbm_header(QIODevice *device, int &w, int &h)
       // limit xbm headers to the first 4k in the file to prevent
       // excessive reads on non-xbm files
       totalReadBytes += readBytes;
+
       if (totalReadBytes >= maxlen) {
          return false;
       }
    }
 
-   buf[readBytes - 1] = '\0';
-   QString sbuf;
-   sbuf = QString::fromLatin1(buf);
+   buffer[readBytes - 1] = '\0';
+   QString str_buffer = QString::fromLatin1(buffer);
 
    // "#define .._width <num>"
-   if (r1.indexIn(sbuf) == 0 &&
-         r2.indexIn(sbuf, r1.matchedLength()) == r1.matchedLength()) {
-      w = QByteArray(&buf[r1.matchedLength()]).trimmed().toInt();
+   match1 = regExp1.match(str_buffer);
+
+   if (match1.hasMatch())  {
+      match2 = regExp2.match(str_buffer, match1.capturedEnd(0));
+
+      if (match2.capturedStart(0) == match1.capturedEnd(0)) {
+         w = QByteArray(&buffer[match1.capturedLength(0)]).trimmed().toInt();
+      }
    }
 
    // "#define .._height <num>"
-   readBytes = device->readLine(buf, buflen);
+   readBytes = device->readLine(buffer, buflen);
+
    if (readBytes <= 0) {
       return false;
    }
-   buf[readBytes - 1] = '\0';
 
-   sbuf = QString::fromLatin1(buf);
+   buffer[readBytes - 1] = '\0';
+   str_buffer = QString::fromLatin1(buffer);
 
-   if (r1.indexIn(sbuf) == 0 &&
-         r2.indexIn(sbuf, r1.matchedLength()) == r1.matchedLength()) {
-      h = QByteArray(&buf[r1.matchedLength()]).trimmed().toInt();
+   if (match1.hasMatch())  {
+      match2 = regExp2.match(str_buffer, match1.capturedEnd(0));
+
+      if (match2.capturedStart(0) == match1.capturedEnd(0)) {
+         h = QByteArray(&buffer[match1.capturedLength(0)]).trimmed().toInt();
+      }
    }
 
    // format error
@@ -131,6 +141,7 @@ static bool read_xbm_body(QIODevice *device, int w, int h, QImage *outImage)
 
    if (outImage->size() != QSize(w, h) || outImage->format() != QImage::Format_MonoLSB) {
       *outImage = QImage(w, h, QImage::Format_MonoLSB);
+
       if (outImage->isNull()) {
          return false;
       }
@@ -138,7 +149,7 @@ static bool read_xbm_body(QIODevice *device, int w, int h, QImage *outImage)
 
    outImage->setColorCount(2);
    outImage->setColor(0, qRgb(255, 255, 255));      // white
-   outImage->setColor(1, qRgb(0, 0, 0));              // black
+   outImage->setColor(1, qRgb(0, 0, 0));            // black
 
    int           x = 0, y = 0;
    uchar *b = outImage->scanLine(0);
@@ -184,11 +195,13 @@ static bool write_xbm_image(const QImage &sourceImage, QIODevice *device, const 
    int        msize = s.length() + 100;
    char *buf = new char[msize];
 
-   qsnprintf(buf, msize, "#define %s_width %d\n", s.toAscii().data(), w);
+   std::snprintf(buf, msize, "#define %s_width %d\n", s.toLatin1().data(), w);
    device->write(buf, qstrlen(buf));
-   qsnprintf(buf, msize, "#define %s_height %d\n", s.toAscii().data(), h);
+
+   std::snprintf(buf, msize, "#define %s_height %d\n", s.toLatin1().data(), h);
    device->write(buf, qstrlen(buf));
-   qsnprintf(buf, msize, "static char %s_bits[] = {\n ", s.toAscii().data());
+
+   std::snprintf(buf, msize, "static char %s_bits[] = {\n ", s.toLatin1().data());
    device->write(buf, qstrlen(buf));
 
    if (image.format() != QImage::Format_MonoLSB) {
@@ -324,23 +337,24 @@ bool QXbmHandler::write(const QImage &image)
 
 bool QXbmHandler::supportsOption(ImageOption option) const
 {
-   return option == Name
-          || option == Size
-          || option == ImageFormat;
+   return option == Name || option == Size || option == ImageFormat;
 }
 
 QVariant QXbmHandler::option(ImageOption option) const
 {
    if (option == Name) {
       return fileName;
+
    } else if (option == Size) {
       if (state == Error) {
          return QVariant();
       }
+
       if (state == Ready && !const_cast<QXbmHandler *>(this)->readHeader()) {
          return QVariant();
       }
       return QSize(width, height);
+
    } else if (option == ImageFormat) {
       return QImage::Format_MonoLSB;
    }

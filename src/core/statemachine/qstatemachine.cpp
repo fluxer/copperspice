@@ -1,27 +1,26 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
+
+#include <algorithm>
 
 #include <qstatemachine.h>
 
@@ -30,16 +29,20 @@
 #include <qstate.h>
 #include <qstate_p.h>
 #include <qstatemachine_p.h>
+
 #include <qabstracttransition.h>
 #include <qabstracttransition_p.h>
-#include <qsignaltransition.h>
-#include <qsignaleventgenerator_p.h>
 #include <qabstractstate.h>
 #include <qabstractstate_p.h>
+#include <qalgorithms.h>
 #include <qfinalstate.h>
 #include <qhistorystate.h>
 #include <qhistorystate_p.h>
+#include <qsignaltransition.h>
+#include <qsignaleventgenerator_p.h>
 #include <qthread_p.h>
+#include <qmetaobject.h>
+#include <qdebug.h>
 
 #ifndef QT_NO_STATEMACHINE_EVENTFILTER
 #include <qeventtransition.h>
@@ -51,11 +54,6 @@
 #include <qanimationgroup.h>
 #include <qvariantanimation_p.h>
 #endif
-
-#include <qmetaobject.h>
-#include <qdebug.h>
-
-QT_BEGIN_NAMESPACE
 
 // messages not required  #define QSTATEMACHINE_DEBUG
 
@@ -325,7 +323,8 @@ QList<QAbstractState *> QStateMachinePrivate::exitStates(QEvent *event,
       }
    }
    QList<QAbstractState *> statesToExit_sorted = statesToExit.toList();
-   qSort(statesToExit_sorted.begin(), statesToExit_sorted.end(), stateExitLessThan);
+   std::sort(statesToExit_sorted.begin(), statesToExit_sorted.end(), stateExitLessThan);
+
    for (int i = 0; i < statesToExit_sorted.size(); ++i) {
       QAbstractState *s = statesToExit_sorted.at(i);
       if (QState *grp = toStandardState(s)) {
@@ -407,7 +406,8 @@ QList<QAbstractState *> QStateMachinePrivate::enterStates(QEvent *event,
             addStatesToEnter(s, lca, statesToEnter, statesForDefaultEntry);
             if (isParallel(lca)) {
                QList<QAbstractState *> lcac = QStatePrivate::get(lca)->childStates();
-               foreach (QAbstractState * child, lcac) {
+
+               for (QAbstractState * child : lcac) {
                   if (!statesToEnter.contains(child)) {
                      addStatesToEnter(child, lca, statesToEnter, statesForDefaultEntry);
                   }
@@ -427,7 +427,7 @@ QList<QAbstractState *> QStateMachinePrivate::enterStates(QEvent *event,
    }
 
    QList<QAbstractState *> statesToEnter_sorted = statesToEnter.toList();
-   qSort(statesToEnter_sorted.begin(), statesToEnter_sorted.end(), stateEntryLessThan);
+   std::sort(statesToEnter_sorted.begin(), statesToEnter_sorted.end(), stateEntryLessThan);
 
    for (int i = 0; i < statesToEnter_sorted.size(); ++i) {
       QAbstractState *s = statesToEnter_sorted.at(i);
@@ -994,21 +994,21 @@ void QStateMachinePrivate::setError(QStateMachine::Error errorCode, QAbstractSta
          Q_ASSERT(currentContext != 0);
 
          errorString = QStateMachine::tr("Missing initial state in compound state '%1'")
-                       .arg(currentContext->objectName());
+                       .formatArg(currentContext->objectName());
 
          break;
       case QStateMachine::NoDefaultStateInHistoryStateError:
          Q_ASSERT(currentContext != 0);
 
          errorString = QStateMachine::tr("Missing default state in history state '%1'")
-                       .arg(currentContext->objectName());
+                       .formatArg(currentContext->objectName());
          break;
 
       case QStateMachine::NoCommonAncestorForTransitionError:
          Q_ASSERT(currentContext != 0);
 
          errorString = QStateMachine::tr("No common ancestor for targets and source of transition from state '%1'")
-                       .arg(currentContext->objectName());
+                       .formatArg(currentContext->objectName());
          break;
       default:
          errorString = QStateMachine::tr("Unknown error");
@@ -1118,8 +1118,8 @@ class StartState : public QState
    StartState(QState *parent)
       : QState(parent) {}
  protected:
-   void onEntry(QEvent *) {}
-   void onExit(QEvent *) {}
+   void onEntry(QEvent *) override {}
+   void onExit(QEvent *) override {}
 };
 
 class InitialTransition : public QAbstractTransition
@@ -1130,10 +1130,11 @@ class InitialTransition : public QAbstractTransition
       setTargetState(target);
    }
  protected:
-   virtual bool eventTest(QEvent *) {
+   virtual bool eventTest(QEvent *) override {
       return true;
    }
-   virtual void onTransition(QEvent *) {}
+
+   virtual void onTransition(QEvent *) override {}
 };
 
 } // namespace
@@ -1168,17 +1169,21 @@ void QStateMachinePrivate::_q_start()
    Q_Q(QStateMachine);
    Q_ASSERT(state == Starting);
    Q_ASSERT(rootState() != 0);
+
    QAbstractState *initial = rootState()->initialState();
    configuration.clear();
+
    qDeleteAll(internalEventQueue);
    internalEventQueue.clear();
    qDeleteAll(externalEventQueue);
+
    externalEventQueue.clear();
    clearHistory();
 
 #ifdef QSTATEMACHINE_DEBUG
    qDebug() << q << ": starting";
 #endif
+
    state = Running;
    processingScheduled = true; // we call _q_process() below
    emit q->started();
@@ -1200,8 +1205,7 @@ void QStateMachinePrivate::_q_start()
    executeTransitionContent(&nullEvent, transitions);
    QList<QAbstractState *> enteredStates = enterStates(&nullEvent, transitions);
 #ifndef QT_NO_PROPERTIES
-   applyProperties(transitions, QList<QAbstractState *>() << start,
-                   enteredStates);
+   applyProperties(transitions, QList<QAbstractState *>() << start, enteredStates);
 #endif
    removeStartState();
 
@@ -1415,15 +1419,17 @@ class GoToStateTransition : public QAbstractTransition
       setTargetState(target);
    }
  protected:
-   void onTransition(QEvent *) {
+   void onTransition(QEvent *) override {
       deleteLater();
    }
-   bool eventTest(QEvent *) {
+
+   bool eventTest(QEvent *) override {
       return true;
    }
 };
 
 } // namespace
+
 // mingw compiler tries to export QObject::findChild<GoToStateTransition>(),
 // which doesn't work if its in an anonymous namespace.
 using namespace _QStateMachine_Internal;
@@ -1527,17 +1533,19 @@ void QStateMachinePrivate::registerSignalTransition(QSignalTransition *transitio
       return;
    }
 
-   BentoAbstract *signalBento = transition->get_signalBento();
+   std::unique_ptr<CsSignal::Internal::BentoAbstract> signalBento = transition->get_signalBento()->clone();
 
    // slot
    if (! m_signalEventGenerator) {
       m_signalEventGenerator = new QSignalEventGenerator(q);
    }
 
-   // BROOM (on hold, statemachine)
-   // passed data missing
-   QObject::connect(sender, signalBento, m_signalEventGenerator, &QSignalEventGenerator::execute,
-                    Qt::UniqueConnection);         // "execute()" );
+   std::unique_ptr<CSBento<void (QSignalEventGenerator::*)()>> slotBento =
+                  CsSignal::Internal::make_unique<CSBento<void (QSignalEventGenerator::*)()>>(&QSignalEventGenerator::execute);
+
+   // broom (on hold, statemachine passed data is missing, change this form CsSignal to QObject)
+   CsSignal::connect(*sender, std::move(signalBento), *m_signalEventGenerator, std::move(slotBento),
+                  CsSignal::ConnectionKind::AutoConnection, true);
 }
 
 void QStateMachinePrivate::unregisterSignalTransition(QSignalTransition *transition)
@@ -1550,11 +1558,13 @@ void QStateMachinePrivate::unregisterSignalTransition(QSignalTransition *transit
 
    Q_ASSERT(m_signalEventGenerator != 0);
 
-   BentoAbstract *signalBento = transition->get_signalBento();
+   CsSignal::Internal::BentoAbstract *signalBento = transition->get_signalBento();
 
-   // BROOM (on hold, statemachine)
-   // passed data missing
-   QObject::disconnect(sender, signalBento, m_signalEventGenerator, &QSignalEventGenerator::execute);    // "execute()" );
+/*
+   // broom (on hold, statemachine passed data missing)
+   QObject::disconnect(sender, signalBento, m_signalEventGenerator, &QSignalEventGenerator::execute);
+
+*/
 
 }
 
@@ -1593,9 +1603,8 @@ void QSignalEventGenerator::execute()
    QObject *sender = this->sender();
    QStateMachine *machine = dynamic_cast<QStateMachine *>(parent());
 
-   // BROOM (on hold, statemachine)
-   // passed data missing
-   QStateMachinePrivate::get(machine)->handleTransitionSignal(sender, sender_signalIndex);      // , data);
+   // broom (on hold, statemachine passed data missing)
+   QStateMachinePrivate::get(machine)->handleTransitionSignal(sender, sender_signalIndex);
 }
 
 
@@ -1671,7 +1680,6 @@ void QStateMachinePrivate::handleFilteredEvent(QObject *watched, QEvent *event)
 void QStateMachinePrivate::handleTransitionSignal(QObject *sender, int signalIndex)   // , const TeaCupAbstract &data)
 {
    // missing code to retrieve vArgs
-
    QList<QVariant> vArgs;       // = data.toVariantList();
 
 #ifdef QSTATEMACHINE_DEBUG
@@ -1897,8 +1905,10 @@ void QStateMachine::start()
          d->state = QStateMachinePrivate::Starting;
          QMetaObject::invokeMethod(this, "_q_start", Qt::QueuedConnection);
          break;
+
       case QStateMachinePrivate::Starting:
          break;
+
       case QStateMachinePrivate::Running:
          qWarning("QStateMachine::start(): already running");
          break;
@@ -2274,7 +2284,5 @@ QStateMachine::WrappedEvent::~WrappedEvent()
    delete m_event;
 }
 
-
-QT_END_NAMESPACE
 
 #endif //QT_NO_STATEMACHINE

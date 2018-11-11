@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -83,12 +80,12 @@ inline void QDBusMarshaller::append(uint arg)
     qIterAppend(&iterator, ba, DBUS_TYPE_UINT32, &arg);
 }
 
-inline void QDBusMarshaller::append(qlonglong arg)
+inline void QDBusMarshaller::append(qint64 arg)
 {
     qIterAppend(&iterator, ba, DBUS_TYPE_INT64, &arg);
 }
 
-inline void QDBusMarshaller::append(qulonglong arg)
+inline void QDBusMarshaller::append(quint64 arg)
 {
     qIterAppend(&iterator, ba, DBUS_TYPE_UINT64, &arg);
 }
@@ -500,7 +497,7 @@ bool QDBusMarshaller::appendCrossMarshalling(QDBusDemarshaller *demarshaller)
         // do exactly like the D-BUS docs suggest
         // (see apidocs for q_dbus_message_iter_get_basic)
 
-        qlonglong value;
+        qint64 value;
         q_dbus_message_iter_get_basic(&demarshaller->iterator, &value);
         q_dbus_message_iter_next(&demarshaller->iterator);
         q_dbus_message_iter_append_basic(&iterator, code, &value);

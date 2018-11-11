@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -48,11 +45,11 @@ VolumeSlider::VolumeSlider(QWidget *parent)
     K_D(VolumeSlider);
 
 #ifndef QT_NO_TOOLTIP
-    setToolTip(tr("Volume: %1%").arg(100));
+    setToolTip(tr("Volume: %1%").formatArg(100));
 #endif
 
 #ifndef QT_NO_WHATSTHIS
-    setWhatsThis(tr("Use this slider to adjust the volume. The leftmost position is 0%. The rightmost is %1%").arg(100));
+    setWhatsThis(tr("Use this slider to adjust the volume. The leftmost position is 0%. The rightmost is %1%").formatArg(100));
 #endif
 
     connect(&d->slider, SIGNAL(valueChanged(int)), this, SLOT(_k_sliderChanged(int)));
@@ -67,10 +64,10 @@ VolumeSlider::VolumeSlider(AudioOutput *output, QWidget *parent)
 {
     K_D(VolumeSlider);
 #ifndef QT_NO_TOOLTIP
-    setToolTip(tr("Volume: %1%").arg(100));
+    setToolTip(tr("Volume: %1%").formatArg(100));
 #endif
 #ifndef QT_NO_WHATSTHIS
-    setWhatsThis(tr("Use this slider to adjust the volume. The leftmost position is 0%. The rightmost is %1%").arg(100));
+    setWhatsThis(tr("Use this slider to adjust the volume. The leftmost position is 0%. The rightmost is %1%").formatArg(100));
 #endif
 
     connect(&d->slider, SIGNAL(valueChanged(int)), this, SLOT(_k_sliderChanged(int)));
@@ -124,9 +121,9 @@ void VolumeSlider::setMaximumVolume(qreal volume)
 {
     int max = static_cast<int>(volume * 100);
     k_ptr->slider.setMaximum(max);
+
 #ifndef QT_NO_WHATSTHIS
-    setWhatsThis(tr("Use this slider to adjust the volume. The leftmost position is 0%. The rightmost is %1%")
-            .arg(max));
+    setWhatsThis(tr("Use this slider to adjust the volume. The leftmost position is 0%. The rightmost is %1%").formatArg(max));
 #endif
 }
 
@@ -199,7 +196,7 @@ void VolumeSliderPrivate::_k_mutedChanged(bool muted)
         muteButton.setIcon(mutedIcon);
     } else {
 #ifndef QT_NO_TOOLTIP
-        q->setToolTip(VolumeSlider::tr("Volume: %1%").arg(static_cast<int>(output->volume() * 100.0)));
+        q->setToolTip(VolumeSlider::tr("Volume: %1%").formatArg(static_cast<int>(output->volume() * 100.0)));
 #endif
         muteButton.setIcon(volumeIcon);
     }
@@ -214,7 +211,7 @@ void VolumeSliderPrivate::_k_sliderChanged(int value)
     if (output) {
 #ifndef QT_NO_TOOLTIP
         if (!output->isMuted()) {
-           q->setToolTip(VolumeSlider::tr("Volume: %1%").arg(value));
+           q->setToolTip(VolumeSlider::tr("Volume: %1%").formatArg(value));
         }
 #endif
 

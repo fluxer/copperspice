@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -257,23 +254,21 @@ void QtSharedPointer::internalSafetyCheckAdd(const void *d_ptr, const volatile v
 void QtSharedPointer::internalSafetyCheckRemove(const void *d_ptr)
 {
    KnownPointers *const kp = knownPointers();
-   if (!kp) {
-      return;   // end-game: the application is being destroyed already
+   if (! kp) {
+      return;   // end-game, the application is being destroyed already
    }
 
    QMutexLocker lock(&kp->mutex);
 
    QHash<const void *, Data>::iterator it = kp->dPointers.find(d_ptr);
+
    if (it == kp->dPointers.end()) {
-      qFatal("QSharedPointer: internal self-check inconsistency: pointer %p was not tracked. "
-             "To use QT_SHAREDPOINTER_TRACK_POINTERS, you have to enable it throughout "
-             "in your code.", d_ptr);
+      qFatal("QSharedPointer: internal self check inconsistency: Pointer %p was not valid. "
+             "To use QT_SHAREDPOINTER_TRACK_POINTERS enable it in your application", d_ptr);
    }
 
    QHash<const volatile void *, const void *>::iterator it2 = kp->dataPointers.find(it->pointer);
    Q_ASSERT(it2 != kp->dataPointers.end());
-
-   //qDebug("Removing d=%p value=%p", d_ptr, it->pointer);
 
    // remove entries
    kp->dataPointers.erase(it2);

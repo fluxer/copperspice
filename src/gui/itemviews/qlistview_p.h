@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -49,15 +46,17 @@ class QListViewItem
  public:
    inline QListViewItem()
       : x(-1), y(-1), w(0), h(0), indexHint(-1), visited(0xffff) {}
+
    inline QListViewItem(const QListViewItem &other)
       : x(other.x), y(other.y), w(other.w), h(other.h),
         indexHint(other.indexHint), visited(other.visited) {}
+
    inline QListViewItem(QRect r, int i)
       : x(r.x()), y(r.y()), w(qMin(r.width(), SHRT_MAX)), h(qMin(r.height(), SHRT_MAX)),
         indexHint(i), visited(0xffff) {}
+
    inline bool operator==(const QListViewItem &other) const {
-      return (x == other.x && y == other.y && w == other.w && h == other.h &&
-              indexHint == other.indexHint);
+      return (x == other.x && y == other.y && w == other.w && h == other.h && indexHint == other.indexHint);
    }
    inline bool operator!=(const QListViewItem &other) const {
       return !(*this == other);
@@ -211,28 +210,33 @@ class QListModeViewBase : public QCommonListViewBase
    int batchSavedPosition;
 
    //reimplementations
-   int itemIndex(const QListViewItem &item) const {
+   int itemIndex(const QListViewItem &item) const override{
       return item.indexHint;
    }
-   QListViewItem indexToListViewItem(const QModelIndex &index) const;
-   bool doBatchedItemLayout(const QListViewLayoutInfo &info, int max);
-   void clear();
-   void setRowCount(int rowCount) {
+
+   QListViewItem indexToListViewItem(const QModelIndex &index) const override;
+   bool doBatchedItemLayout(const QListViewLayoutInfo &info, int max) override;
+   void clear() override;
+
+   void setRowCount(int rowCount) override{
       flowPositions.resize(rowCount);
    }
-   QVector<QModelIndex> intersectingSet(const QRect &area) const;
-   void dataChanged(const QModelIndex &, const QModelIndex &);
+
+   QVector<QModelIndex> intersectingSet(const QRect &area) const override;
+   void dataChanged(const QModelIndex &, const QModelIndex &) override;
 
    int horizontalScrollToValue(int index, QListView::ScrollHint hint,
-                               bool leftOf, bool rightOf, const QRect &area, const QRect &rect) const;
+                  bool leftOf, bool rightOf, const QRect &area, const QRect &rect) const override;
+
    int verticalScrollToValue(int index, QListView::ScrollHint hint,
-                             bool above, bool below, const QRect &area, const QRect &rect) const;
-   void scrollContentsBy(int dx, int dy, bool scrollElasticBand);
-   QRect mapToViewport(const QRect &rect) const;
-   int horizontalOffset() const;
-   int verticalOffset() const;
-   void updateHorizontalScrollBar(const QSize &step);
-   void updateVerticalScrollBar(const QSize &step);
+                  bool above, bool below, const QRect &area, const QRect &rect) const override;
+
+   void scrollContentsBy(int dx, int dy, bool scrollElasticBand) override;
+   QRect mapToViewport(const QRect &rect) const override;
+   int horizontalOffset() const override;
+   int verticalOffset() const override;
+   void updateHorizontalScrollBar(const QSize &step) override;
+   void updateVerticalScrollBar(const QSize &step) override;
 
 #ifndef QT_NO_DRAGANDDROP
    // The next two methods are to be used on LefToRight flow only.
@@ -247,7 +251,7 @@ class QListModeViewBase : public QCommonListViewBase
    void doStaticLayout(const QListViewLayoutInfo &info);
 
    int perItemScrollToValue(int index, int value, int height, QAbstractItemView::ScrollHint hint,
-                            Qt::Orientation orientation, bool wrap, int extent) const;
+                  Qt::Orientation orientation, bool wrap, int extent) const;
 
    int perItemScrollingPageSteps(int length, int bounds, bool wrap) const;
 };
@@ -268,32 +272,31 @@ class QIconModeViewBase : public QCommonListViewBase
    QVector<QModelIndex> *interSectingVector; //used from within intersectingSet
 
    //reimplementations
-   int itemIndex(const QListViewItem &item) const;
-   QListViewItem indexToListViewItem(const QModelIndex &index) const;
-   bool doBatchedItemLayout(const QListViewLayoutInfo &info, int max);
-   void clear();
-   void setRowCount(int rowCount);
-   QVector<QModelIndex> intersectingSet(const QRect &area) const;
+   int itemIndex(const QListViewItem &item) const override;
+   QListViewItem indexToListViewItem(const QModelIndex &index) const override;
+   bool doBatchedItemLayout(const QListViewLayoutInfo &info, int max) override;
+   void clear() override;
+   void setRowCount(int rowCount) override;
+   QVector<QModelIndex> intersectingSet(const QRect &area) const override;
 
-   void scrollContentsBy(int dx, int dy, bool scrollElasticBand);
-   void dataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight);
-   void appendHiddenRow(int row);
-   void removeHiddenRow(int row);
-   void setPositionForIndex(const QPoint &position, const QModelIndex &index);
+   void scrollContentsBy(int dx, int dy, bool scrollElasticBand) override;
+   void dataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight) override;
+   void appendHiddenRow(int row) override;
+   void removeHiddenRow(int row) override;
+   void setPositionForIndex(const QPoint &position, const QModelIndex &index) override;
 
 #ifndef QT_NO_DRAGANDDROP
-   bool filterDragMoveEvent(QDragMoveEvent *);
-   bool filterDragLeaveEvent(QDragLeaveEvent *);
-   bool filterDropEvent(QDropEvent *e);
-   bool filterStartDrag(Qt::DropActions);
+   bool filterDragMoveEvent(QDragMoveEvent *) override;
+   bool filterDragLeaveEvent(QDragLeaveEvent *) override;
+   bool filterDropEvent(QDropEvent *e) override;
+   bool filterStartDrag(Qt::DropActions) override;
 #endif
 
  private:
    void initBspTree(const QSize &contents);
    QPoint initDynamicLayout(const QListViewLayoutInfo &info);
    void doDynamicLayout(const QListViewLayoutInfo &info);
-   static void addLeaf(QVector<int> &leaf, const QRect &area,
-                       uint visited, QBspTree::Data data);
+   static void addLeaf(QVector<int> &leaf, const QRect &area,uint visited, QBspTree::Data data);
    QRect itemsRect(const QVector<QModelIndex> &indexes) const;
    QRect draggedItemsRect() const;
    QPoint snapToGrid(const QPoint &pos) const;
@@ -377,7 +380,7 @@ class QListViewPrivate: public QAbstractItemViewPrivate
    QModelIndex closestIndex(const QRect &target, const QVector<QModelIndex> &candidates) const;
    QSize itemSize(const QStyleOptionViewItem &option, const QModelIndex &index) const;
 
-   bool selectionAllowed(const QModelIndex &index) const {
+   bool selectionAllowed(const QModelIndex &index) const override {
       if (viewMode == QListView::ListMode && !showElasticBand) {
          return index.isValid();
       }
@@ -388,12 +391,13 @@ class QListViewPrivate: public QAbstractItemViewPrivate
    int verticalScrollToValue(const QModelIndex &index, const QRect &rect, QListView::ScrollHint hint) const;
 
    QItemSelection selection(const QRect &rect) const;
-   void selectAll(QItemSelectionModel::SelectionFlags command);
+   void selectAll(QItemSelectionModel::SelectionFlags command) override;
 
 #ifndef QT_NO_DRAGANDDROP
    virtual QAbstractItemView::DropIndicatorPosition position(const QPoint &pos, const QRect &rect,
-         const QModelIndex &idx) const;
-   bool dropOn(QDropEvent *event, int *row, int *col, QModelIndex *index);
+                  const QModelIndex &idx) const override;
+
+   bool dropOn(QDropEvent *event, int *row, int *col, QModelIndex *index) override;
 #endif
 
    inline void setGridSize(const QSize &size) {
@@ -445,7 +449,7 @@ class QListViewPrivate: public QAbstractItemViewPrivate
 
    void scrollElasticBandBy(int dx, int dy);
 
-   QItemViewPaintPairs draggablePaintPairs(const QModelIndexList &indexes, QRect *r) const;
+   QItemViewPaintPairs draggablePaintPairs(const QModelIndexList &indexes, QRect *r) const override;
 
    void emitIndexesMoved(const QModelIndexList &indexes) {
       emit q_func()->indexesMoved(indexes);

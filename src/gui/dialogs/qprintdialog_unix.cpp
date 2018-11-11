@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -82,13 +79,13 @@ class QPrintPropertiesDialog : public QDialog
    void setupPrinter() const;
 
  protected:
-   void showEvent(QShowEvent *event);
+   void showEvent(QShowEvent *event) override;
 
  private:
    Ui::QPrintPropertiesWidget widget;
    QDialogButtonBox *m_buttons;
 
-#if !defined(QT_NO_CUPS)
+#if ! defined(QT_NO_CUPS)
    QCUPSSupport *m_cups;
    QPPDOptionsModel *m_cupsOptionsModel;
 #endif
@@ -122,7 +119,7 @@ class QPrintDialogPrivate : public QAbstractPrintDialogPrivate
    void setupPrinter();
    void updateWidgets();
 
-   virtual void setTabs(const QList<QWidget *> &tabs);
+   void setTabs(const QList<QWidget *> &tabs) override;
 
    Ui::QPrintSettingsOutput options;
    QUnixPrintWidget *top;
@@ -210,7 +207,7 @@ class QPPDOptionsModel : public QAbstractItemModel
    friend class QPPDOptionsEditor;
 
  public:
-   QPPDOptionsModel(QCUPSSupport *cups, QObject *parent = 0);
+   QPPDOptionsModel(QCUPSSupport *cups, QObject *parent = nullptr);
    ~QPPDOptionsModel();
 
    int columnCount(const QModelIndex &parent = QModelIndex()) const;
@@ -235,7 +232,7 @@ class QPPDOptionsEditor : public QStyledItemDelegate
    GUI_CS_OBJECT(QPPDOptionsEditor)
 
  public:
-   QPPDOptionsEditor(QObject *parent = 0) : QStyledItemDelegate(parent) {}
+   QPPDOptionsEditor(QObject *parent = nullptr) : QStyledItemDelegate(parent) {}
    ~QPPDOptionsEditor() {}
 
    QWidget *createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const;
@@ -356,12 +353,15 @@ void QPrintPropertiesDialog::addItemToOptions(QOptionTreeItem *parent, QList<con
 {
    for (int i = 0; i < parent->childItems.count(); ++i) {
       QOptionTreeItem *itm = parent->childItems.at(i);
+
       if (itm->type == QOptionTreeItem::Option) {
          const ppd_option_t *opt = reinterpret_cast<const ppd_option_t *>(itm->ptr);
          options << opt;
+
          if (qstrcmp(opt->defchoice, opt->choices[itm->selected].choice) != 0) {
             markedOptions << opt->keyword << opt->choices[itm->selected].choice;
          }
+
       } else {
          addItemToOptions(itm, options, markedOptions);
       }
@@ -573,7 +573,7 @@ void QPrintDialogPrivate::setTabs(const QList<QWidget *> &tabWidgets)
       delete options.tabs->widget(2);
    }
 
-   QList<QWidget *>::ConstIterator iter = tabWidgets.begin();
+   QList<QWidget *>::const_iterator iter = tabWidgets.begin();
    while (iter != tabWidgets.constEnd()) {
       QWidget *tab = *iter;
       options.tabs->addTab(tab, tab->windowTitle());
@@ -658,12 +658,13 @@ QUnixPrintWidgetPrivate::QUnixPrintWidgetPrivate(QUnixPrintWidget *p)
    if (QCUPSSupport::isAvailable()) {
       cupsPPD = cups->currentPPD();
       cupsPrinterCount = cups->availablePrintersCount();
-      cupsPrinters = cups->availablePrinters();
+      cupsPrinters     = cups->availablePrinters();
 
       for (int i = 0; i < cupsPrinterCount; ++i) {
-         QString printerName(QString::fromLocal8Bit(cupsPrinters[i].name));
+         QString printerName(QString::fromUtf8(cupsPrinters[i].name));
+
          if (cupsPrinters[i].instance) {
-            printerName += QLatin1Char('/') + QString::fromLocal8Bit(cupsPrinters[i].instance);
+            printerName += '/' + QString::fromUtf8(cupsPrinters[i].instance);
          }
 
          widget.printers->addItem(printerName);
@@ -679,6 +680,7 @@ QUnixPrintWidgetPrivate::QUnixPrintWidgetPrivate(QUnixPrintWidget *p)
       currentPrinterIndex = cups->currentPrinterIndex();
    } else {
 #endif
+
       currentPrinterIndex = qt_getLprPrinters(lprPrinters);
       // populating printer combo
       QList<QPrinterDescription>::const_iterator i = lprPrinters.constBegin();
@@ -764,7 +766,7 @@ void QUnixPrintWidgetPrivate::_q_printerChanged(int index)
       if (index > printerCount - 3) { // PDF or postscript
          bool pdfPrinter = (index == printerCount - 2);
          widget.location->setText(QPrintDialog::tr("Local file"));
-         widget.type->setText(QPrintDialog::tr("Write %1 file").arg(pdfPrinter ? QString::fromLatin1("PDF")
+         widget.type->setText(QPrintDialog::tr("Write %1 file").formatArg(pdfPrinter ? QString::fromLatin1("PDF")
                               : QString::fromLatin1("PostScript")));
          widget.properties->setEnabled(true);
          widget.filename->setEnabled(true);
@@ -798,17 +800,19 @@ void QUnixPrintWidgetPrivate::_q_printerChanged(int index)
       const cups_option_t *opt = cups->printerOption(QString::fromLatin1("printer-location"));
       QString location;
       if (opt) {
-         location = QString::fromLocal8Bit(opt->value);
+         location = QString::fromUtf8(opt->value);
       }
       widget.location->setText(location);
 
       cupsPPD = cups->currentPPD();
       // set printer type line
       QString type;
+
       if (cupsPPD) {
-         type = QString::fromLocal8Bit(cupsPPD->manufacturer) + QLatin1String(" - ") + QString::fromLocal8Bit(
+         type = QString::fromUtf8(cupsPPD->manufacturer) + " - " + QString::fromUtf8(
                    cupsPPD->modelname);
       }
+
       widget.type->setText(type);
       if (propertiesDialog) {
          propertiesDialog->selectPrinter();
@@ -870,46 +874,59 @@ void QUnixPrintWidgetPrivate::applyPrinterProperties(QPrinter *p)
    if (p == 0) {
       return;
    }
+
    printer = p;
+
    if (p->outputFileName().isEmpty()) {
-      QString home = QString::fromLocal8Bit(qgetenv("HOME").constData());
-      QString cur = QDir::currentPath();
-      if (home.at(home.length() - 1) != QLatin1Char('/')) {
+      QString home = QString::fromUtf8(qgetenv("HOME"));
+      QString cur  = QDir::currentPath();
+
+      if (home.at(home.length() - 1) != '/') {
          home += QLatin1Char('/');
       }
+
       if (cur.at(cur.length() - 1) != QLatin1Char('/')) {
          cur += QLatin1Char('/');
       }
       if (cur.left(home.length()) != home) {
          cur = home;
       }
+
 #ifdef Q_WS_X11
       if (p->docName().isEmpty()) {
          if (p->outputFormat() == QPrinter::PostScriptFormat) {
-            cur += QLatin1String("print.ps");
+            cur += "print.ps";
          } else {
-            cur += QLatin1String("print.pdf");
+            cur += "print.pdf";
          }
+
       } else {
-         QRegExp re(QString::fromLatin1("(.*)\\.\\S+"));
-         if (re.exactMatch(p->docName())) {
-            cur += re.cap(1);
+         QRegularExpression regExp("(.*)\\.\\S+", QPatternOption::ExactMatchOption);
+         QRegularExpressionMatch match = regExp.match(p->docName());
+
+         if (match.hasMatch()) {
+            cur += match.captured(1);
          } else {
             cur += p->docName();
          }
+
          if (p->outputFormat() == QPrinter::PostScriptFormat) {
-            cur += QLatin1String(".ps");
+            cur += ".ps";
          } else {
-            cur += QLatin1String(".pdf");
+            cur += ".pdf";
          }
       }
 #endif
+
       widget.filename->setText(cur);
+
    } else {
       widget.filename->setText( p->outputFileName() );
    }
+
    QString printer = p->printerName();
-   if (!printer.isEmpty()) {
+
+   if (! printer.isEmpty()) {
       for (int i = 0; i < widget.printers->count(); ++i) {
          if (widget.printers->itemText(i) == printer) {
             widget.printers->setCurrentIndex(i);
@@ -935,15 +952,15 @@ bool QUnixPrintWidgetPrivate::checkFields()
       bool opened = false;
       if (exists && fi.isDir()) {
          QMessageBox::warning(q, q->windowTitle(),
-                              QPrintDialog::tr("%1 is a directory.\nPlease choose a different file name.").arg(file));
+                              QPrintDialog::tr("%1 is a directory.\nPlease choose a different file name.").formatArg(file));
          return false;
       } else if ((exists && !fi.isWritable()) || !(opened = f.open(QFile::Append))) {
          QMessageBox::warning(q, q->windowTitle(),
-                              QPrintDialog::tr("File %1 is not writable.\nPlease choose a different file name.").arg(file));
+                              QPrintDialog::tr("File %1 is not writable.\nPlease choose a different file name.").formatArg(file));
          return false;
       } else if (exists) {
          int ret = QMessageBox::question(q, q->windowTitle(),
-                                         QPrintDialog::tr("%1 already exists.\nDo you want to overwrite it?").arg(file),
+                                         QPrintDialog::tr("%1 already exists.\nDo you want to overwrite it?").formatArg(file),
                                          QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
          if (ret == QMessageBox::No) {
             return false;
@@ -1000,10 +1017,10 @@ void QUnixPrintWidgetPrivate::setCupsProperties()
       engine->setProperty(PPK_CupsStringPageSize, QString::fromLatin1(cupsPageSize));
       engine->setProperty(PPK_CupsOptions, cups->options());
 
-      QRect pageRect = cups->pageRect(cupsPageSize);
+      QRect pageRect = cups->pageRect(cupsPageSize.data());
       engine->setProperty(PPK_CupsPageRect, pageRect);
 
-      QRect paperRect = cups->paperRect(cupsPageSize);
+      QRect paperRect = cups->paperRect(cupsPageSize.data());
       engine->setProperty(PPK_CupsPaperRect, paperRect);
 
       for (int ps = 0; ps < QPrinter::NPaperSize; ++ps) {
@@ -1304,7 +1321,7 @@ void QPPDOptionsEditor::setEditorData(QWidget *editor, const QModelIndex &index)
    }
 
    for (int i = 0; i < itm->childItems.count(); ++i) {
-      cb->addItem(QString::fromLocal8Bit(itm->childItems.at(i)->description));
+      cb->addItem(QString::fromUtf8(itm->childItems.at(i)->description));
    }
 
    if (itm->selected > -1) {

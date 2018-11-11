@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -64,6 +61,7 @@ QT_BEGIN_NAMESPACE
 static int qfswd_fileChanged_pipe[2];
 static void (*qfswd_old_sigio_handler)(int) = 0;
 static void (*qfswd_old_sigio_action)(int, siginfo_t *, void *) = 0;
+
 static void qfswd_sigio_monitor(int signum, siginfo_t *i, void *v)
 {
    qt_safe_write(qfswd_fileChanged_pipe[1], reinterpret_cast<char *>(&i->si_fd), sizeof(int));
@@ -71,6 +69,7 @@ static void qfswd_sigio_monitor(int signum, siginfo_t *i, void *v)
    if (qfswd_old_sigio_handler && qfswd_old_sigio_handler != SIG_IGN) {
       qfswd_old_sigio_handler(signum);
    }
+
    if (qfswd_old_sigio_action) {
       qfswd_old_sigio_action(signum, i, v);
    }
@@ -86,7 +85,7 @@ class QDnotifySignalThread : public QThread
 
    void startNotify();
 
-   virtual void run();
+   void run() override;
 
    CORE_CS_SIGNAL_1(Public, void fdChanged(int data))
    CORE_CS_SIGNAL_2(fdChanged, data)
@@ -100,7 +99,7 @@ class QDnotifySignalThread : public QThread
    CORE_CS_SLOT_2(readFromDnotify)
 
  protected:
-   virtual bool event(QEvent *);
+   bool event(QEvent *) override;
 
 };
 
@@ -194,7 +193,7 @@ QDnotifyFileSystemWatcherEngine::~QDnotifyFileSystemWatcherEngine()
 {
    QMutexLocker locker(&mutex);
 
-   for (QHash<int, Directory>::ConstIterator iter = fdToDirectory.constBegin();
+   for (QHash<int, Directory>::const_iterator iter = fdToDirectory.constBegin();
          iter != fdToDirectory.constEnd();
          ++iter) {
       qt_safe_close(iter->fd);
@@ -374,9 +373,11 @@ void QDnotifyFileSystemWatcherEngine::refresh(int fd)
    QMutexLocker locker(&mutex);
 
    bool wasParent = false;
-   QHash<int, Directory>::Iterator iter = fdToDirectory.find(fd);
+   QHash<int, Directory>::iterator iter = fdToDirectory.find(fd);
+
    if (iter == fdToDirectory.end()) {
-      QHash<int, int>::Iterator pIter = parentToFD.find(fd);
+      QHash<int, int>::iterator pIter = parentToFD.find(fd);
+
       if (pIter == parentToFD.end()) {
          return;
       }

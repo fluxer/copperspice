@@ -1,24 +1,21 @@
 /***********************************************************************
 *
-* Copyright (c) 2012-2016 Barbara Geller
-* Copyright (c) 2012-2016 Ansel Sermersheim
-* Copyright (c) 2012-2014 Digia Plc and/or its subsidiary(-ies).
+* Copyright (c) 2012-2018 Barbara Geller
+* Copyright (c) 2012-2018 Ansel Sermersheim
+* Copyright (c) 2012-2016 Digia Plc and/or its subsidiary(-ies).
 * Copyright (c) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 *
 * This file is part of CopperSpice.
 *
-* CopperSpice is free software: you can redistribute it and/or 
+* CopperSpice is free software. You can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public License
 * version 2.1 as published by the Free Software Foundation.
 *
 * CopperSpice is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with CopperSpice.  If not, see 
 * <http://www.gnu.org/licenses/>.
 *
 ***********************************************************************/
@@ -96,11 +93,12 @@ class QCalendarDayValidator : public QCalendarDateSectionValidator
 
  public:
    QCalendarDayValidator();
-   virtual Section handleKey(int key);
-   virtual QDate applyToDate(const QDate &date) const;
-   virtual void setDate(const QDate &date);
-   virtual QString text() const;
-   virtual QString text(const QDate &date, int repeat) const;
+   Section handleKey(int key) override;
+   QDate applyToDate(const QDate &date) const override;
+   void setDate(const QDate &date) override;
+   QString text() const override;
+   QString text(const QDate &date, int repeat) const override;
+
  private:
    int m_pos;
    int m_day;
@@ -117,6 +115,7 @@ QCalendarDateSectionValidator::Section QCalendarDayValidator::handleKey(int key)
    if (key == Qt::Key_Right || key == Qt::Key_Left) {
       m_pos = 0;
       return QCalendarDateSectionValidator::ThisSection;
+
    } else if (key == Qt::Key_Up) {
       m_pos = 0;
       ++m_day;
@@ -217,18 +216,17 @@ QString QCalendarDayValidator::text(const QDate &date, int repeat) const
    return QString();
 }
 
-//////////////////////////////////
-
 class QCalendarMonthValidator : public QCalendarDateSectionValidator
 {
 
  public:
    QCalendarMonthValidator();
-   virtual Section handleKey(int key);
-   virtual QDate applyToDate(const QDate &date) const;
-   virtual void setDate(const QDate &date);
-   virtual QString text() const;
-   virtual QString text(const QDate &date, int repeat) const;
+   Section handleKey(int key) override;
+   QDate applyToDate(const QDate &date) const override;
+   void setDate(const QDate &date) override;
+   QString text() const override;
+   QString text(const QDate &date, int repeat) const override;
+
  private:
    int m_pos;
    int m_month;
@@ -245,6 +243,7 @@ QCalendarDateSectionValidator::Section QCalendarMonthValidator::handleKey(int ke
    if (key == Qt::Key_Right || key == Qt::Key_Left) {
       m_pos = 0;
       return QCalendarDateSectionValidator::ThisSection;
+
    } else if (key == Qt::Key_Up) {
       m_pos = 0;
       ++m_month;
@@ -346,18 +345,18 @@ QString QCalendarMonthValidator::text(const QDate &date, int repeat) const
    }
 }
 
-//////////////////////////////////
-
 class QCalendarYearValidator : public QCalendarDateSectionValidator
 {
 
  public:
    QCalendarYearValidator();
-   virtual Section handleKey(int key);
-   virtual QDate applyToDate(const QDate &date) const;
-   virtual void setDate(const QDate &date);
-   virtual QString text() const;
-   virtual QString text(const QDate &date, int repeat) const;
+
+   Section handleKey(int key) override;
+   QDate applyToDate(const QDate &date) const override;
+   void setDate(const QDate &date) override;
+   QString text() const override;
+   QString text(const QDate &date, int repeat) const override;
+
  private:
    int pow10(int n);
    int m_pos;
@@ -852,33 +851,38 @@ class QCalendarModel : public QAbstractTableModel
    GUI_CS_OBJECT(QCalendarModel)
 
  public:
-   QCalendarModel(QObject *parent = 0);
+   QCalendarModel(QObject *parent = nullptr);
 
-   int rowCount(const QModelIndex &) const {
+   int rowCount(const QModelIndex &) const override {
       return RowCount + m_firstRow;
    }
-   int columnCount(const QModelIndex &) const {
+
+   int columnCount(const QModelIndex &) const override {
       return ColumnCount + m_firstColumn;
    }
-   QVariant data(const QModelIndex &index, int role) const;
-   Qt::ItemFlags flags(const QModelIndex &index) const;
 
-   bool insertRows(int row, int count, const QModelIndex &parent = QModelIndex()) {
+   QVariant data(const QModelIndex &index, int role) const override;
+   Qt::ItemFlags flags(const QModelIndex &index) const override;
+
+   bool insertRows(int row, int count, const QModelIndex &parent = QModelIndex()) override {
       beginInsertRows(parent, row, row + count - 1);
       endInsertRows();
       return true;
    }
-   bool insertColumns(int column, int count, const QModelIndex &parent = QModelIndex()) {
+
+   bool insertColumns(int column, int count, const QModelIndex &parent = QModelIndex()) override {
       beginInsertColumns(parent, column, column + count - 1);
       endInsertColumns();
       return true;
    }
-   bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex()) {
+
+   bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex()) override {
       beginRemoveRows(parent, row, row + count - 1);
       endRemoveRows();
       return true;
    }
-   bool removeColumns(int column, int count, const QModelIndex &parent = QModelIndex()) {
+
+   bool removeColumns(int column, int count, const QModelIndex &parent = QModelIndex()) override {
       beginRemoveColumns(parent, column, column + count - 1);
       endRemoveColumns();
       return true;
@@ -936,13 +940,15 @@ class QCalendarView : public QTableView
    GUI_CS_OBJECT(QCalendarView)
 
  public:
-   QCalendarView(QWidget *parent = 0);
+   QCalendarView(QWidget *parent = nullptr);
 
    void internalUpdate() {
       updateGeometries();
    }
+
    void setReadOnly(bool enable);
-   virtual void keyboardSearch(const QString &search) {
+
+   void keyboardSearch(const QString &search)  override {
       Q_UNUSED(search)
    }
 
@@ -959,18 +965,18 @@ class QCalendarView : public QTableView
    GUI_CS_SIGNAL_2(editingFinished)
 
  protected:
-   QModelIndex moveCursor(CursorAction cursorAction, Qt::KeyboardModifiers modifiers);
-   void mouseDoubleClickEvent(QMouseEvent *event);
-   void mousePressEvent(QMouseEvent *event);
-   void mouseMoveEvent(QMouseEvent *event);
-   void mouseReleaseEvent(QMouseEvent *event);
+   QModelIndex moveCursor(CursorAction cursorAction, Qt::KeyboardModifiers modifiers) override;
+   void mouseDoubleClickEvent(QMouseEvent *event) override;
+   void mousePressEvent(QMouseEvent *event) override;
+   void mouseMoveEvent(QMouseEvent *event) override;
+   void mouseReleaseEvent(QMouseEvent *event) override;
 
 #ifndef QT_NO_WHEELEVENT
-   void wheelEvent(QWheelEvent *event);
+   void wheelEvent(QWheelEvent *event) override;
 #endif
 
-   void keyPressEvent(QKeyEvent *event);
-   bool event(QEvent *event);
+   void keyPressEvent(QKeyEvent *event) override;
+   bool event(QEvent *event) override;
 
    QDate handleMouseEvent(QMouseEvent *event);
 
@@ -1625,11 +1631,12 @@ class QCalendarDelegate : public QItemDelegate
    GUI_CS_OBJECT(QCalendarDelegate)
 
  public:
-   QCalendarDelegate(QCalendarWidgetPrivate *w, QObject *parent = 0)
-      : QItemDelegate(parent), calendarWidgetPrivate(w) {
-   }
+   QCalendarDelegate(QCalendarWidgetPrivate *w, QObject *parent = nullptr)
+      : QItemDelegate(parent), calendarWidgetPrivate(w) { }
+
    virtual void paint(QPainter *painter, const QStyleOptionViewItem &option,
-                      const QModelIndex &index) const;
+                      const QModelIndex &index) const override;
+
    void paintCell(QPainter *painter, const QRect &rect, const QDate &date) const;
 
  private:
@@ -1637,15 +1644,15 @@ class QCalendarDelegate : public QItemDelegate
    mutable QStyleOptionViewItemV4 storedOption;
 };
 
-//Private tool button class
+// private tool button class
 class QCalToolButton: public QToolButton
 {
  public:
    QCalToolButton(QWidget *parent)
-      : QToolButton(parent) {
-   }
+      : QToolButton(parent) { }
+
  protected:
-   void paintEvent(QPaintEvent *e) {
+   void paintEvent(QPaintEvent *e)  override {
       Q_UNUSED(e)
 
 #ifndef Q_OS_MAC
@@ -1674,7 +1681,7 @@ class QPrevNextCalButton : public QToolButton
    QPrevNextCalButton(QWidget *parent) : QToolButton(parent) {}
 
  protected:
-   void paintEvent(QPaintEvent *) {
+   void paintEvent(QPaintEvent *)  override {
       QStylePainter painter(this);
       QStyleOptionToolButton opt;
       initStyleOption(&opt);
@@ -1686,6 +1693,7 @@ class QPrevNextCalButton : public QToolButton
 class QCalendarWidgetPrivate : public QWidgetPrivate
 {
    Q_DECLARE_PUBLIC(QCalendarWidget)
+
  public:
    QCalendarWidgetPrivate();
 
@@ -1970,8 +1978,10 @@ void QCalendarWidgetPrivate::_q_yearEditingFinished()
    qApp->removeEventFilter(q);
    spaceHolder->changeSize(0, 0);
    yearButton->show();
+
    QDate currentDate = getCurrentDate();
-   currentDate = currentDate.addYears(yearEdit->text().toInt() - currentDate.year());
+   currentDate = currentDate.addYears(yearEdit->text().toInteger<int>() - currentDate.year());
+
    updateCurrentPage(currentDate);
 }
 
